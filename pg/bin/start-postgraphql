@@ -1,0 +1,13 @@
+#!/bin/bash
+
+mkdir -p export
+export DEBUG=postgraphql:postgres
+postgraphql \
+    --connection postgres://mediatum@localhost:5432/mediatum_tu_prod_1 \
+    --schema api \
+    --cors  \
+    --export-schema-json export/schema-export.json \
+    --export-schema-graphql export/schema-export.graphql \
+    --watch \
+
+

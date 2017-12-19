@@ -1,0 +1,15 @@
+#!/bin/bash
+
+mkdir -p export
+
+# Log created SQL queries:
+# export DEBUG="*:sql" # https://github.com/postgraphql/postgraphql/issues/525#issuecomment-317273045
+
+postgraphile \
+    --connection postgres://me@localhost:5432/mediatum_tu_prod_1 \
+    --schema api,debug \
+    --dynamic-json \
+    --cors  \
+    --export-schema-json export/schema-export.json \
+    --export-schema-graphql export/schema-export.graphql \
+    --watch \

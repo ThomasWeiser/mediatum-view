@@ -1,0 +1,48 @@
+<!doctype html>
+<link href='http://fonts.googleapis.com/css?family=Roboto:400,100,‌​100italic,300,300ita‌​lic,400italic,500,50‌​0italic,700,700itali‌​c,900italic,900' rel='stylesheet' type='text/css'>
+<style>
+body {
+  margin: 0 auto;
+  max-width: 56em;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-stretch: 110%;
+  line-height: 1.5;
+  padding: 2em 1em;
+  color: #333;
+}
+.color {
+  color: #e81c4f;
+}
+.searchInput {
+  width: 99%;
+  font-size: 105%;
+}
+.document {
+  margin: 2ex 0;
+}
+.attributes {
+  margin-left: 2em;
+}
+.attribute:hover {
+  background-color: #eee;
+}
+.attribute.author {
+  font-weight: bold;
+}
+.attribute.title {
+  font-style: italic;
+}
+/*
+table {
+  width: 100%;
+}
+thead {
+  font-weight: bold;
+}
+*/
+</style>
+<body>
+  <div></div>
+  <script src="elm.js"></script>
+  <script>Elm.Main.embed(document.querySelector("div"));</script>
+</body>
