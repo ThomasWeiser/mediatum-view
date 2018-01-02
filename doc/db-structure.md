@@ -3,15 +3,18 @@
 
 ## Types
 
+```
 api.metadatatype
 api.metafield
 api.mask
 api.maskitem
 api.maskitem_reachable
 api.document
+```
 
 ## Views
 
+```
 materialized view entity.metadatatype
 materialized view entity.metafield
 materialized view entity.mask
@@ -22,9 +25,11 @@ view entity.node
 view entity.document_mask_fields
 view entity.document_mask_value_object
 view entity.document_mask_value_list
+```
 
 ## API Metadata
 
+```
 function api.all_metadatatypes (bibtexmapping text, citeprocmapping text, find text)
 function api.metadatatype_by_name (name text)
 function api.all_metafields (name text, type text, find text)
@@ -52,9 +57,11 @@ function api.maskitem_subitem_by_name(parent api.maskitem, name text)
 function api.maskitem_superitem(child api.maskitem)
 function api.maskitem_mask(child api.maskitem)
 function api.maskitem_metafield(maskitem api.maskitem)
+```
 
 ## API Document
 
+```
 function api.all_documents (type text, name text)
 function api.document_by_id (id int4)
 function api.document_attrs(document api.document, keys text[])
@@ -64,3 +71,4 @@ function api.metadatatype_documents(mdt api.metadatatype, type text, name text)
 function api.document_values_by_mask(document api.document, mask_name text)
 function api.simple_search (text text, languages text [], domains text [], "limit" integer)
 function api.simple_search_unranked (text text, languages text [function api.author_search (text text) 
+```

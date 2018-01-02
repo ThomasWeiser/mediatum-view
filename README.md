@@ -11,3 +11,6 @@ _... work in progress ..._
 3. [PostGraphile](https://www.graphile.org/postgraphile/) to expose a public schema as a GraphQL API
 4. A web-app client written in [Elm](http://elm-lang.org/) to search and browse (part of) the mediaTUM content
 
+## Installation
+
+See instructions for [backend](pg/README.md) and [frontend](elm/README.md).
