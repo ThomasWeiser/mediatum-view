@@ -1,48 +1,26 @@
 module Main exposing (main)
 
+import Api.Object
+import Api.Object.PageInfo
+import Api.Object.DocumentsConnection
+import Api.Object.DocumentsEdge
+import Api.Object.Document
+import Api.Object.Metadatatype
+import Api.Query
+import Api.Scalar exposing (Cursor)
 import Maybe.Extra
-import Result.Extra
 import Json.Decode exposing (Decoder)
 import Regex
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Select
-import Task
-import GraphQL.Request.Builder as GB
-import GraphQL.Request.Builder.Arg as GBArg
-import GraphQL.Request.Builder.Variable as GBVar
-import GraphQL.Client.Http as GraphQLClient
-
-
-paginationSize : Int
-paginationSize =
-    10
-
-
-type alias Cursor =
-    String
-
-
-type alias Page node =
-    { totalCount : Int -- Not in relay spec! Added by PostGraphQL. See https://www.graphile.org/postgraphile/connections/
-    , pageInfo : PageInfo
-    , edges : List (Edge node)
-    }
-
-
-type alias PageInfo =
-    { hasNextPage : Bool
-    , hasPreviousPage : Bool
-    , startCursor : Maybe Cursor -- Not in relay spec! Added by PostGraphQL
-    , endCursor : Maybe Cursor -- Not in relay spec! Added by PostGraphQL
-    }
-
-
-type alias Edge node =
-    { cursor : Cursor
-    , node : node
-    }
+import Graphqelm.Field
+import Graphqelm.OptionalArgument exposing (OptionalArgument(Present))
+import Graphqelm.SelectionSet exposing (SelectionSet, with)
+import Graphqelm.Http
+import Graphqelm.Operation
+import Pagination
 
 
 type SearchType
@@ -54,6 +32,10 @@ type SimpleSearchDomain
     = SearchAttributes
     | SearchFulltext
     | SearchAll
+
+
+type alias Page itemModel =
+    Pagination.Page Cursor itemModel
 
 
 type alias Model =
@@ -81,25 +63,169 @@ type ValueListType
     = ValueListType
 
 
-valueSpecDocument : GB.ValueSpec GB.NonNull GB.ObjectType Document vars
-valueSpecDocument =
-    GB.object Document
-        |> GB.with
-            (GB.field "metadatatype"
-                []
-                (GB.object identity
-                    |> GB.with
-                        (GB.field "longname"
-                            []
-                            GB.string
-                        )
+pageSize : Int
+pageSize =
+    10
+
+
+sizeLimitSimpleSearch : Int
+sizeLimitSimpleSearch =
+    100
+
+
+sendSearchQuery : Pagination.Position -> Model -> Cmd Msg
+sendSearchQuery paginationPosition model =
+    case model.searchType of
+        SimpleSearch simpleSearchDomain ->
+            makeRequest
+                (querySimpleSearch
+                    model.documents
+                    paginationPosition
+                    model.searchString
+                    (case simpleSearchDomain of
+                        SearchAttributes ->
+                            [ "attrs" ]
+
+                        SearchFulltext ->
+                            [ "fulltext" ]
+
+                        SearchAll ->
+                            [ "attrs", "fulltext" ]
+                    )
+                )
+                requestResultTagger
+
+        AuthorSearch ->
+            makeRequest
+                (queryAuthorSearch
+                    model.documents
+                    paginationPosition
+                    model.searchString
+                )
+                requestResultTagger
+
+
+makeRequest :
+    SelectionSet (Page Document) Graphqelm.Operation.RootQuery
+    -> (Result (Graphqelm.Http.Error (Page Document)) (Page Document) -> Msg)
+    -> Cmd Msg
+makeRequest query tagger =
+    query
+        |> Graphqelm.Http.queryRequest "http://localhost:5000/graphql"
+        |> Graphqelm.Http.send tagger
+
+
+requestResultTagger :
+    Result (Graphqelm.Http.Error (Page Document)) (Page Document)
+    -> Msg
+requestResultTagger httpSendResult =
+    case httpSendResult of
+        Err error ->
+            GraphqelmHttpError error
+
+        Ok documentPage ->
+            DocumentsPageResult documentPage
+
+
+apiDocumentObjects : Pagination.ApiObjects {} Api.Object.DocumentsConnection Api.Object.DocumentsEdge Api.Object.Document Api.Object.PageInfo Cursor Document
+apiDocumentObjects =
+    { connectionSelection = Api.Object.DocumentsConnection.selection
+    , totalCount = Api.Object.DocumentsConnection.totalCount
+    , pageInfo = Api.Object.DocumentsConnection.pageInfo
+    , edges = Api.Object.DocumentsConnection.edges
+    , edgeSelection = Api.Object.DocumentsEdge.selection
+    , cursor = Api.Object.DocumentsEdge.cursor
+    , node = Api.Object.DocumentsEdge.node
+    , pageInfoSelection = Api.Object.PageInfo.selection
+    , hasNextPage = Api.Object.PageInfo.hasNextPage
+    , hasPreviousPage = Api.Object.PageInfo.hasPreviousPage
+    , startCursor = Api.Object.PageInfo.startCursor
+    , endCursor = Api.Object.PageInfo.endCursor
+    }
+
+
+querySimpleSearch :
+    Maybe (Page Document)
+    -> Pagination.Position
+    -> String
+    -> List String
+    -> SelectionSet (Page Document) Graphqelm.Operation.RootQuery
+querySimpleSearch referencePage paginationPosition searchString searchDomains =
+    Api.Query.selection identity
+        |> with
+            (Api.Query.simpleSearch
+                ((\optionals ->
+                    { optionals
+                        | text = Present searchString
+                        , domains = Present (List.map Just searchDomains)
+                        , limit = Present sizeLimitSimpleSearch
+                    }
+                 )
+                    >> Pagination.paginationArguments pageSize referencePage paginationPosition
+                )
+                (Pagination.connectionPage
+                    apiDocumentObjects
+                    documentNode
                 )
             )
-        |> GB.with
-            (GB.field "valuesByMask"
-                [ ( "maskName", GBArg.string "nodesmall" ) ]
-                (GB.customScalar ValueListType decoderAttributeList)
+
+
+queryAuthorSearch :
+    Maybe (Page Document)
+    -> Pagination.Position
+    -> String
+    -> SelectionSet (Page Document) Graphqelm.Operation.RootQuery
+queryAuthorSearch referencePage paginationPosition searchString =
+    Api.Query.selection identity
+        |> with
+            (Api.Query.authorSearch
+                ((\optionals ->
+                    { optionals
+                        | text = Present searchString
+                    }
+                 )
+                    >> Pagination.paginationArguments pageSize referencePage paginationPosition
+                )
+                (Pagination.connectionPage
+                    apiDocumentObjects
+                    documentNode
+                )
             )
+
+
+documentNode : SelectionSet Document Api.Object.Document
+documentNode =
+    Api.Object.Document.selection Document
+        |> with
+            (Api.Object.Document.metadatatype
+                (Api.Object.Metadatatype.selection identity
+                    |> with
+                        (Api.Object.Metadatatype.longname
+                            |> Graphqelm.Field.nonNullOrFail
+                        )
+                )
+                |> Graphqelm.Field.nonNullOrFail
+            )
+        |> with
+            (Api.Object.Document.valuesByMask
+                (\optionals ->
+                    { optionals
+                        | maskName = Present "nodesmall"
+                    }
+                )
+                |> Graphqelm.Field.map mapJsonToAttributes
+            )
+
+
+mapJsonToAttributes : Maybe Api.Scalar.Json -> List Attribute
+mapJsonToAttributes maybeJson =
+    case maybeJson of
+        Nothing ->
+            []
+
+        Just (Api.Scalar.Json str) ->
+            Result.withDefault [] <|
+                Json.Decode.decodeString decoderAttributeList str
 
 
 decoderAttributeList : Decoder (List Attribute)
@@ -115,143 +241,6 @@ decoderAttributeList =
         ]
 
 
-sizeLimitSimpleSearch : Int
-sizeLimitSimpleSearch =
-    100
-
-
-querySimpleSearch :
-    Maybe (Page Document)
-    -> PaginationTarget
-    -> GB.Document GB.Query (Page Document) { vars | searchString : String, searchDomains : List String }
-querySimpleSearch prevResponse paginationTarget =
-    valueSpecDocument
-        |> connectionPage
-        |> GB.field "simpleSearch"
-            ([ ( "limit", GBArg.int sizeLimitSimpleSearch )
-             , ( "domains", GBArg.variable <| GBVar.required "domains" .searchDomains (GBVar.list GBVar.string) )
-             , ( "text", GBArg.variable <| GBVar.required "text" .searchString GBVar.string )
-             ]
-                ++ (paginationArguments prevResponse paginationTarget)
-            )
-        |> GB.extract
-        |> GB.queryDocument
-
-
-queryAuthorSearch :
-    Maybe (Page Document)
-    -> PaginationTarget
-    -> GB.Document GB.Query (Page Document) { vars | searchString : String }
-queryAuthorSearch prevResponse paginationTarget =
-    valueSpecDocument
-        |> connectionPage
-        |> GB.field "authorSearch"
-            ([ ( "text", GBArg.variable <| GBVar.required "text" .searchString GBVar.string ) ]
-                ++ (paginationArguments prevResponse paginationTarget)
-            )
-        |> GB.extract
-        |> GB.queryDocument
-
-
-paginationArguments : Maybe (Page node) -> PaginationTarget -> List ( String, GBArg.Value vars )
-paginationArguments prevResponse target =
-    let
-        paginationSizeArg =
-            GBArg.int paginationSize
-
-        anchor direction =
-            case prevResponse of
-                Nothing ->
-                    []
-
-                Just page ->
-                    case
-                        (page.pageInfo
-                            |> if direction then
-                                .endCursor
-                               else
-                                .startCursor
-                        )
-                    of
-                        Nothing ->
-                            []
-
-                        Just cursor ->
-                            [ ( if direction then
-                                    "after"
-                                else
-                                    "before"
-                              , GBArg.string cursor
-                              )
-                            ]
-    in
-        case target of
-            First ->
-                [ ( "first", paginationSizeArg ) ]
-
-            Next ->
-                [ ( "first", paginationSizeArg ) ] ++ anchor True
-
-            Last ->
-                [ ( "last", paginationSizeArg ) ]
-
-            Previous ->
-                [ ( "last", paginationSizeArg ) ] ++ anchor False
-
-
-{-| Extract node objects from paginated Relay connections yielding a plain list (without additional page- and cursor-info)
--}
-connectionList :
-    GB.ValueSpec GB.NonNull GB.ObjectType result vars
-    -> GB.ValueSpec GB.NonNull GB.ObjectType (List result) vars
-connectionList spec =
-    spec
-        |> GB.field "node" []
-        |> GB.extract
-        |> GB.list
-        |> GB.field "edges" []
-        |> GB.extract
-
-
-{-| Extract node objects from paginated Relay connections yielding a Page type that includes all additional paging info
--}
-connectionPage :
-    GB.ValueSpec GB.NonNull GB.ObjectType result vars
-    -> GB.ValueSpec GB.NonNull GB.ObjectType (Page result) vars
-connectionPage spec =
-    GB.object Page
-        |> GB.with (GB.field "totalCount" [] GB.int)
-        |> GB.with
-            (PageInfo
-                |> GB.object
-                |> GB.with (GB.field "hasNextPage" [] GB.bool)
-                |> GB.with (GB.field "hasPreviousPage" [] GB.bool)
-                |> GB.with (GB.field "startCursor" [] (GB.nullable GB.string))
-                |> GB.with (GB.field "endCursor" [] (GB.nullable GB.string))
-                |> GB.field "pageInfo" []
-            )
-        |> GB.with
-            (Edge
-                |> GB.object
-                |> GB.with (GB.field "cursor" [] GB.string)
-                |> GB.with (GB.field "node" [] spec)
-                |> GB.list
-                |> GB.field "edges" []
-            )
-
-
-sendQuery :
-    GB.Document GB.Query model vars
-    -> vars
-    -> (model -> Msg)
-    -> Cmd Msg
-sendQuery queryDocument variables successTagger =
-    queryDocument
-        |> GB.request variables
-        |> GraphQLClient.sendQuery "http://localhost:5000/graphql"
-        |> Task.attempt (Result.Extra.unpack GraphQLClientError successTagger)
-
-
 main : Program Never Model Msg
 main =
     Html.program
@@ -265,16 +254,9 @@ main =
 type Msg
     = SearchString String
     | SetSearchType SearchType
-    | GraphQLClientError GraphQLClient.Error
+    | GraphqelmHttpError (Graphqelm.Http.Error (Page Document))
     | DocumentsPageResult (Page Document)
-    | PaginationTarget PageView PaginationTarget
-
-
-type PaginationTarget
-    = First
-    | Last
-    | Next
-    | Previous
+    | PickPosition PageView Pagination.Position
 
 
 type PageView
@@ -291,7 +273,7 @@ init =
             }
     in
         ( model
-        , sendSearchQuery First model
+        , sendSearchQuery Pagination.First model
         )
 
 
@@ -304,7 +286,7 @@ update msg model =
                     { model | searchString = str }
             in
                 ( model1
-                , sendSearchQuery First model1
+                , sendSearchQuery Pagination.First model1
                 )
 
         SetSearchType searchType ->
@@ -313,20 +295,20 @@ update msg model =
                     { model | searchType = searchType }
             in
                 ( model1
-                , sendSearchQuery First model1
+                , sendSearchQuery Pagination.First model1
                 )
 
-        PaginationTarget pageView target ->
+        PickPosition pageView position ->
             ( model
             , case pageView of
                 ViewDocuments ->
-                    sendSearchQuery target model
+                    sendSearchQuery position model
             )
 
-        GraphQLClientError graphQLClientError ->
+        GraphqelmHttpError graphqelmHttpError ->
             let
                 _ =
-                    Debug.log "... GraphQLClient Error" graphQLClientError
+                    Debug.log "... Graphqelm Http Error" graphqelmHttpError
             in
                 ( model, Cmd.none )
 
@@ -336,43 +318,11 @@ update msg model =
             )
 
 
-sendSearchQuery : PaginationTarget -> Model -> Cmd Msg
-sendSearchQuery paginationTarget model =
-    case model.searchType of
-        SimpleSearch simpleSearchDomain ->
-            sendQuery
-                (querySimpleSearch model.documents paginationTarget)
-                { searchString = model.searchString
-                , searchDomains =
-                    case simpleSearchDomain of
-                        SearchAttributes ->
-                            [ "attrs" ]
-
-                        SearchFulltext ->
-                            [ "fulltext" ]
-
-                        SearchAll ->
-                            [ "attrs", "fulltext" ]
-                }
-                DocumentsPageResult
-
-        AuthorSearch ->
-            sendQuery
-                (queryAuthorSearch model.documents paginationTarget)
-                { searchString = 
-                    model.searchString
-                        |> String.words
-                        |> List.map (flip String.append <| ":*")
-                        |> String.join " & "
-                }
-                DocumentsPageResult
-
-
 view : Model -> Html Msg
 view model =
     Html.div []
         [ Html.h2 []
-            [ Html.text "mediaTUM HSB Demo 2017-12-20"
+            [ Html.text "mediaTUM HSB Demo 2018-05-30"
             , Html.div [ Html.Attributes.class "color" ]
                 [ Html.text "PostgreSQL · PostGraphQL · GraphQL · Elm" ]
             ]
@@ -380,7 +330,7 @@ view model =
         , viewSearchControls model
         , Html.hr [] []
         , model.documents
-            |> viewResponse (PaginationTarget ViewDocuments) (viewPage viewDocument)
+            |> viewResponse (PickPosition ViewDocuments) (viewPage viewDocument)
         , Html.hr [] []
         ]
 
@@ -421,9 +371,9 @@ viewSearchControls model =
 
 
 viewResponse :
-    (PaginationTarget -> Msg)
-    -> (Page node -> Html Msg)
-    -> Maybe (Page node)
+    (Pagination.Position -> Msg)
+    -> (Page itemModel -> Html Msg)
+    -> Maybe (Page itemModel)
     -> Html Msg
 viewResponse paginationTargetTagger viewEntity response =
     Html.div []
@@ -438,18 +388,15 @@ viewResponse paginationTargetTagger viewEntity response =
         ]
 
 
-viewPage : (node -> Html Msg) -> Page node -> Html Msg
-viewPage viewNode page =
+viewPage : (itemModel -> Html Msg) -> Page itemModel -> Html Msg
+viewPage viewItem page =
     Html.div []
         [ Html.div []
-            (List.map
-                (.node >> viewNode)
-                page.edges
-            )
+            (List.map viewItem (Pagination.items page))
         ]
 
 
-viewNumberOfResults : Maybe (Page mode) -> Html msg
+viewNumberOfResults : Maybe (Page itemModel) -> Html msg
 viewNumberOfResults response =
     Html.div []
         [ Html.strong
@@ -462,24 +409,24 @@ viewNumberOfResults response =
                     Just page ->
                         [ Html.text <|
                             -- TODO: Following code is only valid for a seimpleSearch (i.e. with a limit)
-                            if page.totalCount == sizeLimitSimpleSearch then
+                            if Pagination.totalCount page == sizeLimitSimpleSearch then
                                 ">= "
                             else
                                 ""
-                        , Html.text <| toString page.totalCount
+                        , Html.text <| toString (Pagination.totalCount page)
                         ]
             )
         ]
 
 
-viewPaginationButtons : Maybe (Page node) -> (PaginationTarget -> Msg) -> Html Msg
+viewPaginationButtons : Maybe (Page itemModel) -> (Pagination.Position -> Msg) -> Html Msg
 viewPaginationButtons response targetTagger =
     let
-        hasNextPage =
-            Maybe.Extra.unwrap False (.pageInfo >> .hasNextPage) response
-
-        hasPreviousPage =
-            Maybe.Extra.unwrap False (.pageInfo >> .hasPreviousPage) response
+        ( hasPreviousPage, hasNextPage ) =
+            Maybe.Extra.unwrap
+                ( False, False )
+                (Pagination.hasAdjacentPages)
+                response
 
         viewButton : Bool -> String -> Msg -> Html Msg
         viewButton enabled label msg =
@@ -496,10 +443,10 @@ viewPaginationButtons response targetTagger =
             [ -- "Last" currently does not work with our GraphQL API
               -- Only show "First" and "Next" for now.
               -- May implement a form of infinite scrolling later.
-              viewButton hasPreviousPage "First" (targetTagger First)
+              viewButton hasPreviousPage "First" (targetTagger Pagination.First)
 
             -- viewButton hasPreviousPage "Prev" (targetTagger Previous),
-            , viewButton hasNextPage "Next" (targetTagger Next)
+            , viewButton hasNextPage "Next" (targetTagger Pagination.Next)
 
             -- , viewButton hasNextPage "Last" (targetTagger Last)
             ]
@@ -518,6 +465,7 @@ viewDocument document =
         ]
 
 
+maxAttributeStringLength : Int
 maxAttributeStringLength =
     80
 
