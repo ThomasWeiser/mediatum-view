@@ -8,7 +8,6 @@ import Api.Object.Document
 import Api.Object.Metadatatype
 import Api.Query
 import Api.Scalar exposing (Cursor)
-import Maybe.Extra
 import Json.Decode exposing (Decoder)
 import Regex
 import Html exposing (Html)
@@ -20,6 +19,7 @@ import Graphqelm.OptionalArgument exposing (OptionalArgument(Present))
 import Graphqelm.SelectionSet exposing (SelectionSet, with)
 import Graphqelm.Http
 import Graphqelm.Operation
+import Connection
 import Pagination
 
 
@@ -35,7 +35,7 @@ type SimpleSearchDomain
 
 
 type alias Page itemModel =
-    Pagination.Page Cursor itemModel
+    Connection.Connection Cursor itemModel
 
 
 type alias Model =
@@ -127,7 +127,7 @@ requestResultTagger httpSendResult =
             DocumentsPageResult documentPage
 
 
-apiDocumentObjects : Pagination.ApiObjects {} Api.Object.DocumentsConnection Api.Object.DocumentsEdge Api.Object.Document Api.Object.PageInfo Cursor Document
+apiDocumentObjects : Connection.ApiObjects {} Api.Object.DocumentsConnection Api.Object.DocumentsEdge Api.Object.Document Api.Object.PageInfo Cursor Document
 apiDocumentObjects =
     { connectionSelection = Api.Object.DocumentsConnection.selection
     , totalCount = Api.Object.DocumentsConnection.totalCount
@@ -139,8 +139,6 @@ apiDocumentObjects =
     , pageInfoSelection = Api.Object.PageInfo.selection
     , hasNextPage = Api.Object.PageInfo.hasNextPage
     , hasPreviousPage = Api.Object.PageInfo.hasPreviousPage
-    , startCursor = Api.Object.PageInfo.startCursor
-    , endCursor = Api.Object.PageInfo.endCursor
     }
 
 
@@ -163,7 +161,7 @@ querySimpleSearch referencePage paginationPosition searchString searchDomains =
                  )
                     >> Pagination.paginationArguments pageSize referencePage paginationPosition
                 )
-                (Pagination.connectionPage
+                (Connection.connection
                     apiDocumentObjects
                     documentNode
                 )
@@ -186,7 +184,7 @@ queryAuthorSearch referencePage paginationPosition searchString =
                  )
                     >> Pagination.paginationArguments pageSize referencePage paginationPosition
                 )
-                (Pagination.connectionPage
+                (Connection.connection
                     apiDocumentObjects
                     documentNode
                 )
@@ -392,7 +390,7 @@ viewPage : (itemModel -> Html Msg) -> Page itemModel -> Html Msg
 viewPage viewItem page =
     Html.div []
         [ Html.div []
-            (List.map viewItem (Pagination.items page))
+            (List.map viewItem (Connection.nodes page))
         ]
 
 
@@ -408,12 +406,12 @@ viewNumberOfResults response =
 
                     Just page ->
                         [ Html.text <|
-                            -- TODO: Following code is only valid for a seimpleSearch (i.e. with a limit)
-                            if Pagination.totalCount page == sizeLimitSimpleSearch then
+                            -- TODO: Following code is only valid for a simpleSearch (i.e. with a limit)
+                            if page.totalCount == sizeLimitSimpleSearch then
                                 ">= "
                             else
                                 ""
-                        , Html.text <| toString (Pagination.totalCount page)
+                        , Html.text <| toString page.totalCount
                         ]
             )
         ]
@@ -423,10 +421,12 @@ viewPaginationButtons : Maybe (Page itemModel) -> (Pagination.Position -> Msg) -
 viewPaginationButtons response targetTagger =
     let
         ( hasPreviousPage, hasNextPage ) =
-            Maybe.Extra.unwrap
-                ( False, False )
-                (Pagination.hasAdjacentPages)
-                response
+            case response of
+                Just { pageInfo } ->
+                    ( pageInfo.hasPreviousPage, pageInfo.hasNextPage )
+
+                Nothing ->
+                    ( False, False )
 
         viewButton : Bool -> String -> Msg -> Html Msg
         viewButton enabled label msg =
