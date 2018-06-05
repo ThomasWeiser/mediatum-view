@@ -9,6 +9,23 @@ create schema if not exists debug;
 create schema if not exists aux;
 
 
+create type api.folder as (
+    id int4,
+	parent_id int4,
+    "name" text,
+	orderpos int4,
+	is_toplevel bool,
+	is_collection bool
+);
+
+comment on type api.folder is
+    'All collections and directories';
+comment on column api.folder.id is
+    'The mediaTUM node id of this collection or directory';
+comment on column api.folder.name is
+    'The name of the collection or directory';
+
+
 create type api.metadatatype as (
     id int4,
     "name" text,

@@ -7,6 +7,27 @@ drop schema if exists entity CASCADE;
 create schema entity;
 
 
+create materialized view entity.folder as
+    select
+        node.id as id,
+        min (to_parent.nid) as parent_id,
+        node.name as name,
+        node.orderpos as orderpos,
+        parent.type = 'collections' as is_toplevel,
+        node.type = 'collection' as is_collection
+    from mediatum.node
+    join mediatum.nodemapping as to_parent on node.id = to_parent.cid
+    join mediatum.node as parent on to_parent.nid = parent.id
+    where (node.type = 'collection' or node.type = 'directory')
+    and node.name is not null
+    group by (node.id, node.name, node.orderpos, is_toplevel, is_collection)
+    order by node.orderpos;
+
+
+create unique index ix_folder_id on entity.folder (id);
+create index ix_folder_name on entity.folder (name);
+
+
 create materialized view entity.metadatatype as
     select
         node.id,
@@ -25,7 +46,6 @@ create materialized view entity.metadatatype as
       and node.attrs ->> 'active' = '1'
       and node.name is not null
     order by node.orderpos;
-;
 
 
 create unique index ix_metadatatype_id on entity.metadatatype (id);
@@ -193,7 +213,7 @@ create or replace view entity.document_mask_fields as
         maskitem.width as maskitem_width,
         metafield.id as metafield_id,
         metafield.name as metafield_name,
-        aux.get_node_attr(document.id, metafield.name) as value
+        aux.get_node_attr (document.id, metafield.name) as value
     from entity.document
     join entity.metadatatype on entity.metadatatype.name = entity.document.schema
     join entity.mask on entity.mask.metadatatype_id = entity.metadatatype.id
@@ -206,9 +226,9 @@ create or replace view entity.document_mask_value_object as
     select
         document_id,
         mask_name,
-        jsonb_object_agg(
+        jsonb_object_agg (
             metafield_name,
-            jsonb_build_object(
+            jsonb_build_object (
                 'name',
                 maskitem_name,
                 'orderpos',
@@ -216,7 +236,7 @@ create or replace view entity.document_mask_value_object as
                 'width',
                 maskitem_width,
                 'value',
-                aux.get_node_attr(document_id, metafield_name)
+                aux.get_node_attr (document_id, metafield_name)
             )
         ) as values
     from entity.document_mask_fields
@@ -227,8 +247,8 @@ create or replace view entity.document_mask_value_list as
     select
         document_id,
         mask_name,
-        jsonb_agg(
-            jsonb_build_object(
+        jsonb_agg (
+            jsonb_build_object (
                 'field',
                 metafield_name,
                 'name',
@@ -236,7 +256,7 @@ create or replace view entity.document_mask_value_list as
                 'width',
                 maskitem_width,
                 'value',
-                aux.get_node_attr(document_id, metafield_name)
+                aux.get_node_attr (document_id, metafield_name)
             )
         ) as values
     from (select * from entity.document_mask_fields order by maskitem_orderpos) as q

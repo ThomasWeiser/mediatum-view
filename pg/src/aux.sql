@@ -6,7 +6,7 @@ begin;
 create schema if not exists aux;
 
 
-create or replace function aux.jsonb_filter(obj jsonb, keys text[])
+create or replace function aux.jsonb_filter (obj jsonb, keys text[])
     returns jsonb as $$
     declare result jsonb := '{}'::jsonb;
     declare key text;
@@ -26,7 +26,7 @@ create or replace function aux.jsonb_filter(obj jsonb, keys text[])
 $$ language plpgsql immutable;
 
 
-create or replace function aux.get_node_attrs(nodeId int4, keys text[])
+create or replace function aux.get_node_attrs (nodeId int4, keys text[])
     returns jsonb as $$
     select aux.jsonb_filter (node.attrs, keys)
       from mediatum.node
@@ -34,7 +34,7 @@ create or replace function aux.get_node_attrs(nodeId int4, keys text[])
 $$ language sql stable;
 
 
-create or replace function aux.get_node_attr(nodeId int4, key text)
+create or replace function aux.get_node_attr (nodeId int4, key text)
     returns jsonb as $$
     select  node.attrs->key
       from mediatum.node
@@ -42,7 +42,7 @@ create or replace function aux.get_node_attr(nodeId int4, key text)
 $$ language sql stable;
 
 
-create or replace function aux.get_node_system_attrs(nodeId int4, keys text[])
+create or replace function aux.get_node_system_attrs (nodeId int4, keys text[])
     returns jsonb as $$
     select aux.jsonb_filter (node.system_attrs, keys)
       from mediatum.node
@@ -50,7 +50,7 @@ create or replace function aux.get_node_system_attrs(nodeId int4, keys text[])
 $$ language sql stable;
 
 
-create or replace function aux.is_public_today(nodeId int4)
+create or replace function aux.is_public_today (nodeId int4)
     returns boolean as $$
     select mediatum.has_read_access_to_node (nodeId,
             _group_ids => '{2}', -- Group ID 2 is 'Gast' here. May need a more generic lookup.

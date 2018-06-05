@@ -3,15 +3,70 @@
 begin;
 
 
+-- TODO: Quick and dirty pattern matching ahead. Needs more elaboration:
+--       - Escape special characters (% and _ for ilike)
+--       - Handle patterns with several words (search for results containing all of them)
+--       - We may use FTS instead of pattern matching. Probably needs new index. But should be faster too.
+
+
+create or replace function api.all_folders (name text, is_collection boolean, find text)
+    returns setof api.folder as $$
+    select * from entity.folder
+    where (all_folders.name is null or folder.name = all_folders.name)
+      and (all_folders.is_collection is null or folder.is_collection = all_folders.is_collection)
+      and (all_folders.find is null or folder.name ilike ('%' || all_folders.find || '%'))
+    order by folder.orderpos
+$$ language sql stable rows 1000;
+
+
+create or replace function api.toplevel_folders (name text, is_collection boolean, find text)
+    returns setof api.folder as $$
+    select * from entity.folder
+    where (toplevel_folders.name is null or folder.name = toplevel_folders.name)
+      and (toplevel_folders.is_collection is null or folder.is_collection = toplevel_folders.is_collection)
+      and (toplevel_folders.find is null or folder.name ilike ('%' || toplevel_folders.find || '%'))
+      and folder.is_toplevel
+    order by folder.orderpos
+$$ language sql stable rows 10;
+
+
+create or replace function api.folder_by_id (id int4)
+    returns api.folder as $$
+    select * from entity.folder
+    where entity.folder.id = folder_by_id.id
+$$ language sql stable;
+
+
+create or replace function api.folder_subfolders (parent api.folder, name text, is_collection boolean, find text)
+    returns setof api.folder as $$
+    select * from entity.folder
+    where folder.parent_id = parent.id
+      and (folder_subfolders.name is null or folder.name = folder_subfolders.name)
+      and (folder_subfolders.is_collection is null or folder.is_collection = folder_subfolders.is_collection)
+      and (folder_subfolders.find is null or folder.name ilike ('%' || folder_subfolders.find || '%'))
+    order by folder.orderpos
+$$ language sql stable rows 10;
+
+
+create or replace function api.maskitem_superitem (child api.maskitem)
+    returns api.maskitem as $$
+    select * from entity.maskitem
+    where maskitem.id = child.parent_id
+$$ language sql stable;
+
+
+create or replace function api.folder_superfolder (child api.folder)
+    returns api.folder as $$
+    select * from entity.folder
+    where folder.id = child.parent_id
+$$ language sql stable;
+
+
 create or replace function api.all_metadatatypes (bibtexmapping text, citeprocmapping text, find text)
     returns setof api.metadatatype as $$
     select * from entity.metadatatype
     where (all_metadatatypes.bibtexmapping is null or metadatatype.bibtexmapping = all_metadatatypes.bibtexmapping)
       and (all_metadatatypes.citeprocmapping is null or metadatatype.citeprocmapping = all_metadatatypes.citeprocmapping)
-      -- TODO: Quick and dirty pattern matching ahead. Needs more elaboration:
-      --       - Escape special characters (% and _ for ilike)
-      --       - Handle patterns with several words (search for results containing all of them)
-      --       - We may use FTS instead of pattern matching. Probably needs new index. But should be faster too.
       and (all_metadatatypes.find is null or metadatatype.longname ilike ('%' || all_metadatatypes.find || '%'))
 $$ language sql stable rows 100;
 
@@ -81,62 +136,62 @@ create or replace function api.all_maskitem_reachable (name text, type text, fie
 $$ language sql stable rows 800;
 
 
-create or replace function api.metadatatype_attrs(mdt api.metadatatype, keys text[])
+create or replace function api.metadatatype_attrs (mdt api.metadatatype, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs(mdt.id, keys)
+    select aux.get_node_attrs (mdt.id, keys)
 $$ language sql stable;
 
 
-create or replace function api.metadatatype_system_attrs(mdt api.metadatatype, keys text[])
+create or replace function api.metadatatype_system_attrs (mdt api.metadatatype, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs(mdt.id, keys)
+    select aux.get_node_system_attrs (mdt.id, keys)
 $$ language sql stable;
 
 
-create or replace function api.metafield_attrs(metafield api.metafield, keys text[])
+create or replace function api.metafield_attrs (metafield api.metafield, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs(metafield.id, keys)
+    select aux.get_node_attrs (metafield.id, keys)
 $$ language sql stable;
 
 
-create or replace function api.metafield_system_attrs(metafield api.metafield, keys text[])
+create or replace function api.metafield_system_attrs (metafield api.metafield, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs(metafield.id, keys)
+    select aux.get_node_system_attrs (metafield.id, keys)
 $$ language sql stable;
 
 
-create or replace function api.mask_attrs(mask api.mask, keys text[])
+create or replace function api.mask_attrs (mask api.mask, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs(mask.id, keys)
+    select aux.get_node_attrs (mask.id, keys)
 $$ language sql stable;
 
 
-create or replace function api.mask_system_attrs(mask api.mask, keys text[])
+create or replace function api.mask_system_attrs (mask api.mask, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs(mask.id, keys)
+    select aux.get_node_system_attrs (mask.id, keys)
 $$ language sql stable;
 
 
-create or replace function api.maskitem_attrs(maskitem api.maskitem, keys text[])
+create or replace function api.maskitem_attrs (maskitem api.maskitem, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs(maskitem.id, keys)
+    select aux.get_node_attrs (maskitem.id, keys)
 $$ language sql stable;
 
 
-create or replace function api.maskitem_system_attrs(maskitem api.maskitem, keys text[])
+create or replace function api.maskitem_system_attrs (maskitem api.maskitem, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs(maskitem.id, keys)
+    select aux.get_node_system_attrs (maskitem.id, keys)
 $$ language sql stable;
 
 
-create or replace function api.metafield_metadatatype(mf api.metafield)
+create or replace function api.metafield_metadatatype (mf api.metafield)
     returns api.metadatatype as $$
     select * from entity.metadatatype
     where metadatatype.id = mf.metadatatype_id
 $$ language sql stable;
 
 
-create or replace function api.metadatatype_metafields(mdt api.metadatatype, type text, find text)
+create or replace function api.metadatatype_metafields (mdt api.metadatatype, type text, find text)
     returns setof api.metafield as $$
     select * from entity.metafield
     where metafield.metadatatype_id = mdt.id
@@ -150,7 +205,7 @@ create or replace function api.metadatatype_metafields(mdt api.metadatatype, typ
 $$ language sql stable rows 80;
 
 
-create or replace function api.metadatatype_metafield_by_name(mdt api.metadatatype, name text)
+create or replace function api.metadatatype_metafield_by_name (mdt api.metadatatype, name text)
     returns api.metafield as $$
     select * from entity.metafield
     where metafield.metadatatype_id = mdt.id
@@ -158,14 +213,14 @@ create or replace function api.metadatatype_metafield_by_name(mdt api.metadataty
 $$ language sql stable;
 
 
-create or replace function api.mask_metadatatype(mask api.mask)
+create or replace function api.mask_metadatatype (mask api.mask)
     returns api.metadatatype as $$
     select * from entity.metadatatype
     where metadatatype.id = mask.metadatatype_id
 $$ language sql stable;
 
 
-create or replace function api.metadatatype_masks(mdt api.metadatatype, masktype text, language text, is_default boolean, is_vgroup boolean, find text)
+create or replace function api.metadatatype_masks (mdt api.metadatatype, masktype text, language text, is_default boolean, is_vgroup boolean, find text)
     returns setof api.mask as $$
     select * from entity.mask
     where mask.metadatatype_id = mdt.id
@@ -181,7 +236,7 @@ create or replace function api.metadatatype_masks(mdt api.metadatatype, masktype
 $$ language sql stable rows 80;
 
 
-create or replace function api.metadatatype_mask_by_name(mdt api.metadatatype, name text)
+create or replace function api.metadatatype_mask_by_name (mdt api.metadatatype, name text)
     returns api.mask as $$
     select * from entity.mask
     where mask.metadatatype_id = mdt.id
@@ -189,7 +244,7 @@ create or replace function api.metadatatype_mask_by_name(mdt api.metadatatype, n
 $$ language sql stable;
 
 
-create or replace function api.mask_maskitems(mask api.mask, type text, fieldtype text, is_required boolean, find text)
+create or replace function api.mask_maskitems (mask api.mask, type text, fieldtype text, is_required boolean, find text)
     returns setof api.maskitem as $$
     select * from entity.maskitem
     where maskitem.parent_id = mask.id
@@ -203,7 +258,7 @@ create or replace function api.mask_maskitems(mask api.mask, type text, fieldtyp
 $$ language sql stable rows 80;
 
 
-create or replace function api.mask_maskitem_by_name(mask api.mask, name text)
+create or replace function api.mask_maskitem_by_name (mask api.mask, name text)
     returns api.maskitem as $$
     select * from entity.maskitem
     where maskitem.parent_id = mask.id
@@ -211,7 +266,7 @@ create or replace function api.mask_maskitem_by_name(mask api.mask, name text)
 $$ language sql stable;
 
 
-create or replace function api.maskitem_subitems(parent api.maskitem, type text, is_required boolean, find text)
+create or replace function api.maskitem_subitems (parent api.maskitem, type text, is_required boolean, find text)
     returns setof api.maskitem as $$
     select * from entity.maskitem
     where maskitem.parent_id = parent.id
@@ -224,7 +279,7 @@ create or replace function api.maskitem_subitems(parent api.maskitem, type text,
 $$ language sql stable rows 10;
 
 
-create or replace function api.maskitem_subitem_by_name(parent api.maskitem, name text)
+create or replace function api.maskitem_subitem_by_name (parent api.maskitem, name text)
     returns api.maskitem as $$
     select * from entity.maskitem
     where maskitem.parent_id = parent.id
@@ -232,25 +287,25 @@ create or replace function api.maskitem_subitem_by_name(parent api.maskitem, nam
 $$ language sql stable;
 
 
-create or replace function api.maskitem_superitem(child api.maskitem)
+create or replace function api.maskitem_superitem (child api.maskitem)
     returns api.maskitem as $$
     select * from entity.maskitem
     where maskitem.id = child.parent_id
 $$ language sql stable;
 
 
-create or replace function api.maskitem_mask(child api.maskitem)
+create or replace function api.maskitem_mask (child api.maskitem)
     returns api.mask as $$
     select * from entity.mask
     where mask.id = child.parent_id
 $$ language sql stable;
 
-comment on function api.maskitem_mask(api.maskitem) is
+comment on function api.maskitem_mask (api.maskitem) is
     'Get the mask of this maskitem. Returns null is this maskitem is a subitem of another maskitem';
 -- We may want a recursive query to get the mask of a nested maskitem too.
 
 
-create or replace function api.maskitem_metafield(maskitem api.maskitem)
+create or replace function api.maskitem_metafield (maskitem api.maskitem)
     returns api.metafield as $$
     declare result api.metafield;
     begin

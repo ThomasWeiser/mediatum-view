@@ -18,25 +18,25 @@ create or replace function api.document_by_id (id int4)
 $$ language sql stable;
 
 
-create or replace function api.document_attrs(document api.document, keys text[])
+create or replace function api.document_attrs (document api.document, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs(document.id, keys)
+    select aux.get_node_attrs (document.id, keys)
 $$ language sql stable;
 
 
-create or replace function api.document_system_attrs(document api.document, keys text[])
+create or replace function api.document_system_attrs (document api.document, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs(document.id, keys)
+    select aux.get_node_system_attrs (document.id, keys)
 $$ language sql stable;
 
 
-create or replace function api.document_metadatatype(document api.document)
+create or replace function api.document_metadatatype (document api.document)
     returns api.metadatatype as $$
     select api.metadatatype_by_name (document.schema)
 $$ language sql stable;
 
 
-create or replace function api.metadatatype_documents(mdt api.metadatatype, type text, name text)
+create or replace function api.metadatatype_documents (mdt api.metadatatype, type text, name text)
     returns setof api.document as $$
     select document.*
     from entity.node as document
@@ -46,7 +46,7 @@ create or replace function api.metadatatype_documents(mdt api.metadatatype, type
 $$ language sql stable;
 
 
-create or replace function api.document_values_by_mask(document api.document, mask_name text)
+create or replace function api.document_values_by_mask (document api.document, mask_name text)
     returns jsonb as $$
     select v.values
     from entity.document_mask_value_list as v
@@ -57,8 +57,8 @@ $$ language sql stable parallel safe;
 
 create or replace function aux.simple_search_hit (text text, language text, domain text, "limit" integer)
     returns setof aux.ranked_id as $$
-    select fts.nid, ts_rank_cd(tsvec, tsq)
-    from plainto_tsquery(language::regconfig, text) as tsq
+    select fts.nid, ts_rank_cd (tsvec, tsq)
+    from plainto_tsquery (language::regconfig, text) as tsq
     join mediatum.fts on fts.tsvec @@ tsq
     where fts.config = language
       and fts.searchtype = domain
@@ -68,7 +68,7 @@ $$ language sql stable parallel safe;
 
 create or replace function aux.simple_search_hit_union (text text, languages text [], domains text [], "limit" integer)
     returns setof aux.ranked_id as $$
-    select id, max(rank)
+    select id, max (rank)
     from (
         -- We enumerate all possible combinations
         -- (assuming a configuration to use the languages english and german).
@@ -130,14 +130,14 @@ create or replace function api.author_search (text text)
         node.schema,
         node.name,
         node.orderpos
-    from to_tsquery('german', text) as tsq, -- needs a wellformed tsquery string
-         -- to_tsquery('german', text || ':*') as tsq, -- works only for a single word (i.e. without spaces)
-         -- plainto_tsquery('german', text) as tsq, -- no prefix search
+    from to_tsquery ('german', text) as tsq, -- needs a wellformed tsquery string
+         -- to_tsquery ('german', text || ':*') as tsq, -- works only for a single word (i.e. without spaces)
+         -- plainto_tsquery ('german', text) as tsq, -- no prefix search
          mediatum.node
     where
-        mediatum.to_tsvector_safe(
+        mediatum.to_tsvector_safe (
             'german'::regconfig,
-            replace(node.attrs ->> 'author.surname', ';', ' ')
+            replace (node.attrs ->> 'author.surname', ';', ' ')
         )
         @@ tsq;
 $$ language sql stable rows 100 parallel safe;

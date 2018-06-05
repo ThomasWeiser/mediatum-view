@@ -1,0 +1,13 @@
+#!/bin/bash
+
+p="psql -d mediatum_tu_prod_1 -U mediatum -f"
+
+$p src/drop_all.sql
+$p src/types.sql
+$p src/aux.sql
+$p src/entities.sql
+$p src/api-meta.sql
+$p src/api-document.sql
+$p src/examine.sql
+$p src/debug.sql
+

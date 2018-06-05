@@ -30,7 +30,7 @@ create or replace function debug.all_nodes (
 $$ language sql stable;
 
 
-create or replace function debug.node_by_id(id int4)
+create or replace function debug.node_by_id (id int4)
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -38,19 +38,19 @@ create or replace function debug.node_by_id(id int4)
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_attrs(node debug.mediatum_node, keys text[])
+create or replace function debug.mediatum_node_attrs (node debug.mediatum_node, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs(node.id, keys)
+    select aux.get_node_attrs (node.id, keys)
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_system_attrs(node debug.mediatum_node, keys text[])
+create or replace function debug.mediatum_node_system_attrs (node debug.mediatum_node, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs(node.id, keys)
+    select aux.get_node_system_attrs (node.id, keys)
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_parent_nodes(
+create or replace function debug.mediatum_node_parent_nodes (
         child_node debug.mediatum_node,
         type text,
         schema text,
@@ -80,7 +80,7 @@ create or replace function debug.mediatum_node_parent_nodes(
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_child_nodes(
+create or replace function debug.mediatum_node_child_nodes (
         parent_node debug.mediatum_node,
         type text,
         schema text,
@@ -116,7 +116,7 @@ $$ language sql stable;
    So these functions must not be made accessible in production
    as it reveals private parts of `node` table!
 */
-create or replace function api.metadatatype_node(metadatatype api.metadatatype)
+create or replace function api.metadatatype_node (metadatatype api.metadatatype)
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -124,7 +124,7 @@ create or replace function api.metadatatype_node(metadatatype api.metadatatype)
 $$ language sql stable;
 
 
-create or replace function api.metafield_node(metafield api.metafield)
+create or replace function api.metafield_node (metafield api.metafield)
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -132,7 +132,7 @@ create or replace function api.metafield_node(metafield api.metafield)
 $$ language sql stable;
 
 
-create or replace function api.mask_node(mask api.mask)
+create or replace function api.mask_node (mask api.mask)
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -140,7 +140,7 @@ create or replace function api.mask_node(mask api.mask)
 $$ language sql stable;
 
 
-create or replace function api.maskitem_node(maskitem api.maskitem)
+create or replace function api.maskitem_node (maskitem api.maskitem)
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -148,7 +148,7 @@ create or replace function api.maskitem_node(maskitem api.maskitem)
 $$ language sql stable;
 
 
-create or replace function api.document_node(document api.document)
+create or replace function api.document_node (document api.document)
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
