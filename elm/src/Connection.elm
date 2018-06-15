@@ -3,7 +3,7 @@ module Connection
         ( Connection
         , Edge
         , PageInfo
-        , ApiObjects
+        , GraphqlObjects
         , connection
         , pageInfo
         , nodes
@@ -32,8 +32,8 @@ type alias PageInfo =
     }
 
 
-type alias ApiObjects apiObjectsRecord connectionObject edgeObject nodeObject pageInfoObject cursorScalar nodeType =
-    { apiObjectsRecord
+type alias GraphqlObjects graphqlObjectsRecord connectionObject edgeObject nodeObject pageInfoObject cursorScalar nodeType =
+    { graphqlObjectsRecord
         | connectionSelection :
             (PageInfo -> List (Edge cursorScalar nodeType) -> Int -> Connection cursorScalar nodeType)
             -> SelectionSet (PageInfo -> List (Edge cursorScalar nodeType) -> Int -> Connection cursorScalar nodeType) connectionObject
@@ -61,30 +61,30 @@ nodes model =
 
 
 connection :
-    ApiObjects apiObjectsRecord connectionObject edgeObject nodeObject pageInfoObject cursorScalar nodeType
+    GraphqlObjects graphqlObjectsRecord connectionObject edgeObject nodeObject pageInfoObject cursorScalar nodeType
     -> SelectionSet nodeType nodeObject
     -> SelectionSet (Connection cursorScalar nodeType) connectionObject
-connection apiObjects nodeSelectionSet =
-    apiObjects.connectionSelection Connection
-        |> with (apiObjects.pageInfo (pageInfo apiObjects))
-        |> with (apiObjects.edges (edge apiObjects nodeSelectionSet))
-        |> with (apiObjects.totalCount |> Graphqelm.Field.nonNullOrFail)
+connection graphqlObjects nodeSelectionSet =
+    graphqlObjects.connectionSelection Connection
+        |> with (graphqlObjects.pageInfo (pageInfo graphqlObjects))
+        |> with (graphqlObjects.edges (edge graphqlObjects nodeSelectionSet))
+        |> with (graphqlObjects.totalCount |> Graphqelm.Field.nonNullOrFail)
 
 
 edge :
-    ApiObjects apiObjectsRecord connectionObject edgeObject nodeObject pageInfoObject cursorScalar nodeType
+    GraphqlObjects graphqlObjectsRecord connectionObject edgeObject nodeObject pageInfoObject cursorScalar nodeType
     -> SelectionSet nodeType nodeObject
     -> SelectionSet (Edge cursorScalar nodeType) edgeObject
-edge apiObjects nodeSelectionSet =
-    apiObjects.edgeSelection Edge
-        |> with (apiObjects.cursor |> Graphqelm.Field.nonNullOrFail)
-        |> with (apiObjects.node nodeSelectionSet)
+edge graphqlObjects nodeSelectionSet =
+    graphqlObjects.edgeSelection Edge
+        |> with (graphqlObjects.cursor |> Graphqelm.Field.nonNullOrFail)
+        |> with (graphqlObjects.node nodeSelectionSet)
 
 
 pageInfo :
-    ApiObjects apiObjectsRecord connectionObject edgeObject nodeObject pageInfoObject cursorScalar nodeType
+    GraphqlObjects graphqlObjectsRecord connectionObject edgeObject nodeObject pageInfoObject cursorScalar nodeType
     -> SelectionSet PageInfo pageInfoObject
-pageInfo apiObjects =
-    apiObjects.pageInfoSelection PageInfo
-        |> with apiObjects.hasNextPage
-        |> with apiObjects.hasPreviousPage
+pageInfo graphqlObjects =
+    graphqlObjects.pageInfoSelection PageInfo
+        |> with graphqlObjects.hasNextPage
+        |> with graphqlObjects.hasPreviousPage
