@@ -19,7 +19,7 @@ create type api.folder as (
 );
 
 comment on type api.folder is
-    'All collections and directories';
+    'A collection or directory, located within a hierarchy';
 comment on column api.folder.id is
     'The mediaTUM node id of this collection or directory';
 comment on column api.folder.name is
@@ -37,9 +37,9 @@ create type api.metadatatype as (
 );
 
 comment on type api.metadatatype is
-    'All active meta data types';
+    'A meta data type';
 comment on column api.metadatatype.id is
-    'The mediaTUM node id of this meta data type';
+    'The mediaTUM node id of the meta data type';
 comment on column api.metadatatype.name is
     'The name of the meta data type';
 -- TODO: COMMENT remaining columns
@@ -56,9 +56,9 @@ create type api.metafield as (
 );
 
 comment on type api.metafield is
-    'All fields of all meta data types';
+    'A field of a meta data type';
 comment on column api.metafield.metadatatype_id is
-    'The mediaTUM node id of the meta data type';
+    'The mediaTUM node id of the corresponding meta data type';
 comment on column api.metafield.id is
     'The mediaTUM node id of the field';
 comment on column api.metafield.name is

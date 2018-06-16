@@ -12,8 +12,8 @@
 - `mask` parent is of type `metadatatype`
 - `maskitem` parent is of type `maskitem` or `mask`
 
-- has exactly one parent: `mask`, `maskitem`, `mappingfield`
-- `mappingfield` has no children nodes
+- `mask`, `maskitem`, `mappingfield` have exactly one parent
+- `mappingfield` has no child nodes
 
 - a `metadatatype` has at most one `metafield` per `name`
 - a `metadatatype` has at most one `mask` per `name`
@@ -45,7 +45,7 @@
 - Nodes of type `metadatatype` and `mapping` generally have an `attrs->>'active'` which is `0` or `1`.  
     - Should we only consider those nodes which are marked as active?
     - There are also some `mapping` nodes, that don't have this `attrs` key.
-      Counts in examined production database are: 37x 1, 1x 0, 8x absent.
+      Counts in examined production database are: 37x `1`, 1x `0`, 8x absent.
 
 ### Presumable inconsistencies in production database
 
@@ -67,7 +67,7 @@
 
 ## Ideas
 
-- Highlightning matching text in search results
+- Highlighting matching text in search results
 - Search-as-you-type
     - Throttling, waiting, max request rate
     - Extra API functions
