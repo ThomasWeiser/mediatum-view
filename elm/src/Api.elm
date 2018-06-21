@@ -1,14 +1,18 @@
 module Api
     exposing
         ( Response
+        , makeRequest
+        , queryToplevelFolder
+        , querySubfolder
         , querySimpleSearch
         , queryAuthorSearch
-        , makeRequest
         , sizeLimitSimpleSearch
         )
 
 import Graphql.Object
 import Graphql.Object.PageInfo
+import Graphql.Object.FoldersConnection
+import Graphql.Object.Folder
 import Graphql.Object.DocumentsConnection
 import Graphql.Object.DocumentsEdge
 import Graphql.Object.Document
@@ -16,14 +20,16 @@ import Graphql.Object.Metadatatype
 import Graphql.Query
 import Graphql.Scalar
 import Json.Decode exposing (Decoder)
+import Maybe.Extra
 import Graphqelm.Field
 import Graphqelm.OptionalArgument exposing (OptionalArgument(Present))
-import Graphqelm.SelectionSet exposing (SelectionSet, with)
+import Graphqelm.SelectionSet exposing (SelectionSet, with, hardcoded)
 import Graphqelm.Http
 import Graphqelm.Operation
 import Connection
 import Pagination
 import Page exposing (Page)
+import Folder exposing (FolderId, Folder)
 import Document exposing (Document, Attribute)
 
 
@@ -49,6 +55,47 @@ makeRequest tagger selectionSet =
     selectionSet
         |> Graphqelm.Http.queryRequest "http://localhost:5000/graphql"
         |> Graphqelm.Http.send tagger
+
+
+queryToplevelFolder : SelectionSet (List Folder) Graphqelm.Operation.RootQuery
+queryToplevelFolder =
+    Graphql.Query.selection Maybe.Extra.values
+        |> with
+            (Graphql.Query.allFolders
+                (\optionals ->
+                    { optionals
+                        | isToplevel = Present True
+                    }
+                )
+                (Graphql.Object.FoldersConnection.selection identity
+                    |> with (Graphql.Object.FoldersConnection.nodes folderNode)
+                )
+            )
+
+
+querySubfolder : FolderId -> SelectionSet (List Folder) Graphqelm.Operation.RootQuery
+querySubfolder folderId =
+    Graphql.Query.selection Maybe.Extra.values
+        |> with
+            (Graphql.Query.allFolders
+                (\optionals ->
+                    { optionals
+                        | parentId = Present (Folder.idAsInt folderId)
+                    }
+                )
+                (Graphql.Object.FoldersConnection.selection identity
+                    |> with (Graphql.Object.FoldersConnection.nodes folderNode)
+                )
+            )
+
+
+folderNode : SelectionSet Folder Graphql.Object.Folder
+folderNode =
+    Graphql.Object.Folder.selection Folder.init
+        |> with (Graphql.Object.Folder.id |> Graphqelm.Field.nonNullOrFail)
+        |> with (Graphql.Object.Folder.name |> Graphqelm.Field.nonNullOrFail)
+        |> with (Graphql.Object.Folder.isCollection |> Graphqelm.Field.nonNullOrFail)
+        |> with (Graphql.Object.Folder.numSubfolder |> Graphqelm.Field.nonNullOrFail)
 
 
 querySimpleSearch :

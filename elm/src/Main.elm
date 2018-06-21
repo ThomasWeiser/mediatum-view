@@ -4,12 +4,14 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Select
+import Tree
 import Search exposing (SearchType, SimpleSearchDomain)
 
 
 type alias Model =
     { searchType : SearchType
     , searchString : String
+    , tree : Tree.Model
     , search : Search.Model
     }
 
@@ -28,6 +30,7 @@ type Msg
     = SearchString String
     | SetSearchType SearchType
     | Submit
+    | TreeMsg Tree.Msg
     | SearchMsg Search.Msg
 
 
@@ -36,6 +39,9 @@ init =
     let
         initialSearchType =
             Search.SimpleSearch Search.SearchAttributes
+
+        ( treeModel, treeCmd ) =
+            Tree.init
 
         ( searchModel, searchCmd ) =
             Search.init
@@ -46,11 +52,15 @@ init =
         model =
             { searchType = initialSearchType
             , searchString = ""
+            , tree = treeModel
             , search = searchModel
             }
     in
         ( model
-        , Cmd.map SearchMsg searchCmd
+        , Cmd.batch
+            [ Cmd.map TreeMsg treeCmd
+            , Cmd.map SearchMsg searchCmd
+            ]
         )
 
 
@@ -66,6 +76,15 @@ update msg model =
             ( { model | searchType = searchType }
             , Cmd.none
             )
+
+        TreeMsg subMsg ->
+            let
+                ( subModel, subCmd ) =
+                    Tree.update subMsg model.tree
+            in
+                ( { model | tree = subModel }
+                , Cmd.map TreeMsg subCmd
+                )
 
         SearchMsg subMsg ->
             let
@@ -99,6 +118,8 @@ view model =
             , Html.div [ Html.Attributes.class "color" ]
                 [ Html.text "PostgreSQL · PostGraphile · GraphQL · Elm" ]
             ]
+        , Html.hr [] []
+        , Html.map TreeMsg <| Tree.view model.tree
         , Html.hr [] []
         , viewSearchControls model
         , Html.hr [] []

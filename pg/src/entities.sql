@@ -7,6 +7,30 @@ drop schema if exists entity CASCADE;
 create schema entity;
 
 
+create materialized view entity.folder_node as
+    select *
+    from mediatum.node
+    where node.type in ('collections', 'collection', 'directory')
+    and node.name is not null;
+   
+create unique index ix_folder_mode on entity.folder_node (id);   
+
+
+create or replace view entity.subfolder_count as
+	select
+        folder_node.id as id,
+        cast (count (subfolder.id) as integer) as num_subfolder
+    from entity.folder_node
+    left join
+	(
+	    select nodemapping.nid as id
+		from mediatum.nodemapping
+		join entity.folder_node on folder_node.id = nodemapping.cid
+	) as subfolder
+	on folder_node.id = subfolder.id
+    group by (folder_node.id);
+
+
 create materialized view entity.folder as
     select
         node.id as id,
@@ -14,13 +38,14 @@ create materialized view entity.folder as
         node.name as name,
         node.orderpos as orderpos,
         parent.type = 'collections' as is_toplevel,
-        node.type = 'collection' as is_collection
-    from mediatum.node
+        node.type = 'collection' as is_collection,
+        subfolder_count.num_subfolder as num_subfolder
+    from entity.folder_node as node
     join mediatum.nodemapping as to_parent on node.id = to_parent.cid
     join mediatum.node as parent on to_parent.nid = parent.id
-    where (node.type = 'collection' or node.type = 'directory')
-    and node.name is not null
-    group by (node.id, node.name, node.orderpos, is_toplevel, is_collection)
+    join entity.subfolder_count on node.id = subfolder_count.id
+    where node.type in ('collection', 'directory')
+    group by (node.id, node.name, node.orderpos, is_toplevel, is_collection, subfolder_count.num_subfolder)
     order by node.orderpos;
 
 

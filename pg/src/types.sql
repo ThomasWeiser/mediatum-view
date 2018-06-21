@@ -15,7 +15,8 @@ create type api.folder as (
     "name" text,
 	orderpos int4,
 	is_toplevel bool,
-	is_collection bool
+	is_collection bool,
+	num_subfolder integer
 );
 
 comment on type api.folder is
