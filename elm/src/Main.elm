@@ -112,26 +112,32 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    Html.div []
-        [ Html.h2 []
-            [ Html.text "mediaTUM HSB Demo 2018-06-14"
-            , Html.div [ Html.Attributes.class "color" ]
-                [ Html.text "PostgreSQL · PostGraphile · GraphQL · Elm" ]
+    Html.div [ Html.Attributes.class "page-container" ]
+        [ Html.header []
+            [ Html.h2 []
+                [ Html.text "mediaTUM HSB Demo 2018-06-14"
+                , Html.div [ Html.Attributes.class "color" ]
+                    [ Html.text "PostgreSQL · PostGraphile · GraphQL · Elm" ]
+                ]
+            , viewSearchControls model
             ]
-        , Html.hr [] []
-        , Html.map TreeMsg <| Tree.view model.tree
-        , Html.hr [] []
-        , viewSearchControls model
-        , Html.hr [] []
-        , Html.map SearchMsg <|
-            Search.view model.search
+        , Html.main_ []
+            [ Html.aside []
+                [ Html.map TreeMsg <| Tree.view model.tree
+                ]
+            , Html.article []
+                [ Html.map SearchMsg <|
+                    Search.view model.search
+                ]
+            ]
         ]
 
 
 viewSearchControls : Model -> Html Msg
 viewSearchControls model =
     Html.form
-        [ Html.Events.onSubmit Submit ]
+        [ Html.Attributes.class "search-bar"
+        , Html.Events.onSubmit Submit ]
         [ Select.fromSelected_
             [ Search.SimpleSearch Search.SearchAttributes
             , Search.SimpleSearch Search.SearchFulltext
@@ -143,7 +149,7 @@ viewSearchControls model =
             Search.searchTypeText
             model.searchType
         , Html.input
-            [ Html.Attributes.class "searchInput"
+            [ Html.Attributes.class "search-input"
             , Html.Attributes.type_ "search"
             , Html.Attributes.placeholder "Search ..."
             , Html.Attributes.value model.searchString

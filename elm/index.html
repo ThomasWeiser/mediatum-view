@@ -1,19 +1,57 @@
 <!doctype html>
 <link href='http://fonts.googleapis.com/css?family=Roboto:400,100,‌​100italic,300,300ita‌​lic,400italic,500,50‌​0italic,700,700itali‌​c,900italic,900' rel='stylesheet' type='text/css'>
 <style>
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
 body {
   margin: 0 auto;
   max-width: 56em;
   font-family: "Roboto", "Helvetica", "Arial", sans-serif;
   line-height: 1.5;
-  padding: 2em 1em;
+  padding: 0;
   color: #333;
 }
 .color {
   color: #e81c4f;
 }
-.searchInput {
-  width: 99%;
+
+.page-container {
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+}
+header {
+  flex: 0;
+  border-bottom: 1px solid gray;
+  padding-bottom: 1ex;
+  /* background-color: #eee; */
+}
+main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+aside {
+  flex: 1;
+  overflow: auto;
+  border-right: 1px solid grey;
+  padding: 0.3em;
+}
+article {
+  flex: 3;
+  overflow: auto;
+  padding: 0.5em;
+}
+.search-bar {
+  display: flex;
+}
+.search-input {
+  flex: 1;
   font-size: 105%;
 }
 .document {
@@ -34,7 +72,7 @@ body {
 .folder-list {
   list-style-type: none;
   padding-left: 0;
-  margin-left: 0;
+  margin: 0;
 }
 ul.folder-list ul.folder-list {
     margin-left: 1.4em;

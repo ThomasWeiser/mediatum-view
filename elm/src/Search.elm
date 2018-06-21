@@ -123,11 +123,12 @@ view model =
             , Html.span [] [ Html.text ": " ]
             , Html.span [] [ Html.text model.specification.searchString ]
             ]
-        , Html.hr [] []
-        , Html.text <| "Loading: " ++ toString model.pageResult.loading
-        , Html.hr [] []
-        , Html.text <| "Error: " ++ toString model.pageResult.error
-        , Html.hr [] []
+        , Html.div []
+            [ Html.text <| "Loading: "
+            , Html.text <| toString model.pageResult.loading
+            , Html.text <| ". Error: "
+            , Html.text <| toString model.pageResult.error
+            ]
         , case model.pageResult.page of
             Nothing ->
                 Html.text "No query"
@@ -137,7 +138,6 @@ view model =
                     PickPosition
                     (viewPage Document.view)
                     documentPage
-        , Html.hr [] []
         ]
 
 
