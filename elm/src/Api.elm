@@ -93,7 +93,9 @@ folderNode : SelectionSet Folder Graphql.Object.Folder
 folderNode =
     Graphql.Object.Folder.selection Folder.init
         |> with (Graphql.Object.Folder.id |> Graphqelm.Field.nonNullOrFail)
+        |> with (Graphql.Object.Folder.parentId |> Graphqelm.Field.nonNullOrFail)
         |> with (Graphql.Object.Folder.name |> Graphqelm.Field.nonNullOrFail)
+        |> with (Graphql.Object.Folder.isToplevel |> Graphqelm.Field.nonNullOrFail)
         |> with (Graphql.Object.Folder.isCollection |> Graphqelm.Field.nonNullOrFail)
         |> with (Graphql.Object.Folder.numSubfolder |> Graphqelm.Field.nonNullOrFail)
 

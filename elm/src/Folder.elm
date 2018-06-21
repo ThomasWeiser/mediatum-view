@@ -4,7 +4,6 @@ module Folder
         , Folder
         , init
         , idAsInt
-        , toggle
         , view
         )
 
@@ -33,21 +32,25 @@ type alias FolderId =
 
 type alias Folder =
     { id : FolderId
+    , parent : Maybe FolderId
     , name : String
     , isCollection : Bool
     , numSubfolder : Int
-    , isExpanded : Bool
     , subfolderIds : Maybe (List FolderId)
     }
 
 
-init : Int -> String -> Bool -> Int -> Folder
-init idAsInt name isCollection numSubfolder =
+init : Int -> Int -> String -> Bool -> Bool -> Int -> Folder
+init idAsInt parentIdAsInt name isToplevel isCollection numSubfolder =
     { id = ( idAsInt, 0.0 )
+    , parent =
+        if isToplevel then
+            Nothing
+        else
+            Just ( parentIdAsInt, 0.0 )
     , name = name
     , isCollection = isCollection
     , numSubfolder = numSubfolder
-    , isExpanded = False
     , subfolderIds = Nothing
     }
 
@@ -57,24 +60,20 @@ idAsInt ( i, _ ) =
     i
 
 
-toggle : Folder -> Folder
-toggle folder =
-    { folder | isExpanded = not folder.isExpanded }
-
-
 hasSubfolder : Folder -> Bool
 hasSubfolder folder =
     folder.numSubfolder > 0
 
 
-view : Folder -> Html msg
-view folder =
+view : Folder -> Bool -> Bool -> Html msg
+view folder selected expanded =
     Html.div
         [ Html.Attributes.classList
-            [ ( "leaf", not (hasSubfolder folder) )
-            , ( "expanded", hasSubfolder folder && folder.isExpanded )
-            , ( "collapsed", hasSubfolder folder && not (folder.isExpanded) )
-            , ( "folder-head", True )
+            [ ( "folder-head", True )
+            , ( "leaf", not (hasSubfolder folder) )
+            , ( "expanded", hasSubfolder folder && expanded )
+            , ( "collapsed", hasSubfolder folder && not expanded )
+            , ( "selected", selected )
             ]
         ]
         [ Html.span

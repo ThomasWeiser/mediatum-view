@@ -21,6 +21,8 @@ type alias Model =
     , toplevelIds : List FolderId
     , loading : Bool
     , error : Maybe (Graphqelm.Http.Error (List Folder))
+    , selection : List FolderId
+    , showSubselection : Bool
     }
 
 
@@ -35,6 +37,8 @@ init =
       , toplevelIds = []
       , loading = True
       , error = Nothing
+      , selection = []
+      , showSubselection = True
       }
     , Api.makeRequest
         (ApiResponse Nothing)
@@ -69,7 +73,9 @@ update msg model =
             )
 
         Select id ->
-            loadSubfolder id (toggleFolder id model)
+            model
+                |> selectFolder id
+                |> loadSubfolder id
 
 
 addFolders : List Folder -> Model -> Model
@@ -86,7 +92,7 @@ addFolders folderList model =
                 model.foldersById
                 folderList
     in
-        { model | foldersById = newFoldersById } |> Debug.log "foldersById"
+        { model | foldersById = newFoldersById }
 
 
 setToplevelIds : List Folder -> Model -> Model
@@ -94,7 +100,6 @@ setToplevelIds folderList model =
     { model
         | toplevelIds =
             List.map .id folderList
-                |> Debug.log "toplevelIds"
     }
 
 
@@ -140,15 +145,33 @@ getSubfolderIds id model =
             Nothing
 
 
-toggleFolder : FolderId -> Model -> Model
-toggleFolder id model =
-    { model
-        | foldersById =
-            Dict.update
-                id
-                (Maybe.map Folder.toggle)
-                model.foldersById
-    }
+getParentId : FolderId -> Model -> Maybe FolderId
+getParentId id model =
+    Dict.get id model.foldersById
+        |> Maybe.andThen .parent
+
+
+selectFolder : FolderId -> Model -> Model
+selectFolder id model =
+    let
+        selectionPath : FolderId -> List FolderId
+        selectionPath id =
+            id
+                :: (case getParentId id model of
+                        Nothing ->
+                            []
+
+                        Just parentId ->
+                            selectionPath parentId
+                   )
+
+        alreadySelected =
+            List.head model.selection == Just id
+    in
+        { model
+            | selection = selectionPath id
+            , showSubselection = not alreadySelected || not model.showSubselection
+        }
 
 
 loadSubfolder : FolderId -> Model -> ( Model, Cmd Msg )
@@ -184,22 +207,30 @@ viewListOfFolders model folderIds =
 
 viewFolder : Model -> FolderId -> Html Msg
 viewFolder model id =
-    case Dict.get id model.foldersById of
-        Nothing ->
-            Html.div [] [ Html.text "..." ]
+    let
+        isSelectedFolder =
+            List.head model.selection == Just id
 
-        Just folder ->
-            Html.div []
-                [ Html.div
-                    [ Html.Events.onClick (Select id) ]
-                    [ Folder.view folder ]
-                , if folder.isExpanded then
-                    case getSubfolderIds id model of
-                        Nothing ->
-                            Html.text ""
+        expanded =
+            List.member id model.selection
+                && (not isSelectedFolder || model.showSubselection)
+    in
+        case Dict.get id model.foldersById of
+            Nothing ->
+                Html.div [] [ Html.text "..." ]
 
-                        Just subfolderIds ->
-                            viewListOfFolders model subfolderIds
-                  else
-                    Html.text ""
-                ]
+            Just folder ->
+                Html.div []
+                    [ Html.div
+                        [ Html.Events.onClick (Select id) ]
+                        [ Folder.view folder isSelectedFolder expanded ]
+                    , if expanded then
+                        case getSubfolderIds id model of
+                            Nothing ->
+                                Html.text ""
+
+                            Just subfolderIds ->
+                                viewListOfFolders model subfolderIds
+                      else
+                        Html.text ""
+                    ]
