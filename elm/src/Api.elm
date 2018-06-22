@@ -4,6 +4,7 @@ module Api
         , makeRequest
         , queryToplevelFolder
         , querySubfolder
+        , queryFolderDocuments
         , querySimpleSearch
         , queryAuthorSearch
         , sizeLimitSimpleSearch
@@ -98,6 +99,38 @@ folderNode =
         |> with (Graphql.Object.Folder.isToplevel |> Graphqelm.Field.nonNullOrFail)
         |> with (Graphql.Object.Folder.isCollection |> Graphqelm.Field.nonNullOrFail)
         |> with (Graphql.Object.Folder.numSubfolder |> Graphqelm.Field.nonNullOrFail)
+
+
+queryFolderDocuments :
+    Maybe (Page Document)
+    -> Pagination.Position
+    -> FolderId
+    -> SelectionSet (Page Document) Graphqelm.Operation.RootQuery
+queryFolderDocuments referencePage paginationPosition folderId =
+    Graphql.Query.selection identity
+        |> with
+            (Graphql.Query.folderById
+                (\optionals ->
+                    { optionals
+                        | id = Present (Folder.idAsInt folderId)
+                    }
+                )
+                (Graphql.Object.Folder.selection identity
+                    |> with
+                        (Graphql.Object.Folder.documents
+                            (Pagination.paginationArguments
+                                pageSize
+                                referencePage
+                                paginationPosition
+                            )
+                            (Connection.connection
+                                graphqlDocumentObjects
+                                documentNode
+                            )
+                        )
+                )
+                |> Graphqelm.Field.nonNullOrFail
+            )
 
 
 querySimpleSearch :

@@ -55,6 +55,17 @@ create or replace function api.document_values_by_mask (document api.document, m
 $$ language sql stable parallel safe;
 
 
+create or replace function api.folder_documents (folder api.folder, type text, name text)
+    returns setof api.document as $$
+    select document.*
+    from entity.document
+    join mediatum.noderelation on document.id = noderelation.cid
+    where folder.id = noderelation.nid
+      and (folder_documents.type is null or document.type = folder_documents.type)
+      and (folder_documents.name is null or document.name = folder_documents.name)
+$$ language sql stable rows 1000;
+
+
 create or replace function aux.simple_search_hit (text text, language text, domain text, "limit" integer)
     returns setof aux.ranked_id as $$
     select fts.nid, ts_rank_cd (tsvec, tsq)

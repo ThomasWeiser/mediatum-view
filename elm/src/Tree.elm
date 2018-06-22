@@ -5,6 +5,7 @@ module Tree
         , init
         , update
         , view
+        , selectedFolderId
         )
 
 import Dict exposing (Dict)
@@ -44,6 +45,11 @@ init =
         (ApiResponse Nothing)
         Api.queryToplevelFolder
     )
+
+
+selectedFolderId : Model -> Maybe FolderId
+selectedFolderId model=
+    List.head model.selection
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

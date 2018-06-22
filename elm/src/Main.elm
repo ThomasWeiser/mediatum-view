@@ -45,7 +45,8 @@ init =
 
         ( searchModel, searchCmd ) =
             Search.init
-                { searchType = initialSearchType
+                { folder = Nothing
+                , searchType = initialSearchType
                 , searchString = ""
                 }
 
@@ -99,7 +100,8 @@ update msg model =
             let
                 ( searchModel, searchCmd ) =
                     Search.init
-                        { searchType = model.searchType
+                        { folder = model.tree |> Tree.selectedFolderId
+                        , searchType = model.searchType
                         , searchString = model.searchString
                         }
             in
@@ -137,7 +139,8 @@ viewSearchControls : Model -> Html Msg
 viewSearchControls model =
     Html.form
         [ Html.Attributes.class "search-bar"
-        , Html.Events.onSubmit Submit ]
+        , Html.Events.onSubmit Submit
+        ]
         [ Select.fromSelected_
             [ Search.SimpleSearch Search.SearchAttributes
             , Search.SimpleSearch Search.SearchFulltext

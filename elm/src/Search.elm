@@ -18,6 +18,7 @@ import Pagination
 import Page exposing (Page, PageResult)
 import Document exposing (Document, Attribute)
 import Api
+import Folder exposing (FolderId)
 
 
 type alias Model =
@@ -27,7 +28,8 @@ type alias Model =
 
 
 type alias Specification =
-    { searchType : SearchType
+    { folder : Maybe FolderId
+    , searchType : SearchType
     , searchString : String
     }
 
@@ -78,7 +80,20 @@ update msg model =
 sendSearchQuery : Pagination.Position -> Model -> ( Model, Cmd Msg )
 sendSearchQuery paginationPosition model =
     if model.specification.searchString == "" then
-        ( model, Cmd.none )
+        ( { model
+            | pageResult = Page.loadingPageResult model.pageResult
+          }
+        , Api.makeRequest
+            ApiResponse
+            (Api.queryFolderDocuments
+                model.pageResult.page
+                paginationPosition
+                (Maybe.withDefault
+                    ( 671579, 0.0 )
+                    model.specification.folder
+                )
+            )
+        )
     else
         ( { model
             | pageResult = Page.loadingPageResult model.pageResult
