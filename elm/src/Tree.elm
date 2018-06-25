@@ -19,7 +19,7 @@ import Api
 
 
 type alias Model =
-    { foldersById : Dict FolderId Folder
+    { folderCache : Dict FolderId Folder
     , rootIds : List FolderId
     , loading : Bool
     , error : Maybe (Graphqelm.Http.Error (List Folder))
@@ -35,7 +35,7 @@ type Msg
 
 init : ( Model, Cmd Msg )
 init =
-    ( { foldersById = Dict.empty
+    ( { folderCache = Dict.empty
       , rootIds = []
       , loading = True
       , error = Nothing
@@ -49,7 +49,7 @@ init =
 
 
 selectedFolderId : Model -> Maybe FolderId
-selectedFolderId model=
+selectedFolderId model =
     List.head model.selection
 
 
@@ -70,8 +70,12 @@ update msg model =
                 , error = Nothing
               }
                 |> addFolders folderList
-                |> (if isRootQuery then setRootIds folderList else identity)
-                |> setSubfolders folderList
+                |> linkFolders folderList
+                |> (if isRootQuery then
+                        setRootIds folderList
+                    else
+                        identity
+                   )
             , Cmd.none
             )
 
@@ -84,7 +88,7 @@ update msg model =
 addFolders : List Folder -> Model -> Model
 addFolders folderList model =
     let
-        newFoldersById =
+        newFolderCache =
             List.foldl
                 (\folder dict ->
                     Dict.insert
@@ -92,10 +96,10 @@ addFolders folderList model =
                         folder
                         dict
                 )
-                model.foldersById
+                model.folderCache
                 folderList
     in
-        { model | foldersById = newFoldersById }
+        { model | folderCache = newFolderCache }
 
 
 setRootIds : List Folder -> Model -> Model
@@ -111,19 +115,20 @@ setRootIds rootFolderList model =
                 )
                 rootFolderList
         , selection =
-             List.take 1 rootFolderList |> List.map .id
+            List.take 1 rootFolderList |> List.map .id
     }
 
 
-setSubfolders : List Folder -> Model -> Model
-setSubfolders folderList model =
+linkFolders : List Folder -> Model -> Model
+linkFolders folderList model =
     let
         groupedFolderList : Dict FolderId (List Folder)
-        groupedFolderList = Dict.Extra.filterGroupBy
+        groupedFolderList =
+            Dict.Extra.filterGroupBy
                 .parent
                 folderList
 
-        newFoldersById =
+        newFolderCache =
             Dict.foldl
                 (\parentId subfolders dict ->
                     Dict.update
@@ -131,35 +136,21 @@ setSubfolders folderList model =
                         (Maybe.map
                             (\parentFolder ->
                                 { parentFolder
-                                | subfolderIds = Just (List.map .id subfolders)
+                                    | subfolderIds = Just (List.map .id subfolders)
                                 }
                             )
                         )
                         dict
                 )
-                model.foldersById
+                model.folderCache
                 groupedFolderList
-
     in
-        { model | foldersById = newFoldersById }
-
-
-getSubfolders : FolderId -> Model -> Maybe (List Folder)
-getSubfolders id model =
-    case getSubfolderIds id model of
-        Just subfolderIdList ->
-            Just <|
-                List.filterMap
-                    (flip Dict.get model.foldersById)
-                    subfolderIdList
-
-        Nothing ->
-            Nothing
+        { model | folderCache = newFolderCache }
 
 
 getSubfolderIds : FolderId -> Model -> Maybe (List FolderId)
 getSubfolderIds id model =
-    case Dict.get id model.foldersById of
+    case Dict.get id model.folderCache of
         Just superFolder ->
             superFolder.subfolderIds
 
@@ -169,7 +160,7 @@ getSubfolderIds id model =
 
 getParentId : FolderId -> Model -> Maybe FolderId
 getParentId id model =
-    Dict.get id model.foldersById
+    Dict.get id model.folderCache
         |> Maybe.andThen .parent
 
 
@@ -227,6 +218,13 @@ viewListOfFolders model folderIds =
             folderIds
 
 
+viewListOfFoldersLoading : Html Msg
+viewListOfFoldersLoading =
+    Html.ul [ Html.Attributes.class "folder-list" ]
+        [ Html.li [] [ Html.text "..." ]
+        ]
+
+
 viewFolder : Model -> FolderId -> Html Msg
 viewFolder model id =
     let
@@ -237,8 +235,10 @@ viewFolder model id =
             List.member id model.selection
                 && (not isSelectedFolder || model.showSubselection)
     in
-        case Dict.get id model.foldersById of
+        case Dict.get id model.folderCache of
             Nothing ->
+                -- Cache miss. Should never happen,
+                -- because only cached folders are getting linked.
                 Html.div [] [ Html.text "..." ]
 
             Just folder ->
@@ -249,7 +249,7 @@ viewFolder model id =
                     , if expanded then
                         case getSubfolderIds id model of
                             Nothing ->
-                                Html.text ""
+                                viewListOfFoldersLoading
 
                             Just subfolderIds ->
                                 viewListOfFolders model subfolderIds
