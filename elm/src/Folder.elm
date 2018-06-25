@@ -4,6 +4,7 @@ module Folder
         , Folder
         , init
         , idAsInt
+        , isRoot
         , view
         )
 
@@ -40,14 +41,16 @@ type alias Folder =
     }
 
 
-init : Int -> Int -> String -> Bool -> Bool -> Int -> Folder
-init idAsInt parentIdAsInt name isToplevel isCollection numSubfolder =
+init : Int -> Maybe Int -> String -> Bool -> Int -> Folder
+init idAsInt maybeParentIdAsInt name isCollection numSubfolder =
     { id = ( idAsInt, 0.0 )
     , parent =
-        if isToplevel then
-            Nothing
-        else
-            Just ( parentIdAsInt, 0.0 )
+        case maybeParentIdAsInt of
+            Nothing ->
+                Nothing
+
+            Just parentIdAsInt ->
+                Just ( parentIdAsInt, 0.0 )
     , name = name
     , isCollection = isCollection
     , numSubfolder = numSubfolder
@@ -58,6 +61,11 @@ init idAsInt parentIdAsInt name isToplevel isCollection numSubfolder =
 idAsInt : FolderId -> Int
 idAsInt ( i, _ ) =
     i
+
+
+isRoot : Folder -> Bool
+isRoot folder =
+    folder.parent == Nothing
 
 
 hasSubfolder : Folder -> Bool

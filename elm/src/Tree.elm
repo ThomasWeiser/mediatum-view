@@ -9,6 +9,7 @@ module Tree
         )
 
 import Dict exposing (Dict)
+import Dict.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -19,7 +20,7 @@ import Api
 
 type alias Model =
     { foldersById : Dict FolderId Folder
-    , toplevelIds : List FolderId
+    , rootIds : List FolderId
     , loading : Bool
     , error : Maybe (Graphqelm.Http.Error (List Folder))
     , selection : List FolderId
@@ -28,21 +29,21 @@ type alias Model =
 
 
 type Msg
-    = ApiResponse (Maybe FolderId) (Api.Response (List Folder))
+    = ApiResponse Bool (Api.Response (List Folder))
     | Select FolderId
 
 
 init : ( Model, Cmd Msg )
 init =
     ( { foldersById = Dict.empty
-      , toplevelIds = []
+      , rootIds = []
       , loading = True
       , error = Nothing
       , selection = []
       , showSubselection = True
       }
     , Api.makeRequest
-        (ApiResponse Nothing)
+        (ApiResponse True)
         Api.queryToplevelFolder
     )
 
@@ -63,18 +64,14 @@ update msg model =
             , Cmd.none
             )
 
-        ApiResponse superFolder (Ok folderList) ->
+        ApiResponse isRootQuery (Ok folderList) ->
             ( { model
                 | loading = False
                 , error = Nothing
               }
                 |> addFolders folderList
-                |> case superFolder of
-                    Nothing ->
-                        setToplevelIds folderList
-
-                    Just superFolderId ->
-                        setSubfolders superFolderId folderList
+                |> (if isRootQuery then setRootIds folderList else identity)
+                |> setSubfolders folderList
             , Cmd.none
             )
 
@@ -101,31 +98,50 @@ addFolders folderList model =
         { model | foldersById = newFoldersById }
 
 
-setToplevelIds : List Folder -> Model -> Model
-setToplevelIds folderList model =
+setRootIds : List Folder -> Model -> Model
+setRootIds rootFolderList model =
     { model
-        | toplevelIds =
-            List.map .id folderList
+        | rootIds =
+            List.filterMap
+                (\folder ->
+                    if Folder.isRoot folder then
+                        Just folder.id
+                    else
+                        Nothing
+                )
+                rootFolderList
+        , selection =
+             List.take 1 rootFolderList |> List.map .id
     }
 
 
-setSubfolders : FolderId -> List Folder -> Model -> Model
-setSubfolders id folderList model =
-    { model
-        | foldersById =
-            Dict.update
-                id
-                (Maybe.map
-                    (\folder ->
-                        { folder
-                            | subfolderIds =
-                                Just
-                                    (List.map .id folderList)
-                        }
-                    )
+setSubfolders : List Folder -> Model -> Model
+setSubfolders folderList model =
+    let
+        groupedFolderList : Dict FolderId (List Folder)
+        groupedFolderList = Dict.Extra.filterGroupBy
+                .parent
+                folderList
+
+        newFoldersById =
+            Dict.foldl
+                (\parentId subfolders dict ->
+                    Dict.update
+                        parentId
+                        (Maybe.map
+                            (\parentFolder ->
+                                { parentFolder
+                                | subfolderIds = Just (List.map .id subfolders)
+                                }
+                            )
+                        )
+                        dict
                 )
                 model.foldersById
-    }
+                groupedFolderList
+
+    in
+        { model | foldersById = newFoldersById }
 
 
 getSubfolders : FolderId -> Model -> Maybe (List Folder)
@@ -186,7 +202,7 @@ loadSubfolder id model =
         Nothing ->
             ( { model | loading = True }
             , Api.makeRequest
-                (ApiResponse (Just id))
+                (ApiResponse False)
                 (Api.querySubfolder id)
             )
 
@@ -197,7 +213,7 @@ loadSubfolder id model =
 view : Model -> Html Msg
 view model =
     Html.div []
-        [ viewListOfFolders model model.toplevelIds ]
+        [ viewListOfFolders model model.rootIds ]
 
 
 viewListOfFolders : Model -> List FolderId -> Html Msg

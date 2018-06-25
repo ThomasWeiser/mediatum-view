@@ -9,6 +9,7 @@
     "exposed-modules": [],
     "dependencies": {
         "dillonkearns/graphqelm": "11.1.0 <= v < 12.0.0",
+        "elm-community/dict-extra": "2.3.0 <= v < 3.0.0",
         "elm-community/list-extra": "7.1.0 <= v < 8.0.0",
         "elm-community/maybe-extra": "4.0.0 <= v < 5.0.0",
         "elm-community/result-extra": "2.2.0 <= v < 3.0.0",

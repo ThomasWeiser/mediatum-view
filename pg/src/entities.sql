@@ -34,18 +34,20 @@ create or replace view entity.subfolder_count as
 create materialized view entity.folder as
     select
         node.id as id,
-        min (to_parent.nid) as parent_id,
+        case when node.type = 'collections'
+            then null
+            else min (to_parent.nid)
+        end as parent_id,
         node.name as name,
         node.orderpos as orderpos,
-        parent.type = 'collections' as is_toplevel,
-        node.type = 'collection' as is_collection,
+        node.type = 'collections' as is_root,
+        node.type in ('collections', 'collection') as is_collection,
         subfolder_count.num_subfolder as num_subfolder
     from entity.folder_node as node
     join mediatum.nodemapping as to_parent on node.id = to_parent.cid
     join mediatum.node as parent on to_parent.nid = parent.id
     join entity.subfolder_count on node.id = subfolder_count.id
-    where node.type in ('collection', 'directory')
-    group by (node.id, node.name, node.orderpos, is_toplevel, is_collection, subfolder_count.num_subfolder)
+    group by (node.id, node.name, node.orderpos, is_root, is_collection, subfolder_count.num_subfolder)
     order by node.orderpos;
 
 

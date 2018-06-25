@@ -9,13 +9,13 @@ begin;
 --       - We may use FTS instead of pattern matching. Probably needs new index. But should be faster too.
 
 
-create or replace function api.all_folders (name text, parent_id int4, is_toplevel boolean, is_collection boolean, find text)
+create or replace function api.all_folders (name text, parent_id int4, is_root boolean, is_collection boolean, find text)
     returns setof api.folder as $$
     select * from entity.folder
     where (all_folders.name is null or folder.name = all_folders.name)
       and (all_folders.parent_id is null or folder.parent_id = all_folders.parent_id)
+      and (all_folders.is_root is null or folder.is_root = all_folders.is_root)
       and (all_folders.is_collection is null or folder.is_collection = all_folders.is_collection)
-      and (all_folders.is_toplevel is null or folder.is_toplevel = all_folders.is_toplevel)
       and (all_folders.find is null or folder.name ilike ('%' || all_folders.find || '%'))
     order by folder.orderpos
 $$ language sql stable rows 1000;
@@ -37,13 +37,6 @@ create or replace function api.folder_subfolders (parent api.folder, name text, 
       and (folder_subfolders.find is null or folder.name ilike ('%' || folder_subfolders.find || '%'))
     order by folder.orderpos
 $$ language sql stable rows 10;
-
-
-create or replace function api.maskitem_superitem (child api.maskitem)
-    returns api.maskitem as $$
-    select * from entity.maskitem
-    where maskitem.id = child.parent_id
-$$ language sql stable;
 
 
 create or replace function api.folder_superfolder (child api.folder)

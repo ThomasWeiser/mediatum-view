@@ -14,7 +14,7 @@ create type api.folder as (
 	parent_id int4,
     "name" text,
 	orderpos int4,
-	is_toplevel bool,
+	is_root bool,
 	is_collection bool,
 	num_subfolder integer
 );

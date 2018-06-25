@@ -60,16 +60,16 @@ makeRequest tagger selectionSet =
 
 queryToplevelFolder : SelectionSet (List Folder) Graphqelm.Operation.RootQuery
 queryToplevelFolder =
-    Graphql.Query.selection Maybe.Extra.values
+    Graphql.Query.selection (Maybe.Extra.values >> List.concat)
         |> with
             (Graphql.Query.allFolders
                 (\optionals ->
                     { optionals
-                        | isToplevel = Present True
+                        | isRoot = Present True
                     }
                 )
                 (Graphql.Object.FoldersConnection.selection identity
-                    |> with (Graphql.Object.FoldersConnection.nodes folderNode)
+                    |> with (Graphql.Object.FoldersConnection.nodes folderNodeWithSubfolders)
                 )
             )
 
@@ -94,11 +94,32 @@ folderNode : SelectionSet Folder Graphql.Object.Folder
 folderNode =
     Graphql.Object.Folder.selection Folder.init
         |> with (Graphql.Object.Folder.id |> Graphqelm.Field.nonNullOrFail)
-        |> with (Graphql.Object.Folder.parentId |> Graphqelm.Field.nonNullOrFail)
+        |> with (Graphql.Object.Folder.parentId)
         |> with (Graphql.Object.Folder.name |> Graphqelm.Field.nonNullOrFail)
-        |> with (Graphql.Object.Folder.isToplevel |> Graphqelm.Field.nonNullOrFail)
         |> with (Graphql.Object.Folder.isCollection |> Graphqelm.Field.nonNullOrFail)
         |> with (Graphql.Object.Folder.numSubfolder |> Graphqelm.Field.nonNullOrFail)
+
+
+folderNodeWithSubfolders : SelectionSet (List Folder) Graphql.Object.Folder
+folderNodeWithSubfolders =
+    let
+        constructor : Int -> Maybe Int -> String -> Bool -> Int -> List Folder -> List Folder
+        constructor idAsInt maybeParentIdAsInt name isCollection numSubfolder subfolder =
+            Folder.init idAsInt maybeParentIdAsInt name isCollection numSubfolder
+                :: subfolder
+    in
+        Graphql.Object.Folder.selection constructor
+            |> with (Graphql.Object.Folder.id |> Graphqelm.Field.nonNullOrFail)
+            |> with (Graphql.Object.Folder.parentId)
+            |> with (Graphql.Object.Folder.name |> Graphqelm.Field.nonNullOrFail)
+            |> with (Graphql.Object.Folder.isCollection |> Graphqelm.Field.nonNullOrFail)
+            |> with (Graphql.Object.Folder.numSubfolder |> Graphqelm.Field.nonNullOrFail)
+            |> with
+                (Graphql.Object.Folder.subfolders identity
+                    (Graphql.Object.FoldersConnection.selection Maybe.Extra.values
+                        |> with (Graphql.Object.FoldersConnection.nodes folderNode)
+                    )
+                )
 
 
 queryFolderDocuments :
