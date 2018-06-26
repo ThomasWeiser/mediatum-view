@@ -6,6 +6,26 @@ begin;
 create schema if not exists aux;
 
 
+create or replace view aux.node_lineage as
+    select distinct
+        nid as ancestor,
+        cid as descendant
+    from mediatum.noderelation;
+
+
+create or replace function aux.test_node_lineage (ancestor int4, descendant int4)
+    returns boolean as $$
+        begin
+            perform
+                from mediatum.noderelation
+                where noderelation.cid = descendant
+                  and noderelation.nid = ancestor
+                limit 1;
+            return found;
+        end;
+$$ language plpgsql stable;
+
+
 create or replace function aux.jsonb_filter (obj jsonb, keys text[])
     returns jsonb as $$
     declare result jsonb := '{}'::jsonb;

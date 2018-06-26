@@ -79,54 +79,60 @@ update msg model =
 
 sendSearchQuery : Pagination.Position -> Model -> ( Model, Cmd Msg )
 sendSearchQuery paginationPosition model =
-    if model.specification.searchString == "" then
-        ( { model
-            | pageResult = Page.loadingPageResult model.pageResult
-          }
-        , Api.makeRequest
-            ApiResponse
-            (Api.queryFolderDocuments
-                model.pageResult.page
-                paginationPosition
-                (Maybe.withDefault
-                    ( 671579, 0.0 )
-                    model.specification.folder
-                )
+    case model.specification.folder of
+        Nothing ->
+            ( model
+            , Cmd.none
             )
-        )
-    else
-        ( { model
-            | pageResult = Page.loadingPageResult model.pageResult
-          }
-        , case model.specification.searchType of
-            SimpleSearch simpleSearchDomain ->
-                Api.makeRequest
+
+        Just folderId ->
+            if model.specification.searchString == "" then
+                ( { model
+                    | pageResult = Page.loadingPageResult model.pageResult
+                  }
+                , Api.makeRequest
                     ApiResponse
-                    (Api.querySimpleSearch
+                    (Api.queryFolderDocuments
                         model.pageResult.page
                         paginationPosition
-                        model.specification.searchString
-                        (case simpleSearchDomain of
-                            SearchAttributes ->
-                                [ "attrs" ]
-
-                            SearchFulltext ->
-                                [ "fulltext" ]
-
-                            SearchAll ->
-                                [ "attrs", "fulltext" ]
-                        )
+                        folderId
                     )
+                )
+            else
+                ( { model
+                    | pageResult = Page.loadingPageResult model.pageResult
+                  }
+                , case model.specification.searchType of
+                    SimpleSearch simpleSearchDomain ->
+                        Api.makeRequest
+                            ApiResponse
+                            (Api.querySimpleSearch
+                                model.pageResult.page
+                                paginationPosition
+                                folderId
+                                model.specification.searchString
+                                (case simpleSearchDomain of
+                                    SearchAttributes ->
+                                        [ "attrs" ]
 
-            AuthorSearch ->
-                Api.makeRequest
-                    ApiResponse
-                    (Api.queryAuthorSearch
-                        model.pageResult.page
-                        paginationPosition
-                        model.specification.searchString
-                    )
-        )
+                                    SearchFulltext ->
+                                        [ "fulltext" ]
+
+                                    SearchAll ->
+                                        [ "attrs", "fulltext" ]
+                                )
+                            )
+
+                    AuthorSearch ->
+                        Api.makeRequest
+                            ApiResponse
+                            (Api.queryAuthorSearch
+                                model.pageResult.page
+                                paginationPosition
+                                folderId
+                                model.specification.searchString
+                            )
+                )
 
 
 view : Model -> Html Msg

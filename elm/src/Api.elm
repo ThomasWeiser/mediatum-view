@@ -157,55 +157,79 @@ queryFolderDocuments referencePage paginationPosition folderId =
 querySimpleSearch :
     Maybe (Page Document)
     -> Pagination.Position
+    -> FolderId
     -> String
     -> List String
     -> SelectionSet (Page Document) Graphqelm.Operation.RootQuery
-querySimpleSearch referencePage paginationPosition searchString searchDomains =
+querySimpleSearch referencePage paginationPosition folderId searchString searchDomains =
     Graphql.Query.selection identity
         |> with
-            (Graphql.Query.simpleSearch
-                ((\optionals ->
+            (Graphql.Query.folderById
+                (\optionals ->
                     { optionals
-                        | text = Present searchString
-                        , domains = Present (List.map Just searchDomains)
-                        , limit = Present sizeLimitSimpleSearch
+                        | id = Present (Folder.idAsInt folderId)
                     }
-                 )
-                    >> Pagination.paginationArguments
-                        pageSize
-                        referencePage
-                        paginationPosition
                 )
-                (Connection.connection
-                    graphqlDocumentObjects
-                    documentNode
+                (Graphql.Object.Folder.selection identity
+                    |> with
+                        (Graphql.Object.Folder.simpleSearch
+                            ((\optionals ->
+                                { optionals
+                                    | text = Present searchString
+                                    , domains = Present (List.map Just searchDomains)
+                                    , limit = Present sizeLimitSimpleSearch
+                                }
+                             )
+                                >> Pagination.paginationArguments
+                                    pageSize
+                                    referencePage
+                                    paginationPosition
+                            )
+                            (Connection.connection
+                                graphqlDocumentObjects
+                                documentNode
+                            )
+                        )
                 )
+                |> Graphqelm.Field.nonNullOrFail
             )
 
 
 queryAuthorSearch :
     Maybe (Page Document)
     -> Pagination.Position
+    -> FolderId
     -> String
     -> SelectionSet (Page Document) Graphqelm.Operation.RootQuery
-queryAuthorSearch referencePage paginationPosition searchString =
+queryAuthorSearch referencePage paginationPosition folderId searchString =
     Graphql.Query.selection identity
         |> with
-            (Graphql.Query.authorSearch
-                ((\optionals ->
+            (Graphql.Query.folderById
+                (\optionals ->
                     { optionals
-                        | text = Present searchString
+                        | id = Present (Folder.idAsInt folderId)
                     }
-                 )
-                    >> Pagination.paginationArguments
-                        pageSize
-                        referencePage
-                        paginationPosition
                 )
-                (Connection.connection
-                    graphqlDocumentObjects
-                    documentNode
+                (Graphql.Object.Folder.selection identity
+                    |> with
+                        (Graphql.Object.Folder.authorSearch
+                            ((\optionals ->
+                                { optionals
+                                    | text = Present searchString
+                                }
+                             )
+                                >> Pagination.paginationArguments
+                                    pageSize
+                                    referencePage
+                                    paginationPosition
+                            )
+                            (Connection.connection
+                                graphqlDocumentObjects
+                                documentNode
+                            )
+                        )
                 )
+                |> Graphqelm.Field.nonNullOrFail
             )
 
 

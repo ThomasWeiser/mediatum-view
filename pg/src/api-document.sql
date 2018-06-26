@@ -5,7 +5,8 @@ begin;
 
 create or replace function api.all_documents (type text, name text)
     returns setof api.document as $$
-    select * from entity.document
+    select *
+    from entity.document
     where (all_documents.type is null or document.type = all_documents.type)
       and (all_documents.name is null or document.name = all_documents.name)
 $$ language sql stable rows 10000;
@@ -13,7 +14,8 @@ $$ language sql stable rows 10000;
 
 create or replace function api.document_by_id (id int4)
     returns api.document as $$
-    select * from entity.document
+    select *
+    from entity.document
     where document.id = document_by_id.id
 $$ language sql stable;
 
@@ -59,8 +61,8 @@ create or replace function api.folder_documents (folder api.folder, type text, n
     returns setof api.document as $$
     select document.*
     from entity.document
-    join mediatum.noderelation on document.id = noderelation.cid
-    where folder.id = noderelation.nid
+    join aux.node_lineage on document.id = node_lineage.descendant
+    where folder.id = node_lineage.ancestor
       and (folder_documents.type is null or document.type = folder_documents.type)
       and (folder_documents.name is null or document.name = folder_documents.name)
 $$ language sql stable rows 1000;
@@ -102,7 +104,7 @@ create or replace function aux.simple_search_hit_union (text text, languages tex
 $$ language sql stable parallel safe;
 
 
-create or replace function api.simple_search (text text, languages text [], domains text [], "limit" integer)
+create or replace function api.folder_simple_search (folder api.folder, text text, languages text [], domains text [], "limit" integer)
     returns setof api.document as $$
     select document.*
     from aux.simple_search_hit_union (
@@ -113,13 +115,14 @@ create or replace function api.simple_search (text text, languages text [], doma
             "limit" * 2
         ) as hit
     join entity.document on document.id = hit.id
+    where aux.test_node_lineage (folder.id, document.id)
     order by hit.rank desc
     limit "limit"
     ;
 $$ language sql stable rows 100 parallel safe;
 
 
-create or replace function api.simple_search_unranked (text text, languages text [], domains text [], "limit" integer)
+create or replace function api.folder_simple_search_unranked (folder api.folder, text text, languages text [], domains text [], "limit" integer)
     returns setof api.document as $$
     select document.*
     from aux.simple_search_hit_union (
@@ -129,11 +132,12 @@ create or replace function api.simple_search_unranked (text text, languages text
             coalesce (domains, array['fulltext', 'attrs']),
             "limit"
         ) as hit
-    join entity.document on document.id = hit.id;
+    join entity.document on document.id = hit.id
+    where aux.test_node_lineage (folder.id, document.id)
 $$ language sql stable rows 100 parallel safe;
 
 
-create or replace function api.author_search (text text) 
+create or replace function api.folder_author_search (folder api.folder, text text) 
     returns setof api.document as $$
     select
         node.id,
@@ -145,12 +149,12 @@ create or replace function api.author_search (text text)
          -- to_tsquery ('german', text || ':*') as tsq, -- works only for a single word (i.e. without spaces)
          -- plainto_tsquery ('german', text) as tsq, -- no prefix search
          mediatum.node
-    where
-        mediatum.to_tsvector_safe (
+    where aux.test_node_lineage (folder.id, node.id)
+      and mediatum.to_tsvector_safe (
             'german'::regconfig,
             replace (node.attrs ->> 'author.surname', ';', ' ')
-        )
-        @@ tsq;
+          )
+          @@ tsq;
 $$ language sql stable rows 100 parallel safe;
 
 
