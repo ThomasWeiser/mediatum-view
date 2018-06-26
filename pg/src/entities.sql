@@ -199,6 +199,39 @@ create materialized view entity.maskitem_recursive as
     order by orderpos;
 
 
+create materialized view entity.mapping as
+    select
+        node.id as id,
+        node.name as name,
+        node.orderpos as orderpos,
+        node.attrs ->> 'mappingtype' as type,
+        node.attrs ->> 'description' as description
+    from mediatum.node as parent
+    join mediatum.nodemapping on parent.id = nodemapping.nid
+    join mediatum.node on node.id = nodemapping.cid
+    where parent.type = 'mappings'
+      and node.type = 'mapping'
+      -- TODO: How to deal with attribute active? It may be 0, 1 or absent.
+      and (not node.attrs ? 'active' or node.attrs ->> 'active' = '1')
+      and node.name is not null
+    order by node.orderpos;
+
+
+create materialized view entity.mappingfield as
+    select
+        node.id as id,
+        mapping.id as mapping_id,
+        node.name as name,
+        node.orderpos as orderpos,
+        node.attrs ->> 'description'  as description,
+        node.attrs ->> 'mandatory' = 'True' as is_mandatory
+    from entity.mapping
+    join mediatum.nodemapping on mapping.id = nodemapping.nid
+    join mediatum.node on node.id = nodemapping.cid
+    where node.type = 'mappingfield'
+    order by node.orderpos;
+
+
 create or replace view entity.document as
     select
         node.id,

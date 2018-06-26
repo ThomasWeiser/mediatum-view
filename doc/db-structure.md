@@ -9,6 +9,8 @@ api.metafield
 api.mask
 api.maskitem
 api.maskitem_reachable
+api.mapping
+api.mappingfield
 api.document
 ```
 
@@ -20,6 +22,8 @@ materialized view entity.metafield
 materialized view entity.mask
 materialized view entity.maskitem
 materialized view entity.maskitem_recursive
+materialized view entity.mapping
+materialized view entity.mappingfield
 view entity.document
 view entity.node
 view entity.document_mask_fields
@@ -36,6 +40,9 @@ function api.all_metafields (name text, type text, find text)
 function api.all_masks (name text, masktype text, language text, is_default boolean, is_vgroup boolean, find text)
 function api.all_maskitems (name text, type text, fieldtype text, is_required boolean, find text)
 function api.all_maskitem_reachable (name text, type text, fieldtype text, is_required boolean, find text)
+function api.all_mappings (type text, find text)
+function api.mapping_by_name (name text)
+function api.all_mappingfields (name text, is_mandatory boolean, find text)
 function api.metadatatype_attrs(mdt api.metadatatype, keys text[])
 function api.metadatatype_system_attrs(mdt api.metadatatype, keys text[])
 function api.metafield_attrs(metafield api.metafield, keys text[])
@@ -45,6 +52,10 @@ function api.mask_system_attrs(mask api.mask, keys text[])
 function api.maskitem_attrs(maskitem api.maskitem, keys text[])
 function api.maskitem_system_attrs(maskitem api.maskitem, keys text[])
 function api.metafield_metadatatype(mf api.metafield)
+function api.mapping_attrs(mapping api.mapping, keys text[])
+function api.mapping_system_attrs(mapping api.mapping, keys text[])
+function api.mappingfield_attrs(mappingfield api.mappingfield, keys text[])
+function api.mappingfield_system_attrs(mappingfield api.mappingfield, keys text[])
 function api.metadatatype_metafields(mdt api.metadatatype, type text, find text)
 function api.metadatatype_metafield_by_name(mdt api.metadatatype, name text)
 function api.mask_metadatatype(mask api.mask)
@@ -57,6 +68,12 @@ function api.maskitem_subitem_by_name(parent api.maskitem, name text)
 function api.maskitem_superitem(child api.maskitem)
 function api.maskitem_mask(child api.maskitem)
 function api.maskitem_metafield(maskitem api.maskitem)
+function api.maskitem_mappingfield(maskitem api.maskitem)
+function api.maskitem_template(maskitem api.maskitem)
+function api.mappingfield_mapping(mf api.mappingfield)
+function api.mapping_mappingfields(m api.mapping, is_mandatory boolean, find text)
+function api.mapping_mappingfield_by_name(m api.mapping, name text)
+function api.mask_exportmapping(mask api.mask)
 ```
 
 ## API Document

@@ -120,6 +120,38 @@ create or replace function api.all_maskitem_reachable (name text, type text, fie
 $$ language sql stable rows 800;
 
 
+create or replace function api.all_mappings (type text, find text)
+    returns setof api.mapping as $$
+    select * from entity.mapping
+    where (all_mappings.type is null or mapping.type = all_mappings.type)
+      and (all_mappings.find is null
+            or mapping.name ilike ('%' || all_mappings.find || '%')
+            or mapping.description ilike ('%' || all_mappings.find || '%')
+          )
+    order by mapping.orderpos
+$$ language sql stable rows 40;
+
+
+create or replace function api.mapping_by_name (name text)
+    returns api.mapping as $$
+    select * from entity.mapping
+    where entity.mapping.name = mapping_by_name.name
+$$ language sql stable;
+
+
+create or replace function api.all_mappingfields (name text, is_mandatory boolean, find text)
+    returns setof api.mappingfield as $$
+    select * from entity.mappingfield
+    where (all_mappingfields.name is null or mappingfield.name = all_mappingfields.name)
+      and (all_mappingfields.is_mandatory is null or mappingfield.is_mandatory = all_mappingfields.is_mandatory)
+      and (all_mappingfields.find is null
+            or mappingfield.name ilike ('%' || all_mappingfields.find || '%')
+            or mappingfield.description ilike ('%' || all_mappingfields.find || '%')
+          )
+    order by mappingfield.orderpos
+$$ language sql stable rows 400;
+
+
 create or replace function api.metadatatype_attrs (mdt api.metadatatype, keys text[])
     returns jsonb as $$
     select aux.get_node_attrs (mdt.id, keys)
@@ -172,6 +204,30 @@ create or replace function api.metafield_metadatatype (mf api.metafield)
     returns api.metadatatype as $$
     select * from entity.metadatatype
     where metadatatype.id = mf.metadatatype_id
+$$ language sql stable;
+
+
+create or replace function api.mapping_attrs (mapping api.mapping, keys text[])
+    returns jsonb as $$
+    select aux.get_node_attrs(mapping.id, keys)
+$$ language sql stable;
+
+
+create or replace function api.mapping_system_attrs (mapping api.mapping, keys text[])
+    returns jsonb as $$
+    select aux.get_node_system_attrs(mapping.id, keys)
+$$ language sql stable;
+
+
+create or replace function api.mappingfield_attrs (mappingfield api.mappingfield, keys text[])
+    returns jsonb as $$
+    select aux.get_node_attrs(mappingfield.id, keys)
+$$ language sql stable;
+
+
+create or replace function api.mappingfield_system_attrs (mappingfield api.mappingfield, keys text[])
+    returns jsonb as $$
+    select aux.get_node_system_attrs(mappingfield.id, keys)
 $$ language sql stable;
 
 
@@ -310,6 +366,80 @@ create or replace function api.maskitem_metafield (maskitem api.maskitem)
         return result;
     end;
 $$ language plpgsql stable;
+
+
+create or replace function api.maskitem_mappingfield(maskitem api.maskitem)
+    returns api.mappingfield as $$
+    declare result api.mappingfield;
+    begin
+        case maskitem.fieldtype
+            when 'mapping' then
+                select mappingfield.*
+                into result
+                from mediatum.node
+                join entity.mappingfield
+                  on (node.attrs->>'mappingfield' <> 'None') and (node.attrs->>'mappingfield')::int4 = mappingfield.id
+                where maskitem.id = node.id;
+            else
+                result := null;
+        end case;
+        return result;
+    end;
+$$ language plpgsql stable;
+
+
+create or replace function api.maskitem_template(maskitem api.maskitem)
+    returns text as $$
+    declare result text;
+    begin
+        case maskitem.fieldtype
+            when 'attribute' then
+                select node.attrs->>'mappingfield'
+                into result
+                from mediatum.node
+                where maskitem.id = node.id;
+            else
+                result := null;
+        end case;
+        return result;
+    end;
+$$ language plpgsql stable;
+
+
+create or replace function api.mappingfield_mapping(mf api.mappingfield)
+    returns api.mapping as $$
+    select * from entity.mapping
+    where mapping.id = mf.mapping_id
+$$ language sql stable;
+
+
+create or replace function api.mapping_mappingfields(m api.mapping, is_mandatory boolean, find text)
+    returns setof api.mappingfield as $$
+    select * from entity.mappingfield
+    where mappingfield.mapping_id = m.id
+      and (mapping_mappingfields.is_mandatory is null or mappingfield.is_mandatory = mapping_mappingfields.is_mandatory)
+      and (mapping_mappingfields.find is null
+            or mappingfield.name ilike ('%' || mapping_mappingfields.find || '%')
+            or mappingfield.description ilike ('%' || mapping_mappingfields.find || '%')
+          )
+$$ language sql stable rows 80;
+
+
+create or replace function api.mapping_mappingfield_by_name(m api.mapping, name text)
+    returns api.mappingfield as $$
+    select * from entity.mappingfield
+    where mappingfield.mapping_id = m.id
+      and mappingfield.name = mapping_mappingfield_by_name.name
+$$ language sql stable;
+
+
+create or replace function api.mask_exportmapping(mask api.mask)
+    returns api.mapping as $$
+    select mapping.*
+    from mediatum.node
+    join entity.mapping on mapping.id = (node.attrs ->> 'exportmapping')::int4
+    where node.id = mask.id
+$$ language sql stable;
 
 
 commit;

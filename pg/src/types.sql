@@ -107,6 +107,25 @@ create type api.maskitem_reachable as (
 );
 
     
+create type api.mapping as (
+	id int4,
+	name text,
+	orderpos int4,
+	type text,
+    description text
+);
+
+    
+create type api.mappingfield as (
+	id int4,
+	mapping_id int4,
+	name text,
+	orderpos int4,
+    description text,
+    is_mandatory boolean
+);
+
+    
 create type api.document as (
 	id int4,
 	"type" text,

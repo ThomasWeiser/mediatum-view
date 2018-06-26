@@ -148,6 +148,22 @@ create or replace function api.maskitem_node (maskitem api.maskitem)
 $$ language sql stable;
 
 
+create or replace function api.mapping_node (mapping api.mapping)
+    returns debug.mediatum_node as $$
+    select id, type, schema, name, orderpos, fulltext, subnode
+    from mediatum.node
+    where node.id = mapping.id
+$$ language sql stable;
+
+
+create or replace function api.mappingfield_node (mappingfield api.mappingfield)
+    returns debug.mediatum_node as $$
+    select id, type, schema, name, orderpos, fulltext, subnode
+    from mediatum.node
+    where node.id = mappingfield.id
+$$ language sql stable;
+
+
 create or replace function api.document_node (document api.document)
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
@@ -181,6 +197,20 @@ create or replace function debug.mediatum_node_as_maskitem (node debug.mediatum_
     returns api.maskitem as $$
     select * from entity.maskitem
     where entity.maskitem.id = node.id
+$$ language sql stable;
+
+
+create or replace function debug.mediatum_node_as_mapping (node debug.mediatum_node)
+    returns api.mapping as $$
+    select * from entity.mapping
+    where entity.mapping.id = node.id
+$$ language sql stable;
+
+
+create or replace function debug.mediatum_node_as_mappingfield (node debug.mediatum_node)
+    returns api.mappingfield as $$
+    select * from entity.mappingfield
+    where entity.mappingfield.id = node.id
 $$ language sql stable;
 
 
