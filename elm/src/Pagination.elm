@@ -6,7 +6,6 @@ module Pagination
 
 import List.Extra
 import Graphqelm.OptionalArgument exposing (OptionalArgument(Absent, Present))
-import Graphqelm.SelectionSet exposing (SelectionSet, with)
 import Connection exposing (Connection)
 
 

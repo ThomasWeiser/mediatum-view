@@ -19,6 +19,7 @@ import Page exposing (Page, PageResult)
 import Document exposing (Document, Attribute)
 import Api
 import Folder exposing (FolderId)
+import Tree
 
 
 type alias Model =
@@ -135,14 +136,22 @@ sendSearchQuery paginationPosition model =
                 )
 
 
-view : Model -> Html Msg
-view model =
+view : Tree.Model -> Model -> Html Msg
+view tree model =
     Html.div []
-        [ Html.div []
+        [ case model.specification.folder of
+            Just folderId ->
+                Html.div []
+                    [ Tree.viewBreadcrumbs tree folderId ]
+
+            Nothing ->
+                Html.text ""
+        , Html.div []
             [ Html.span [] [ Html.text "Search " ]
             , Html.span [] [ Html.text <| searchTypeText model.specification.searchType ]
-            , Html.span [] [ Html.text ": " ]
+            , Html.span [] [ Html.text ": \"" ]
             , Html.span [] [ Html.text model.specification.searchString ]
+            , Html.span [] [ Html.text "\"" ]
             ]
         , Html.div []
             [ Html.text <| "Loading: "

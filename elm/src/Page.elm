@@ -9,7 +9,7 @@ module Page
         )
 
 import Graphql.Scalar
-import Graphqelm.Http
+import Graphqelm.Extra
 import Connection
 
 
@@ -24,7 +24,7 @@ entries page =
 
 type alias PageResult itemModel =
     { loading : Bool
-    , error : Maybe (Graphqelm.Http.Error (Page itemModel))
+    , error : Maybe Graphqelm.Extra.StrippedError
     , page : Maybe (Page itemModel)
     }
 
@@ -38,7 +38,7 @@ initialPageResult =
 
 
 updatePageResultFromResult :
-    Result (Graphqelm.Http.Error (Page itemModel)) (Page itemModel)
+    Result Graphqelm.Extra.StrippedError (Page itemModel)
     -> PageResult itemModel
     -> PageResult itemModel
 updatePageResultFromResult result pageResult =

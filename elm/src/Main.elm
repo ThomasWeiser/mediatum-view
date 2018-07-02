@@ -129,7 +129,7 @@ view model =
                 ]
             , Html.article []
                 [ Html.map SearchMsg <|
-                    Search.view model.search
+                    Search.view model.tree model.search
                 ]
             ]
         ]

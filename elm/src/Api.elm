@@ -1,6 +1,7 @@
 module Api
     exposing
         ( Response
+        , ApiError
         , makeRequest
         , queryToplevelFolder
         , querySubfolder
@@ -27,6 +28,7 @@ import Graphqelm.OptionalArgument exposing (OptionalArgument(Present))
 import Graphqelm.SelectionSet exposing (SelectionSet, with, hardcoded)
 import Graphqelm.Http
 import Graphqelm.Operation
+import Graphqelm.Extra
 import Connection
 import Pagination
 import Page exposing (Page)
@@ -45,7 +47,11 @@ sizeLimitSimpleSearch =
 
 
 type alias Response decodesTo =
-    Result (Graphqelm.Http.Error decodesTo) decodesTo
+    Result ApiError decodesTo
+
+
+type alias ApiError =
+    Graphqelm.Extra.StrippedError
 
 
 makeRequest :
@@ -55,12 +61,13 @@ makeRequest :
 makeRequest tagger selectionSet =
     selectionSet
         |> Graphqelm.Http.queryRequest "http://localhost:5000/graphql"
-        |> Graphqelm.Http.send tagger
+        |> Graphqelm.Http.send
+            (Result.mapError Graphqelm.Extra.stripError >> tagger)
 
 
-queryToplevelFolder : SelectionSet (List Folder) Graphqelm.Operation.RootQuery
+queryToplevelFolder : SelectionSet (List ( Folder, List Folder )) Graphqelm.Operation.RootQuery
 queryToplevelFolder =
-    Graphql.Query.selection (Maybe.Extra.values >> List.concat)
+    Graphql.Query.selection Maybe.Extra.values
         |> with
             (Graphql.Query.allFolders
                 (\optionals ->
@@ -100,13 +107,14 @@ folderNode =
         |> with (Graphql.Object.Folder.numSubfolder |> Graphqelm.Field.nonNullOrFail)
 
 
-folderNodeWithSubfolders : SelectionSet (List Folder) Graphql.Object.Folder
+folderNodeWithSubfolders : SelectionSet ( Folder, List Folder ) Graphql.Object.Folder
 folderNodeWithSubfolders =
     let
-        constructor : Int -> Maybe Int -> String -> Bool -> Int -> List Folder -> List Folder
+        constructor : Int -> Maybe Int -> String -> Bool -> Int -> List Folder -> ( Folder, List Folder )
         constructor idAsInt maybeParentIdAsInt name isCollection numSubfolder subfolder =
-            Folder.init idAsInt maybeParentIdAsInt name isCollection numSubfolder
-                :: subfolder
+            ( Folder.init idAsInt maybeParentIdAsInt name isCollection numSubfolder
+            , subfolder
+            )
     in
         Graphql.Object.Folder.selection constructor
             |> with (Graphql.Object.Folder.id |> Graphqelm.Field.nonNullOrFail)

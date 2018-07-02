@@ -14,7 +14,7 @@ create type api.folder as (
 	parent_id int4,
     "name" text,
 	orderpos int4,
-	is_collection bool,
+	is_collection boolean,
 	num_subfolder integer
 );
 
@@ -149,7 +149,7 @@ create type debug.mediatum_node as (
 	"name" varchar,
 	orderpos int4,
 	fulltext varchar,
-	subnode bool
+	subnode boolean
 );
 
 

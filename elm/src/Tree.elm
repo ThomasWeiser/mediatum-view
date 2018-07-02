@@ -5,31 +5,38 @@ module Tree
         , init
         , update
         , view
+        , viewBreadcrumbs
         , selectedFolderId
         )
 
 import Dict exposing (Dict)
-import Dict.Extra
+import Maybe.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Graphqelm.Http
 import Folder exposing (FolderId, Folder)
-import Api
+import Api exposing (ApiError)
 
 
 type alias Model =
-    { folderCache : Dict FolderId Folder
+    { folderCache : Dict FolderId FolderInTree
     , rootIds : List FolderId
     , loading : Bool
-    , error : Maybe (Graphqelm.Http.Error (List Folder))
+    , error : Maybe ApiError
     , selection : List FolderId
     , showSubselection : Bool
     }
 
 
+type alias FolderInTree =
+    { folder : Folder
+    , subLinks : Maybe (List FolderId)
+    }
+
+
 type Msg
-    = ApiResponse Bool (Api.Response (List Folder))
+    = ApiResponseSubfolder FolderId (Api.Response (List Folder))
+    | ApiResponseToplevelFolder (Api.Response (List ( Folder, List Folder )))
     | Select FolderId
 
 
@@ -43,7 +50,7 @@ init =
       , showSubselection = True
       }
     , Api.makeRequest
-        (ApiResponse True)
+        ApiResponseToplevelFolder
         Api.queryToplevelFolder
     )
 
@@ -56,7 +63,7 @@ selectedFolderId model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ApiResponse _ (Err err) ->
+        ApiResponseToplevelFolder (Err err) ->
             ( { model
                 | loading = False
                 , error = Just err
@@ -64,18 +71,30 @@ update msg model =
             , Cmd.none
             )
 
-        ApiResponse isRootQuery (Ok folderList) ->
+        ApiResponseSubfolder _ (Err err) ->
+            ( { model
+                | loading = False
+                , error = Just err
+              }
+            , Cmd.none
+            )
+
+        ApiResponseToplevelFolder (Ok listOfRootFoldersWithSubfolders) ->
+            ( { model
+                | loading = False
+                , error = Nothing
+              }
+                |> addRootFolders listOfRootFoldersWithSubfolders
+            , Cmd.none
+            )
+
+        ApiResponseSubfolder superfolderId (Ok folderList) ->
             ( { model
                 | loading = False
                 , error = Nothing
               }
                 |> addFolders folderList
-                |> linkFolders folderList
-                |> (if isRootQuery then
-                        setRootIds folderList
-                    else
-                        identity
-                   )
+                |> setSubfolders superfolderId folderList
             , Cmd.none
             )
 
@@ -83,6 +102,32 @@ update msg model =
             model
                 |> selectFolder id
                 |> loadSubfolder id
+
+
+addRootFolders : List ( Folder, List Folder ) -> Model -> Model
+addRootFolders rootFoldersWithSubfolders model =
+    let
+        modelWithFoldersAdded : Model
+        modelWithFoldersAdded =
+            List.foldl
+                addRootFolder
+                model
+                rootFoldersWithSubfolders
+
+        addRootFolder : ( Folder, List Folder ) -> Model -> Model
+        addRootFolder ( rootFolder, subFolders ) model =
+            model
+                |> addFolders (rootFolder :: subFolders)
+                |> setSubfolders rootFolder.id subFolders
+
+        rootIds : List FolderId
+        rootIds =
+            List.map (Tuple.first >> .id) rootFoldersWithSubfolders
+    in
+        { modelWithFoldersAdded
+            | rootIds = rootIds
+            , selection = List.take 1 rootIds
+        }
 
 
 addFolders : List Folder -> Model -> Model
@@ -93,7 +138,13 @@ addFolders folderList model =
                 (\folder dict ->
                     Dict.insert
                         folder.id
-                        folder
+                        { folder = folder
+                        , subLinks =
+                            if Folder.hasSubfolder folder then
+                                Nothing
+                            else
+                                Just []
+                        }
                         dict
                 )
                 model.folderCache
@@ -102,99 +153,67 @@ addFolders folderList model =
         { model | folderCache = newFolderCache }
 
 
-setRootIds : List Folder -> Model -> Model
-setRootIds rootFolderList model =
+setSubfolders : FolderId -> List Folder -> Model -> Model
+setSubfolders id folderList model =
     { model
-        | rootIds =
-            List.filterMap
-                (\folder ->
-                    if Folder.isRoot folder then
-                        Just folder.id
-                    else
-                        Nothing
+        | folderCache =
+            Dict.update
+                id
+                (Maybe.map
+                    (\folderInTree ->
+                        { folderInTree
+                            | subLinks = Just (List.map .id folderList)
+                        }
+                    )
                 )
-                rootFolderList
-        , selection =
-            List.take 1 rootFolderList |> List.map .id
+                model.folderCache
     }
 
 
-linkFolders : List Folder -> Model -> Model
-linkFolders folderList model =
-    let
-        groupedFolderList : Dict FolderId (List Folder)
-        groupedFolderList =
-            Dict.Extra.filterGroupBy
-                .parent
-                folderList
-
-        newFolderCache =
-            Dict.foldl
-                (\parentId subfolders dict ->
-                    Dict.update
-                        parentId
-                        (Maybe.map
-                            (\parentFolder ->
-                                { parentFolder
-                                    | subfolderIds = Just (List.map .id subfolders)
-                                }
-                            )
-                        )
-                        dict
-                )
-                model.folderCache
-                groupedFolderList
-    in
-        { model | folderCache = newFolderCache }
-
-
-getSubfolderIds : FolderId -> Model -> Maybe (List FolderId)
-getSubfolderIds id model =
-    case Dict.get id model.folderCache of
-        Just superFolder ->
-            superFolder.subfolderIds
-
-        Nothing ->
-            Nothing
+getSubLinks : FolderId -> Model -> Maybe (List FolderId)
+getSubLinks id model =
+    Dict.get id model.folderCache
+        |> Maybe.andThen .subLinks
 
 
 getParentId : FolderId -> Model -> Maybe FolderId
 getParentId id model =
     Dict.get id model.folderCache
-        |> Maybe.andThen .parent
+        |> Maybe.andThen (.folder >> .parent)
+
+
+getPath : FolderId -> Model -> List FolderId
+getPath id model =
+    id
+        :: (case getParentId id model of
+                Nothing ->
+                    []
+
+                Just parentId ->
+                    getPath parentId model
+           )
 
 
 selectFolder : FolderId -> Model -> Model
 selectFolder id model =
     let
-        selectionPath : FolderId -> List FolderId
-        selectionPath id =
-            id
-                :: (case getParentId id model of
-                        Nothing ->
-                            []
-
-                        Just parentId ->
-                            selectionPath parentId
-                   )
-
         alreadySelected =
             List.head model.selection == Just id
     in
         { model
-            | selection = selectionPath id
+            | selection = getPath id model
             , showSubselection = not alreadySelected || not model.showSubselection
         }
 
 
 loadSubfolder : FolderId -> Model -> ( Model, Cmd Msg )
-loadSubfolder id model =
-    case getSubfolderIds id model of
+loadSubfolder superfolderId model =
+    case getSubLinks superfolderId model of
         Nothing ->
             ( { model | loading = True }
             , Api.makeRequest
-                (ApiResponse False)
-                (Api.querySubfolder id)
+                (ApiResponseSubfolder superfolderId)
+                (Api.querySubfolder superfolderId)
             )
 
         Just _ ->
@@ -241,18 +260,36 @@ viewFolder model id =
                 -- because only cached folders are getting linked.
                 Html.div [] [ Html.text "..." ]
 
-            Just folder ->
+            Just { folder } ->
                 Html.div []
                     [ Html.div
                         [ Html.Events.onClick (Select id) ]
                         [ Folder.view folder isSelectedFolder expanded ]
                     , if expanded then
-                        case getSubfolderIds id model of
+                        case getSubLinks id model of
                             Nothing ->
                                 viewListOfFoldersLoading
 
-                            Just subfolderIds ->
-                                viewListOfFolders model subfolderIds
+                            Just subLinks ->
+                                viewListOfFolders model subLinks
                       else
                         Html.text ""
                     ]
+
+
+viewBreadcrumbs : Model -> FolderId -> Html msg
+viewBreadcrumbs model id =
+    Html.span []
+        (getPath id model
+            |> List.reverse
+            |> List.map
+                (\id ->
+                    Html.span []
+                        [ Dict.get id model.folderCache
+                            |> Maybe.Extra.unwrap "..." (.folder >> .name)
+                            |> Html.text
+                        ]
+                )
+            |> List.intersperse
+                (Html.span [] [ Html.text " > " ])
+        )

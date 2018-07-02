@@ -5,6 +5,7 @@ module Folder
         , init
         , idAsInt
         , isRoot
+        , hasSubfolder
         , view
         )
 
@@ -37,7 +38,6 @@ type alias Folder =
     , name : String
     , isCollection : Bool
     , numSubfolder : Int
-    , subfolderIds : Maybe (List FolderId)
     }
 
 
@@ -54,7 +54,6 @@ init idAsInt maybeParentIdAsInt name isCollection numSubfolder =
     , name = name
     , isCollection = isCollection
     , numSubfolder = numSubfolder
-    , subfolderIds = Nothing
     }
 
 
