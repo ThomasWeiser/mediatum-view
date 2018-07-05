@@ -3,6 +3,7 @@ module Main exposing (main)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Icons
 import Select
 import Tree
 import Search exposing (SearchType, SimpleSearchDomain)
@@ -115,7 +116,8 @@ update msg model =
 view : Model -> Html Msg
 view model =
     Html.div [ Html.Attributes.class "page-container" ]
-        [ Html.header []
+        [ Icons.definitions
+        , Html.header []
             [ Html.h2 []
                 [ Html.text "mediaTUM HSB Demo 2018-06-14"
                 , Html.div [ Html.Attributes.class "color" ]

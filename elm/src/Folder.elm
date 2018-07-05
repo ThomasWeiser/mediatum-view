@@ -11,6 +11,7 @@ module Folder
 
 import Html exposing (Html)
 import Html.Attributes
+import Icons
 
 
 {-| Distinct type for folder identifier, which just wraps the integer that is used in the API
@@ -77,13 +78,22 @@ view folder selected expanded =
     Html.div
         [ Html.Attributes.classList
             [ ( "folder-head", True )
-            , ( "leaf", not (hasSubfolder folder) )
-            , ( "expanded", hasSubfolder folder && expanded )
+            , ( "collection", folder.isCollection )
+            , ( "directory", not folder.isCollection )
             , ( "collapsed", hasSubfolder folder && not expanded )
+            , ( "expanded", hasSubfolder folder && expanded )
+            , ( "leaf", not (hasSubfolder folder) )
             , ( "selected", selected )
             ]
         ]
-        [ Html.span
+        [ if hasSubfolder folder then
+            if expanded then
+                Icons.expanded
+            else
+                Icons.collapsed
+          else
+            Icons.leaf
+        , Html.span
             [ Html.Attributes.class "folder-name" ]
             [ Html.text folder.name ]
         ]
