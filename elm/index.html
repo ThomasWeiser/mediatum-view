@@ -94,9 +94,13 @@ ul.folder-list ul.folder-list {
   height: 1.5ex;
   stroke: currentColor;
   fill: currentColor;
+  transition: transform 0.15s
 }
 .directory .svg-icon {
   fill: transparent;
+}
+.expanded .svg-icon {
+  transform: rotate(90deg);
 }
 </style>
 <body>

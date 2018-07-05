@@ -1,8 +1,7 @@
 module Icons
     exposing
         ( definitions
-        , collapsed
-        , expanded
+        , expando
         , leaf
         )
 
@@ -17,21 +16,15 @@ definitions =
         [ Svg.Attributes.display "none" ]
         [ Svg.defs
             [ Svg.Attributes.class "svg-icon-definitions" ]
-            [ symbolWithPath "collapsed" "M 6 4 l 20 12 l -20 12 z"
-            , symbolWithPath "expanded" "M 4 8 l 12 20 l 12 -20 z"
+            [ symbolWithPath "expando" "M 6 4 l 20 12 l -20 12 z"
             , symbolWithPath "leaf" "M 6 6 h 20 v 20 h -20 z"
             ]
         ]
 
 
-collapsed : Html msg
-collapsed =
-    icon "collapsed"
-
-
-expanded : Html msg
-expanded =
-    icon "expanded"
+expando : Html msg
+expando =
+    icon "expando"
 
 
 leaf : Html msg

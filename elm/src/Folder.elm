@@ -87,10 +87,7 @@ view folder selected expanded =
             ]
         ]
         [ if hasSubfolder folder then
-            if expanded then
-                Icons.expanded
-            else
-                Icons.collapsed
+            Icons.expando
           else
             Icons.leaf
         , Html.span
