@@ -161,10 +161,9 @@ viewSearchControls model =
             , Html.Events.onInput SearchString
             ]
             []
-        , Html.input
+        , Html.button
             [ Html.Attributes.type_ "submit"
             , Html.Attributes.value "Search"
-            , Html.Events.onSubmit Submit
             ]
-            []
+            [ Icons.search ]
         ]
