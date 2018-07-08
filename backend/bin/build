@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 p="psql -d mediatum_tu_prod_1 -U mediatum -f"
 

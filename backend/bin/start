@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 mkdir -p export
 
-# Log created SQL queries:
-# export DEBUG="*:sql" # https://github.com/postgraphql/postgraphql/issues/525#issuecomment-317273045
+# Log created SQL queries
+# https://github.com/postgraphql/postgraphql/issues/525#issuecomment-317273045
+# export DEBUG="*:sql" 
 
 postgraphile \
     --connection postgres://me@localhost:5432/mediatum_tu_prod_1 \
