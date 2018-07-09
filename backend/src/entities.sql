@@ -1,4 +1,7 @@
 
+-- Queries to extract the publicly exposed API objects
+-- from mediaTUM's generic node table.
+
 
 begin;
 

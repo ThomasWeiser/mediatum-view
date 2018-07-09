@@ -1,4 +1,6 @@
 
+-- Some queries for helping to examine the db structure.
+
 
 begin;
 

@@ -1,4 +1,5 @@
 
+-- Some auxiliary functions, that live in their own schema.
 
 begin;
 

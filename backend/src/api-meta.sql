@@ -1,12 +1,17 @@
 
+-- Publicly exposed GraphQL functions
+-- regarding meta objects.
+
 
 begin;
 
 
--- TODO: Quick and dirty pattern matching ahead. Needs more elaboration:
---       - Escape special characters (% and _ for ilike)
---       - Handle patterns with several words (search for results containing all of them)
---       - We may use FTS instead of pattern matching. Probably needs new index. But should be faster too.
+/*
+TODO: Quick and dirty pattern matching ahead. Needs more elaboration:
+  - Escape special characters (% and _ for ilike)
+  - Handle patterns with several words (search for results containing all of them)
+  - We may use FTS instead of pattern matching. Probably needs new index. But should be faster too.
+*/      
 
 
 create or replace function api.all_folders (name text, parent_id int4, is_root boolean, is_collection boolean, find text)
@@ -20,12 +25,18 @@ create or replace function api.all_folders (name text, parent_id int4, is_root b
     order by folder.orderpos
 $$ language sql stable rows 1000;
 
+comment on function api.all_folders (name text, parent_id int4, is_root boolean, is_collection boolean, find text) is
+    'Reads and enables pagination through all folders (i.w. collections and directories), optionally filtered by name, parentId, isRoot and isCollection, and searchable by name.';
+
 
 create or replace function api.folder_by_id (id int4)
     returns api.folder as $$
     select * from entity.folder
     where entity.folder.id = folder_by_id.id
 $$ language sql stable;
+
+comment on function api.folder_by_id (id int4) is
+    'Gets a folder by its mediaTUM node id.';
 
 
 create or replace function api.folder_subfolders (parent api.folder, name text, is_collection boolean, find text)
@@ -38,12 +49,18 @@ create or replace function api.folder_subfolders (parent api.folder, name text, 
     order by folder.orderpos
 $$ language sql stable rows 10;
 
+comment on function api.folder_subfolders (parent api.folder, name text, is_collection boolean, find text) is
+    'Reads and enables pagination through all sub-folders of this folder, optionally filtered by name and isCollection, and searchable by name.';
+
 
 create or replace function api.folder_superfolder (child api.folder)
     returns api.folder as $$
     select * from entity.folder
     where folder.id = child.parent_id
 $$ language sql stable;
+
+comment on function api.folder_superfolder (child api.folder) is
+    'Gets the super-folder of this folder. Returns null if this folder is at the root.';
 
 
 create or replace function api.all_metadatatypes (bibtexmapping text, citeprocmapping text, find text)
@@ -54,12 +71,18 @@ create or replace function api.all_metadatatypes (bibtexmapping text, citeprocma
       and (all_metadatatypes.find is null or metadatatype.longname ilike ('%' || all_metadatatypes.find || '%'))
 $$ language sql stable rows 100;
 
+comment on function api.all_metadatatypes (bibtexmapping text, citeprocmapping text, find text) is
+    'Reads and enables pagination through all meta data types, optionally filtered by bibtexmapping and citeprocmapping, and searchable by longname.';
+
 
 create or replace function api.metadatatype_by_name (name text)
     returns api.metadatatype as $$
     select * from entity.metadatatype
     where entity.metadatatype.name = metadatatype_by_name.name
 $$ language sql stable;
+
+comment on function api.folder_by_id (id int4) is
+    'Gets a meta data type by its name.';
 
 
 create or replace function api.all_metafields (name text, type text, find text)
@@ -74,6 +97,9 @@ create or replace function api.all_metafields (name text, type text, find text)
           )
     order by metafield.orderpos
 $$ language sql stable rows 3000;
+
+comment on function api.all_metafields (name text, type text, find text) is
+    'Reads and enables pagination through all meta fields, optionally filtered by name and type, and searchable by name, label and description.';
 
 
 create or replace function api.all_masks (name text, masktype text, language text, is_default boolean, is_vgroup boolean, find text)
@@ -91,6 +117,9 @@ create or replace function api.all_masks (name text, masktype text, language tex
     order by mask.orderpos
 $$ language sql stable rows 800;
 
+comment on function api.all_masks (name text, masktype text, language text, is_default boolean, is_vgroup boolean, find text) is
+    'Reads and enables pagination through all masks, optionally filtered by name, masktype, language, is_default, is_vgroup, and searchable by name and description.';
+
 
 create or replace function api.all_maskitems (name text, type text, fieldtype text, is_required boolean, find text)
     returns setof api.maskitem as $$
@@ -104,6 +133,9 @@ create or replace function api.all_maskitems (name text, type text, fieldtype te
           )
     order by maskitem.orderpos
 $$ language sql stable rows 800;
+
+comment on function api.all_maskitems (name text, type text, fieldtype text, is_required boolean, find text) is
+    'Reads and enables pagination through all mask items, optionally filtered by name, type, fieldtype and is_required, and searchable by name.';
 
 
 create or replace function api.all_maskitem_reachable (name text, type text, fieldtype text, is_required boolean, find text)
@@ -119,6 +151,9 @@ create or replace function api.all_maskitem_reachable (name text, type text, fie
     order by maskitem_recursive.orderpos
 $$ language sql stable rows 800;
 
+comment on function api.all_maskitem_reachable (name text, type text, fieldtype text, is_required boolean, find text) is
+    'Reads and enables pagination through all mask items (alternative implementation), optionally filtered by name, type, fieldtype and is_required, and searchable by name.';
+
 
 create or replace function api.all_mappings (type text, find text)
     returns setof api.mapping as $$
@@ -131,12 +166,18 @@ create or replace function api.all_mappings (type text, find text)
     order by mapping.orderpos
 $$ language sql stable rows 40;
 
+comment on function api.all_mappings (type text, find text) is
+    'Reads and enables pagination through all mappings, optionally filtered by type, and searchable by name and description.';
+
 
 create or replace function api.mapping_by_name (name text)
     returns api.mapping as $$
     select * from entity.mapping
     where entity.mapping.name = mapping_by_name.name
 $$ language sql stable;
+
+comment on function api.mapping_by_name (name text) is
+    'Gets a mapping by its name.';
 
 
 create or replace function api.all_mappingfields (name text, is_mandatory boolean, find text)
@@ -151,11 +192,17 @@ create or replace function api.all_mappingfields (name text, is_mandatory boolea
     order by mappingfield.orderpos
 $$ language sql stable rows 400;
 
+comment on function api.all_mappingfields (name text, is_mandatory boolean, find text) is
+    'Reads and enables pagination through all mapping fields, optionally filtered by name and is_mandatory, and searchable by name and description.';
+
 
 create or replace function api.metadatatype_attrs (mdt api.metadatatype, keys text[])
     returns jsonb as $$
     select aux.get_node_attrs (mdt.id, keys)
 $$ language sql stable;
+
+comment on function api.metadatatype_attrs (mdt api.metadatatype, keys text[]) is
+    'Gets the node attributes of this meta data type as a JSON value, optionally filtered by a list of keys.';
 
 
 create or replace function api.metadatatype_system_attrs (mdt api.metadatatype, keys text[])
@@ -163,11 +210,17 @@ create or replace function api.metadatatype_system_attrs (mdt api.metadatatype, 
     select aux.get_node_system_attrs (mdt.id, keys)
 $$ language sql stable;
 
+comment on function api.metadatatype_system_attrs (mdt api.metadatatype, keys text[]) is
+    'Gets the node system attributes of this meta data type as a JSON value, optionally filtered by a list of keys.';
+
 
 create or replace function api.metafield_attrs (metafield api.metafield, keys text[])
     returns jsonb as $$
     select aux.get_node_attrs (metafield.id, keys)
 $$ language sql stable;
+
+comment on function api.metafield_attrs (metafield api.metafield, keys text[]) is
+    'Gets the node attributes of this meta field as a JSON value, optionally filtered by a list of keys.';
 
 
 create or replace function api.metafield_system_attrs (metafield api.metafield, keys text[])
@@ -175,11 +228,17 @@ create or replace function api.metafield_system_attrs (metafield api.metafield, 
     select aux.get_node_system_attrs (metafield.id, keys)
 $$ language sql stable;
 
+comment on function api.metafield_system_attrs (metafield api.metafield, keys text[]) is
+    'Gets the node system attributes of this meta field as a JSON value, optionally filtered by a list of keys.';
+
 
 create or replace function api.mask_attrs (mask api.mask, keys text[])
     returns jsonb as $$
     select aux.get_node_attrs (mask.id, keys)
 $$ language sql stable;
+
+comment on function api.mask_attrs (mask api.mask, keys text[]) is
+    'Gets the node attributes of this mask as a JSON value, optionally filtered by a list of keys.';
 
 
 create or replace function api.mask_system_attrs (mask api.mask, keys text[])
@@ -187,17 +246,26 @@ create or replace function api.mask_system_attrs (mask api.mask, keys text[])
     select aux.get_node_system_attrs (mask.id, keys)
 $$ language sql stable;
 
+comment on function api.mask_system_attrs (mask api.mask, keys text[]) is
+    'Gets the node system attributes of this mask as a JSON value, optionally filtered by a list of keys.';
+
 
 create or replace function api.maskitem_attrs (maskitem api.maskitem, keys text[])
     returns jsonb as $$
     select aux.get_node_attrs (maskitem.id, keys)
 $$ language sql stable;
 
+comment on function api.maskitem_attrs (maskitem api.maskitem, keys text[]) is
+    'Gets the node attributes of this mask item as a JSON value, optionally filtered by a list of keys.';
+
 
 create or replace function api.maskitem_system_attrs (maskitem api.maskitem, keys text[])
     returns jsonb as $$
     select aux.get_node_system_attrs (maskitem.id, keys)
 $$ language sql stable;
+
+comment on function api.maskitem_system_attrs (maskitem api.maskitem, keys text[]) is
+    'Gets the node system attributes of this mask item as a JSON value, optionally filtered by a list of keys.';
 
 
 create or replace function api.metafield_metadatatype (mf api.metafield)
@@ -206,11 +274,17 @@ create or replace function api.metafield_metadatatype (mf api.metafield)
     where metadatatype.id = mf.metadatatype_id
 $$ language sql stable;
 
+comment on function api.metafield_metadatatype (mf api.metafield) is
+    'Gets the meta data type associated with this meta field.';
+
 
 create or replace function api.mapping_attrs (mapping api.mapping, keys text[])
     returns jsonb as $$
     select aux.get_node_attrs(mapping.id, keys)
 $$ language sql stable;
+
+comment on function api.mapping_attrs (mapping api.mapping, keys text[]) is
+    'Gets the node attributes of this mapping as a JSON value, optionally filtered by a list of keys.';
 
 
 create or replace function api.mapping_system_attrs (mapping api.mapping, keys text[])
@@ -218,17 +292,26 @@ create or replace function api.mapping_system_attrs (mapping api.mapping, keys t
     select aux.get_node_system_attrs(mapping.id, keys)
 $$ language sql stable;
 
+comment on function api.mapping_system_attrs (mapping api.mapping, keys text[]) is
+    'Gets the node system attributes of this mapping as a JSON value, optionally filtered by a list of keys.';
+
 
 create or replace function api.mappingfield_attrs (mappingfield api.mappingfield, keys text[])
     returns jsonb as $$
     select aux.get_node_attrs(mappingfield.id, keys)
 $$ language sql stable;
 
+comment on function api.mappingfield_attrs (mappingfield api.mappingfield, keys text[]) is
+    'Gets the node attributes of this mapping field as a JSON value, optionally filtered by a list of keys.';
+
 
 create or replace function api.mappingfield_system_attrs (mappingfield api.mappingfield, keys text[])
     returns jsonb as $$
     select aux.get_node_system_attrs(mappingfield.id, keys)
 $$ language sql stable;
+
+comment on function api.mappingfield_system_attrs (mappingfield api.mappingfield, keys text[]) is
+    'Gets the node system attributes of this mapping field as a JSON value, optionally filtered by a list of keys.';
 
 
 create or replace function api.metadatatype_metafields (mdt api.metadatatype, type text, find text)
@@ -244,6 +327,9 @@ create or replace function api.metadatatype_metafields (mdt api.metadatatype, ty
     order by metafield.orderpos
 $$ language sql stable rows 80;
 
+comment on function api.metadatatype_metafields (mdt api.metadatatype, type text, find text) is
+    'Reads and enables pagination through all meta fields of this meta data type, optionally filtered by type, and searchable by name, label and description.';
+
 
 create or replace function api.metadatatype_metafield_by_name (mdt api.metadatatype, name text)
     returns api.metafield as $$
@@ -252,12 +338,18 @@ create or replace function api.metadatatype_metafield_by_name (mdt api.metadatat
       and metafield.name = metadatatype_metafield_by_name.name
 $$ language sql stable;
 
+comment on function api.metadatatype_metafield_by_name (mdt api.metadatatype, name text) is
+    'Gets a meta field of this meta data type by name.';
+
 
 create or replace function api.mask_metadatatype (mask api.mask)
     returns api.metadatatype as $$
     select * from entity.metadatatype
     where metadatatype.id = mask.metadatatype_id
 $$ language sql stable;
+
+comment on function api.mask_metadatatype (mask api.mask) is
+    'Gets the meta data type of this mask.';
 
 
 create or replace function api.metadatatype_masks (mdt api.metadatatype, masktype text, language text, is_default boolean, is_vgroup boolean, find text)
@@ -275,6 +367,9 @@ create or replace function api.metadatatype_masks (mdt api.metadatatype, masktyp
     order by mask.orderpos
 $$ language sql stable rows 80;
 
+comment on function api.metadatatype_masks (mdt api.metadatatype, masktype text, language text, is_default boolean, is_vgroup boolean, find text) is
+    'Reads and enables pagination through all masks of this meta data type, optionally filtered by type, language, is_default, is_vgroup, and searchable by name and description.';
+
 
 create or replace function api.metadatatype_mask_by_name (mdt api.metadatatype, name text)
     returns api.mask as $$
@@ -282,6 +377,9 @@ create or replace function api.metadatatype_mask_by_name (mdt api.metadatatype, 
     where mask.metadatatype_id = mdt.id
       and mask.name = metadatatype_mask_by_name.name
 $$ language sql stable;
+
+comment on function api.metadatatype_mask_by_name (mdt api.metadatatype, name text) is
+    'Gets a mask of this meta data type by name.';
 
 
 create or replace function api.mask_maskitems (mask api.mask, type text, fieldtype text, is_required boolean, find text)
@@ -297,6 +395,9 @@ create or replace function api.mask_maskitems (mask api.mask, type text, fieldty
     order by maskitem.orderpos
 $$ language sql stable rows 80;
 
+comment on function api.mask_maskitems (mask api.mask, type text, fieldtype text, is_required boolean, find text) is
+    'Reads and enables pagination through all items this mask, optionally filtered by type, fieldtype and is_required, and searchable by name.';
+
 
 create or replace function api.mask_maskitem_by_name (mask api.mask, name text)
     returns api.maskitem as $$
@@ -304,6 +405,9 @@ create or replace function api.mask_maskitem_by_name (mask api.mask, name text)
     where maskitem.parent_id = mask.id
       and maskitem.name = mask_maskitem_by_name.name
 $$ language sql stable;
+
+comment on function api.mask_maskitem_by_name (mask api.mask, name text) is
+    'Gets an item of this mask by name.';
 
 
 create or replace function api.maskitem_subitems (parent api.maskitem, type text, is_required boolean, find text)
@@ -318,6 +422,9 @@ create or replace function api.maskitem_subitems (parent api.maskitem, type text
     order by maskitem.orderpos
 $$ language sql stable rows 10;
 
+comment on function api.maskitem_subitems (parent api.maskitem, type text, is_required boolean, find text) is
+    'Reads and enables pagination through all sub-items of this mask item, optionally filtered by type and is_required, and searchable by name.';
+
 
 create or replace function api.maskitem_subitem_by_name (parent api.maskitem, name text)
     returns api.maskitem as $$
@@ -326,12 +433,18 @@ create or replace function api.maskitem_subitem_by_name (parent api.maskitem, na
       and maskitem.name = maskitem_subitem_by_name.name
 $$ language sql stable;
 
+comment on function api.maskitem_subitem_by_name (parent api.maskitem, name text) is
+    'Gets a sub-item of this mask item by name.';
+
 
 create or replace function api.maskitem_superitem (child api.maskitem)
     returns api.maskitem as $$
     select * from entity.maskitem
     where maskitem.id = child.parent_id
 $$ language sql stable;
+
+comment on function api.maskitem_superitem (child api.maskitem) is
+    'Gets the super-item of this mask item. Returns null if this item is a direct child of a mask.';
 
 
 create or replace function api.maskitem_mask (child api.maskitem)
@@ -341,7 +454,7 @@ create or replace function api.maskitem_mask (child api.maskitem)
 $$ language sql stable;
 
 comment on function api.maskitem_mask (api.maskitem) is
-    'Get the mask of this maskitem. Returns null is this maskitem is a subitem of another maskitem';
+    'Gets the mask of this maskitem. Returns null is this maskitem is a subitem of another maskitem.';
 -- We may want a recursive query to get the mask of a nested maskitem too.
 
 
@@ -367,6 +480,9 @@ create or replace function api.maskitem_metafield (maskitem api.maskitem)
     end;
 $$ language plpgsql stable;
 
+comment on function api.maskitem_metafield (maskitem api.maskitem) is
+    'Gets the meta field associated with this mask item.';
+
 
 create or replace function api.maskitem_mappingfield(maskitem api.maskitem)
     returns api.mappingfield as $$
@@ -378,7 +494,8 @@ create or replace function api.maskitem_mappingfield(maskitem api.maskitem)
                 into result
                 from mediatum.node
                 join entity.mappingfield
-                  on (node.attrs->>'mappingfield' <> 'None') and (node.attrs->>'mappingfield')::int4 = mappingfield.id
+                  on (node.attrs->>'mappingfield' <> 'None') and
+                     (node.attrs->>'mappingfield')::int4 = mappingfield.id
                 where maskitem.id = node.id;
             else
                 result := null;
@@ -386,6 +503,9 @@ create or replace function api.maskitem_mappingfield(maskitem api.maskitem)
         return result;
     end;
 $$ language plpgsql stable;
+
+comment on function api.maskitem_mappingfield(maskitem api.maskitem) is
+    'Gets the mapping field associated with this mask item. Returns null if there is no such mapping field.';
 
 
 create or replace function api.maskitem_template(maskitem api.maskitem)
@@ -405,12 +525,18 @@ create or replace function api.maskitem_template(maskitem api.maskitem)
     end;
 $$ language plpgsql stable;
 
+comment on function api.maskitem_template(maskitem api.maskitem) is
+    'Gets the template string of mask item. Returns null if there is no such template.';
+
 
 create or replace function api.mappingfield_mapping(mf api.mappingfield)
     returns api.mapping as $$
     select * from entity.mapping
     where mapping.id = mf.mapping_id
 $$ language sql stable;
+
+comment on function api.mappingfield_mapping(mf api.mappingfield) is
+    'Gets the mapping of this mapping field.';
 
 
 create or replace function api.mapping_mappingfields(m api.mapping, is_mandatory boolean, find text)
@@ -424,6 +550,9 @@ create or replace function api.mapping_mappingfields(m api.mapping, is_mandatory
           )
 $$ language sql stable rows 80;
 
+comment on function api.mapping_mappingfields(m api.mapping, is_mandatory boolean, find text) is
+    'Reads and enables pagination through all mapping fields of this mapping, optionally filtered by is_mandatory, and searchable by name and description.';
+
 
 create or replace function api.mapping_mappingfield_by_name(m api.mapping, name text)
     returns api.mappingfield as $$
@@ -431,6 +560,9 @@ create or replace function api.mapping_mappingfield_by_name(m api.mapping, name 
     where mappingfield.mapping_id = m.id
       and mappingfield.name = mapping_mappingfield_by_name.name
 $$ language sql stable;
+
+comment on function api.mapping_mappingfield_by_name(m api.mapping, name text) is
+    'Gets a mapping field of this mapping by name.';
 
 
 create or replace function api.mask_exportmapping(mask api.mask)
@@ -440,6 +572,9 @@ create or replace function api.mask_exportmapping(mask api.mask)
     join entity.mapping on mapping.id = (node.attrs ->> 'exportmapping')::int4
     where node.id = mask.id
 $$ language sql stable;
+
+comment on function api.mask_exportmapping(mask api.mask) is
+    'Gets the export mapping of this mask. Returns null if there is no such mapping.';
 
 
 commit;

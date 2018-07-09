@@ -1,4 +1,7 @@
 
+-- Publicly exposed GraphQL functions
+-- regarding document objects.
+
 
 begin;
 
@@ -11,6 +14,9 @@ create or replace function api.all_documents (type text, name text)
       and (all_documents.name is null or document.name = all_documents.name)
 $$ language sql stable rows 10000;
 
+comment on function api.all_documents (type text, name text) is
+    'Reads and enables pagination through all documents, optionally filtered by type and name.';
+
 
 create or replace function api.document_by_id (id int4)
     returns api.document as $$
@@ -19,11 +25,17 @@ create or replace function api.document_by_id (id int4)
     where document.id = document_by_id.id
 $$ language sql stable;
 
+comment on function api.document_by_id (id int4) is
+    'Gets a document by its mediaTUM node id.';
+
 
 create or replace function api.document_attrs (document api.document, keys text[])
     returns jsonb as $$
     select aux.get_node_attrs (document.id, keys)
 $$ language sql stable;
+
+comment on function api.document_attrs (document api.document, keys text[]) is
+    'Gets the node attributes of this document as a JSON value, optionally filtered by a list of keys.';
 
 
 create or replace function api.document_system_attrs (document api.document, keys text[])
@@ -31,11 +43,17 @@ create or replace function api.document_system_attrs (document api.document, key
     select aux.get_node_system_attrs (document.id, keys)
 $$ language sql stable;
 
+comment on function api.document_system_attrs (document api.document, keys text[]) is
+    'Gets the node system attributes of this document as a JSON value, optionally filtered by a list of keys.';
+
 
 create or replace function api.document_metadatatype (document api.document)
     returns api.metadatatype as $$
     select api.metadatatype_by_name (document.schema)
 $$ language sql stable;
+
+comment on function api.document_metadatatype (document api.document) is
+    'Gets the meta data type of this document.';
 
 
 create or replace function api.metadatatype_documents (mdt api.metadatatype, type text, name text)
@@ -47,6 +65,9 @@ create or replace function api.metadatatype_documents (mdt api.metadatatype, typ
       and (metadatatype_documents.name is null or document.name = metadatatype_documents.name)
 $$ language sql stable;
 
+comment on function api.metadatatype_documents (mdt api.metadatatype, type text, name text) is
+    'Reads and enables pagination through all documents having this meta data type, optionally filtered by type and name.';
+
 
 create or replace function api.document_values_by_mask (document api.document, mask_name text)
     returns jsonb as $$
@@ -55,6 +76,9 @@ create or replace function api.document_values_by_mask (document api.document, m
     where v.document_id = document_values_by_mask.document.id
       and v.mask_name = document_values_by_mask.mask_name
 $$ language sql stable parallel safe;
+
+comment on function api.document_values_by_mask (document api.document, mask_name text) is
+    'Gets the meta field values of this document as a JSON value, selected by a named mask.';
 
 
 create or replace function api.folder_documents (folder api.folder, type text, name text)
@@ -66,6 +90,9 @@ create or replace function api.folder_documents (folder api.folder, type text, n
       and (folder_documents.type is null or document.type = folder_documents.type)
       and (folder_documents.name is null or document.name = folder_documents.name)
 $$ language sql stable rows 1000;
+
+comment on function api.folder_documents (folder api.folder, type text, name text) is
+    'Reads and enables pagination through all documents within a folder, optionally filtered by type and name.';
 
 
 create or replace function aux.simple_search_hit (text text, language text, domain text, "limit" integer)
@@ -121,6 +148,12 @@ create or replace function api.folder_simple_search (folder api.folder, text tex
     ;
 $$ language sql stable rows 100 parallel safe;
 
+comment on function api.folder_simple_search (folder api.folder, text text, languages text [], domains text [], "limit" integer) is
+    'Reads and enables pagination through all documents within a folder, filtered by a keyword search, and sorted by a search rank.'
+    ' Languages may currently include "english" and "german".'
+    ' Domains may currently include "fulltext" and "attrs".'
+    ' You have to give a limit for the number of results (in order to limit the expense for sorting them by rank).';
+
 
 create or replace function api.folder_simple_search_unranked (folder api.folder, text text, languages text [], domains text [], "limit" integer)
     returns setof api.document as $$
@@ -136,8 +169,14 @@ create or replace function api.folder_simple_search_unranked (folder api.folder,
     where aux.test_node_lineage (folder.id, document.id)
 $$ language sql stable rows 100 parallel safe;
 
+comment on function api.folder_simple_search (folder api.folder, text text, languages text [], domains text [], "limit" integer) is
+    'Reads and enables pagination through all documents within a folder, filtered by a keyword search, not sorted by a search rank.'
+    ' Languages may currently include "english" and "german".'
+    ' Domains may currently include "fulltext" and "attrs".'
+    ' You have to give a limit for the number of results.';
 
-create or replace function api.folder_author_search (folder api.folder, text text) 
+
+create or replace function api.folder_author_search (folder api.folder, text text)
     returns setof api.document as $$
     select
         node.id,
@@ -156,6 +195,9 @@ create or replace function api.folder_author_search (folder api.folder, text tex
           )
           @@ tsq;
 $$ language sql stable rows 100 parallel safe;
+
+comment on function api.folder_author_search (folder api.folder, text text) is
+    'Reads and enables pagination through all documents within a folder, filtered by a keyword search though the documents'' author.';
 
 
 commit;

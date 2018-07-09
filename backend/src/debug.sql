@@ -1,4 +1,7 @@
 
+-- Functions used during development, that link the public GraphQL types with the mediaTUM node table.
+-- Useful when examining the structure of the node table.
+
 
 begin;
 
@@ -110,11 +113,14 @@ create or replace function debug.mediatum_node_child_nodes (
 $$ language sql stable;
 
 
-/* Would like to put these debug functions into schema `debug`.
+/* Would like to put the following debug functions into schema `debug`.
    But input data type and function must live in same schema.
    https://www.graphile.org/postgraphile/computed-columns/
    So these functions must not be made accessible in production
-   as it reveals private parts of `node` table!
+   as it reveals private parts of the `node` table!
+
+   Maybe we should remove these functions altogether!
+   Don't think they are that useful anyway!.
 */
 create or replace function api.metadatatype_node (metadatatype api.metadatatype)
     returns debug.mediatum_node as $$
