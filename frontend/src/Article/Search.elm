@@ -1,4 +1,4 @@
-module Search
+module Article.Search
     exposing
         ( Model
         , Specification
@@ -19,10 +19,14 @@ import Page exposing (Page, PageResult)
 import Graphqelm.Extra
 import Document exposing (Document, Attribute)
 import Api
-import Folder exposing (FolderId)
-import Tree
+import Folder exposing (Folder, FolderId)
 import Icons
 import Utils
+
+
+type alias Context =
+    { folder : Folder
+    }
 
 
 type alias Model =
@@ -32,8 +36,7 @@ type alias Model =
 
 
 type alias Specification =
-    { folder : Maybe FolderId
-    , searchType : SearchType
+    { searchType : SearchType
     , searchString : String
     }
 
@@ -52,10 +55,11 @@ type SimpleSearchDomain
 type Msg
     = ApiResponse (Api.Response (Page Document))
     | PickPosition Pagination.Position
+    | SelectDocument Int
 
 
-init : Specification -> ( Model, Cmd Msg )
-init specification =
+init : Context -> Specification -> ( Model, Cmd Msg )
+init context specification =
     let
         model =
             { specification = specification
@@ -64,92 +68,85 @@ init specification =
     in
         update
             (PickPosition Pagination.First)
+            context
             model
+            |> Utils.tupleRemoveThird
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Msg -> Context -> Model -> ( Model, Cmd Msg, Maybe Int )
+update msg context model =
     case msg of
         PickPosition position ->
-            sendSearchQuery position model
+            sendSearchQuery position context model
+                |> Utils.tupleAddThird Nothing
 
         ApiResponse result ->
             ( { model
                 | pageResult = Page.updatePageResultFromResult result model.pageResult
               }
             , Cmd.none
+            , Nothing
             )
 
+        SelectDocument id ->
+            ( model, Cmd.none, Just id )
 
-sendSearchQuery : Pagination.Position -> Model -> ( Model, Cmd Msg )
-sendSearchQuery paginationPosition model =
-    case model.specification.folder of
-        Nothing ->
-            ( model
-            , Cmd.none
+
+sendSearchQuery : Pagination.Position -> Context -> Model -> ( Model, Cmd Msg )
+sendSearchQuery paginationPosition context model =
+    if model.specification.searchString == "" then
+        ( { model
+            | pageResult = Page.loadingPageResult model.pageResult
+          }
+        , Api.makeRequest
+            ApiResponse
+            (Api.queryFolderDocuments
+                model.pageResult.page
+                paginationPosition
+                context.folder.id
             )
-
-        Just folderId ->
-            if model.specification.searchString == "" then
-                ( { model
-                    | pageResult = Page.loadingPageResult model.pageResult
-                  }
-                , Api.makeRequest
+        )
+    else
+        ( { model
+            | pageResult = Page.loadingPageResult model.pageResult
+          }
+        , case model.specification.searchType of
+            SimpleSearch simpleSearchDomain ->
+                Api.makeRequest
                     ApiResponse
-                    (Api.queryFolderDocuments
+                    (Api.querySimpleSearch
                         model.pageResult.page
                         paginationPosition
-                        folderId
+                        context.folder.id
+                        model.specification.searchString
+                        (case simpleSearchDomain of
+                            SearchAttributes ->
+                                [ "attrs" ]
+
+                            SearchFulltext ->
+                                [ "fulltext" ]
+
+                            SearchAll ->
+                                [ "attrs", "fulltext" ]
+                        )
                     )
-                )
-            else
-                ( { model
-                    | pageResult = Page.loadingPageResult model.pageResult
-                  }
-                , case model.specification.searchType of
-                    SimpleSearch simpleSearchDomain ->
-                        Api.makeRequest
-                            ApiResponse
-                            (Api.querySimpleSearch
-                                model.pageResult.page
-                                paginationPosition
-                                folderId
-                                model.specification.searchString
-                                (case simpleSearchDomain of
-                                    SearchAttributes ->
-                                        [ "attrs" ]
 
-                                    SearchFulltext ->
-                                        [ "fulltext" ]
-
-                                    SearchAll ->
-                                        [ "attrs", "fulltext" ]
-                                )
-                            )
-
-                    AuthorSearch ->
-                        Api.makeRequest
-                            ApiResponse
-                            (Api.queryAuthorSearch
-                                model.pageResult.page
-                                paginationPosition
-                                folderId
-                                model.specification.searchString
-                            )
-                )
+            AuthorSearch ->
+                Api.makeRequest
+                    ApiResponse
+                    (Api.queryAuthorSearch
+                        model.pageResult.page
+                        paginationPosition
+                        context.folder.id
+                        model.specification.searchString
+                    )
+        )
 
 
-view : Tree.Model -> Model -> Html Msg
-view tree model =
+view : Model -> Html Msg
+view model =
     Html.div []
-        [ Html.div [ Html.Attributes.class "breadcrumbs" ] <|
-            case model.specification.folder of
-                Just folderId ->
-                    [ Tree.viewBreadcrumbs tree folderId ]
-
-                Nothing ->
-                    [ Html.text Utils.noBreakSpace ]
-        , Html.div [] <|
+        [ Html.div [] <|
             if model.specification.searchString == "" then
                 [ Html.span [] [ Html.text "All Documents" ] ]
             else
@@ -166,7 +163,7 @@ view tree model =
             Just documentPage ->
                 viewResponse
                     PickPosition
-                    (viewPage Document.view)
+                    (viewPage (Document.view SelectDocument))
                     documentPage
         , if model.pageResult.loading then
             Icons.spinner

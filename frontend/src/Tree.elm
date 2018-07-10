@@ -6,7 +6,7 @@ module Tree
         , update
         , view
         , viewBreadcrumbs
-        , selectedFolderId
+        , selectedFolder
         )
 
 import Dict exposing (Dict)
@@ -55,9 +55,11 @@ init =
     )
 
 
-selectedFolderId : Model -> Maybe FolderId
-selectedFolderId model =
+selectedFolder : Model -> Maybe Folder
+selectedFolder model =
     List.head model.selection
+        |> Maybe.andThen (flip Dict.get model.folderCache)
+        |> Maybe.map .folder
 
 
 update : Msg -> Model -> ( Model, Cmd Msg, Bool )

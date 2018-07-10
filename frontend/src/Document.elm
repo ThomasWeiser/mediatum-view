@@ -3,10 +3,12 @@ module Document exposing (Document, Attribute, view)
 import Regex
 import Html exposing (Html)
 import Html.Attributes
+import Html.Events
 
 
 type alias Document =
-    { metadatatypeName : String
+    { id : Int
+    , metadatatypeName : String
     , attributes : List Attribute
     }
 
@@ -19,12 +21,15 @@ type alias Attribute =
     }
 
 
-view : Document -> Html msg
-view document =
+view : (Int -> msg) -> Document -> Html msg
+view clickMsg document =
     Html.div [ Html.Attributes.class "document" ]
         [ Html.div [ Html.Attributes.class "metadatatype" ]
             [ Html.text document.metadatatypeName ]
-        , Html.div [ Html.Attributes.class "attributes" ]
+        , Html.div
+            [ Html.Attributes.class "attributes" 
+            , Html.Events.onClick (clickMsg document.id)
+            ]
             (List.map
                 viewAttribute
                 document.attributes

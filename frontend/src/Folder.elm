@@ -2,6 +2,7 @@ module Folder
     exposing
         ( FolderId
         , Folder
+        , dummy
         , init
         , idAsInt
         , isRoot
@@ -39,6 +40,16 @@ type alias Folder =
     , name : String
     , isCollection : Bool
     , numSubfolder : Int
+    }
+
+
+dummy : Folder
+dummy = 
+    { id = ( -1, 0.0 )
+    , parent = Nothing
+    , name = ""
+    , isCollection = False
+    , numSubfolder = 0
     }
 
 

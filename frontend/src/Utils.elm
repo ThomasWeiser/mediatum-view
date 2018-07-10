@@ -2,6 +2,8 @@ module Utils
     exposing
         ( noBreakSpace
         , when
+        , tupleAddThird
+        , tupleRemoveThird
         )
 
 import Char
@@ -14,4 +16,17 @@ noBreakSpace =
 
 when : (a -> a) -> Bool -> a -> a
 when fn cond =
-    if cond then fn else identity
+    if cond then
+        fn
+    else
+        identity
+
+
+tupleAddThird : c -> ( a, b ) -> ( a, b, c )
+tupleAddThird c ( a, b ) =
+    ( a, b, c )
+
+
+tupleRemoveThird : ( a, b, c ) -> ( a, b )
+tupleRemoveThird ( a, b, c ) =
+    ( a, b )

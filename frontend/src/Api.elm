@@ -245,6 +245,10 @@ documentNode : SelectionSet Document Graphql.Object.Document
 documentNode =
     Graphql.Object.Document.selection Document
         |> with
+            (Graphql.Object.Document.id
+                |> Graphqelm.Field.nonNullOrFail
+            )
+        |> with
             (Graphql.Object.Document.metadatatype
                 (Graphql.Object.Metadatatype.selection identity
                     |> with

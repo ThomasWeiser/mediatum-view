@@ -1,13 +1,13 @@
 module Main exposing (main)
 
-import Maybe.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
 import Select
 import Tree
-import Search exposing (SearchType, SimpleSearchDomain)
+import Article
+import Article.Search exposing (SearchType, SimpleSearchDomain)
 import Utils
 
 
@@ -15,7 +15,7 @@ type alias Model =
     { searchType : SearchType
     , searchString : String
     , tree : Tree.Model
-    , search : Search.Model
+    , article : Article.Model
     }
 
 
@@ -34,36 +34,32 @@ type Msg
     | SetSearchType SearchType
     | Submit
     | TreeMsg Tree.Msg
-    | SearchMsg Search.Msg
+    | ArticleMsg Article.Msg
 
 
 init : ( Model, Cmd Msg )
 init =
     let
         initialSearchType =
-            Search.SimpleSearch Search.SearchAttributes
+            Article.Search.SimpleSearch Article.Search.SearchAttributes
 
         ( treeModel, treeCmd ) =
             Tree.init
 
-        ( searchModel, searchCmd ) =
-            Search.init
-                { folder = Nothing
-                , searchType = initialSearchType
-                , searchString = ""
-                }
+        ( articleModel, articleCmd ) =
+            Article.initEmpty ()
 
         model =
             { searchType = initialSearchType
             , searchString = ""
             , tree = treeModel
-            , search = searchModel
+            , article = articleModel
             }
     in
         ( model
         , Cmd.batch
             [ Cmd.map TreeMsg treeCmd
-            , Cmd.map SearchMsg searchCmd
+            , Cmd.map ArticleMsg articleCmd
             ]
         )
 
@@ -93,29 +89,33 @@ update msg model =
                         (andThenUpdate Submit)
                         changedSelection
 
-        SearchMsg subMsg ->
+        ArticleMsg subMsg ->
             let
                 ( subModel, subCmd ) =
-                    Search.update subMsg model.search
+                    Article.update subMsg model.article
             in
-                ( { model | search = subModel }
-                , Cmd.map SearchMsg subCmd
+                ( { model | article = subModel }
+                , Cmd.map ArticleMsg subCmd
                 )
 
         Submit ->
-            let
-                ( searchModel, searchCmd ) =
-                    Search.init
-                        { folder = model.tree |> Tree.selectedFolderId
-                        , searchType = model.searchType
-                        , searchString = model.searchString
-                        }
-            in
-                ( { model
-                    | search = searchModel
-                  }
-                , Cmd.map SearchMsg searchCmd
-                )
+            case model.tree |> Tree.selectedFolder of
+                Just selectedFolder ->
+                    let
+                        ( articleModel, articleCmd ) =
+                            Article.initCollectionOrSearch
+                                selectedFolder
+                                model.searchType
+                                model.searchString
+                    in
+                        ( { model
+                            | article = articleModel
+                          }
+                        , Cmd.map ArticleMsg articleCmd
+                        )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
 
 andThenUpdate : Msg -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
@@ -145,8 +145,8 @@ view model =
                 ]
             , Html.article
                 [ Html.Attributes.class "search" ]
-                [ Html.map SearchMsg <|
-                    Search.view model.tree model.search
+                [ Html.map ArticleMsg <|
+                    Article.view model.tree model.article
                 ]
             ]
         ]
@@ -159,14 +159,14 @@ viewSearchControls model =
         , Html.Events.onSubmit Submit
         ]
         [ Select.fromSelected_
-            [ Search.SimpleSearch Search.SearchAttributes
-            , Search.SimpleSearch Search.SearchFulltext
-            , Search.SimpleSearch Search.SearchAll
-            , Search.AuthorSearch
+            [ Article.Search.SimpleSearch Article.Search.SearchAttributes
+            , Article.Search.SimpleSearch Article.Search.SearchFulltext
+            , Article.Search.SimpleSearch Article.Search.SearchAll
+            , Article.Search.AuthorSearch
             ]
             SetSearchType
             toString
-            Search.searchTypeText
+            Article.Search.searchTypeText
             model.searchType
         , Html.input
             [ Html.Attributes.class "search-input"
