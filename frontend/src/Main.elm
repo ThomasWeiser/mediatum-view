@@ -133,8 +133,14 @@ view model =
         [ Icons.definitions
         , Html.header []
             [ Html.h2 []
-                [ Html.text "mediaTUM HSB Demo 2018-06-14"
-                , Html.div [ Html.Attributes.class "color" ]
+                [ Html.div []
+                    [ Html.span [ Html.Attributes.class "title" ]
+                        [ Html.text "mediaTUM view" ]
+                    , Html.span [ Html.Attributes.class "subtitle" ]
+                        [ Html.text "Demo 2018-07-12" ]
+                    ]
+                , Html.div
+                    [ Html.Attributes.class "subtitle" ]
                     [ Html.text "PostgreSQL · PostGraphile · GraphQL · Elm" ]
                 ]
             , viewSearchControls model
