@@ -60,9 +60,9 @@ selectedFolderId model =
     List.head model.selection
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd Msg, Bool )
 update msg model =
-    case msg of
+    (case msg of
         ApiResponseToplevelFolder (Err err) ->
             ( { model
                 | loading = False
@@ -102,6 +102,13 @@ update msg model =
             model
                 |> selectFolder id
                 |> loadSubfolder id
+    )
+        |> (\( newModel, cmd ) ->
+                ( newModel
+                , cmd
+                , newModel.selection /= model.selection
+                )
+           )
 
 
 addRootFolders : List ( Folder, List Folder ) -> Model -> Model

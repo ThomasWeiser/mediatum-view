@@ -37,13 +37,13 @@ main {
   min-height: 0;
 }
 aside {
-  flex: 1;
+  flex: 3;
   overflow: auto;
   border-right: 1px solid grey;
   padding: 0.3em;
 }
 article {
-  flex: 3;
+  flex: 7;
   overflow: auto;
   padding: 0.5em;
 }
@@ -106,6 +106,22 @@ ul.folder-list ul.folder-list {
 .expanded .svg-icon {
   transform: rotate(90deg);
 }
+
+.search {
+  position: relative;
+}
+.search .spinner {
+  width: 3em;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.search .error {
+  color: #e81c4f;
+}
+
 </style>
 <body>
   <div></div>

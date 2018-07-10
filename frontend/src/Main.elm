@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Maybe.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -7,6 +8,7 @@ import Icons
 import Select
 import Tree
 import Search exposing (SearchType, SimpleSearchDomain)
+import Utils
 
 
 type alias Model =
@@ -81,12 +83,15 @@ update msg model =
 
         TreeMsg subMsg ->
             let
-                ( subModel, subCmd ) =
+                ( subModel, subCmd, changedSelection ) =
                     Tree.update subMsg model.tree
             in
                 ( { model | tree = subModel }
                 , Cmd.map TreeMsg subCmd
                 )
+                    |> Utils.when
+                        (andThenUpdate Submit)
+                        changedSelection
 
         SearchMsg subMsg ->
             let
@@ -113,6 +118,15 @@ update msg model =
                 )
 
 
+andThenUpdate : Msg -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+andThenUpdate msg ( model1, cmd1 ) =
+    let
+        ( model2, cmd2 ) =
+            update msg model1
+    in
+        ( model2, Cmd.batch [ cmd1, cmd2 ] )
+
+
 view : Model -> Html Msg
 view model =
     Html.div [ Html.Attributes.class "page-container" ]
@@ -129,7 +143,8 @@ view model =
             [ Html.aside []
                 [ Html.map TreeMsg <| Tree.view model.tree
                 ]
-            , Html.article []
+            , Html.article
+                [ Html.Attributes.class "search" ]
                 [ Html.map SearchMsg <|
                     Search.view model.tree model.search
                 ]

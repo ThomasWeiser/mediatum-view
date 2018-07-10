@@ -16,10 +16,13 @@ import Html.Attributes
 import Html.Events
 import Pagination
 import Page exposing (Page, PageResult)
+import Graphqelm.Extra
 import Document exposing (Document, Attribute)
 import Api
 import Folder exposing (FolderId)
 import Tree
+import Icons
+import Utils
 
 
 type alias Model =
@@ -139,35 +142,42 @@ sendSearchQuery paginationPosition model =
 view : Tree.Model -> Model -> Html Msg
 view tree model =
     Html.div []
-        [ case model.specification.folder of
-            Just folderId ->
-                Html.div []
+        [ Html.div [ Html.Attributes.class "breadcrumbs" ] <|
+            case model.specification.folder of
+                Just folderId ->
                     [ Tree.viewBreadcrumbs tree folderId ]
 
-            Nothing ->
-                Html.text ""
-        , Html.div []
-            [ Html.span [] [ Html.text "Search " ]
-            , Html.span [] [ Html.text <| searchTypeText model.specification.searchType ]
-            , Html.span [] [ Html.text ": \"" ]
-            , Html.span [] [ Html.text model.specification.searchString ]
-            , Html.span [] [ Html.text "\"" ]
-            ]
-        , Html.div []
-            [ Html.text <| "Loading: "
-            , Html.text <| toString model.pageResult.loading
-            , Html.text <| ". Error: "
-            , Html.text <| toString model.pageResult.error
-            ]
+                Nothing ->
+                    [ Html.text Utils.noBreakSpace ]
+        , Html.div [] <|
+            if model.specification.searchString == "" then
+                [ Html.span [] [ Html.text "All Documents" ] ]
+            else
+                [ Html.span [] [ Html.text "Search " ]
+                , Html.span [] [ Html.text <| searchTypeText model.specification.searchType ]
+                , Html.span [] [ Html.text ": \"" ]
+                , Html.span [] [ Html.text model.specification.searchString ]
+                , Html.span [] [ Html.text "\"" ]
+                ]
         , case model.pageResult.page of
             Nothing ->
-                Html.text "No query"
+                Html.text ""
 
             Just documentPage ->
                 viewResponse
                     PickPosition
                     (viewPage Document.view)
                     documentPage
+        , if model.pageResult.loading then
+            Icons.spinner
+          else
+            Html.text ""
+        , case model.pageResult.error of
+            Nothing ->
+                Html.text ""
+
+            Just error ->
+                viewError error
         ]
 
 
@@ -263,3 +273,10 @@ viewPaginationButtons page targetTagger =
                    page.pageInfo.hasNextPage
             -}
             ]
+
+
+viewError : Graphqelm.Extra.StrippedError -> Html msg
+viewError error =
+    Html.div
+        [ Html.Attributes.class "error" ]
+        [ Html.text (toString error) ]
