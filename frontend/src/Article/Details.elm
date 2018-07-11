@@ -95,7 +95,7 @@ viewAttribute attribute =
     case attribute.value of
         Just value ->
             Html.tr []
-                [ Html.td [] [ Html.text attribute.name, Html.text ":" ]
+                [ Html.td [] [ Html.text attribute.name ]
                 , Html.td [] [ Html.text value ]
                 ]
 
