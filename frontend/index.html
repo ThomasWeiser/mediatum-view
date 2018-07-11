@@ -71,7 +71,7 @@ article {
 .attribute:hover {
   background-color: #eee;
 }
-.attribute.author {
+.author {
   font-weight: bold;
 }
 .attribute.title {
@@ -84,6 +84,13 @@ article {
 }
 ul.folder-list ul.folder-list {
     margin-left: 1.4em;
+}
+.details .header {
+  margin: 3ex 0;
+}
+.details .header .metadatatype
+{
+  color: #e81c4f;
 }
 
 .folder-head {
@@ -137,7 +144,10 @@ ul.folder-list ul.folder-list {
 }
 .article .details table td {
   vertical-align: top;
-  padding: 0.1em 0;
+  padding: 0.2em 0;
+}
+.article .details table td:first-of-type {
+  font-weight: bold;
 }
 .article .details table td + td {
   padding-left: 0.4em;

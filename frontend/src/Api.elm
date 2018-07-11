@@ -270,6 +270,10 @@ documentNode maskName =
                 |> Graphqelm.Field.nonNullOrFail
             )
         |> with
+            (Graphql.Object.Document.name
+                |> Graphqelm.Field.nonNullOrFail
+            )
+        |> with
             (Graphql.Object.Document.valuesByMask
                 (\optionals ->
                     { optionals

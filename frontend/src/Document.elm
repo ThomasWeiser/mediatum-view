@@ -35,6 +35,7 @@ idAsInt ( _, i ) =
 
 type alias Document =
     { id : DocumentId
+    , name : String
     , metadatatypeName : String
     , attributes : List Attribute
     }
@@ -48,9 +49,10 @@ type alias Attribute =
     }
 
 
-init : Int -> String -> List Attribute -> Document
-init idAsInt metadatatypeName attributes =
+init : Int -> String -> String -> List Attribute -> Document
+init idAsInt metadatatypeName name attributes =
     { id = ( 0.0, idAsInt )
+    , name = name
     , metadatatypeName = metadatatypeName
     , attributes = attributes
     }

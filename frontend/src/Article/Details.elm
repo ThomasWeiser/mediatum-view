@@ -82,11 +82,19 @@ view model =
 
 viewDocument : Document -> Html msg
 viewDocument document =
-    Html.table []
-        [ Html.tbody [] <|
-            List.map
-                viewAttribute
-                document.attributes
+    Html.div []
+        [ Html.div [Html.Attributes.class "header"]
+            [ Html.div [ Html.Attributes.class "metadatatype" ]
+                [ Html.text document.metadatatypeName ]
+            , Html.div [ Html.Attributes.class "author" ]
+                [ Html.text document.name ]
+            ]
+        , Html.table []
+            [ Html.tbody [] <|
+                List.map
+                    viewAttribute
+                    document.attributes
+            ]
         ]
 
 
