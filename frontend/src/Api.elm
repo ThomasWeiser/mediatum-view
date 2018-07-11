@@ -8,6 +8,7 @@ module Api
         , queryFolderDocuments
         , querySimpleSearch
         , queryAuthorSearch
+        , queryDocumentDetails
         , sizeLimitSimpleSearch
         )
 
@@ -33,7 +34,7 @@ import Connection
 import Pagination
 import Page exposing (Page)
 import Folder exposing (FolderId, Folder)
-import Document exposing (Document, Attribute)
+import Document exposing (Document)
 
 
 pageSize : Int
@@ -154,7 +155,7 @@ queryFolderDocuments referencePage paginationPosition folderId =
                             )
                             (Connection.connection
                                 graphqlDocumentObjects
-                                documentNode
+                                (documentNode "nodesmall")
                             )
                         )
                 )
@@ -195,7 +196,7 @@ querySimpleSearch referencePage paginationPosition folderId searchString searchD
                             )
                             (Connection.connection
                                 graphqlDocumentObjects
-                                documentNode
+                                (documentNode "nodesmall")
                             )
                         )
                 )
@@ -233,7 +234,7 @@ queryAuthorSearch referencePage paginationPosition folderId searchString =
                             )
                             (Connection.connection
                                 graphqlDocumentObjects
-                                documentNode
+                                (documentNode "nodesmall")
                             )
                         )
                 )
@@ -241,8 +242,24 @@ queryAuthorSearch referencePage paginationPosition folderId searchString =
             )
 
 
-documentNode : SelectionSet Document Graphql.Object.Document
-documentNode =
+queryDocumentDetails :
+    Int
+    -> SelectionSet (Maybe Document) Graphqelm.Operation.RootQuery
+queryDocumentDetails documentId =
+    Graphql.Query.selection identity
+        |> with
+            (Graphql.Query.documentById
+                (\optionals ->
+                    { optionals
+                        | id = Present documentId
+                    }
+                )
+                (documentNode "nodebig")
+            )
+
+
+documentNode : String -> SelectionSet Document Graphql.Object.Document
+documentNode maskName =
     Graphql.Object.Document.selection Document
         |> with
             (Graphql.Object.Document.id
@@ -262,14 +279,14 @@ documentNode =
             (Graphql.Object.Document.valuesByMask
                 (\optionals ->
                     { optionals
-                        | maskName = Present "nodesmall"
+                        | maskName = Present maskName
                     }
                 )
                 |> Graphqelm.Field.map mapJsonToAttributes
             )
 
 
-mapJsonToAttributes : Maybe Graphql.Scalar.Json -> List Attribute
+mapJsonToAttributes : Maybe Graphql.Scalar.Json -> List Document.Attribute
 mapJsonToAttributes maybeJson =
     case maybeJson of
         Nothing ->
@@ -280,12 +297,12 @@ mapJsonToAttributes maybeJson =
                 Json.Decode.decodeString decoderAttributeList str
 
 
-decoderAttributeList : Decoder (List Attribute)
+decoderAttributeList : Decoder (List Document.Attribute)
 decoderAttributeList =
     Json.Decode.oneOf
         [ Json.Decode.null []
         , Json.Decode.list <|
-            Json.Decode.map4 Attribute
+            Json.Decode.map4 Document.Attribute
                 (Json.Decode.field "field" Json.Decode.string)
                 (Json.Decode.field "name" Json.Decode.string)
                 (Json.Decode.field "width" Json.Decode.int)

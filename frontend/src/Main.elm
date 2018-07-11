@@ -150,7 +150,7 @@ view model =
                 [ Html.map TreeMsg <| Tree.view model.tree
                 ]
             , Html.article
-                [ Html.Attributes.class "search" ]
+                [ Html.Attributes.class "article" ]
                 [ Html.map ArticleMsg <|
                     Article.view model.tree model.article
                 ]

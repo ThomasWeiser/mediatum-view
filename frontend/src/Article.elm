@@ -135,6 +135,7 @@ update msg model =
                         ( { model | content = SearchModel subModel1 }
                         , Cmd.map SearchMsg subCmd
                         )
+
                     Just documentId ->
                         initDetails model.static.folder documentId
 

@@ -27,7 +27,7 @@ view clickMsg document =
         [ Html.div [ Html.Attributes.class "metadatatype" ]
             [ Html.text document.metadatatypeName ]
         , Html.div
-            [ Html.Attributes.class "attributes" 
+            [ Html.Attributes.class "attributes"
             , Html.Events.onClick (clickMsg document.id)
             ]
             (List.map

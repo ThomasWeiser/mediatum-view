@@ -44,7 +44,7 @@ type alias Folder =
 
 
 dummy : Folder
-dummy = 
+dummy =
     { id = ( -1, 0.0 )
     , parent = Nothing
     , name = ""

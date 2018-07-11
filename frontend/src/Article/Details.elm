@@ -7,39 +7,104 @@ module Article.Details
         , view
         )
 
+import Maybe.Extra
 import Html exposing (Html)
-import Folder exposing (Folder, FolderId)
+import Html.Attributes
+import Document exposing (Document, Attribute)
+import Api
+import Graphqelm.Extra
+import Icons
 
 
-type alias Model =
-    { id : Int
-    }
+type Model
+    = Loading
+    | Success Document
+    | NotFound Int
+    | Error Graphqelm.Extra.StrippedError
 
 
 type Msg
-    = NoOp
+    = ApiResponse Int (Api.Response (Maybe Document))
 
 
 init : Int -> ( Model, Cmd Msg )
 init id =
-    ( { id = id }
-    , Cmd.none
+    ( Loading
+    , sendDocumentQuery id
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
+        ApiResponse _ (Err err) ->
+            ( Error err
+            , Cmd.none
+            )
+
+        ApiResponse id (Ok result) ->
+            ( Maybe.Extra.unwrap
+                (NotFound id)
+                Success
+                result
+            , Cmd.none
+            )
+
+
+sendDocumentQuery : Int -> Cmd Msg
+sendDocumentQuery id =
+    Api.makeRequest
+        (ApiResponse id)
+        (Api.queryDocumentDetails id)
 
 
 view : Model -> Html Msg
 view model =
-    Html.div []
-        [ Html.h3 [] <|
-    
-                [ Html.text "Display for document "
-                , Html.text (toString model.id)
-                ]
+    Html.div [ Html.Attributes.class "details" ]
+        [ case model of
+            Loading ->
+                Icons.spinner
+
+            Success document ->
+                viewDocument document
+
+            NotFound id ->
+                Html.span []
+                    [ Html.text "Document with id "
+                    , Html.text (toString id)
+                    , Html.text " not available"
+                    ]
+
+            Error error ->
+                viewError error
         ]
+
+
+viewDocument : Document -> Html msg
+viewDocument document =
+    Html.table []
+        [ Html.tbody [] <|
+            List.map
+                viewAttribute
+                document.attributes
+        ]
+
+
+viewAttribute : Attribute -> Html msg
+viewAttribute attribute =
+    case attribute.value of
+        Just value ->
+            Html.tr []
+                [ Html.td [] [ Html.text attribute.name, Html.text ":" ]
+                , Html.td [] [ Html.text value ]
+                ]
+
+        Nothing ->
+            Html.text ""
+
+
+viewError : Graphqelm.Extra.StrippedError -> Html msg
+viewError error =
+    Html.div
+        [ Html.Attributes.class "error" ]
+        [ Html.text (toString error) ]
