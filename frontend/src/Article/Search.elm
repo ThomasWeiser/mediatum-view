@@ -17,7 +17,7 @@ import Html.Events
 import Pagination
 import Page exposing (Page, PageResult)
 import Graphqelm.Extra
-import Document exposing (Document, Attribute)
+import Document exposing (Document, DocumentId, Attribute)
 import Api
 import Folder exposing (Folder, FolderId)
 import Icons
@@ -55,7 +55,7 @@ type SimpleSearchDomain
 type Msg
     = ApiResponse (Api.Response (Page Document))
     | PickPosition Pagination.Position
-    | SelectDocument Int
+    | SelectDocument DocumentId
 
 
 init : Context -> Specification -> ( Model, Cmd Msg )
@@ -73,7 +73,7 @@ init context specification =
             |> Utils.tupleRemoveThird
 
 
-update : Msg -> Context -> Model -> ( Model, Cmd Msg, Maybe Int )
+update : Msg -> Context -> Model -> ( Model, Cmd Msg, Maybe DocumentId )
 update msg context model =
     case msg of
         PickPosition position ->

@@ -10,7 +10,7 @@ module Article.Details
 import Maybe.Extra
 import Html exposing (Html)
 import Html.Attributes
-import Document exposing (Document, Attribute)
+import Document exposing (Document, DocumentId, Attribute)
 import Api
 import Graphqelm.Extra
 import Icons
@@ -19,15 +19,15 @@ import Icons
 type Model
     = Loading
     | Success Document
-    | NotFound Int
+    | NotFound DocumentId
     | Error Graphqelm.Extra.StrippedError
 
 
 type Msg
-    = ApiResponse Int (Api.Response (Maybe Document))
+    = ApiResponse DocumentId (Api.Response (Maybe Document))
 
 
-init : Int -> ( Model, Cmd Msg )
+init : DocumentId -> ( Model, Cmd Msg )
 init id =
     ( Loading
     , sendDocumentQuery id
@@ -51,7 +51,7 @@ update msg model =
             )
 
 
-sendDocumentQuery : Int -> Cmd Msg
+sendDocumentQuery : DocumentId -> Cmd Msg
 sendDocumentQuery id =
     Api.makeRequest
         (ApiResponse id)

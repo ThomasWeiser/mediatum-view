@@ -16,6 +16,7 @@ import Article.Empty
 import Article.Collection
 import Article.Search exposing (SearchType, SimpleSearchDomain)
 import Article.Details
+import Document exposing (DocumentId)
 
 
 type alias Model =
@@ -88,7 +89,7 @@ initCollectionOrSearch folder searchType searchString =
                 )
 
 
-initDetails : Folder -> Int -> ( Model, Cmd Msg )
+initDetails : Folder -> DocumentId -> ( Model, Cmd Msg )
 initDetails folder id =
     let
         ( subModel, subCmd ) =

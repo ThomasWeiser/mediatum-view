@@ -34,7 +34,7 @@ import Connection
 import Pagination
 import Page exposing (Page)
 import Folder exposing (FolderId, Folder)
-import Document exposing (Document)
+import Document exposing (Document, DocumentId)
 
 
 pageSize : Int
@@ -243,7 +243,7 @@ queryAuthorSearch referencePage paginationPosition folderId searchString =
 
 
 queryDocumentDetails :
-    Int
+    DocumentId
     -> SelectionSet (Maybe Document) Graphqelm.Operation.RootQuery
 queryDocumentDetails documentId =
     Graphql.Query.selection identity
@@ -251,7 +251,7 @@ queryDocumentDetails documentId =
             (Graphql.Query.documentById
                 (\optionals ->
                     { optionals
-                        | id = Present documentId
+                        | id = Present (Document.idAsInt documentId)
                     }
                 )
                 (documentNode "nodebig")
@@ -260,7 +260,7 @@ queryDocumentDetails documentId =
 
 documentNode : String -> SelectionSet Document Graphql.Object.Document
 documentNode maskName =
-    Graphql.Object.Document.selection Document
+    Graphql.Object.Document.selection Document.init
         |> with
             (Graphql.Object.Document.id
                 |> Graphqelm.Field.nonNullOrFail

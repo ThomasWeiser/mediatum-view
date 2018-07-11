@@ -1,4 +1,12 @@
-module Document exposing (Document, Attribute, view)
+module Document
+    exposing
+        ( Document
+        , DocumentId
+        , Attribute
+        , init
+        , idAsInt
+        , view
+        )
 
 import Regex
 import Html exposing (Html)
@@ -6,8 +14,27 @@ import Html.Attributes
 import Html.Events
 
 
+{- Actually, the type should be defined like this:
+
+       type DocumentId = DocumentId Int
+
+   But in Elm 0.18 union types are not comparable and therefore not usable as keys of a dict.
+   Only ints, floats, chars, strings, lists, and tuples are comparable.
+   So, as a workaround we use a tuple with some contrived structure to make it somewhat unique.
+-}
+
+
+type alias DocumentId =
+    ( Float, Int )
+
+
+idAsInt : DocumentId -> Int
+idAsInt ( _, i ) =
+    i
+
+
 type alias Document =
-    { id : Int
+    { id : DocumentId
     , metadatatypeName : String
     , attributes : List Attribute
     }
@@ -21,7 +48,15 @@ type alias Attribute =
     }
 
 
-view : (Int -> msg) -> Document -> Html msg
+init : Int -> String -> List Attribute -> Document
+init idAsInt metadatatypeName attributes =
+    { id = ( 0.0, idAsInt )
+    , metadatatypeName = metadatatypeName
+    , attributes = attributes
+    }
+
+
+view : (DocumentId -> msg) -> Document -> Html msg
 view clickMsg document =
     Html.div [ Html.Attributes.class "document" ]
         [ Html.div [ Html.Attributes.class "metadatatype" ]
