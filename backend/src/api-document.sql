@@ -6,16 +6,42 @@
 begin;
 
 
-create or replace function api.all_documents (type text, name text)
+create or replace function api.all_documents (folder_id int4, type text, name text)
     returns setof api.document as $$
-    select *
+    select document.*
     from entity.document
-    where (all_documents.type is null or document.type = all_documents.type)
-      and (all_documents.name is null or document.name = all_documents.name)
+    join aux.node_lineage on document.id = node_lineage.descendant
+    where folder_id = node_lineage.ancestor
+    and (all_documents.type is null or document.type = all_documents.type)
+    and (all_documents.name is null or document.name = all_documents.name);
 $$ language sql stable rows 10000;
 
-comment on function api.all_documents (type text, name text) is
-    'Reads and enables pagination through all documents, optionally filtered by type and name.';
+/*
+Actually, we would like to declare that the first parameter is required.
+
+This can be done by annotating the function as `strict` and using default arguments for the
+optional parameters. See https://github.com/graphile/postgraphile/issues/438
+
+Unfortunately, this leads to inefficient query execution.
+See http://www.postgresonline.com/journal/archives/163-STRICT-on-SQL-Function-Breaks-In-lining-Gotcha.html
+
+We tested with PostgreSQL version 9.6.5
+Maybe a later of PostgreSQL version will fix this inefficiency.
+Then we may want to amend the API here.
+
+create or replace function api.all_documents (folder_id int4, type text='', name text='')
+    returns setof api.document as $$
+    select document.*
+    from entity.document
+    join aux.node_lineage on document.id = node_lineage.descendant
+    where folder_id = node_lineage.ancestor
+    and (all_documents.type = '' or document.type = all_documents.type)
+    and (all_documents.name = '' or document.name = all_documents.name);
+$$ language sql stable strict rows 10000;
+*/
+
+comment on function api.all_documents (folder_id int4, type text, name text) is
+    'Reads and enables pagination through all documents in a folder, optionally filtered by type and name.';
 
 
 create or replace function api.document_by_id (id int4)
@@ -79,20 +105,6 @@ $$ language sql stable parallel safe;
 
 comment on function api.document_values_by_mask (document api.document, mask_name text) is
     'Gets the meta field values of this document as a JSON value, selected by a named mask.';
-
-
-create or replace function api.folder_documents (folder api.folder, type text, name text)
-    returns setof api.document as $$
-    select document.*
-    from entity.document
-    join aux.node_lineage on document.id = node_lineage.descendant
-    where folder.id = node_lineage.ancestor
-      and (folder_documents.type is null or document.type = folder_documents.type)
-      and (folder_documents.name is null or document.name = folder_documents.name)
-$$ language sql stable rows 1000;
-
-comment on function api.folder_documents (folder api.folder, type text, name text) is
-    'Reads and enables pagination through all documents within a folder, optionally filtered by type and name.';
 
 
 create or replace function aux.simple_search_hit (text text, language text, domain text, "limit" integer)

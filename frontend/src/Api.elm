@@ -139,27 +139,21 @@ queryFolderDocuments :
 queryFolderDocuments referencePage paginationPosition folderId =
     Graphql.Query.selection identity
         |> with
-            (Graphql.Query.folderById
-                (\optionals ->
+            (Graphql.Query.allDocuments
+                ((\optionals ->
                     { optionals
-                        | id = Present (Folder.idAsInt folderId)
+                        | folderId = Present (Folder.idAsInt folderId)
                     }
+                 )
+                    >> Pagination.paginationArguments
+                        pageSize
+                        referencePage
+                        paginationPosition
                 )
-                (Graphql.Object.Folder.selection identity
-                    |> with
-                        (Graphql.Object.Folder.documents
-                            (Pagination.paginationArguments
-                                pageSize
-                                referencePage
-                                paginationPosition
-                            )
-                            (Connection.connection
-                                graphqlDocumentObjects
-                                (documentNode "nodesmall")
-                            )
-                        )
+                (Connection.connection
+                    graphqlDocumentObjects
+                    (documentNode "nodesmall")
                 )
-                |> Graphqelm.Field.nonNullOrFail
             )
 
 

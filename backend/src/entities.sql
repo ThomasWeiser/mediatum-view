@@ -238,9 +238,9 @@ create materialized view entity.mappingfield as
 create or replace view entity.document as
     select
         node.id,
-        node.type,
-        node.schema,
-        node.name,
+        node.type :: text,
+        node.schema :: text,
+        node.name :: text,
         node.orderpos
     from mediatum.node
     join mediatum.nodetype on node.type = nodetype.name
