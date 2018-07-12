@@ -14,7 +14,8 @@ create materialized view entity.folder_node as
     select *
     from mediatum.node
     where node.type in ('collections', 'collection', 'directory')
-    and node.name is not null;
+    and node.name is not null
+    and aux.is_public_today (node.id);
    
 create unique index ix_folder_mode on entity.folder_node (id);   
 
