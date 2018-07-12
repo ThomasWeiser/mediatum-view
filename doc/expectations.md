@@ -37,6 +37,13 @@
      - selected as children of node 'metadatatypes'
      - selected by type 'metadatatype'
 
+### Assumptions about folders
+
+- a `collection` has a unique parent folder
+    - There is one exception: `1296307`
+- a `directory` has a unique parent folder
+    - There is four exceptions
+
 
 ## Questions
 
