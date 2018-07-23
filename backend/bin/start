@@ -13,5 +13,8 @@ postgraphile \
     --export-schema-json export/schema-export.json \
     --export-schema-graphql export/schema-export.graphql \
     --watch \
+    --no-setof-functions-contain-nulls \
+    --legacy-relations=omit \
+    --no-ignore-rbac \
 
 #     --dynamic-json \

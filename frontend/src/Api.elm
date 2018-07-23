@@ -23,7 +23,6 @@ import Graphql.Object.Metadatatype
 import Graphql.Query
 import Graphql.Scalar
 import Json.Decode exposing (Decoder)
-import Maybe.Extra
 import Graphqelm.Field
 import Graphqelm.OptionalArgument exposing (OptionalArgument(Present))
 import Graphqelm.SelectionSet exposing (SelectionSet, with, hardcoded)
@@ -68,7 +67,7 @@ makeRequest tagger selectionSet =
 
 queryToplevelFolder : SelectionSet (List ( Folder, List Folder )) Graphqelm.Operation.RootQuery
 queryToplevelFolder =
-    Graphql.Query.selection Maybe.Extra.values
+    Graphql.Query.selection identity
         |> with
             (Graphql.Query.allFolders
                 (\optionals ->
@@ -84,7 +83,7 @@ queryToplevelFolder =
 
 querySubfolder : FolderId -> SelectionSet (List Folder) Graphqelm.Operation.RootQuery
 querySubfolder folderId =
-    Graphql.Query.selection Maybe.Extra.values
+    Graphql.Query.selection identity
         |> with
             (Graphql.Query.allFolders
                 (\optionals ->
@@ -125,7 +124,7 @@ folderNodeWithSubfolders =
             |> with (Graphql.Object.Folder.numSubfolder |> Graphqelm.Field.nonNullOrFail)
             |> with
                 (Graphql.Object.Folder.subfolders identity
-                    (Graphql.Object.FoldersConnection.selection Maybe.Extra.values
+                    (Graphql.Object.FoldersConnection.selection identity
                         |> with (Graphql.Object.FoldersConnection.nodes folderNode)
                     )
                 )
