@@ -13,4 +13,4 @@ _... work in progress ..._
 
 ## Installation
 
-See instructions for [backend](pg/README.md) and [frontend](elm/README.md).
+See instructions for [backend](backend/README.md) and [frontend](frontend/README.md).
