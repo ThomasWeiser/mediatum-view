@@ -262,13 +262,6 @@ comment on column api.document.orderpos is
     'A number indicating the position of this document among its siblings';
 
 
-drop type if exists aux.ranked_id;
-create type aux.ranked_id as (
-    id int4,
-    rank float4
-);
-
-
 create type debug.mediatum_node as (
 	id int4,
 	"type" varchar,

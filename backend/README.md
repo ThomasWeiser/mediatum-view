@@ -19,6 +19,31 @@ On top of that we use [PostGraphile](https://www.graphile.org/postgraphile/) (fo
 
 ## Prerequisites
 
+### PostgreSQL
+
+In general, we use an up-to-date version of PostgreSQL. Currently this is version 10.5.
+
+Minimum required version is 9.6.
+
+### RUM
+
+RUM is an extension for PostgreSQL that adds a new indexing method, similar to GIN.
+
+To install and integrate RUM do something like the following. Here `mediatum` is the name of the database to be used.
+
+
+```sh
+git clone https://github.com/postgrespro/rum
+cd rum
+make USE_PGXS=1
+sudo make USE_PGXS=1 install
+make USE_PGXS=1 installcheck
+dropdb contrib_regression
+psql -d mediatum -c "CREATE EXTENSION rum;"
+```
+
+### PostGraphile
+
 [PostGraphile](https://www.graphile.org/postgraphile/) is a `Node.js` application. Install with:
 
 ```sh

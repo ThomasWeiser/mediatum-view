@@ -107,67 +107,49 @@ comment on function api.document_values_by_mask (document api.document, mask_nam
     'Gets the meta field values of this document as a JSON value, selected by a named mask.';
 
 
-create or replace function aux.simple_search_hit (text text, language text, domain text, "limit" integer)
-    returns setof aux.ranked_id as $$
-    select fts.nid, ts_rank_cd (tsvec, tsq)
-    from plainto_tsquery (language::regconfig, text) as tsq
-    join mediatum.fts on fts.tsvec @@ tsq
-    where fts.config = language
-      and fts.searchtype = domain
-    limit "limit"
-$$ language sql stable parallel safe;
+create or replace function aux.simple_search_hit (search_term text, language text, domain text, "limit" int4)
+    returns table (id int4, distance float4, count int8) as $$
+    declare tsquery tsquery := plainto_tsquery(language::regconfig, search_term);
+    begin
+    	return query
+			select fts.nid as id,
+			       fts.tsvec <=> tsquery as distance,
+			       count(*) over ()
+			 from mediatum.fts
+			where fts.tsvec @@ tsquery
+			  and fts.config = language
+			  and fts.searchtype = domain
+			order by fts.tsvec <=> tsquery
+			limit "limit";
+    end;
+$$ language plpgsql stable strict parallel safe rows 100;
 
 
-create or replace function aux.simple_search_hit_union (text text, languages text [], domains text [], "limit" integer)
-    returns setof aux.ranked_id as $$
-    select id, max (rank)
+create or replace function aux.simple_search_hit_union (search_term text, languages text [], domains text [], "limit" integer)
+    returns table (id int4, distance float4) as $$
+    select id, min (distance)
     from (
         -- We enumerate all possible combinations
         -- (assuming a configuration to use the languages english and german).
         -- This way we make sure that PostgreSQL uses the corresponding partial indexes on the fts table.
         -- Alternatively we could build dynamic SQL queries instead (if fixed enumeration isn't an option).
-        select * from aux.simple_search_hit (text, 'german', 'fulltext', "limit")
-        where 'german' = any (languages) and  'fulltext' = any (domains)
+        select * from aux.simple_search_hit (search_term, 'german', 'fulltext', "limit")
+        where 'german' = any (languages) and 'fulltext' = any (domains)
         union all
-        select * from aux.simple_search_hit (text, 'english', 'fulltext', "limit")
-        where 'english' = any (languages) and  'fulltext' = any (domains)
+        select * from aux.simple_search_hit (search_term, 'english', 'fulltext', "limit")
+        where 'english' = any (languages) and 'fulltext' = any (domains)
         union all
-        select * from aux.simple_search_hit (text, 'german', 'attrs', "limit")
-        where 'german' = any (languages) and  'attrs' = any (domains)
+        select * from aux.simple_search_hit (search_term, 'german', 'attrs', "limit")
+        where 'german' = any (languages) and 'attrs' = any (domains)
         union all
-        select * from aux.simple_search_hit (text, 'english', 'attrs', "limit")
-        where 'english' = any (languages) and  'attrs' = any (domains)
+        select * from aux.simple_search_hit (search_term, 'english', 'attrs', "limit")
+        where 'english' = any (languages) and 'attrs' = any (domains)
     ) as hit
     group by id
-    limit "limit"
-$$ language sql stable parallel safe;
+$$ language sql stable parallel safe rows 100;
 
 
 create or replace function api.folder_simple_search (folder api.folder, text text, languages text [], domains text [], "limit" integer)
-    returns setof api.document as $$
-    select document.*
-    from aux.simple_search_hit_union (
-            text,
-            -- TODO: Should probably read list of languages from current settings.
-            coalesce (languages, array['english', 'german']),
-            coalesce (domains, array['fulltext', 'attrs']),
-            "limit" * 2
-        ) as hit
-    join entity.document on document.id = hit.id
-    where aux.test_node_lineage (folder.id, document.id)
-    order by hit.rank desc
-    limit "limit"
-    ;
-$$ language sql stable rows 100 parallel safe;
-
-comment on function api.folder_simple_search (folder api.folder, text text, languages text [], domains text [], "limit" integer) is
-    'Reads and enables pagination through all documents within a folder, filtered by a keyword search, and sorted by a search rank.'
-    ' Languages may currently include "english" and "german".'
-    ' Domains may currently include "fulltext" and "attrs".'
-    ' You have to give a limit for the number of results (in order to limit the expense for sorting them by rank).';
-
-
-create or replace function api.folder_simple_search_unranked (folder api.folder, text text, languages text [], domains text [], "limit" integer)
     returns setof api.document as $$
     select document.*
     from aux.simple_search_hit_union (
@@ -179,13 +161,16 @@ create or replace function api.folder_simple_search_unranked (folder api.folder,
         ) as hit
     join entity.document on document.id = hit.id
     where aux.test_node_lineage (folder.id, document.id)
-$$ language sql stable rows 100 parallel safe;
+    order by hit.distance
+    limit "limit"
+    ;
+$$ language sql stable parallel safe rows 100;
 
 comment on function api.folder_simple_search (folder api.folder, text text, languages text [], domains text [], "limit" integer) is
-    'Reads and enables pagination through all documents within a folder, filtered by a keyword search, not sorted by a search rank.'
+    'Reads and enables pagination through all documents within a folder, filtered by a keyword search, and sorted by a search rank.'
     ' Languages may currently include "english" and "german".'
     ' Domains may currently include "fulltext" and "attrs".'
-    ' You have to give a limit for the number of results.';
+    ' You have to give a limit for the number of results (in order to limit the expense for sorting them by rank).';
 
 
 create or replace function api.folder_author_search (folder api.folder, text text)
