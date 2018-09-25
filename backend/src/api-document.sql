@@ -107,8 +107,13 @@ comment on function api.document_values_by_mask (document api.document, mask_nam
     'Gets the meta field values of this document as a JSON value, selected by a named mask.';
 
 
-create or replace function aux.fts_on_domains (fts_query tsquery, domains text [], "limit" int4)
+create or replace function aux.fts_on_domains (search_term text, domains text [], "limit" int4)
     returns table (id int4, distance float4, count integer) as $$
+    declare fts_query tsquery := 
+        plainto_tsquery ('english'::regconfig, search_term) ||
+        plainto_tsquery ('german'::regconfig, search_term);
+    begin
+        return query
         select fts.nid as id,
             fts.tsvec <=> fts_query as distance,
             (count(*) over ())::integer
@@ -117,17 +122,8 @@ create or replace function aux.fts_on_domains (fts_query tsquery, domains text [
           and fts.searchtype = any (domains)
         order by fts.tsvec <=> fts_query
         limit "limit";
-$$ language sql stable strict parallel safe rows 100;
-
-create or replace function aux.simple_search_hit (search_term text, domains text [], "limit" int4)
-    returns table (id int4, distance float4, count integer) as $$
-        select
-            aux.fts_on_domains (
-                plainto_tsquery ('english'::regconfig, search_term) || plainto_tsquery ('german'::regconfig, search_term),
-                domains,
-                "limit"
-            )   
-$$ language sql stable strict parallel safe rows 100;
+    end;
+$$ language plpgsql stable strict parallel safe rows 100;
 
 
 create or replace function api.folder_simple_search (folder api.folder, text text, domains text [], "limit" integer)
@@ -137,7 +133,7 @@ create or replace function api.folder_simple_search (folder api.folder, text tex
         hit.count,
         (row_number () over (order by hit.distance, document.id))::integer as number,
         hit.distance
-    from aux.simple_search_hit (
+    from aux.fts_on_domains (
             text,
             coalesce (domains, array['fulltext', 'attrs']),
             "limit"
