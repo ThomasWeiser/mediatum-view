@@ -262,6 +262,27 @@ comment on column api.document.orderpos is
     'A number indicating the position of this document among its siblings';
 
 
+create type api.document_result as (
+    document api.document,
+    count integer,
+    number integer,
+    distance float4
+);
+
+comment on type api.document is
+    'A document as the basic subject of publication of the media server';
+comment on column api.document.id is
+    'The mediaTUM node id of this document; used as a public reference';
+comment on column api.document."type" is
+    'The major type of the document; may be "document", "image", "video", "audio", "dissertation" or "other"';
+comment on column api.document."schema" is
+    'The schema of the document is the name of the corresponding meta data type';
+comment on column api.document.name is
+    'The name given to the document, usually the author''s name';
+comment on column api.document.orderpos is
+    'A number indicating the position of this document among its siblings';
+
+
 create type debug.mediatum_node as (
 	id int4,
 	"type" varchar,

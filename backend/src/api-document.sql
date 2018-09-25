@@ -108,13 +108,13 @@ comment on function api.document_values_by_mask (document api.document, mask_nam
 
 
 create or replace function aux.simple_search_hit (search_term text, language text, domain text, "limit" int4)
-    returns table (id int4, distance float4, count int8) as $$
+    returns table (id int4, distance float4, count integer) as $$
     declare tsquery tsquery := plainto_tsquery(language::regconfig, search_term);
     begin
     	return query
 			select fts.nid as id,
 			       fts.tsvec <=> tsquery as distance,
-			       count(*) over ()
+			       (count(*) over ())::integer
 			 from mediatum.fts
 			where fts.tsvec @@ tsquery
 			  and fts.config = language
@@ -126,32 +126,39 @@ $$ language plpgsql stable strict parallel safe rows 100;
 
 
 create or replace function aux.simple_search_hit_union (search_term text, languages text [], domains text [], "limit" integer)
-    returns table (id int4, distance float4) as $$
-    select id, min (distance)
+    returns table (id int4, distance float4, count integer) as $$
+    select id, min (distance), max (count)
     from (
-        -- We enumerate all possible combinations
-        -- (assuming a configuration to use the languages english and german).
-        -- This way we make sure that PostgreSQL uses the corresponding partial indexes on the fts table.
-        -- Alternatively we could build dynamic SQL queries instead (if fixed enumeration isn't an option).
-        select * from aux.simple_search_hit (search_term, 'german', 'fulltext', "limit")
-        where 'german' = any (languages) and 'fulltext' = any (domains)
-        union all
-        select * from aux.simple_search_hit (search_term, 'english', 'fulltext', "limit")
-        where 'english' = any (languages) and 'fulltext' = any (domains)
-        union all
-        select * from aux.simple_search_hit (search_term, 'german', 'attrs', "limit")
-        where 'german' = any (languages) and 'attrs' = any (domains)
-        union all
-        select * from aux.simple_search_hit (search_term, 'english', 'attrs', "limit")
-        where 'english' = any (languages) and 'attrs' = any (domains)
-    ) as hit
-    group by id
+        select id, distance, max (count) over () as count
+        from (
+            -- We enumerate all possible combinations
+            -- (assuming a configuration to use the languages english and german).
+            -- This way we make sure that PostgreSQL uses the corresponding partial indexes on the fts table.
+            -- Alternatively we could build dynamic SQL queries instead (if fixed enumeration isn't an option).
+            select * from aux.simple_search_hit (search_term, 'german', 'fulltext', "limit")
+            where 'german' = any (languages) and 'fulltext' = any (domains)
+            union all
+            select * from aux.simple_search_hit (search_term, 'english', 'fulltext', "limit")
+            where 'english' = any (languages) and 'fulltext' = any (domains)
+            union all
+            select * from aux.simple_search_hit (search_term, 'german', 'attrs', "limit")
+            where 'german' = any (languages) and 'attrs' = any (domains)
+            union all
+            select * from aux.simple_search_hit (search_term, 'english', 'attrs', "limit")
+            where 'english' = any (languages) and 'attrs' = any (domains)
+        ) as hit_and_max_count
+    ) as hit_to_be_grouped
+    group by (id)
 $$ language sql stable parallel safe rows 100;
 
 
 create or replace function api.folder_simple_search (folder api.folder, text text, languages text [], domains text [], "limit" integer)
-    returns setof api.document as $$
-    select document.*
+    returns setof api.document_result as $$
+    select
+        (document.id, document.type, document.schema, document.name, document.orderpos)::api.document as document,
+        hit.count,
+        (row_number () over (order by hit.distance, document.id))::integer as number,
+        hit.distance
     from aux.simple_search_hit_union (
             text,
             -- TODO: Should probably read list of languages from current settings.
@@ -161,7 +168,7 @@ create or replace function api.folder_simple_search (folder api.folder, text tex
         ) as hit
     join entity.document on document.id = hit.id
     where aux.test_node_lineage (folder.id, document.id)
-    order by hit.distance
+    order by hit.distance, document.id
     limit "limit"
     ;
 $$ language sql stable parallel safe rows 100;
