@@ -269,6 +269,17 @@ create type api.document_result as (
     distance float4
 );
 
+create type api.test_result as (
+    number integer,
+    distance float4,
+    document api.document
+);
+
+create type api.test_result_page as (
+    count integer,
+    content api.test_result[]
+);
+
 comment on type api.document is
     'A document as the basic subject of publication of the media server';
 comment on column api.document.id is

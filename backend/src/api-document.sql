@@ -126,7 +126,7 @@ create or replace function aux.fts_on_domains (search_term text, domains text []
 $$ language plpgsql stable strict parallel safe rows 100;
 
 
-create or replace function api.folder_simple_search (folder api.folder, text text, domains text [], "limit" integer)
+create or replace function api.folder_simple_search (folder api.folder, text text, domains text [], "limit" integer, "offset" integer)
     returns setof api.document_result as $$
     select
         (document.id, document.type, document.schema, document.name, document.orderpos)::api.document as document,
@@ -136,20 +136,57 @@ create or replace function api.folder_simple_search (folder api.folder, text tex
     from aux.fts_on_domains (
             text,
             coalesce (domains, array['fulltext', 'attrs']),
-            "limit"
+            ("limit" + "offset")
         ) as hit
     join entity.document on document.id = hit.id
     where aux.test_node_lineage (folder.id, document.id)
     order by hit.distance, document.id
     limit "limit"
+    offset "offset"
     ;
 $$ language sql stable parallel safe rows 100;
 
-comment on function api.folder_simple_search (folder api.folder, text text, domains text [], "limit" integer) is
+comment on function api.folder_simple_search (folder api.folder, text text, domains text [], "limit" integer, "offset" integer) is
     'Reads and enables pagination through all documents within a folder, filtered by a keyword search, and sorted by a search rank.'
     ' Languages may currently include "english" and "german".'
     ' Domains may currently include "fulltext" and "attrs".'
     ' You have to give a limit for the number of results (in order to limit the expense for sorting them by rank).';
+
+
+create or replace function api.test1 ()
+    returns api.test_result_page as $$
+    select
+        17 as count,
+        array
+            [ row( 1 , 7.1,
+                   row( 1001, 'typ1', 'schema1', 'name1', 1 )::api.document
+                 )::api.test_result
+            , row( 2 , 7.2,
+                   row( 1002, 'typ2', 'schema2', 'name2', 2 )::api.document
+                 )::api.test_result
+            ] as content
+    ;
+$$ language sql stable parallel safe;
+
+
+create or replace function api.folder_simple_search_page (folder api.folder, text text, domains text [], "limit" integer, "offset" integer)
+    returns api.test_result_page as $$
+
+    -- TODO: Poss. write as plpgsql
+    -- TODO: Poss. use an aggregate functions: array_agg, first_value
+    --       Test also with parameters that result in an empty page!
+
+    with search_result as (
+            select * from api.folder_simple_search (folder, text, domains, "limit", "offset")
+        )
+    select
+        coalesce((select max(count) from search_result), 0),
+        array(
+            select row(number, distance, document)::api.test_result from search_result
+        )
+
+    ;
+$$ language sql stable parallel safe;
 
 
 create or replace function api.folder_author_search (folder api.folder, text text)
