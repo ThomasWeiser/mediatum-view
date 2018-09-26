@@ -8,13 +8,13 @@ You need to have [Elm](http://elm-lang.org/) v0.18 installed. See [here](https:/
 We use [GraphqElm](https://github.com/dillonkearns/graphqelm) to autogenerate GraphQL queries in Elm. Install this tool via npm with:
 
 ```sh
-npm install -g graphqelm
+$ npm install -g graphqelm
 ```
 
 Additionally, we use the tool [elm-live](https://github.com/tomekwi/elm-live). It watches the Elm source code, recompiles it when needed, serves the result via HTTP and handles live reloading the browser. Install with:
 
 ```sh
-npm install -g elm-live
+$ npm install -g elm-live
 ```
 
 ## Building
@@ -22,13 +22,13 @@ npm install -g elm-live
 The commands to build the frontend app are in the script `bin/build`. Please review this file. Before running it make sure that the backend is already started. Then run the script:
 
 ```sh
-bin/build
+$ bin/build
 ```
 
 For serving the the app and live rebuilding start `elm-live` with this script:
 
 ```sh
-bin/start
+$ bin/start
 ```
 
 and open http://localhost:8000/ to run the app in your browser.

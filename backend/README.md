@@ -33,13 +33,16 @@ To install and integrate RUM do something like the following. Here `mediatum` is
 
 
 ```sh
-git clone https://github.com/postgrespro/rum
-cd rum
-make USE_PGXS=1
-sudo make USE_PGXS=1 install
-make USE_PGXS=1 installcheck
-dropdb contrib_regression
-psql -d mediatum -c "CREATE EXTENSION rum;"
+$ git clone https://github.com/postgrespro/rum
+$ cd rum
+$ make USE_PGXS=1
+
+$ sudo make USE_PGXS=1 install
+
+$ make USE_PGXS=1 installcheck
+$ dropdb contrib_regression
+
+$ psql -d mediatum -c "CREATE EXTENSION rum;"
 ```
 
 ### PostGraphile
@@ -47,15 +50,16 @@ psql -d mediatum -c "CREATE EXTENSION rum;"
 [PostGraphile](https://www.graphile.org/postgraphile/) is a `Node.js` application. Install with:
 
 ```sh
-npm install -g postgraphile
+$ npm install -g postgraphile
 ```
 
 ## Installation
 
-To submit the new code to a running mediaTUM database execute the SQL and PL/pgSQL code as listed in `bin/build`. Please review this script, especially the the name of the database, and then run it with
+To submit the new code to a running mediaTUM database execute the SQL and PL/pgSQL code as listed in `bin/build-indexes` and `bin/build`. Please review these scripts, especially the the name of the database. Building the new RUM indexes takes some time depending on the quantity of full text to index.
 
 ```sh
-bin/build
+$ bin/build-indexes
+$ bin/build
 ```
 
 ## Running PostGraphile
@@ -63,7 +67,7 @@ bin/build
 See `bin/start` for the necessary parameters when starting PostGraphile. Please review and customize the configuration in that script, then run:
 
 ```sh
-bin/start
+$ bin/start
 ```
 
 If all goes well you will see two URLs: One for the GraphQL endpoint, and one for [Graph*i*QL](https://github.com/graphql/graphiql). Open the latter to get a handy in-browser tool to explore the resulting API.
