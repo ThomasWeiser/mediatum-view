@@ -107,11 +107,10 @@ comment on function api.document_values_by_mask (document api.document, mask_nam
     'Gets the meta field values of this document as a JSON value, selected by a named mask.';
 
 
-create or replace function aux.fts_on_domains (search_term text, domains text [], "limit" int4)
+create or replace function aux.fts_ordered_and_limited (search_term text, domain text, language text, "limit" int4)
     returns table (id int4, distance float4, count integer) as $$
     declare fts_query tsquery := 
-        plainto_tsquery ('english'::regconfig, search_term) ||
-        plainto_tsquery ('german'::regconfig, search_term);
+        plainto_tsquery (language::regconfig, search_term);
     begin
         return query
         select fts.nid as id,
@@ -119,57 +118,39 @@ create or replace function aux.fts_on_domains (search_term text, domains text []
             (count(*) over ())::integer
         from mediatum.fts
         where fts.tsvec @@ fts_query
-          and fts.searchtype = any (domains)
+          and fts.searchtype = domain
+          and fts.config = language
         order by fts.tsvec <=> fts_query
         limit "limit";
     end;
 $$ language plpgsql stable strict parallel safe rows 100;
 
 
-create or replace function api.folder_simple_search (folder api.folder, text text, domains text [], "limit" integer, "offset" integer)
+create or replace function api.folder_simple_search (folder api.folder, text text, domain text, language text, "limit" integer, offset_ integer)
     returns setof api.document_result as $$
     select
         (document.id, document.type, document.schema, document.name, document.orderpos)::api.document as document,
         hit.count,
-        (row_number () over (order by hit.distance, document.id))::integer as number,
+        (row_number () over (order by hit.distance -- , document.id
+            ))::integer as number,
         hit.distance
-    from aux.fts_on_domains (
-            text,
-            coalesce (domains, array['fulltext', 'attrs']),
-            ("limit" + "offset")
-        ) as hit
+    from aux.fts_ordered_and_limited (text, domain, language, ("limit" + offset_) * 2) as hit
     join entity.document on document.id = hit.id
     where aux.test_node_lineage (folder.id, document.id)
-    order by hit.distance, document.id
+    order by hit.distance -- , document.id
     limit "limit"
-    offset "offset"
+    offset offset_
     ;
 $$ language sql stable parallel safe rows 100;
 
-comment on function api.folder_simple_search (folder api.folder, text text, domains text [], "limit" integer, "offset" integer) is
+comment on function api.folder_simple_search (folder api.folder, text text, domain text, language text, "limit" integer, offset_ integer) is
     'Reads and enables pagination through all documents within a folder, filtered by a keyword search, and sorted by a search rank.'
     ' Languages may currently include "english" and "german".'
     ' Domains may currently include "fulltext" and "attrs".'
     ' You have to give a limit for the number of results (in order to limit the expense for sorting them by rank).';
 
 
-create or replace function api.test1 ()
-    returns api.test_result_page as $$
-    select
-        17 as count,
-        array
-            [ row( 1 , 7.1,
-                   row( 1001, 'typ1', 'schema1', 'name1', 1 )::api.document
-                 )::api.test_result
-            , row( 2 , 7.2,
-                   row( 1002, 'typ2', 'schema2', 'name2', 2 )::api.document
-                 )::api.test_result
-            ] as content
-    ;
-$$ language sql stable parallel safe;
-
-
-create or replace function api.folder_simple_search_page (folder api.folder, text text, domains text [], "limit" integer, "offset" integer)
+create or replace function api.folder_simple_search_page (folder api.folder, text text, domain text, language text, "limit" integer, offset_ integer)
     returns api.test_result_page as $$
 
     -- TODO: Poss. write as plpgsql
@@ -177,7 +158,7 @@ create or replace function api.folder_simple_search_page (folder api.folder, tex
     --       Test also with parameters that result in an empty page!
 
     with search_result as (
-            select * from api.folder_simple_search (folder, text, domains, "limit", "offset")
+            select * from api.folder_simple_search (folder, text, domain, language, "limit", offset_)
         )
     select
         coalesce((select max(count) from search_result), 0),
