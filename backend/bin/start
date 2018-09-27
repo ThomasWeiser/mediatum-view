@@ -5,6 +5,7 @@ mkdir -p export
 # Log created SQL queries
 # https://github.com/postgraphql/postgraphql/issues/525#issuecomment-317273045
 # export DEBUG="*:sql" 
+# export DEBUG="graphile-build:warn"
 
 postgraphile \
     --connection postgres://me@localhost:5432/mediatum_tu_prod_1 \
