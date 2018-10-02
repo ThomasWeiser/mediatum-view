@@ -123,64 +123,20 @@ create or replace function aux.fts_ordered (fts_query tsquery, domain text, lang
 $$ -- Using language plpgsql is more efficient here than sql.
    language plpgsql stable strict parallel safe rows 1000;
 
+
 create or replace function aux.fts_document_folder_limited
-    (folder api.folder
+    ( folder api.folder
     , fts_query tsquery
     , domain text
     , language text
-    , limit_ integer
+    , "limit" integer
     )
-    returns setof api.document_result as $$
+    returns table
+        ( document api.document
+        , distance float4
+        ) as $$
     select
         (document.id, document.type, document.schema, document.name, document.orderpos)::api.document as document,
-        -1 as count, -- (count(*) over ())::integer,
-        (row_number () over (order by fts.distance))::integer as number,
-        fts.distance
-    from aux.fts_ordered (fts_query, domain, language) as fts
-    join entity.document on document.id = fts.id
-    where aux.test_node_lineage (folder.id, document.id)
-    -- order by fts.distance -- , document.id
-    limit limit_ -- TODO: necessary?
-    ;
-$$ language sql stable parallel safe rows 1000;
-
-
-create or replace function aux.fts_document_folder_limited_plpgsql
-    (folder api.folder
-    , fts_query tsquery
-    , domain text
-    , language text
-    , limit_ integer
-    )
-    returns setof api.document_result as $$
-    begin return query
-    select
-        (document.id, document.type, document.schema, document.name, document.orderpos)::api.document as document,
-        -1 as count, -- (count(*) over ())::integer,
-        (row_number () over (order by fts.distance))::integer as number,
-        fts.distance
-    from aux.fts_ordered (fts_query, domain, language) as fts
-    join entity.document on document.id = fts.id
-    where aux.test_node_lineage (folder.id, document.id)
-    -- order by fts.distance -- , document.id
-    limit limit_ -- TODO: necessary?
-    ;
-    end;
-$$ language plpgsql stable parallel safe rows 1000;
-
-
-create or replace function aux.fts_document_folder_limited_inlined
-    (folder api.folder
-    , fts_query tsquery
-    , domain text
-    , language text
-    , limit_ integer
-    )
-    returns setof api.document_result as $$
-    select
-        (document.id, document.type, document.schema, document.name, document.orderpos)::api.document as document,
-        -1 as count, -- (count(*) over ())::integer,
-        (row_number () over (order by fts.distance))::integer as number,
         fts.distance
     from (select fts.nid as id
                , fts.tsvec <=> fts_query as distance
@@ -193,30 +149,46 @@ create or replace function aux.fts_document_folder_limited_inlined
          ) as fts
     join entity.document on document.id = fts.id
     where aux.test_node_lineage (folder.id, document.id)
-    -- order by fts.distance -- , document.id
-    limit limit_ -- TODO: necessary?
+    -- order by fts.distance -- Order obtained from subquery is preserved.
+    limit "limit"
     ;
-$$ language sql stable parallel safe rows 1000;
+$$ -- Language sql gives stable performance here.
+   -- Language plpgsql gives efficient performace for the first 5 queries
+   --                  and degrades badly afterwards.
+    language sql stable parallel safe rows 100;
 
 
-create or replace function aux.fts_document_folder
-    (folder api.folder
-    , fts_query tsquery
+create or replace function aux.fts_document_folder_paginated
+    ( folder api.folder
+    , text text
     , domain text
     , language text
+    , "limit" integer
+    , "offset" integer
     )
-    returns setof api.document_result as $$
-    select
-        (document.id, document.type, document.schema, document.name, document.orderpos)::api.document as document,
-        0, -- (count(*) over ())::integer,
-        (row_number () over (order by fts.distance -- , document.id
-            ))::integer as number,
-        fts.distance
-    from aux.fts_ordered (fts_query, domain, language) as fts
-    join entity.document on document.id = fts.id
-    where aux.test_node_lineage (folder.id, document.id)
-    ;
-$$ language sql stable parallel safe rows 1000;
+    returns table
+        ( document api.document
+        , distance float4
+        , number integer
+        , has_next_page boolean
+        )
+    as $$
+        begin return query
+            select f.document
+                , f.distance
+                , (row_number () over ())::integer as number
+                , (count(*) over ()) > "limit" + "offset"
+            from aux.fts_document_folder_limited
+                ( folder
+                , plainto_tsquery (language::regconfig, text)
+                , domain
+                , language
+                , "limit" + "offset" + 1
+                ) as f
+            limit "limit"
+            offset "offset";
+        end;
+$$ language plpgsql stable parallel safe rows 100;
 
 
 create or replace function api.folder_simple_search
@@ -224,48 +196,66 @@ create or replace function api.folder_simple_search
     , text text
     , domain text
     , language text
-    , limit_ integer
-    , offset_ integer
+    , "limit" integer default 10
+    , "offset" integer default 0
     )
-    returns setof api.document_result as $$
-    select *
-    from aux.fts_document_folder_limited
-        ( folder
-        , plainto_tsquery (language::regconfig, text)
-        , domain
-        , language
-        , limit_ + offset_
-        )
-    limit limit_
-    offset offset_
-    ;
-$$ language sql stable parallel safe rows 100;
+    returns api.fts_document_result_page as $$
 
-comment on function api.folder_simple_search (folder api.folder, text text, domain text, language text, "limit" integer, offset_ integer) is
-    'Reads and enables pagination through all documents within a folder, filtered by a keyword search, and sorted by a search rank.'
-    ' Languages may currently include "english" and "german".'
-    ' Domains may currently include "fulltext" and "attrs".'
-    ' You have to give a limit for the number of results (in order to limit the expense for sorting them by rank).';
-
-
-create or replace function api.folder_simple_search_page (folder api.folder, text text, domain text, language text, "limit" integer, offset_ integer)
-    returns api.test_result_page as $$
-
-    -- TODO: Poss. write as plpgsql
-    -- TODO: Poss. use an aggregate functions: array_agg, first_value
-    --       Test also with parameters that result in an empty page!
-
-    with search_result as (
-            select * from api.folder_simple_search (folder, text, domain, language, "limit", offset_)
-        )
-    select
-        coalesce((select max(count) from search_result), 0),
-        array(
-            select row(number, distance, document)::api.test_result from search_result
-        )
-
-    ;
+        with search_result as (
+                select *
+                from aux.fts_document_folder_paginated (folder, text, domain, language, "limit", "offset")
+            )
+        select
+            coalesce(
+                (select every(has_next_page) from search_result), false
+            ) as has_next_page,
+            array (
+            select row(number, distance, document)::api.fts_document_result
+                from search_result
+            ) as content
+        ;
 $$ language sql stable parallel safe;
+
+-- The same function as plpgsql
+-- Performance behavior seems to be the same.
+create or replace function api.folder_simple_search_pl
+    (folder api.folder
+    , text text
+    , domain text
+    , language text
+    , "limit" integer default 10
+    , "offset" integer default 0
+    )
+    returns api.fts_document_result_page as $$
+    declare res api.fts_document_result_page;
+
+    begin
+        select
+            coalesce
+                ( bool_or (has_next_page)
+                , false
+                ) as has_next_page,
+            coalesce
+                ( array_agg (row (number, distance, document)::api.fts_document_result)
+                , array[]::api.fts_document_result[]
+                ) as content
+        into res
+        from
+            aux.fts_document_folder_paginated (folder, text, domain, language, "limit", "offset")
+        ;
+        return res;
+    end;
+$$ language plpgsql stable parallel safe;
+
+comment on function api.folder_simple_search (folder api.folder, text text, domain text, language text, "limit" integer, "offset" integer) is
+    'Reads and enables pagination through all documents within a folder, filtered by a keyword search, and sorted by a search rank.'
+    ' Language may currently be "english" and "german".'
+    ' Domain may currently be "fulltext" and "attrs".'
+    ' For pagination you may specify a limit (defaults to 10) and an offset (defaults to 0).'
+    ;
+
+
+----------------------------------------------------
 
 
 create or replace function api.folder_author_search (folder api.folder, text text)

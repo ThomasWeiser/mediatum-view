@@ -262,36 +262,33 @@ comment on column api.document.orderpos is
     'A number indicating the position of this document among its siblings';
 
 
-create type api.document_result as (
-    document api.document,
-    count integer,
-    number integer,
-    distance float4
-);
-
-create type api.test_result as (
+create type api.fts_document_result as (
     number integer,
     distance float4,
     document api.document
 );
 
-create type api.test_result_page as (
-    count integer,
-    content api.test_result[]
+comment on type api.fts_document_result is
+    'A single result from a full text search, containing a document';
+comment on column api.fts_document_result.number is
+    'Sequence number of this result';
+comment on column api.fts_document_result.distance is
+    'A measure of the relevance of this result with respect to the query expression; lower values means higher relevance';
+comment on column api.fts_document_result.document is
+    'The resulting document';
+
+
+create type api.fts_document_result_page as (
+    has_next_page boolean,
+    content api.fts_document_result[]
 );
 
-comment on type api.document is
-    'A document as the basic subject of publication of the media server';
-comment on column api.document.id is
-    'The mediaTUM node id of this document; used as a public reference';
-comment on column api.document."type" is
-    'The major type of the document; may be "document", "image", "video", "audio", "dissertation" or "other"';
-comment on column api.document."schema" is
-    'The schema of the document is the name of the corresponding meta data type';
-comment on column api.document.name is
-    'The name given to the document, usually the author''s name';
-comment on column api.document.orderpos is
-    'A number indicating the position of this document among its siblings';
+comment on type api.fts_document_result_page is
+    'A result page from a full text search of documents';
+comment on column api.fts_document_result_page.has_next_page is
+    'Indicates whether there are more results after the current page';
+comment on column api.fts_document_result_page.content is
+    'A list of document results from a full text search';
 
 
 create type debug.mediatum_node as (
