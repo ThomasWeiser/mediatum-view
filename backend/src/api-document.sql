@@ -107,38 +107,136 @@ comment on function api.document_values_by_mask (document api.document, mask_nam
     'Gets the meta field values of this document as a JSON value, selected by a named mask.';
 
 
-create or replace function aux.fts_ordered_and_limited (search_term text, domain text, language text, "limit" int4)
+create or replace function aux.fts_ordered (fts_query tsquery, domain text, language text)
     returns table (id int4, distance float4, count integer) as $$
-    declare fts_query tsquery := 
-        plainto_tsquery (language::regconfig, search_term);
     begin
         return query
-        select fts.nid as id,
-            fts.tsvec <=> fts_query as distance,
-            (count(*) over ())::integer
+        select fts.nid as id
+             , fts.tsvec <=> fts_query as distance
+             , (count(*) over ())::integer
         from mediatum.fts
         where fts.tsvec @@ fts_query
           and fts.searchtype = domain
           and fts.config = language
-        order by fts.tsvec <=> fts_query
-        limit "limit";
+        order by fts.tsvec <=> fts_query;
     end;
-$$ language plpgsql stable strict parallel safe rows 100;
+$$ -- Using language plpgsql is more efficient here than sql.
+   language plpgsql stable strict parallel safe rows 1000;
 
-
-create or replace function api.folder_simple_search (folder api.folder, text text, domain text, language text, "limit" integer, offset_ integer)
+create or replace function aux.fts_document_folder_limited
+    (folder api.folder
+    , fts_query tsquery
+    , domain text
+    , language text
+    , limit_ integer
+    )
     returns setof api.document_result as $$
     select
         (document.id, document.type, document.schema, document.name, document.orderpos)::api.document as document,
-        hit.count,
-        (row_number () over (order by hit.distance -- , document.id
-            ))::integer as number,
-        hit.distance
-    from aux.fts_ordered_and_limited (text, domain, language, ("limit" + offset_) * 2) as hit
-    join entity.document on document.id = hit.id
+        -1 as count, -- (count(*) over ())::integer,
+        (row_number () over (order by fts.distance))::integer as number,
+        fts.distance
+    from aux.fts_ordered (fts_query, domain, language) as fts
+    join entity.document on document.id = fts.id
     where aux.test_node_lineage (folder.id, document.id)
-    order by hit.distance -- , document.id
-    limit "limit"
+    -- order by fts.distance -- , document.id
+    limit limit_ -- TODO: necessary?
+    ;
+$$ language sql stable parallel safe rows 1000;
+
+
+create or replace function aux.fts_document_folder_limited_plpgsql
+    (folder api.folder
+    , fts_query tsquery
+    , domain text
+    , language text
+    , limit_ integer
+    )
+    returns setof api.document_result as $$
+    begin return query
+    select
+        (document.id, document.type, document.schema, document.name, document.orderpos)::api.document as document,
+        -1 as count, -- (count(*) over ())::integer,
+        (row_number () over (order by fts.distance))::integer as number,
+        fts.distance
+    from aux.fts_ordered (fts_query, domain, language) as fts
+    join entity.document on document.id = fts.id
+    where aux.test_node_lineage (folder.id, document.id)
+    -- order by fts.distance -- , document.id
+    limit limit_ -- TODO: necessary?
+    ;
+    end;
+$$ language plpgsql stable parallel safe rows 1000;
+
+
+create or replace function aux.fts_document_folder_limited_inlined
+    (folder api.folder
+    , fts_query tsquery
+    , domain text
+    , language text
+    , limit_ integer
+    )
+    returns setof api.document_result as $$
+    select
+        (document.id, document.type, document.schema, document.name, document.orderpos)::api.document as document,
+        -1 as count, -- (count(*) over ())::integer,
+        (row_number () over (order by fts.distance))::integer as number,
+        fts.distance
+    from (select fts.nid as id
+               , fts.tsvec <=> fts_query as distance
+               , (count(*) over ())::integer
+           from mediatum.fts
+           where fts.tsvec @@ fts_query
+           and fts.searchtype = domain
+           and fts.config = language
+           order by fts.tsvec <=> fts_query
+         ) as fts
+    join entity.document on document.id = fts.id
+    where aux.test_node_lineage (folder.id, document.id)
+    -- order by fts.distance -- , document.id
+    limit limit_ -- TODO: necessary?
+    ;
+$$ language sql stable parallel safe rows 1000;
+
+
+create or replace function aux.fts_document_folder
+    (folder api.folder
+    , fts_query tsquery
+    , domain text
+    , language text
+    )
+    returns setof api.document_result as $$
+    select
+        (document.id, document.type, document.schema, document.name, document.orderpos)::api.document as document,
+        0, -- (count(*) over ())::integer,
+        (row_number () over (order by fts.distance -- , document.id
+            ))::integer as number,
+        fts.distance
+    from aux.fts_ordered (fts_query, domain, language) as fts
+    join entity.document on document.id = fts.id
+    where aux.test_node_lineage (folder.id, document.id)
+    ;
+$$ language sql stable parallel safe rows 1000;
+
+
+create or replace function api.folder_simple_search
+    (folder api.folder
+    , text text
+    , domain text
+    , language text
+    , limit_ integer
+    , offset_ integer
+    )
+    returns setof api.document_result as $$
+    select *
+    from aux.fts_document_folder_limited
+        ( folder
+        , plainto_tsquery (language::regconfig, text)
+        , domain
+        , language
+        , limit_ + offset_
+        )
+    limit limit_
     offset offset_
     ;
 $$ language sql stable parallel safe rows 100;
