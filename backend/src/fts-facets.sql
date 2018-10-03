@@ -71,41 +71,54 @@ create or replace function aux.fts_folder_document_set
     as $$ 
     declare res api.document_set;
     begin  
-    select array_agg (fts.id)
-    into res
-    from (select fts.nid as id
-           from mediatum.fts
-           where fts.tsvec @@ fts_query
-           and fts.searchtype = domain
-           and fts.config = language
-         ) as fts
-    -- join entity.document on document.id = fts.id
-    where exists (select 1 from mediatum.noderelation where nid = folder_id and cid = fts.id)
-    -- and aux.is_public_today (fts.id)
-    ; 
-    return res;
+        select folder_id, count (fts.id), array_agg (fts.id)
+        into res
+        from ( select fts.nid as id
+               from mediatum.fts
+               where fts.tsvec @@ fts_query
+               and fts.searchtype = domain
+               and fts.config = language
+             ) as fts
+        -- join entity.document on document.id = fts.id -- TODO
+        where exists ( select 1
+                      from mediatum.noderelation
+                      where nid = folder_id and cid = fts.id
+                    )
+        -- and aux.is_public_today (fts.id) -- TODO
+        ; 
+        return res;
     end;
 $$ language plpgsql stable parallel safe;
 
 
 create or replace function aux.folder_subfolder_counts
     ( document_set api.document_set
-    , folder_id int4
+    , parent_folder_id int4 default null
     )
     returns table
         ( folder_id int4
         , count integer
         ) as $$
+    begin
+        return query
+            select
+              node_children,
+              -- Counting in a sub-query together with `exists` is faster than
+              -- counting with a group-by and together with `aux.test_node_lineage`
+              -- TODO: Test if this is also true in case of a large number of sub-folders.
+              ( select count (*)
+                    from unnest (document_set.id_list) as document_id_rows
+                    where exists ( select 1
+                                  from mediatum.noderelation
+                                  where nid = node_children and cid = document_id_rows
+                                )
+              )::integer
+            from aux.node_children (coalesce (parent_folder_id, document_set.folder_id))
+        ;
+    end;
+$$ language plpgsql stable parallel safe rows 50;
 
-    select
-      node_self_and_children,
-      -- Counting in a sub-query together with `exists` is faster than
-      -- counting with a group-by and together with `aux.test_node_lineage`
-      (select count (*)
-            from unnest (document_set.id_list) as document_id_rows
-            where exists (select 1 from mediatum.noderelation where nid = node_self_and_children and cid = document_id_rows)
-      )::integer
-    from aux.node_self_and_children (folder_id)
-    ;
-$$ language sql stable parallel safe rows 50;
+
+
+
 

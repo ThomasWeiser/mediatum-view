@@ -292,6 +292,8 @@ comment on column api.fts_document_result_page.content is
 
 
 create type api.document_set as (
+    folder_id int4,
+    count integer,
     id_list int4[]
 );
 

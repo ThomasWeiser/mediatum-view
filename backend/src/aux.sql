@@ -37,6 +37,15 @@ create or replace function aux.node_self_and_children (parent_node_id int4)
 $$ language plpgsql stable;
 
 
+create or replace function aux.node_children (parent_node_id int4)
+    returns setof int4 as $$
+        begin
+	      return query
+	      	select cid from mediatum.nodemapping where nid = parent_node_id;
+        end;
+$$ language plpgsql stable;
+
+
 create or replace function aux.jsonb_filter (obj jsonb, keys text[])
     returns jsonb as $$
     declare result jsonb := '{}'::jsonb;
