@@ -196,7 +196,7 @@ $$ language plpgsql stable parallel safe rows 100;
 
 
 create or replace function api.folder_simple_search
-    (folder api.folder
+    ( folder api.folder
     , text text
     , domain text
     , language text

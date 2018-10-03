@@ -297,6 +297,11 @@ create type api.document_set as (
     id_list int4[]
 );
 
+create type api.folder_count as (
+    folder_id int4,
+    count integer
+);
+
 create type debug.mediatum_node as (
 	id int4,
 	"type" varchar,
