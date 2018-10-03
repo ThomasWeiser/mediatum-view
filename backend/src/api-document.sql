@@ -148,7 +148,11 @@ create or replace function aux.fts_document_folder_limited
            order by fts.tsvec <=> fts_query
          ) as fts
     join entity.document on document.id = fts.id
-    where aux.test_node_lineage (folder_id, document.id)
+
+    -- Performance: Using exists with a subquery is faster than current implementation of aux.test_node_lineage
+    -- where aux.test_node_lineage (folder_id, document.id)
+    where exists (select 1 from mediatum.noderelation where nid = folder_id and cid = document.id)
+
     -- order by fts.distance -- Order obtained from subquery is preserved.
     limit "limit"
     ;
