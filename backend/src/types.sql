@@ -291,6 +291,10 @@ comment on column api.fts_document_result_page.content is
     'A list of document results from a full text search';
 
 
+create type api.document_set as (
+    id_list int4[]
+);
+
 create type debug.mediatum_node as (
 	id int4,
 	"type" varchar,
