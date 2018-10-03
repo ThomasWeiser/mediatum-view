@@ -125,7 +125,7 @@ $$ -- Using language plpgsql is more efficient here than sql.
 
 
 create or replace function aux.fts_document_folder_limited
-    ( folder api.folder
+    ( folder_id int4
     , fts_query tsquery
     , domain text
     , language text
@@ -148,7 +148,7 @@ create or replace function aux.fts_document_folder_limited
            order by fts.tsvec <=> fts_query
          ) as fts
     join entity.document on document.id = fts.id
-    where aux.test_node_lineage (folder.id, document.id)
+    where aux.test_node_lineage (folder_id, document.id)
     -- order by fts.distance -- Order obtained from subquery is preserved.
     limit "limit"
     ;
@@ -159,7 +159,7 @@ $$ -- Language sql gives stable performance here.
 
 
 create or replace function aux.fts_document_folder_paginated
-    ( folder api.folder
+    ( folder_id int4
     , text text
     , domain text
     , language text
@@ -179,7 +179,7 @@ create or replace function aux.fts_document_folder_paginated
                 , (row_number () over ())::integer as number
                 , (count(*) over ()) > "limit" + "offset"
             from aux.fts_document_folder_limited
-                ( folder
+                ( folder_id
                 , plainto_tsquery (language::regconfig, text)
                 , domain
                 , language
@@ -203,7 +203,8 @@ create or replace function api.folder_simple_search
 
         with search_result as (
                 select *
-                from aux.fts_document_folder_paginated (folder, text, domain, language, "limit", "offset")
+                from aux.fts_document_folder_paginated
+                    (folder.id, text, domain, language, "limit", "offset")
             )
         select
             coalesce(
@@ -241,7 +242,7 @@ create or replace function api.folder_simple_search_pl
                 ) as content
         into res
         from
-            aux.fts_document_folder_paginated (folder, text, domain, language, "limit", "offset")
+            aux.fts_document_folder_paginated (folder.id, text, domain, language, "limit", "offset")
         ;
         return res;
     end;
