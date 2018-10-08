@@ -1,4 +1,4 @@
-module Pagination
+module Pagination.Relay.Pagination
     exposing
         ( Position(..)
         , paginationArguments
@@ -6,7 +6,7 @@ module Pagination
 
 import List.Extra
 import Graphqelm.OptionalArgument exposing (OptionalArgument(Absent, Present))
-import Connection exposing (Connection)
+import Pagination.Relay.Connection exposing (Connection)
 
 
 type Position

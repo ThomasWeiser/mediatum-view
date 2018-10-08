@@ -1,4 +1,4 @@
-module Connection
+module Pagination.Relay.Connection
     exposing
         ( Connection
         , Edge

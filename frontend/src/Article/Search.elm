@@ -14,8 +14,8 @@ module Article.Search
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Pagination
-import Page exposing (Page, PageResult)
+import Pagination.Relay.Pagination as Pagination
+import Pagination.Relay.Page as Page exposing (Page, PageResult)
 import Graphqelm.Extra
 import Document exposing (Document, DocumentId, Attribute)
 import Api

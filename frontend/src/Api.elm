@@ -29,9 +29,9 @@ import Graphqelm.SelectionSet exposing (SelectionSet, with, hardcoded)
 import Graphqelm.Http
 import Graphqelm.Operation
 import Graphqelm.Extra
-import Connection
-import Pagination
-import Page exposing (Page)
+import Pagination.Relay.Connection as Connection exposing (Connection)
+import Pagination.Relay.Pagination
+import Pagination.Relay.Page
 import Folder exposing (FolderId, Folder)
 import Document exposing (Document, DocumentId)
 
@@ -131,10 +131,10 @@ folderNodeWithSubfolders =
 
 
 queryFolderDocuments :
-    Maybe (Page Document)
-    -> Pagination.Position
+    Maybe (Pagination.Relay.Page.Page Document)
+    -> Pagination.Relay.Pagination.Position
     -> FolderId
-    -> SelectionSet (Page Document) Graphqelm.Operation.RootQuery
+    -> SelectionSet (Pagination.Relay.Page.Page Document) Graphqelm.Operation.RootQuery
 queryFolderDocuments referencePage paginationPosition folderId =
     Graphql.Query.selection identity
         |> with
@@ -144,7 +144,7 @@ queryFolderDocuments referencePage paginationPosition folderId =
                         | folderId = Present (Folder.idAsInt folderId)
                     }
                  )
-                    >> Pagination.paginationArguments
+                    >> Pagination.Relay.Pagination.paginationArguments
                         pageSize
                         referencePage
                         paginationPosition
@@ -157,12 +157,12 @@ queryFolderDocuments referencePage paginationPosition folderId =
 
 
 querySimpleSearch :
-    Maybe (Page Document)
-    -> Pagination.Position
+    Maybe (Pagination.Relay.Page.Page Document)
+    -> Pagination.Relay.Pagination.Position
     -> FolderId
     -> String
     -> List String
-    -> SelectionSet (Page Document) Graphqelm.Operation.RootQuery
+    -> SelectionSet (Pagination.Relay.Page.Page Document) Graphqelm.Operation.RootQuery
 querySimpleSearch referencePage paginationPosition folderId searchString searchDomains =
     Graphql.Query.selection identity
         |> with
@@ -182,7 +182,7 @@ querySimpleSearch referencePage paginationPosition folderId searchString searchD
                                     , limit = Present sizeLimitSimpleSearch
                                 }
                              )
-                                >> Pagination.paginationArguments
+                                >> Pagination.Relay.Pagination.paginationArguments
                                     pageSize
                                     referencePage
                                     paginationPosition
@@ -198,11 +198,11 @@ querySimpleSearch referencePage paginationPosition folderId searchString searchD
 
 
 queryAuthorSearch :
-    Maybe (Page Document)
-    -> Pagination.Position
+    Maybe (Pagination.Relay.Page.Page Document)
+    -> Pagination.Relay.Pagination.Position
     -> FolderId
     -> String
-    -> SelectionSet (Page Document) Graphqelm.Operation.RootQuery
+    -> SelectionSet (Pagination.Relay.Page.Page Document) Graphqelm.Operation.RootQuery
 queryAuthorSearch referencePage paginationPosition folderId searchString =
     Graphql.Query.selection identity
         |> with
@@ -220,7 +220,7 @@ queryAuthorSearch referencePage paginationPosition folderId searchString =
                                     | text = Present searchString
                                 }
                              )
-                                >> Pagination.paginationArguments
+                                >> Pagination.Relay.Pagination.paginationArguments
                                     pageSize
                                     referencePage
                                     paginationPosition

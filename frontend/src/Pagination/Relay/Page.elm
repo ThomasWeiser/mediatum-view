@@ -1,4 +1,4 @@
-module Page
+module Pagination.Relay.Page
     exposing
         ( Page
         , entries
@@ -10,11 +10,11 @@ module Page
 
 import Graphql.Scalar
 import Graphqelm.Extra
-import Connection
+import Pagination.Relay.Connection as Connection exposing (Connection)
 
 
 type alias Page itemModel =
-    Connection.Connection Graphql.Scalar.Cursor itemModel
+    Connection Graphql.Scalar.Cursor itemModel
 
 
 entries : Page itemModel -> List itemModel
