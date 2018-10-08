@@ -7,7 +7,6 @@ module Api
         , querySubfolder
         , queryFolderDocuments
         , querySimpleSearch
-        , queryAuthorSearch
         , queryDocumentDetails
         , sizeLimitSimpleSearch
         )
@@ -161,9 +160,10 @@ querySimpleSearch :
     -> Pagination.Relay.Pagination.Position
     -> FolderId
     -> String
-    -> List String
+    -> String
+    -> String
     -> SelectionSet (Pagination.Relay.Page.Page Document) Graphqelm.Operation.RootQuery
-querySimpleSearch referencePage paginationPosition folderId searchString searchDomains =
+querySimpleSearch referencePage paginationPosition folderId searchString searchDomain searchLanguage =
     Graphql.Query.selection identity
         |> with
             (Graphql.Query.folderById
@@ -178,7 +178,8 @@ querySimpleSearch referencePage paginationPosition folderId searchString searchD
                             ((\optionals ->
                                 { optionals
                                     | text = Present searchString
-                                    , domains = Present (List.map Just searchDomains)
+                                    , domains = Present (List.map Just [searchDomain])
+                                    , languages = Present (List.map Just [searchLanguage])
                                     , limit = Present sizeLimitSimpleSearch
                                 }
                              )
@@ -197,6 +198,7 @@ querySimpleSearch referencePage paginationPosition folderId searchString searchD
             )
 
 
+{-
 queryAuthorSearch :
     Maybe (Pagination.Relay.Page.Page Document)
     -> Pagination.Relay.Pagination.Position
@@ -233,6 +235,7 @@ queryAuthorSearch referencePage paginationPosition folderId searchString =
                 )
                 |> Graphqelm.Field.nonNullOrFail
             )
+-}
 
 
 queryDocumentDetails :

@@ -7,7 +7,7 @@ import Icons
 import Select
 import Tree
 import Article
-import Article.Search exposing (SearchType, SimpleSearchDomain)
+import Article.Search exposing (SearchType, SimpleSearchDomain, SimpleSearchLanguage)
 import Utils
 
 
@@ -41,7 +41,9 @@ init : ( Model, Cmd Msg )
 init =
     let
         initialSearchType =
-            Article.Search.SimpleSearch Article.Search.SearchAttributes
+            Article.Search.SimpleSearch
+                Article.Search.SearchAttributes
+                Article.Search.English
 
         ( treeModel, treeCmd ) =
             Tree.init
@@ -165,10 +167,18 @@ viewSearchControls model =
         , Html.Events.onSubmit Submit
         ]
         [ Select.fromSelected_
-            [ Article.Search.SimpleSearch Article.Search.SearchAttributes
-            , Article.Search.SimpleSearch Article.Search.SearchFulltext
-            , Article.Search.SimpleSearch Article.Search.SearchAll
-            , Article.Search.AuthorSearch
+            [ Article.Search.SimpleSearch
+                Article.Search.SearchAttributes
+                Article.Search.English
+            , Article.Search.SimpleSearch
+                Article.Search.SearchAttributes
+                Article.Search.German
+            , Article.Search.SimpleSearch
+                Article.Search.SearchFulltext
+                Article.Search.English
+            , Article.Search.SimpleSearch
+                Article.Search.SearchFulltext
+                Article.Search.German
             ]
             SetSearchType
             toString

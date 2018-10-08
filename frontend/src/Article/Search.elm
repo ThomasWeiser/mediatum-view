@@ -4,6 +4,7 @@ module Article.Search
         , Specification
         , SearchType(..)
         , SimpleSearchDomain(..)
+        , SimpleSearchLanguage(..)
         , Msg
         , init
         , update
@@ -42,14 +43,17 @@ type alias Specification =
 
 
 type SearchType
-    = SimpleSearch SimpleSearchDomain
-    | AuthorSearch
+    = SimpleSearch SimpleSearchDomain SimpleSearchLanguage
 
 
 type SimpleSearchDomain
     = SearchAttributes
     | SearchFulltext
-    | SearchAll
+
+
+type SimpleSearchLanguage
+    = English
+    | German
 
 
 type Msg
@@ -111,7 +115,7 @@ sendSearchQuery paginationPosition context model =
             | pageResult = Page.loadingPageResult model.pageResult
           }
         , case model.specification.searchType of
-            SimpleSearch simpleSearchDomain ->
+            SimpleSearch simpleSearchDomain simpleSearchLanguage ->
                 Api.makeRequest
                     ApiResponse
                     (Api.querySimpleSearch
@@ -121,25 +125,30 @@ sendSearchQuery paginationPosition context model =
                         model.specification.searchString
                         (case simpleSearchDomain of
                             SearchAttributes ->
-                                [ "attrs" ]
+                                "attrs"
 
                             SearchFulltext ->
-                                [ "fulltext" ]
+                                "fulltext"
+                        )
+                        (case simpleSearchLanguage of
+                            English ->
+                                "english"
 
-                            SearchAll ->
-                                [ "attrs", "fulltext" ]
+                            German ->
+                                "german"
                         )
                     )
-
-            AuthorSearch ->
-                Api.makeRequest
-                    ApiResponse
-                    (Api.queryAuthorSearch
-                        model.pageResult.page
-                        paginationPosition
-                        context.folder.id
-                        model.specification.searchString
-                    )
+          {-
+             AuthorSearch ->
+                 Api.makeRequest
+                     ApiResponse
+                     (Api.queryAuthorSearch
+                         model.pageResult.page
+                         paginationPosition
+                         context.folder.id
+                         model.specification.searchString
+                     )
+          -}
         )
 
 
@@ -181,17 +190,17 @@ view model =
 searchTypeText : SearchType -> String
 searchTypeText searchType =
     case searchType of
-        SimpleSearch SearchAttributes ->
-            "All Attributes"
+        SimpleSearch SearchAttributes English ->
+            "All Attributes - English"
 
-        SimpleSearch SearchFulltext ->
-            "Fulltext"
+        SimpleSearch SearchAttributes German ->
+            "All Attributes - German"
 
-        SimpleSearch SearchAll ->
-            "Attributes and Fulltext"
+        SimpleSearch SearchFulltext English ->
+            "Fulltext - English"
 
-        AuthorSearch ->
-            "Author Surname"
+        SimpleSearch SearchFulltext German ->
+            "Fulltext - German"
 
 
 viewResponse :
