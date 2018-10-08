@@ -93,7 +93,7 @@ create or replace function aux.fts_document_folder_paginated
 $$ language plpgsql stable parallel safe rows 100;
 
 
-create or replace function api.folder_simple_search
+create or replace function api.folder_fts_page
     ( folder api.folder
     , text text
     , domain text
@@ -121,7 +121,7 @@ $$ language sql stable parallel safe;
 
 -- The same function as plpgsql
 -- Performance behavior seems to be the same.
-create or replace function api.folder_simple_search_pl
+create or replace function api.folder_fts_page_pl
     (folder api.folder
     , text text
     , domain text
@@ -150,7 +150,7 @@ create or replace function api.folder_simple_search_pl
     end;
 $$ language plpgsql stable parallel safe;
 
-comment on function api.folder_simple_search (folder api.folder, text text, domain text, language text, "limit" integer, "offset" integer) is
+comment on function api.folder_fts_page (folder api.folder, text text, domain text, language text, "limit" integer, "offset" integer) is
     'Reads and enables pagination through all documents within a folder, filtered by a keyword search, and sorted by a search rank.'
     ' Language may currently be "english" and "german".'
     ' Domain may currently be "fulltext" and "attrs".'

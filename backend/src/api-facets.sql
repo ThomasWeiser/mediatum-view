@@ -5,15 +5,15 @@
 begin;
 
 
-create or replace function aux.fts_folder_document_set
+create or replace function aux.fts_folder_docset
     ( folder_id int4
     , fts_query tsquery
     , domain text
     , language text
     )
-    returns api.document_set
+    returns api.docset
     as $$ 
-    declare res api.document_set;
+    declare res api.docset;
     begin  
         select folder_id, count (fts.id), array_agg (fts.id)
         into res
@@ -35,17 +35,16 @@ create or replace function aux.fts_folder_document_set
 $$ language plpgsql stable parallel safe;
 
 
-create or replace function api.folder_fts_folder_document_set
+create or replace function api.folder_fts_docset
     ( folder api.folder
     , text text
     , domain text
     , language text
     )
-    returns api.document_set
+    returns api.docset
     as $$ 
-    -- declare res api.document_set;
     begin  
-        return aux.fts_folder_document_set
+        return aux.fts_folder_docset
           ( folder.id
           , plainto_tsquery (language::regconfig, text)
           , domain
@@ -56,7 +55,7 @@ $$ language plpgsql stable parallel safe;
 
 
 create or replace function aux.subfolder_counts
-    ( document_set api.document_set
+    ( docset api.docset
     , parent_folder_id int4 default null
     )
     returns table
@@ -71,27 +70,27 @@ create or replace function aux.subfolder_counts
               -- counting with a group-by and together with `aux.test_node_lineage`
               -- TODO: Test if this is also true in case of a large number of sub-folders.
               ( select count (*)
-                    from unnest (document_set.id_list) as document_id_rows
+                    from unnest (docset.id_list) as document_id_rows
                     where exists ( select 1
                                   from mediatum.noderelation
                                   where nid = node_children and cid = document_id_rows
                                 )
               )::integer
-            from aux.node_children (coalesce (parent_folder_id, document_set.folder_id))
+            from aux.node_children (coalesce (parent_folder_id, docset.folder_id))
         ;
     end;
 $$ language plpgsql stable parallel safe rows 50;
 
 
-create or replace function api.document_set_subfolder_counts
-    ( document_set api.document_set
+create or replace function api.docset_subfolder_counts
+    ( docset api.docset
     , parent_folder_id int4 -- default null
     )
     returns setof api.folder_count as $$
     begin
         return query
             select *
-            from aux.subfolder_counts (document_set, parent_folder_id)
+            from aux.subfolder_counts (docset, parent_folder_id)
         ;
     end;
 $$ language plpgsql stable parallel safe rows 50;
