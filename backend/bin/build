@@ -8,7 +8,8 @@ $p src/aux.sql
 $p src/entities.sql
 $p src/api-meta.sql
 $p src/api-document.sql
-$p src/fts-facets.sql
+$p src/api-fts.sql
+$p src/api-facets.sql
 $p src/examine.sql
 $p src/debug.sql
 

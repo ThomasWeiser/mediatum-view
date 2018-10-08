@@ -9,7 +9,6 @@ drop schema if exists debug cascade;
 
 create schema if not exists api;
 create schema if not exists debug;
-create schema if not exists aux;
 
 
 create type api.folder as (
