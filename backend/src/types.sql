@@ -291,15 +291,15 @@ comment on column api.fts_document_result_page.content is
     'A list of document results from a full text search';
 
 
-create type api.docset as (
-    folder_id int4,
-    count integer,
-    id_list int4[]
-);
-
 create type api.folder_count as (
     folder_id int4,
     count integer
+);
+
+create type api.docset as (
+    folder_id int4,
+    folder_count api.folder_count,
+    id_list int4[]
 );
 
 create type debug.mediatum_node as (

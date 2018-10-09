@@ -15,7 +15,9 @@ create or replace function aux.fts_folder_docset
     as $$ 
     declare res api.docset;
     begin  
-        select folder_id, count (fts.id), array_agg (fts.id)
+        select folder_id
+             , row(folder_id, count (fts.id))::api.folder_count
+             , array_agg (fts.id)
         into res
         from ( select fts.nid as id
                from mediatum.fts
