@@ -1,15 +1,11 @@
-module Article.Search
+module Article.Directory
     exposing
         ( Model
         , Specification
-        , SearchType(..)
-        , SimpleSearchDomain(..)
-        , SimpleSearchLanguage(..)
         , Msg
         , init
         , update
         , view
-        , searchTypeText
         )
 
 import Html exposing (Html)
@@ -37,23 +33,7 @@ type alias Model =
 
 
 type alias Specification =
-    { searchType : SearchType
-    , searchString : String
-    }
-
-
-type SearchType
-    = SimpleSearch SimpleSearchDomain SimpleSearchLanguage
-
-
-type SimpleSearchDomain
-    = SearchAttributes
-    | SearchFulltext
-
-
-type SimpleSearchLanguage
-    = English
-    | German
+    ()
 
 
 type Msg
@@ -98,73 +78,24 @@ update msg context model =
 
 sendSearchQuery : Pagination.Position -> Context -> Model -> ( Model, Cmd Msg )
 sendSearchQuery paginationPosition context model =
-    if model.specification.searchString == "" then
-        ( { model
-            | pageResult = Page.loadingPageResult model.pageResult
-          }
-        , Api.makeRequest
-            ApiResponse
-            (Api.queryFolderDocuments
-                model.pageResult.page
-                paginationPosition
-                context.folder.id
-            )
+    ( { model
+        | pageResult = Page.loadingPageResult model.pageResult
+      }
+    , Api.makeRequest
+        ApiResponse
+        (Api.queryFolderDocuments
+            model.pageResult.page
+            paginationPosition
+            context.folder.id
         )
-    else
-        ( { model
-            | pageResult = Page.loadingPageResult model.pageResult
-          }
-        , case model.specification.searchType of
-            SimpleSearch simpleSearchDomain simpleSearchLanguage ->
-                Api.makeRequest
-                    ApiResponse
-                    (Api.querySimpleSearch
-                        model.pageResult.page
-                        paginationPosition
-                        context.folder.id
-                        model.specification.searchString
-                        (case simpleSearchDomain of
-                            SearchAttributes ->
-                                "attrs"
-
-                            SearchFulltext ->
-                                "fulltext"
-                        )
-                        (case simpleSearchLanguage of
-                            English ->
-                                "english"
-
-                            German ->
-                                "german"
-                        )
-                    )
-          {-
-             AuthorSearch ->
-                 Api.makeRequest
-                     ApiResponse
-                     (Api.queryAuthorSearch
-                         model.pageResult.page
-                         paginationPosition
-                         context.folder.id
-                         model.specification.searchString
-                     )
-          -}
-        )
+    )
 
 
 view : Model -> Html Msg
 view model =
     Html.div []
         [ Html.div [] <|
-            if model.specification.searchString == "" then
-                [ Html.span [] [ Html.text "All Documents" ] ]
-            else
-                [ Html.span [] [ Html.text "Search " ]
-                , Html.span [] [ Html.text <| searchTypeText model.specification.searchType ]
-                , Html.span [] [ Html.text ": \"" ]
-                , Html.span [] [ Html.text model.specification.searchString ]
-                , Html.span [] [ Html.text "\"" ]
-                ]
+            [ Html.span [] [ Html.text "All Documents" ] ]
         , case model.pageResult.page of
             Nothing ->
                 Html.text ""
@@ -172,7 +103,7 @@ view model =
             Just documentPage ->
                 viewResponse
                     PickPosition
-                    (viewPage (Document.view SelectDocument))
+                    (viewPage (Document.view SelectDocument Nothing))
                     documentPage
         , if model.pageResult.loading then
             Icons.spinner
@@ -185,22 +116,6 @@ view model =
             Just error ->
                 viewError error
         ]
-
-
-searchTypeText : SearchType -> String
-searchTypeText searchType =
-    case searchType of
-        SimpleSearch SearchAttributes English ->
-            "All Attributes - English"
-
-        SimpleSearch SearchAttributes German ->
-            "All Attributes - German"
-
-        SimpleSearch SearchFulltext English ->
-            "Fulltext - English"
-
-        SimpleSearch SearchFulltext German ->
-            "Fulltext - German"
 
 
 viewResponse :
@@ -230,13 +145,6 @@ viewNumberOfResults page =
         [ Html.strong
             []
             [ Html.text "Number of Results: "
-            , Html.text <|
-                -- TODO: Following code is only valid for a simpleSearch
-                -- (i.e. with a limit)
-                if page.totalCount == Api.sizeLimitSimpleSearch then
-                    ">= "
-                else
-                    ""
             , Html.text <| toString page.totalCount
             ]
         ]

@@ -7,7 +7,7 @@ import Icons
 import Select
 import Tree
 import Article
-import Article.Search exposing (SearchType, SimpleSearchDomain, SimpleSearchLanguage)
+import Article.Fts exposing (SearchType, FtsSearchDomain, FtsSearchLanguage)
 import Utils
 
 
@@ -41,9 +41,9 @@ init : ( Model, Cmd Msg )
 init =
     let
         initialSearchType =
-            Article.Search.SimpleSearch
-                Article.Search.SearchAttributes
-                Article.Search.English
+            Article.Fts.FtsSearch
+                Article.Fts.SearchAttributes
+                Article.Fts.English
 
         ( treeModel, treeCmd ) =
             Tree.init
@@ -139,7 +139,7 @@ view model =
                     [ Html.span [ Html.Attributes.class "title" ]
                         [ Html.text "mediaTUM view" ]
                     , Html.span [ Html.Attributes.class "subtitle" ]
-                        [ Html.text "Demo 2018-07-12" ]
+                        [ Html.text "WIP 2018-10-09" ]
                     ]
                 , Html.div
                     [ Html.Attributes.class "subtitle" ]
@@ -167,22 +167,22 @@ viewSearchControls model =
         , Html.Events.onSubmit Submit
         ]
         [ Select.fromSelected_
-            [ Article.Search.SimpleSearch
-                Article.Search.SearchAttributes
-                Article.Search.English
-            , Article.Search.SimpleSearch
-                Article.Search.SearchAttributes
-                Article.Search.German
-            , Article.Search.SimpleSearch
-                Article.Search.SearchFulltext
-                Article.Search.English
-            , Article.Search.SimpleSearch
-                Article.Search.SearchFulltext
-                Article.Search.German
+            [ Article.Fts.FtsSearch
+                Article.Fts.SearchAttributes
+                Article.Fts.English
+            , Article.Fts.FtsSearch
+                Article.Fts.SearchAttributes
+                Article.Fts.German
+            , Article.Fts.FtsSearch
+                Article.Fts.SearchFulltext
+                Article.Fts.English
+            , Article.Fts.FtsSearch
+                Article.Fts.SearchFulltext
+                Article.Fts.German
             ]
             SetSearchType
             toString
-            Article.Search.searchTypeText
+            Article.Fts.searchTypeText
             model.searchType
         , Html.input
             [ Html.Attributes.class "search-input"

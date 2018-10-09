@@ -6,9 +6,8 @@ module Api
         , queryToplevelFolder
         , querySubfolder
         , queryFolderDocuments
-        , querySimpleSearch
+        , queryFtsPage
         , queryDocumentDetails
-        , sizeLimitSimpleSearch
         )
 
 import Graphql.Object
@@ -18,6 +17,8 @@ import Graphql.Object.Folder
 import Graphql.Object.DocumentsConnection
 import Graphql.Object.DocumentsEdge
 import Graphql.Object.Document
+import Graphql.Object.FtsDocumentResult
+import Graphql.Object.FtsDocumentResultPage
 import Graphql.Object.Metadatatype
 import Graphql.Query
 import Graphql.Scalar
@@ -31,18 +32,15 @@ import Graphqelm.Extra
 import Pagination.Relay.Connection as Connection exposing (Connection)
 import Pagination.Relay.Pagination
 import Pagination.Relay.Page
+import Pagination.Offset.Page
 import Folder exposing (FolderId, Folder)
 import Document exposing (Document, DocumentId)
+import FtsDocumentResult exposing (FtsDocumentResult)
 
 
 pageSize : Int
 pageSize =
     10
-
-
-sizeLimitSimpleSearch : Int
-sizeLimitSimpleSearch =
-    100
 
 
 type alias Response decodesTo =
@@ -155,15 +153,15 @@ queryFolderDocuments referencePage paginationPosition folderId =
             )
 
 
-querySimpleSearch :
-    Maybe (Pagination.Relay.Page.Page Document)
-    -> Pagination.Relay.Pagination.Position
+queryFtsPage :
+    Maybe (Pagination.Offset.Page.Page FtsDocumentResult)
+    -> Pagination.Offset.Page.Position
     -> FolderId
     -> String
     -> String
     -> String
-    -> SelectionSet (Pagination.Relay.Page.Page Document) Graphqelm.Operation.RootQuery
-querySimpleSearch referencePage paginationPosition folderId searchString searchDomain searchLanguage =
+    -> SelectionSet (Pagination.Offset.Page.Page FtsDocumentResult) Graphqelm.Operation.RootQuery
+queryFtsPage referencePage paginationPosition folderId searchString searchDomain searchLanguage =
     Graphql.Query.selection identity
         |> with
             (Graphql.Query.folderById
@@ -174,67 +172,67 @@ querySimpleSearch referencePage paginationPosition folderId searchString searchD
                 )
                 (Graphql.Object.Folder.selection identity
                     |> with
-                        (Graphql.Object.Folder.simpleSearch
-                            ((\optionals ->
+                        (Graphql.Object.Folder.ftsPage
+                            (\optionals ->
                                 { optionals
                                     | text = Present searchString
-                                    , domains = Present (List.map Just [searchDomain])
-                                    , languages = Present (List.map Just [searchLanguage])
-                                    , limit = Present sizeLimitSimpleSearch
+                                    , domain = Present searchDomain
+                                    , language = Present searchLanguage
+                                    , limit = Present pageSize
+                                    , offset =
+                                        Present <|
+                                            Pagination.Offset.Page.positionToOffset
+                                                pageSize
+                                                referencePage
+                                                paginationPosition
                                 }
-                             )
-                                >> Pagination.Relay.Pagination.paginationArguments
-                                    pageSize
-                                    referencePage
-                                    paginationPosition
                             )
-                            (Connection.connection
-                                graphqlDocumentObjects
-                                (documentNode "nodesmall")
-                            )
+                            (ftsDocumentResultPage "nodesmall")
+                            |> Graphqelm.Field.nonNullOrFail
                         )
                 )
                 |> Graphqelm.Field.nonNullOrFail
             )
+
 
 
 {-
-queryAuthorSearch :
-    Maybe (Pagination.Relay.Page.Page Document)
-    -> Pagination.Relay.Pagination.Position
-    -> FolderId
-    -> String
-    -> SelectionSet (Pagination.Relay.Page.Page Document) Graphqelm.Operation.RootQuery
-queryAuthorSearch referencePage paginationPosition folderId searchString =
-    Graphql.Query.selection identity
-        |> with
-            (Graphql.Query.folderById
-                (\optionals ->
-                    { optionals
-                        | id = Present (Folder.idAsInt folderId)
-                    }
-                )
-                (Graphql.Object.Folder.selection identity
-                    |> with
-                        (Graphql.Object.Folder.authorSearch
-                            ((\optionals ->
-                                { optionals
-                                    | text = Present searchString
-                                }
-                             )
-                                >> Pagination.Relay.Pagination.paginationArguments
-                                    pageSize
-                                    referencePage
-                                    paginationPosition
-                            )
-                            (Connection.connection
-                                graphqlDocumentObjects
-                                (documentNode "nodesmall")
-                            )
-                        )
-                )
-                |> Graphqelm.Field.nonNullOrFail
-            )
+   queryAuthorSearch :
+       Maybe (Pagination.Relay.Page.Page Document)
+       -> Pagination.Relay.Pagination.Position
+       -> FolderId
+       -> String
+       -> SelectionSet (Pagination.Relay.Page.Page Document) Graphqelm.Operation.RootQuery
+   queryAuthorSearch referencePage paginationPosition folderId searchString =
+       Graphql.Query.selection identity
+           |> with
+               (Graphql.Query.folderById
+                   (\optionals ->
+                       { optionals
+                           | id = Present (Folder.idAsInt folderId)
+                       }
+                   )
+                   (Graphql.Object.Folder.selection identity
+                       |> with
+                           (Graphql.Object.Folder.authorSearch
+                               ((\optionals ->
+                                   { optionals
+                                       | text = Present searchString
+                                   }
+                                )
+                                   >> Pagination.Relay.Pagination.paginationArguments
+                                       pageSize
+                                       referencePage
+                                       paginationPosition
+                               )
+                               (Connection.connection
+                                   graphqlDocumentObjects
+                                   (documentNode "nodesmall")
+                               )
+                           )
+                   )
+                   |> Graphqelm.Field.nonNullOrFail
+               )
 -}
 
 
@@ -251,6 +249,45 @@ queryDocumentDetails documentId =
                     }
                 )
                 (documentNode "nodebig")
+            )
+
+
+ftsDocumentResultPage :
+    String
+    -> SelectionSet (Pagination.Offset.Page.Page FtsDocumentResult) Graphql.Object.FtsDocumentResultPage
+ftsDocumentResultPage maskName =
+    Graphql.Object.FtsDocumentResultPage.selection Pagination.Offset.Page.Page
+        |> with
+            (Graphql.Object.FtsDocumentResultPage.offset
+                |> Graphqelm.Field.nonNullOrFail
+            )
+        |> with
+            (Graphql.Object.FtsDocumentResultPage.hasNextPage
+                |> Graphqelm.Field.nonNullOrFail
+            )
+        |> with
+            (Graphql.Object.FtsDocumentResultPage.content
+                (ftsDocumentResult maskName)
+                |> Graphqelm.Field.nonNullOrFail
+                |> Graphqelm.Field.nonNullElementsOrFail
+            )
+
+
+ftsDocumentResult : String -> SelectionSet FtsDocumentResult Graphql.Object.FtsDocumentResult
+ftsDocumentResult maskName =
+    Graphql.Object.FtsDocumentResult.selection FtsDocumentResult.init
+        |> with
+            (Graphql.Object.FtsDocumentResult.number
+                |> Graphqelm.Field.nonNullOrFail
+            )
+        |> with
+            (Graphql.Object.FtsDocumentResult.distance
+                |> Graphqelm.Field.nonNullOrFail
+            )
+        |> with
+            (Graphql.Object.FtsDocumentResult.document
+                (documentNode maskName)
+                |> Graphqelm.Field.nonNullOrFail
             )
 
 

@@ -14,7 +14,8 @@ import Folder exposing (Folder, FolderId)
 import Tree
 import Article.Empty
 import Article.Collection
-import Article.Search exposing (SearchType, SimpleSearchDomain)
+import Article.Directory
+import Article.Fts exposing (SearchType)
 import Article.Details
 import Document exposing (DocumentId)
 
@@ -33,14 +34,16 @@ type alias Static =
 type Content
     = EmptyModel Article.Empty.Model
     | CollectionModel Article.Collection.Model
-    | SearchModel Article.Search.Model
+    | DirectoryModel Article.Directory.Model
+    | FtsModel Article.Fts.Model
     | DetailsModel Article.Details.Model
 
 
 type Msg
     = EmptyMsg Article.Empty.Msg
     | CollectionMsg Article.Collection.Msg
-    | SearchMsg Article.Search.Msg
+    | DirectoryMsg Article.Directory.Msg
+    | FtsMsg Article.Fts.Msg
     | DetailsMsg Article.Details.Msg
 
 
@@ -63,29 +66,40 @@ initCollectionOrSearch folder searchType searchString =
         static =
             { folder = folder }
     in
-        if folder.isCollection && searchString == "" then
-            let
-                ( subModel, subCmd ) =
-                    Article.Collection.init ()
-            in
-                ( { static = static
-                  , content = CollectionModel subModel
-                  }
-                , Cmd.map CollectionMsg subCmd
-                )
+        if searchString == "" then
+            if folder.isCollection && searchString == "" then
+                let
+                    ( subModel, subCmd ) =
+                        Article.Collection.init ()
+                in
+                    ( { static = static
+                      , content = CollectionModel subModel
+                      }
+                    , Cmd.map CollectionMsg subCmd
+                    )
+            else
+                let
+                    ( subModel, subCmd ) =
+                        Article.Directory.init static ()
+                in
+                    ( { static = static
+                      , content = DirectoryModel subModel
+                      }
+                    , Cmd.map DirectoryMsg subCmd
+                    )
         else
             let
                 ( subModel, subCmd ) =
-                    Article.Search.init
+                    Article.Fts.init
                         static
                         { searchType = searchType
                         , searchString = searchString
                         }
             in
                 ( { static = static
-                  , content = SearchModel subModel
+                  , content = FtsModel subModel
                   }
-                , Cmd.map SearchMsg subCmd
+                , Cmd.map FtsMsg subCmd
                 )
 
 
@@ -123,18 +137,35 @@ update msg model =
                 , Cmd.map CollectionMsg subCmd
                 )
 
-        ( SearchMsg subMsg, SearchModel subModel ) ->
+        ( DirectoryMsg subMsg, DirectoryModel subModel ) ->
             let
                 ( subModel1, subCmd, documentSelection ) =
-                    Article.Search.update
+                    Article.Directory.update
                         subMsg
                         model.static
                         subModel
             in
                 case documentSelection of
                     Nothing ->
-                        ( { model | content = SearchModel subModel1 }
-                        , Cmd.map SearchMsg subCmd
+                        ( { model | content = DirectoryModel subModel1 }
+                        , Cmd.map DirectoryMsg subCmd
+                        )
+
+                    Just documentId ->
+                        initDetails model.static.folder documentId
+
+        ( FtsMsg subMsg, FtsModel subModel ) ->
+            let
+                ( subModel1, subCmd, documentSelection ) =
+                    Article.Fts.update
+                        subMsg
+                        model.static
+                        subModel
+            in
+                case documentSelection of
+                    Nothing ->
+                        ( { model | content = FtsModel subModel1 }
+                        , Cmd.map FtsMsg subCmd
                         )
 
                     Just documentId ->
@@ -175,9 +206,13 @@ viewContent model =
             Article.Collection.view model.static subModel
                 |> Html.map CollectionMsg
 
-        SearchModel subModel ->
-            Article.Search.view subModel
-                |> Html.map SearchMsg
+        DirectoryModel subModel ->
+            Article.Directory.view subModel
+                |> Html.map DirectoryMsg
+
+        FtsModel subModel ->
+            Article.Fts.view subModel
+                |> Html.map FtsMsg
 
         DetailsModel subModel ->
             Article.Details.view subModel

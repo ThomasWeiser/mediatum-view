@@ -58,11 +58,21 @@ init idAsInt metadatatypeName name attributes =
     }
 
 
-view : (DocumentId -> msg) -> Document -> Html msg
-view clickMsg document =
+view : (DocumentId -> msg) -> Maybe Int -> Document -> Html msg
+view clickMsg maybeNumber document =
     Html.div [ Html.Attributes.class "document" ]
         [ Html.div [ Html.Attributes.class "metadatatype" ]
-            [ Html.text document.metadatatypeName ]
+            [ case maybeNumber of
+                Just number ->
+                    Html.span [ Html.Attributes.class "result-number" ]
+                        [Html.text <| toString number ++ ". "]
+                Nothing ->
+                    Html.text ""
+
+            , Html.span [ Html.Attributes.class "metadatatype" ]
+                [Html.text document.metadatatypeName]
+            
+            ]
         , Html.div
             [ Html.Attributes.class "attributes"
             , Html.Events.onClick (clickMsg document.id)
