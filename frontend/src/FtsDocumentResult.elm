@@ -6,7 +6,6 @@ module FtsDocumentResult
         )
 
 import Html exposing (Html)
-import Html.Attributes
 import Document exposing (Document, DocumentId)
 
 

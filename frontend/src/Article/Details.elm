@@ -83,7 +83,7 @@ view model =
 viewDocument : Document -> Html msg
 viewDocument document =
     Html.div []
-        [ Html.div [Html.Attributes.class "header"]
+        [ Html.div [ Html.Attributes.class "header" ]
             [ Html.div [ Html.Attributes.class "metadatatype" ]
                 [ Html.text document.metadatatypeName ]
             , Html.div [ Html.Attributes.class "author" ]

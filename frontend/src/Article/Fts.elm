@@ -18,9 +18,9 @@ import Html.Events
 import Pagination.Offset.Page as Page exposing (Page, PageResult)
 import Graphqelm.Extra
 import FtsDocumentResult exposing (FtsDocumentResult)
-import Document exposing (Document, DocumentId, Attribute)
+import Document exposing (Document, DocumentId)
 import Api
-import Folder exposing (Folder, FolderId)
+import Folder exposing (Folder)
 import Icons
 import Utils
 

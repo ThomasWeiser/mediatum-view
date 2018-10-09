@@ -124,8 +124,8 @@ addRootFolders rootFoldersWithSubfolders model =
                 rootFoldersWithSubfolders
 
         addRootFolder : ( Folder, List Folder ) -> Model -> Model
-        addRootFolder ( rootFolder, subFolders ) model =
-            model
+        addRootFolder ( rootFolder, subFolders ) model1 =
+            model1
                 |> addFolders (rootFolder :: subFolders)
                 |> setSubfolders rootFolder.id subFolders
 
@@ -292,9 +292,9 @@ viewBreadcrumbs model id =
         (getPath id model
             |> List.reverse
             |> List.map
-                (\id ->
+                (\id1 ->
                     Html.span []
-                        [ Dict.get id model.folderCache
+                        [ Dict.get id1 model.folderCache
                             |> Maybe.Extra.unwrap "..." (.folder >> .name)
                             |> Html.text
                         ]

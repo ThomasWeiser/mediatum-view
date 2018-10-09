@@ -7,7 +7,7 @@ import Icons
 import Select
 import Tree
 import Article
-import Article.Fts exposing (SearchType, FtsSearchDomain, FtsSearchLanguage)
+import Article.Fts exposing (SearchType)
 import Utils
 
 

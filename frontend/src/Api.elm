@@ -25,11 +25,11 @@ import Graphql.Scalar
 import Json.Decode exposing (Decoder)
 import Graphqelm.Field
 import Graphqelm.OptionalArgument exposing (OptionalArgument(Present))
-import Graphqelm.SelectionSet exposing (SelectionSet, with, hardcoded)
+import Graphqelm.SelectionSet exposing (SelectionSet, with)
 import Graphqelm.Http
 import Graphqelm.Operation
 import Graphqelm.Extra
-import Pagination.Relay.Connection as Connection exposing (Connection)
+import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Pagination
 import Pagination.Relay.Page
 import Pagination.Offset.Page

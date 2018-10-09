@@ -10,7 +10,7 @@ module Article
 
 import Html exposing (Html)
 import Html.Attributes
-import Folder exposing (Folder, FolderId)
+import Folder exposing (Folder)
 import Tree
 import Article.Empty
 import Article.Collection

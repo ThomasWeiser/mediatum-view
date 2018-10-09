@@ -65,13 +65,12 @@ view clickMsg maybeNumber document =
             [ case maybeNumber of
                 Just number ->
                     Html.span [ Html.Attributes.class "result-number" ]
-                        [Html.text <| toString number ++ ". "]
+                        [ Html.text <| toString number ++ ". " ]
+
                 Nothing ->
                     Html.text ""
-
             , Html.span [ Html.Attributes.class "metadatatype" ]
-                [Html.text document.metadatatypeName]
-            
+                [ Html.text document.metadatatypeName ]
             ]
         , Html.div
             [ Html.Attributes.class "attributes"

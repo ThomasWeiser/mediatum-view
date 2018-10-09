@@ -9,7 +9,7 @@ module Article.Collection
         )
 
 import Html exposing (Html)
-import Folder exposing (Folder, FolderId)
+import Folder exposing (Folder)
 
 
 type alias Context =
