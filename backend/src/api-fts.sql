@@ -109,6 +109,7 @@ create or replace function api.folder_fts_page
                     (folder.id, text, domain, language, "limit", "offset")
             )
         select
+            "offset",
             coalesce(
                 (select every(has_next_page) from search_result), false
             ) as has_next_page,
@@ -134,6 +135,7 @@ create or replace function api.folder_fts_page_pl
 
     begin
         select
+            "offset",
             coalesce
                 ( bool_or (has_next_page)
                 , false

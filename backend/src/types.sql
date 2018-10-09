@@ -278,6 +278,7 @@ comment on column api.fts_document_result.document is
 
 
 create type api.fts_document_result_page as (
+    "offset" integer,
     has_next_page boolean,
     content api.fts_document_result[]
 );
