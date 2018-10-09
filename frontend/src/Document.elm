@@ -4,7 +4,7 @@ module Document
         , DocumentId
         , Attribute
         , init
-        , idAsInt
+        , idToInt
         , view
         )
 
@@ -28,9 +28,14 @@ type alias DocumentId =
     ( Float, Int )
 
 
-idAsInt : DocumentId -> Int
-idAsInt ( _, i ) =
+idToInt : DocumentId -> Int
+idToInt ( _, i ) =
     i
+
+
+idFromInt : Int -> DocumentId
+idFromInt idAsInt =
+    ( 0.0, idAsInt )
 
 
 type alias Document =
@@ -51,7 +56,7 @@ type alias Attribute =
 
 init : Int -> String -> String -> List Attribute -> Document
 init idAsInt metadatatypeName name attributes =
-    { id = ( 0.0, idAsInt )
+    { id = idFromInt idAsInt
     , name = name
     , metadatatypeName = metadatatypeName
     , attributes = attributes

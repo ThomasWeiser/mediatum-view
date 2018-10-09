@@ -2,14 +2,17 @@ module Folder
     exposing
         ( FolderId
         , Folder
+        , FolderCountMap
         , dummy
         , init
-        , idAsInt
+        , idToInt
+        , idFromInt
         , isRoot
         , hasSubfolder
         , view
         )
 
+import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes
 import Icons
@@ -43,9 +46,13 @@ type alias Folder =
     }
 
 
+type alias FolderCountMap =
+    Dict FolderId Int
+
+
 dummy : Folder
 dummy =
-    { id = ( -1, 0.0 )
+    { id = idFromInt -1
     , parent = Nothing
     , name = ""
     , isCollection = False
@@ -55,23 +62,28 @@ dummy =
 
 init : Int -> Maybe Int -> String -> Bool -> Int -> Folder
 init idAsInt maybeParentIdAsInt name isCollection numSubfolder =
-    { id = ( idAsInt, 0.0 )
+    { id = idFromInt idAsInt
     , parent =
         case maybeParentIdAsInt of
             Nothing ->
                 Nothing
 
             Just parentIdAsInt ->
-                Just ( parentIdAsInt, 0.0 )
+                Just (idFromInt parentIdAsInt)
     , name = name
     , isCollection = isCollection
     , numSubfolder = numSubfolder
     }
 
 
-idAsInt : FolderId -> Int
-idAsInt ( i, _ ) =
+idToInt : FolderId -> Int
+idToInt ( i, _ ) =
     i
+
+
+idFromInt : Int -> FolderId
+idFromInt idAsInt =
+    ( idAsInt, 0.0 )
 
 
 isRoot : Folder -> Bool
@@ -84,8 +96,8 @@ hasSubfolder folder =
     folder.numSubfolder > 0
 
 
-view : Folder -> Bool -> Bool -> Html msg
-view folder selected expanded =
+view : Folder -> Maybe Int -> Bool -> Bool -> Html msg
+view folder maybeCount selected expanded =
     Html.div
         [ Html.Attributes.classList
             [ ( "folder-head", True )
@@ -97,11 +109,23 @@ view folder selected expanded =
             , ( "selected", selected )
             ]
         ]
-        [ if hasSubfolder folder then
+        ([ if hasSubfolder folder then
             Icons.expando
-          else
+           else
             Icons.leaf
-        , Html.span
+         , Html.span
             [ Html.Attributes.class "folder-name" ]
             [ Html.text folder.name ]
-        ]
+         ]
+            ++ (case maybeCount of
+                    Nothing ->
+                        []
+
+                    Just count ->
+                        [ Html.text " "
+                        , Html.span
+                            [ Html.Attributes.class "folder-count" ]
+                            [ Html.text <| "(" ++ toString count ++ ")" ]
+                        ]
+               )
+        )

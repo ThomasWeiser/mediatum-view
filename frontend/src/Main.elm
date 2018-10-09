@@ -1,10 +1,12 @@
 module Main exposing (main)
 
+import Dict
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
 import Select
+import Folder exposing (FolderCountMap)
 import Tree
 import Article
 import Article.Fts exposing (SearchType)
@@ -15,6 +17,7 @@ type alias Model =
     { searchType : SearchType
     , searchString : String
     , tree : Tree.Model
+    , folderCounts : FolderCountMap
     , article : Article.Model
     }
 
@@ -55,6 +58,7 @@ init =
             { searchType = initialSearchType
             , searchString = ""
             , tree = treeModel
+            , folderCounts = Dict.empty
             , article = articleModel
             }
     in
@@ -93,10 +97,21 @@ update msg model =
 
         ArticleMsg subMsg ->
             let
-                ( subModel, subCmd ) =
+                ( subModel, subCmd, subReturn ) =
                     Article.update subMsg model.article
+
+                folderCounts =
+                    case subReturn of
+                        Article.NoReturn ->
+                            model.folderCounts
+
+                        Article.FolderCounts folderCounts1 ->
+                            folderCounts1
             in
-                ( { model | article = subModel }
+                ( { model
+                    | folderCounts = folderCounts
+                    , article = subModel
+                  }
                 , Cmd.map ArticleMsg subCmd
                 )
 
@@ -149,7 +164,7 @@ view model =
             ]
         , Html.main_ []
             [ Html.aside []
-                [ Html.map TreeMsg <| Tree.view model.tree
+                [ Html.map TreeMsg <| Tree.view model.tree model.folderCounts
                 ]
             , Html.article
                 [ Html.Attributes.class "article" ]

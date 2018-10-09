@@ -14,7 +14,7 @@ import Maybe.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Folder exposing (FolderId, Folder)
+import Folder exposing (FolderId, Folder, FolderCountMap)
 import Api exposing (ApiError)
 
 
@@ -229,19 +229,19 @@ loadSubfolder superfolderId model =
             ( model, Cmd.none )
 
 
-view : Model -> Html Msg
-view model =
+view : Model -> FolderCountMap -> Html Msg
+view model folderCounts =
     Html.div []
-        [ viewListOfFolders model model.rootIds ]
+        [ viewListOfFolders model folderCounts model.rootIds ]
 
 
-viewListOfFolders : Model -> List FolderId -> Html Msg
-viewListOfFolders model folderIds =
+viewListOfFolders : Model -> FolderCountMap -> List FolderId -> Html Msg
+viewListOfFolders model folderCounts folderIds =
     Html.ul [ Html.Attributes.class "folder-list" ] <|
         List.map
             (\id ->
                 Html.li []
-                    [ viewFolder model id ]
+                    [ viewFolder model folderCounts id ]
             )
             folderIds
 
@@ -253,8 +253,8 @@ viewListOfFoldersLoading =
         ]
 
 
-viewFolder : Model -> FolderId -> Html Msg
-viewFolder model id =
+viewFolder : Model -> FolderCountMap -> FolderId -> Html Msg
+viewFolder model folderCounts id =
     let
         isSelectedFolder =
             List.head model.selection == Just id
@@ -273,14 +273,19 @@ viewFolder model id =
                 Html.div []
                     [ Html.div
                         [ Html.Events.onClick (Select id) ]
-                        [ Folder.view folder isSelectedFolder expanded ]
+                        [ Folder.view
+                            folder
+                            (Dict.get folder.id folderCounts)
+                            isSelectedFolder
+                            expanded
+                        ]
                     , if expanded then
                         case getSubLinks id model of
                             Nothing ->
                                 viewListOfFoldersLoading
 
                             Just subLinks ->
-                                viewListOfFolders model subLinks
+                                viewListOfFolders model folderCounts subLinks
                       else
                         Html.text ""
                     ]

@@ -7,13 +7,18 @@ module Api
         , querySubfolder
         , queryFolderDocuments
         , queryFtsPage
+        , queryFtsFolderCounts
         , queryDocumentDetails
         )
 
+import Dict
 import Graphql.Object
 import Graphql.Object.PageInfo
 import Graphql.Object.FoldersConnection
 import Graphql.Object.Folder
+import Graphql.Object.FolderCountsConnection
+import Graphql.Object.FolderCount
+import Graphql.Object.Docset
 import Graphql.Object.DocumentsConnection
 import Graphql.Object.DocumentsEdge
 import Graphql.Object.Document
@@ -33,7 +38,7 @@ import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Pagination
 import Pagination.Relay.Page
 import Pagination.Offset.Page
-import Folder exposing (FolderId, Folder)
+import Folder exposing (FolderId, Folder, FolderCountMap)
 import Document exposing (Document, DocumentId)
 import FtsDocumentResult exposing (FtsDocumentResult)
 
@@ -85,7 +90,7 @@ querySubfolder folderId =
             (Graphql.Query.allFolders
                 (\optionals ->
                     { optionals
-                        | parentId = Present (Folder.idAsInt folderId)
+                        | parentId = Present (Folder.idToInt folderId)
                     }
                 )
                 (Graphql.Object.FoldersConnection.selection identity
@@ -138,7 +143,7 @@ queryFolderDocuments referencePage paginationPosition folderId =
             (Graphql.Query.allDocuments
                 ((\optionals ->
                     { optionals
-                        | folderId = Present (Folder.idAsInt folderId)
+                        | folderId = Present (Folder.idToInt folderId)
                     }
                  )
                     >> Pagination.Relay.Pagination.paginationArguments
@@ -167,7 +172,7 @@ queryFtsPage referencePage paginationPosition folderId searchString searchDomain
             (Graphql.Query.folderById
                 (\optionals ->
                     { optionals
-                        | id = Present (Folder.idAsInt folderId)
+                        | id = Present (Folder.idToInt folderId)
                     }
                 )
                 (Graphql.Object.Folder.selection identity
@@ -195,6 +200,69 @@ queryFtsPage referencePage paginationPosition folderId searchString searchDomain
             )
 
 
+queryFtsFolderCounts :
+    FolderId
+    -> String
+    -> String
+    -> String
+    -> SelectionSet FolderCountMap Graphqelm.Operation.RootQuery
+queryFtsFolderCounts folderId searchString searchDomain searchLanguage =
+    Graphql.Query.selection identity
+        |> with
+            (Graphql.Query.folderById
+                (\optionals ->
+                    { optionals
+                        | id = Present (Folder.idToInt folderId)
+                    }
+                )
+                (Graphql.Object.Folder.selection Dict.fromList
+                    |> with
+                        (Graphql.Object.Folder.ftsDocset
+                            (\optionals ->
+                                { optionals
+                                    | text = Present searchString
+                                    , domain = Present searchDomain
+                                    , language = Present searchLanguage
+                                }
+                            )
+                            (Graphql.Object.Docset.selection (::)
+                                |> with
+                                    (Graphql.Object.Docset.folderCount
+                                        folderCount
+                                        |> Graphqelm.Field.nonNullOrFail
+                                    )
+                                |> with
+                                    (Graphql.Object.Docset.subfolderCounts
+                                        identity
+                                        (Graphql.Object.FolderCountsConnection.selection identity
+                                            |> with
+                                                (Graphql.Object.FolderCountsConnection.nodes
+                                                    folderCount
+                                                )
+                                        )
+                                    )
+                            )
+                            |> Graphqelm.Field.nonNullOrFail
+                        )
+                )
+                |> Graphqelm.Field.nonNullOrFail
+            )
+
+
+folderCount : SelectionSet ( FolderId, Int ) Graphql.Object.FolderCount
+folderCount =
+    Graphql.Object.FolderCount.selection (,)
+        |> with
+            (Graphql.Object.FolderCount.folderId
+                |> Graphqelm.Field.nonNullOrFail
+                |> Graphqelm.Field.map Folder.idFromInt
+            )
+        |> with
+            (Graphql.Object.FolderCount.count
+                |> Graphqelm.Field.nonNullOrFail
+            )
+
+
 
 {-
    queryAuthorSearch :
@@ -209,7 +277,7 @@ queryFtsPage referencePage paginationPosition folderId searchString searchDomain
                (Graphql.Query.folderById
                    (\optionals ->
                        { optionals
-                           | id = Present (Folder.idAsInt folderId)
+                           | id = Present (Folder.idToInt folderId)
                        }
                    )
                    (Graphql.Object.Folder.selection identity
@@ -245,7 +313,7 @@ queryDocumentDetails documentId =
             (Graphql.Query.documentById
                 (\optionals ->
                     { optionals
-                        | id = Present (Document.idAsInt documentId)
+                        | id = Present (Document.idToInt documentId)
                     }
                 )
                 (documentNode "nodebig")

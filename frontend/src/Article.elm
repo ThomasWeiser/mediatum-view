@@ -2,6 +2,7 @@ module Article
     exposing
         ( Model
         , Msg
+        , Return(..)
         , initEmpty
         , initCollectionOrSearch
         , update
@@ -10,7 +11,7 @@ module Article
 
 import Html exposing (Html)
 import Html.Attributes
-import Folder exposing (Folder)
+import Folder exposing (Folder, FolderCountMap)
 import Tree
 import Article.Empty
 import Article.Collection
@@ -18,6 +19,7 @@ import Article.Directory
 import Article.Fts exposing (SearchType)
 import Article.Details
 import Document exposing (DocumentId)
+import Utils
 
 
 type alias Model =
@@ -45,6 +47,11 @@ type Msg
     | DirectoryMsg Article.Directory.Msg
     | FtsMsg Article.Fts.Msg
     | DetailsMsg Article.Details.Msg
+
+
+type Return
+    = NoReturn
+    | FolderCounts FolderCountMap
 
 
 initEmpty : () -> ( Model, Cmd Msg )
@@ -116,7 +123,7 @@ initDetails folder id =
         )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     case ( msg, model.content ) of
         ( EmptyMsg subMsg, EmptyModel subModel ) ->
@@ -126,6 +133,7 @@ update msg model =
             in
                 ( { model | content = EmptyModel subModel1 }
                 , Cmd.map EmptyMsg subCmd
+                , NoReturn
                 )
 
         ( CollectionMsg subMsg, CollectionModel subModel ) ->
@@ -135,6 +143,7 @@ update msg model =
             in
                 ( { model | content = CollectionModel subModel1 }
                 , Cmd.map CollectionMsg subCmd
+                , NoReturn
                 )
 
         ( DirectoryMsg subMsg, DirectoryModel subModel ) ->
@@ -149,27 +158,37 @@ update msg model =
                     Nothing ->
                         ( { model | content = DirectoryModel subModel1 }
                         , Cmd.map DirectoryMsg subCmd
+                        , NoReturn
                         )
 
                     Just documentId ->
                         initDetails model.static.folder documentId
+                            |> Utils.tupleAddThird NoReturn
 
         ( FtsMsg subMsg, FtsModel subModel ) ->
             let
-                ( subModel1, subCmd, documentSelection ) =
+                ( subModel1, subCmd, subReturn ) =
                     Article.Fts.update
                         subMsg
                         model.static
                         subModel
             in
-                case documentSelection of
-                    Nothing ->
+                case subReturn of
+                    Article.Fts.NoReturn ->
                         ( { model | content = FtsModel subModel1 }
                         , Cmd.map FtsMsg subCmd
+                        , NoReturn
                         )
 
-                    Just documentId ->
+                    Article.Fts.FolderCounts folderCounts ->
+                        ( model
+                        , Cmd.none
+                        , FolderCounts folderCounts
+                        )
+
+                    Article.Fts.SelectedDocument documentId ->
                         initDetails model.static.folder documentId
+                            |> Utils.tupleAddThird NoReturn
 
         ( DetailsMsg subMsg, DetailsModel subModel ) ->
             let
@@ -178,11 +197,12 @@ update msg model =
             in
                 ( { model | content = DetailsModel subModel1 }
                 , Cmd.map DetailsMsg subCmd
+                , NoReturn
                 )
 
         _ ->
             -- Message doesn't match model; shouldn't never happen
-            ( model, Cmd.none )
+            ( model, Cmd.none, NoReturn )
 
 
 view : Tree.Model -> Model -> Html Msg

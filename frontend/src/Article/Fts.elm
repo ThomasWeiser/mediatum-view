@@ -6,6 +6,7 @@ module Article.Fts
         , FtsSearchDomain(..)
         , FtsSearchLanguage(..)
         , Msg
+        , Return(..)
         , init
         , update
         , view
@@ -20,7 +21,7 @@ import Graphqelm.Extra
 import FtsDocumentResult exposing (FtsDocumentResult)
 import Document exposing (Document, DocumentId)
 import Api
-import Folder exposing (Folder)
+import Folder exposing (Folder, FolderCountMap)
 import Icons
 import Utils
 
@@ -57,9 +58,16 @@ type FtsSearchLanguage
 
 
 type Msg
-    = ApiResponse (Api.Response (Page FtsDocumentResult))
+    = ApiResponseFtsPage (Api.Response (Page FtsDocumentResult))
+    | ApiResponseFtsFolderCounts (Api.Response FolderCountMap)
     | PickPosition Page.Position
     | SelectDocument DocumentId
+
+
+type Return
+    = NoReturn
+    | SelectedDocument DocumentId
+    | FolderCounts FolderCountMap
 
 
 init : Context -> Specification -> ( Model, Cmd Msg )
@@ -77,23 +85,57 @@ init context specification =
             |> Utils.tupleRemoveThird
 
 
-update : Msg -> Context -> Model -> ( Model, Cmd Msg, Maybe DocumentId )
+update : Msg -> Context -> Model -> ( Model, Cmd Msg, Return )
 update msg context model =
     case msg of
         PickPosition position ->
             sendSearchQuery position context model
-                |> Utils.tupleAddThird Nothing
+                |> Utils.tupleAddThird NoReturn
 
-        ApiResponse result ->
+        ApiResponseFtsPage result ->
             ( { model
                 | pageResult = Page.updatePageResultFromResult result model.pageResult
               }
+            , case model.specification.searchType of
+                FtsSearch ftsSearchDomain ftsSearchLanguage ->
+                    Api.makeRequest
+                        ApiResponseFtsFolderCounts
+                        (Api.queryFtsFolderCounts
+                            context.folder.id
+                            model.specification.searchString
+                            (case ftsSearchDomain of
+                                SearchAttributes ->
+                                    "attrs"
+
+                                SearchFulltext ->
+                                    "fulltext"
+                            )
+                            (case ftsSearchLanguage of
+                                English ->
+                                    "english"
+
+                                German ->
+                                    "german"
+                            )
+                        )
+            , NoReturn
+            )
+
+        ApiResponseFtsFolderCounts (Err error) ->
+            -- TODO
+            ( model
             , Cmd.none
-            , Nothing
+            , NoReturn
+            )
+
+        ApiResponseFtsFolderCounts (Ok folderCountMap) ->
+            ( model
+            , Cmd.none
+            , FolderCounts folderCountMap
             )
 
         SelectDocument id ->
-            ( model, Cmd.none, Just id )
+            ( model, Cmd.none, SelectedDocument id )
 
 
 sendSearchQuery : Page.Position -> Context -> Model -> ( Model, Cmd Msg )
@@ -104,7 +146,7 @@ sendSearchQuery paginationPosition context model =
     , case model.specification.searchType of
         FtsSearch ftsSearchDomain ftsSearchLanguage ->
             Api.makeRequest
-                ApiResponse
+                ApiResponseFtsPage
                 (Api.queryFtsPage
                     model.pageResult.page
                     paginationPosition
@@ -128,7 +170,7 @@ sendSearchQuery paginationPosition context model =
       {-
          AuthorSearch ->
              Api.makeRequest
-                 ApiResponse
+                 ApiResponseFtsPage
                  (Api.queryAuthorSearch
                      model.pageResult.page
                      paginationPosition
