@@ -88,36 +88,35 @@ init context specification =
 update : Msg -> Context -> Model -> ( Model, Cmd Msg, Return )
 update msg context model =
     case msg of
-        PickPosition position ->
-            sendSearchQuery position context model
-                |> Utils.tupleAddThird NoReturn
+        PickPosition paginationPosition ->
+            ( { model
+                | pageResult = Page.loadingPageResult model.pageResult
+              }
+            , Api.makeRequest
+                ApiResponseFtsPage
+                (Api.queryFtsPage
+                    model.pageResult.page
+                    paginationPosition
+                    context.folder.id
+                    model.specification.searchString
+                    (searchTypeDomainToString model.specification.searchType)
+                    (searchTypeLanguageToString model.specification.searchType)
+                )
+            , NoReturn
+            )
 
         ApiResponseFtsPage result ->
             ( { model
                 | pageResult = Page.updatePageResultFromResult result model.pageResult
               }
-            , case model.specification.searchType of
-                FtsSearch ftsSearchDomain ftsSearchLanguage ->
-                    Api.makeRequest
-                        ApiResponseFtsFolderCounts
-                        (Api.queryFtsFolderCounts
-                            context.folder.id
-                            model.specification.searchString
-                            (case ftsSearchDomain of
-                                SearchAttributes ->
-                                    "attrs"
-
-                                SearchFulltext ->
-                                    "fulltext"
-                            )
-                            (case ftsSearchLanguage of
-                                English ->
-                                    "english"
-
-                                German ->
-                                    "german"
-                            )
-                        )
+            , Api.makeRequest
+                ApiResponseFtsFolderCounts
+                (Api.queryFtsFolderCounts
+                    context.folder.id
+                    model.specification.searchString
+                    (searchTypeDomainToString model.specification.searchType)
+                    (searchTypeLanguageToString model.specification.searchType)
+                )
             , NoReturn
             )
 
@@ -136,49 +135,6 @@ update msg context model =
 
         SelectDocument id ->
             ( model, Cmd.none, SelectedDocument id )
-
-
-sendSearchQuery : Page.Position -> Context -> Model -> ( Model, Cmd Msg )
-sendSearchQuery paginationPosition context model =
-    ( { model
-        | pageResult = Page.loadingPageResult model.pageResult
-      }
-    , case model.specification.searchType of
-        FtsSearch ftsSearchDomain ftsSearchLanguage ->
-            Api.makeRequest
-                ApiResponseFtsPage
-                (Api.queryFtsPage
-                    model.pageResult.page
-                    paginationPosition
-                    context.folder.id
-                    model.specification.searchString
-                    (case ftsSearchDomain of
-                        SearchAttributes ->
-                            "attrs"
-
-                        SearchFulltext ->
-                            "fulltext"
-                    )
-                    (case ftsSearchLanguage of
-                        English ->
-                            "english"
-
-                        German ->
-                            "german"
-                    )
-                )
-      {-
-         AuthorSearch ->
-             Api.makeRequest
-                 ApiResponseFtsPage
-                 (Api.queryAuthorSearch
-                     model.pageResult.page
-                     paginationPosition
-                     context.folder.id
-                     model.specification.searchString
-                 )
-      -}
-    )
 
 
 view : Model -> Html Msg
@@ -214,6 +170,26 @@ view model =
             Just error ->
                 viewError error
         ]
+
+
+searchTypeDomainToString : SearchType -> String
+searchTypeDomainToString searchType =
+    case searchType of
+        FtsSearch SearchAttributes _ ->
+            "attrs"
+
+        FtsSearch SearchFulltext _ ->
+            "fulltext"
+
+
+searchTypeLanguageToString : SearchType -> String
+searchTypeLanguageToString searchType =
+    case searchType of
+        FtsSearch _ English ->
+            "english"
+
+        FtsSearch _ German ->
+            "german"
 
 
 searchTypeText : SearchType -> String
