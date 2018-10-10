@@ -34,6 +34,7 @@ type alias Context =
 type alias Model =
     { specification : Specification
     , pageResult : PageResult FtsDocumentResult
+    , queryFolderCounts : Bool
     }
 
 
@@ -76,6 +77,7 @@ init context specification =
         model =
             { specification = specification
             , pageResult = Page.initialPageResult
+            , queryFolderCounts = True
             }
     in
         update
@@ -108,15 +110,19 @@ update msg context model =
         ApiResponseFtsPage result ->
             ( { model
                 | pageResult = Page.updatePageResultFromResult result model.pageResult
+                , queryFolderCounts = False
               }
-            , Api.makeRequest
-                ApiResponseFtsFolderCounts
-                (Api.queryFtsFolderCounts
-                    context.folder.id
-                    model.specification.searchString
-                    (searchTypeDomainToString model.specification.searchType)
-                    (searchTypeLanguageToString model.specification.searchType)
-                )
+            , if model.queryFolderCounts then
+                Api.makeRequest
+                    ApiResponseFtsFolderCounts
+                    (Api.queryFtsFolderCounts
+                        context.folder.id
+                        model.specification.searchString
+                        (searchTypeDomainToString model.specification.searchType)
+                        (searchTypeLanguageToString model.specification.searchType)
+                    )
+              else
+                Cmd.none
             , NoReturn
             )
 
