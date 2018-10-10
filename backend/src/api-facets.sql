@@ -25,12 +25,11 @@ create or replace function aux.fts_folder_docset
                and fts.searchtype = domain
                and fts.config = language
              ) as fts
-        -- join entity.document on document.id = fts.id -- TODO
+        join entity.document on document.id = fts.id
         where exists ( select 1
                       from mediatum.noderelation
                       where nid = folder_id and cid = fts.id
                     )
-        -- and aux.is_public_today (fts.id) -- TODO
         ; 
         return res;
     end;
