@@ -127,6 +127,7 @@ update msg model =
                     in
                         ( { model
                             | article = articleModel
+                            , folderCounts = Dict.empty
                           }
                         , Cmd.map ArticleMsg articleCmd
                         )
