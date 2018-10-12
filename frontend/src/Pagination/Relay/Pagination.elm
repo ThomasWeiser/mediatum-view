@@ -3,7 +3,7 @@ module Pagination.Relay.Pagination exposing
     , paginationArguments
     )
 
-import Graphqelm.OptionalArgument exposing (OptionalArgument(..))
+import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import List.Extra
 import Pagination.Relay.Connection exposing (Connection)
 

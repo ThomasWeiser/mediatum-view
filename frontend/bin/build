@@ -5,7 +5,7 @@
 # https://github.com/dillonkearns/graphqelm
 
 rm -rf gen
-graphqelm http://localhost:5000/graphql --base Graphql --output gen/
+bin/elm-graphql http://localhost:5000/graphql --base Graphql --output gen/
 
 # Prepare a clean build.
 rm -rf elm-stuff/build-artifacts

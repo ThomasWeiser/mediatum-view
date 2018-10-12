@@ -8,7 +8,7 @@ module Article.Details exposing
 
 import Api
 import Document exposing (Attribute, Document, DocumentId)
-import Graphqelm.Extra
+import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Icons
@@ -19,7 +19,7 @@ type Model
     = Loading
     | Success Document
     | NotFound DocumentId
-    | Error Graphqelm.Extra.StrippedError
+    | Error Graphql.Extra.StrippedError
 
 
 type Msg
@@ -110,7 +110,7 @@ viewAttribute attribute =
             Html.text ""
 
 
-viewError : Graphqelm.Extra.StrippedError -> Html msg
+viewError : Graphql.Extra.StrippedError -> Html msg
 viewError error =
     Html.div
         [ Html.Attributes.class "error" ]

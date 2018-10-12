@@ -10,7 +10,7 @@ module Article.Directory exposing
 import Api
 import Document exposing (Document, DocumentId)
 import Folder exposing (Folder)
-import Graphqelm.Extra
+import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -188,7 +188,7 @@ viewPaginationButtons page targetTagger =
         ]
 
 
-viewError : Graphqelm.Extra.StrippedError -> Html msg
+viewError : Graphql.Extra.StrippedError -> Html msg
 viewError error =
     Html.div
         [ Html.Attributes.class "error" ]

@@ -8,8 +8,8 @@ module Pagination.Relay.Connection exposing
     , pageInfo
     )
 
-import Graphqelm.Field
-import Graphqelm.SelectionSet exposing (SelectionSet, with)
+import Graphql.Field
+import Graphql.SelectionSet exposing (SelectionSet, with)
 
 
 type alias Connection cursorScalar nodeType =
@@ -38,19 +38,19 @@ type alias GraphqlObjects graphqlObjectsRecord connectionObject edgeObject nodeO
             -> SelectionSet (PageInfo -> List (Edge cursorScalar nodeType) -> Int -> Connection cursorScalar nodeType) connectionObject
         , pageInfo :
             SelectionSet PageInfo pageInfoObject
-            -> Graphqelm.Field.Field PageInfo connectionObject
-        , totalCount : Graphqelm.Field.Field (Maybe Int) connectionObject
-        , edges : SelectionSet (Edge cursorScalar nodeType) edgeObject -> Graphqelm.Field.Field (List (Edge cursorScalar nodeType)) connectionObject
+            -> Graphql.Field.Field PageInfo connectionObject
+        , totalCount : Graphql.Field.Field (Maybe Int) connectionObject
+        , edges : SelectionSet (Edge cursorScalar nodeType) edgeObject -> Graphql.Field.Field (List (Edge cursorScalar nodeType)) connectionObject
         , edgeSelection :
             (cursorScalar -> nodeType -> Edge cursorScalar nodeType)
             -> SelectionSet (cursorScalar -> nodeType -> Edge cursorScalar nodeType) edgeObject
-        , cursor : Graphqelm.Field.Field (Maybe cursorScalar) edgeObject
-        , node : SelectionSet nodeType nodeObject -> Graphqelm.Field.Field nodeType edgeObject
+        , cursor : Graphql.Field.Field (Maybe cursorScalar) edgeObject
+        , node : SelectionSet nodeType nodeObject -> Graphql.Field.Field nodeType edgeObject
         , pageInfoSelection :
             (Bool -> Bool -> PageInfo)
             -> SelectionSet (Bool -> Bool -> PageInfo) pageInfoObject
-        , hasNextPage : Graphqelm.Field.Field Bool pageInfoObject
-        , hasPreviousPage : Graphqelm.Field.Field Bool pageInfoObject
+        , hasNextPage : Graphql.Field.Field Bool pageInfoObject
+        , hasPreviousPage : Graphql.Field.Field Bool pageInfoObject
     }
 
 
@@ -67,7 +67,7 @@ connection graphqlObjects nodeSelectionSet =
     graphqlObjects.connectionSelection Connection
         |> with (graphqlObjects.pageInfo (pageInfo graphqlObjects))
         |> with (graphqlObjects.edges (edge graphqlObjects nodeSelectionSet))
-        |> with (graphqlObjects.totalCount |> Graphqelm.Field.nonNullOrFail)
+        |> with (graphqlObjects.totalCount |> Graphql.Field.nonNullOrFail)
 
 
 edge :
@@ -76,7 +76,7 @@ edge :
     -> SelectionSet (Edge cursorScalar nodeType) edgeObject
 edge graphqlObjects nodeSelectionSet =
     graphqlObjects.edgeSelection Edge
-        |> with (graphqlObjects.cursor |> Graphqelm.Field.nonNullOrFail)
+        |> with (graphqlObjects.cursor |> Graphql.Field.nonNullOrFail)
         |> with (graphqlObjects.node nodeSelectionSet)
 
 
