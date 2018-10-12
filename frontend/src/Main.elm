@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Article
 import Article.Fts exposing (SearchType)
+import Browser
 import Dict
 import Folder exposing (FolderCounts)
 import Html exposing (Html)
@@ -22,9 +23,9 @@ type alias Model =
     }
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
+    Browser.element
         { init = init
         , update = update
         , subscriptions = always Sub.none
@@ -41,8 +42,8 @@ type Msg
     | ArticleMsg Article.Msg
 
 
-init : ( Model, Cmd Msg )
-init =
+init : () -> ( Model, Cmd Msg )
+init _ =
     let
         initialSearchType =
             Article.Fts.FtsSearch

@@ -1,3 +1,3 @@
 #!/bin/sh
 
-elm-live src/Main.elm --output=elm.js
+bin/elm-live -e bin/elm src/Main.elm -- --output=elm.js # --optimize

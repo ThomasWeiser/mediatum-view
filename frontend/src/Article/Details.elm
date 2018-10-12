@@ -70,7 +70,7 @@ view model =
             NotFound id ->
                 Html.span []
                     [ Html.text "Document with id "
-                    , Html.text (toString id)
+                    , Html.text (Document.idToString id)
                     , Html.text " not available"
                     ]
 
@@ -114,4 +114,4 @@ viewError : Graphql.Extra.StrippedError -> Html msg
 viewError error =
     Html.div
         [ Html.Attributes.class "error" ]
-        [ Html.text (toString error) ]
+        [ Html.text (Graphql.Extra.errorToString error) ]

@@ -158,5 +158,9 @@ ul.folder-list ul.folder-list {
   <div></div>
   <script src="assets/debug/elm-remotedev.js"></script>
   <script src="elm.js"></script>
-  <script>Elm.Main.embed(document.querySelector("div"));</script>
+  <script>
+    Elm.Main.init({
+      node: document.querySelector("div")
+    });
+  </script>
 </body>

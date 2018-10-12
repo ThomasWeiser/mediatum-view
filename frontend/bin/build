@@ -16,4 +16,4 @@ rm -rf elm-stuff/build-artifacts
 # patch --strip=0 --forward <patch-elm-remotedev
 
 # Compile the Elm code
-bin/elm make --output=elm.js src/Main.elm
+bin/elm make --output=elm.js --optimize src/Main.elm

@@ -8,6 +8,7 @@
     "dependencies": {
         "direct": {
             "dillonkearns/elm-graphql": "1.1.0",
+            "elm/browser": "1.0.0",
             "elm/core": "1.0.0",
             "elm/html": "1.0.0",
             "elm/http": "1.0.0",

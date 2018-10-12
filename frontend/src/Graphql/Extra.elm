@@ -1,5 +1,6 @@
 module Graphql.Extra exposing
     ( StrippedError
+    , errorToString
     , stripError
     )
 
@@ -21,3 +22,43 @@ stripError graphqlHttpError =
 
         Graphql.Http.GraphqlError _ e ->
             GraphqlError e
+
+
+errorToString : StrippedError -> String
+errorToString error =
+    case error of
+        HttpError httpError ->
+            httpErrorToString httpError
+
+        GraphqlError graphqlError ->
+            graphqErrorToString graphqlError
+
+
+httpErrorToString : Http.Error -> String
+httpErrorToString error =
+    case error of
+        Http.BadUrl url ->
+            "Bad Url: \"" ++ url ++ "\""
+
+        Http.Timeout ->
+            "Timeout"
+
+        Http.NetworkError ->
+            "NetworkError"
+
+        Http.BadStatus response ->
+            "BadStatus: "
+                ++ String.fromInt response.status.code
+                ++ " ("
+                ++ response.status.message
+                ++ ")"
+
+        Http.BadPayload explanation _ ->
+            "BadPayload: " ++ explanation
+
+
+graphqErrorToString : List Graphql.Http.GraphqlError.GraphqlError -> String
+graphqErrorToString errorList =
+    String.join
+        ", "
+        (List.map .message errorList)

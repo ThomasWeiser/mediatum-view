@@ -287,4 +287,4 @@ viewError : Graphql.Extra.StrippedError -> Html msg
 viewError error =
     Html.div
         [ Html.Attributes.class "error" ]
-        [ Html.text (toString error) ]
+        [ Html.text (Graphql.Extra.errorToString error) ]

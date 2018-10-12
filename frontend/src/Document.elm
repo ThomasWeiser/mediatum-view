@@ -3,6 +3,7 @@ module Document exposing
     , Document
     , DocumentId
     , idToInt
+    , idToString
     , init
     , view
     )
@@ -28,14 +29,19 @@ type alias DocumentId =
     ( Float, Int )
 
 
+idFromInt : Int -> DocumentId
+idFromInt idAsInt =
+    ( 0.0, idAsInt )
+
+
 idToInt : DocumentId -> Int
 idToInt ( _, i ) =
     i
 
 
-idFromInt : Int -> DocumentId
-idFromInt idAsInt =
-    ( 0.0, idAsInt )
+idToString : DocumentId -> String
+idToString ( _, i ) =
+    String.fromInt i
 
 
 type alias Document =
@@ -70,7 +76,7 @@ view clickMsg maybeNumber document =
             [ case maybeNumber of
                 Just number ->
                     Html.span [ Html.Attributes.class "result-number" ]
-                        [ Html.text <| toString number ++ ". " ]
+                        [ Html.text <| String.fromInt number ++ ". " ]
 
                 Nothing ->
                     Html.text ""
@@ -96,8 +102,10 @@ maxAttributeStringLength =
 viewAttribute : Attribute -> Html msg
 viewAttribute attribute =
     let
-        isField regex =
-            Regex.contains (Regex.regex regex) attribute.field
+        isField regexString =
+            Regex.contains
+                (Maybe.withDefault Regex.never (Regex.fromString regexString))
+                attribute.field
     in
     case attribute.value of
         Just valueLong ->

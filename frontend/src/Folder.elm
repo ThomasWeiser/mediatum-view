@@ -125,7 +125,7 @@ view folder maybeCount selected expanded =
                         [ Html.text " "
                         , Html.span
                             [ Html.Attributes.class "folder-count" ]
-                            [ Html.text <| "(" ++ toString count ++ ")" ]
+                            [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
                         ]
                )
         )

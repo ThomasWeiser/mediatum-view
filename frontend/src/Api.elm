@@ -17,9 +17,6 @@ import FtsDocumentResult exposing (FtsDocumentResult)
 import Graphql.Extra
 import Graphql.Field
 import Graphql.Http
-import Graphql.Operation
-import Graphql.OptionalArgument exposing (OptionalArgument(..))
-import Graphql.SelectionSet exposing (SelectionSet, with)
 import Graphql.Object
 import Graphql.Object.Docset
 import Graphql.Object.Document
@@ -33,8 +30,11 @@ import Graphql.Object.FtsDocumentResult
 import Graphql.Object.FtsDocumentResultPage
 import Graphql.Object.Metadatatype
 import Graphql.Object.PageInfo
+import Graphql.Operation
+import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.Query
 import Graphql.Scalar
+import Graphql.SelectionSet exposing (SelectionSet, with)
 import Json.Decode exposing (Decoder)
 import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
