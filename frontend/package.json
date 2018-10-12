@@ -1,0 +1,28 @@
+{
+  "name": "mediatum-view",
+  "version": "1.0.0",
+  "description": "Web app as a client for the GraphQL API of mediaTUM",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ThomasWeiser/mediatum-view.git"
+  },
+  "keywords": [
+    "mediatum",
+    "tum",
+    "media-server",
+    "library-database",
+    "webapp",
+    "postgresql",
+    "graphql",
+    "elm"
+  ],
+  "author": "Thomas Weiser",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/ThomasWeiser/mediatum-view/issues"
+  },
+  "homepage": "https://github.com/ThomasWeiser/mediatum-view#readme"
+}
