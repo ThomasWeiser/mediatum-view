@@ -45,7 +45,7 @@ init =
     let
         initialSearchType =
             Article.Fts.FtsSearch
-                Article.Fts.SearchAttributes
+                Article.Fts.SearchFulltext
                 Article.Fts.English
 
         ( treeModel, treeCmd ) =
