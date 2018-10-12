@@ -10,7 +10,8 @@ module Article.Fts
         , init
         , update
         , view
-        , searchTypeText
+        , searchTypeToLabel
+        , searchTypeFromLabel
         )
 
 import Html exposing (Html)
@@ -151,7 +152,7 @@ view model =
                 [ Html.span [] [ Html.text "All Documents" ] ]
             else
                 [ Html.span [] [ Html.text "Search " ]
-                , Html.span [] [ Html.text <| searchTypeText model.specification.searchType ]
+                , Html.span [] [ Html.text <| searchTypeToLabel model.specification.searchType ]
                 , Html.span [] [ Html.text ": \"" ]
                 , Html.span [] [ Html.text model.specification.searchString ]
                 , Html.span [] [ Html.text "\"" ]
@@ -198,8 +199,8 @@ searchTypeLanguageToString searchType =
             "german"
 
 
-searchTypeText : SearchType -> String
-searchTypeText searchType =
+searchTypeToLabel : SearchType -> String
+searchTypeToLabel searchType =
     case searchType of
         FtsSearch SearchAttributes English ->
             "All Attributes - English"
@@ -212,6 +213,25 @@ searchTypeText searchType =
 
         FtsSearch SearchFulltext German ->
             "Fulltext - German"
+
+
+searchTypeFromLabel : String -> Maybe SearchType
+searchTypeFromLabel label =
+    case label of
+        "All Attributes - English" ->
+            Just <| FtsSearch SearchAttributes English
+
+        "All Attributes - German" ->
+            Just <| FtsSearch SearchAttributes German
+
+        "Fulltext - English" ->
+            Just <| FtsSearch SearchFulltext English
+
+        "Fulltext - German" ->
+            Just <| FtsSearch SearchFulltext German
+
+        _ ->
+            Nothing
 
 
 viewResponse :

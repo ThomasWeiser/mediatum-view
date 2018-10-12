@@ -1,11 +1,11 @@
 module Main exposing (main)
 
 import Dict
+import Maybe.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
-import Select
 import Folder exposing (FolderCounts)
 import Tree
 import Article
@@ -33,7 +33,8 @@ main =
 
 
 type Msg
-    = SearchString String
+    = NoOp
+    | SearchString String
     | SetSearchType SearchType
     | Submit
     | TreeMsg Tree.Msg
@@ -73,6 +74,9 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
         SearchString str ->
             ( { model | searchString = str }
             , Cmd.none
@@ -182,24 +186,38 @@ viewSearchControls model =
         [ Html.Attributes.class "search-bar"
         , Html.Events.onSubmit Submit
         ]
-        [ Select.fromSelected_
-            [ Article.Fts.FtsSearch
-                Article.Fts.SearchAttributes
-                Article.Fts.English
-            , Article.Fts.FtsSearch
-                Article.Fts.SearchAttributes
-                Article.Fts.German
-            , Article.Fts.FtsSearch
-                Article.Fts.SearchFulltext
-                Article.Fts.English
-            , Article.Fts.FtsSearch
-                Article.Fts.SearchFulltext
-                Article.Fts.German
+        [ Html.select
+            [ Html.Events.onInput
+                (Article.Fts.searchTypeFromLabel
+                    >> Maybe.Extra.unwrap NoOp SetSearchType
+                )
             ]
-            SetSearchType
-            toString
-            Article.Fts.searchTypeText
-            model.searchType
+            (List.map
+                (\searchType ->
+                    Html.option
+                        [ Html.Attributes.value
+                            (Article.Fts.searchTypeToLabel searchType)
+                        , Html.Attributes.selected
+                            (model.searchType == searchType)
+                        ]
+                        [ Html.text
+                            (Article.Fts.searchTypeToLabel searchType)
+                        ]
+                )
+                [ Article.Fts.FtsSearch
+                    Article.Fts.SearchAttributes
+                    Article.Fts.English
+                , Article.Fts.FtsSearch
+                    Article.Fts.SearchAttributes
+                    Article.Fts.German
+                , Article.Fts.FtsSearch
+                    Article.Fts.SearchFulltext
+                    Article.Fts.English
+                , Article.Fts.FtsSearch
+                    Article.Fts.SearchFulltext
+                    Article.Fts.German
+                ]
+            )
         , Html.input
             [ Html.Attributes.class "search-input"
             , Html.Attributes.type_ "search"
