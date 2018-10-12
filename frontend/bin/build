@@ -9,11 +9,11 @@ graphqelm http://localhost:5000/graphql --base Graphql --output gen/
 
 # Prepare a clean build.
 rm -rf elm-stuff/build-artifacts
-elm package install --yes
+bin/elm package install --yes
 
 # Apply patch necessary for integration with chromium's "Redux DevTools Extension"
 # https://github.com/utkarshkukreti/elm-remotedev
 patch --strip=0 --forward <patch-elm-remotedev
 
 # Compile the Elm code
-elm make --output=elm.js src/Main.elm
+bin/elm make --output=elm.js src/Main.elm

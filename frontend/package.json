@@ -24,5 +24,10 @@
   "bugs": {
     "url": "https://github.com/ThomasWeiser/mediatum-view/issues"
   },
-  "homepage": "https://github.com/ThomasWeiser/mediatum-view#readme"
+  "homepage": "https://github.com/ThomasWeiser/mediatum-view#readme",
+  "devDependencies": {
+    "elm": "^0.19.0-bugfix2",
+    "elm-format": "^0.8.1",
+    "elm-live": "^3.1.0"
+  }
 }
