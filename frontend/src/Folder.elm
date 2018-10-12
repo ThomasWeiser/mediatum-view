@@ -2,7 +2,7 @@ module Folder
     exposing
         ( FolderId
         , Folder
-        , FolderCountMap
+        , FolderCounts
         , dummy
         , init
         , idToInt
@@ -46,7 +46,7 @@ type alias Folder =
     }
 
 
-type alias FolderCountMap =
+type alias FolderCounts =
     Dict FolderId Int
 
 

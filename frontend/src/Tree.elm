@@ -14,7 +14,7 @@ import Maybe.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Folder exposing (FolderId, Folder, FolderCountMap)
+import Folder exposing (FolderId, Folder, FolderCounts)
 import Api exposing (ApiError)
 
 
@@ -229,13 +229,13 @@ loadSubfolder superfolderId model =
             ( model, Cmd.none )
 
 
-view : Model -> FolderCountMap -> Html Msg
+view : Model -> FolderCounts -> Html Msg
 view model folderCounts =
     Html.div []
         [ viewListOfFolders model folderCounts model.rootIds ]
 
 
-viewListOfFolders : Model -> FolderCountMap -> List FolderId -> Html Msg
+viewListOfFolders : Model -> FolderCounts -> List FolderId -> Html Msg
 viewListOfFolders model folderCounts folderIds =
     Html.ul [ Html.Attributes.class "folder-list" ] <|
         List.map
@@ -253,7 +253,7 @@ viewListOfFoldersLoading =
         ]
 
 
-viewFolder : Model -> FolderCountMap -> FolderId -> Html Msg
+viewFolder : Model -> FolderCounts -> FolderId -> Html Msg
 viewFolder model folderCounts id =
     let
         isSelectedFolder =

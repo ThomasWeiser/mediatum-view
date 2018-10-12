@@ -6,7 +6,7 @@ import Html.Attributes
 import Html.Events
 import Icons
 import Select
-import Folder exposing (FolderCountMap)
+import Folder exposing (FolderCounts)
 import Tree
 import Article
 import Article.Fts exposing (SearchType)
@@ -17,7 +17,7 @@ type alias Model =
     { searchType : SearchType
     , searchString : String
     , tree : Tree.Model
-    , folderCounts : FolderCountMap
+    , folderCounts : FolderCounts
     , article : Article.Model
     }
 

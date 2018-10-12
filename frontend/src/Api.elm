@@ -38,7 +38,7 @@ import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Pagination
 import Pagination.Relay.Page
 import Pagination.Offset.Page
-import Folder exposing (FolderId, Folder, FolderCountMap)
+import Folder exposing (FolderId, Folder, FolderCounts)
 import Document exposing (Document, DocumentId)
 import FtsDocumentResult exposing (FtsDocumentResult)
 
@@ -205,7 +205,7 @@ queryFtsFolderCounts :
     -> String
     -> String
     -> String
-    -> SelectionSet FolderCountMap Graphqelm.Operation.RootQuery
+    -> SelectionSet FolderCounts Graphqelm.Operation.RootQuery
 queryFtsFolderCounts folderId searchString searchDomain searchLanguage =
     Graphql.Query.selection identity
         |> with

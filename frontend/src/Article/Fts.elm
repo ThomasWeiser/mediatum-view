@@ -21,7 +21,7 @@ import Graphqelm.Extra
 import FtsDocumentResult exposing (FtsDocumentResult)
 import Document exposing (Document, DocumentId)
 import Api
-import Folder exposing (Folder, FolderCountMap)
+import Folder exposing (Folder, FolderCounts)
 import Icons
 import Utils
 
@@ -60,7 +60,7 @@ type FtsSearchLanguage
 
 type Msg
     = ApiResponseFtsPage (Api.Response (Page FtsDocumentResult))
-    | ApiResponseFtsFolderCounts (Api.Response FolderCountMap)
+    | ApiResponseFtsFolderCounts (Api.Response FolderCounts)
     | PickPosition Page.Position
     | SelectDocument DocumentId
 
@@ -68,7 +68,7 @@ type Msg
 type Return
     = NoReturn
     | SelectedDocument DocumentId
-    | FolderCounts FolderCountMap
+    | FolderCounts FolderCounts
 
 
 init : Context -> Specification -> ( Model, Cmd Msg )

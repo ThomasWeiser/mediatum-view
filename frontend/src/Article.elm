@@ -11,7 +11,7 @@ module Article
 
 import Html exposing (Html)
 import Html.Attributes
-import Folder exposing (Folder, FolderCountMap)
+import Folder exposing (Folder, FolderCounts)
 import Tree
 import Article.Empty
 import Article.Collection
@@ -51,7 +51,7 @@ type Msg
 
 type Return
     = NoReturn
-    | FolderCounts FolderCountMap
+    | FolderCounts FolderCounts
 
 
 initEmpty : () -> ( Model, Cmd Msg )
