@@ -1,11 +1,10 @@
-module Pagination.Relay.Pagination
-    exposing
-        ( Position(..)
-        , paginationArguments
-        )
+module Pagination.Relay.Pagination exposing
+    ( Position(..)
+    , paginationArguments
+    )
 
+import Graphqelm.OptionalArgument exposing (OptionalArgument(..))
 import List.Extra
-import Graphqelm.OptionalArgument exposing (OptionalArgument(Absent, Present))
 import Pagination.Relay.Connection exposing (Connection)
 
 
@@ -48,37 +47,36 @@ paginationArguments pageSize referencePage position =
                         Just { cursor } ->
                             Present cursor
     in
-        (\optionals ->
-            case position of
-                First ->
-                    { optionals
-                        | first = Present pageSize
-                        , last = Absent
-                        , before = Absent
-                        , after = Absent
-                    }
+    \optionals ->
+        case position of
+            First ->
+                { optionals
+                    | first = Present pageSize
+                    , last = Absent
+                    , before = Absent
+                    , after = Absent
+                }
 
-                Next ->
-                    { optionals
-                        | first = Present pageSize
-                        , last = Absent
-                        , before = Absent
-                        , after = anchor List.Extra.last
-                    }
+            Next ->
+                { optionals
+                    | first = Present pageSize
+                    , last = Absent
+                    , before = Absent
+                    , after = anchor List.Extra.last
+                }
 
-                Last ->
-                    { optionals
-                        | first = Absent
-                        , last = Present pageSize
-                        , before = Absent
-                        , after = Absent
-                    }
+            Last ->
+                { optionals
+                    | first = Absent
+                    , last = Present pageSize
+                    , before = Absent
+                    , after = Absent
+                }
 
-                Previous ->
-                    { optionals
-                        | first = Absent
-                        , last = Present pageSize
-                        , before = anchor List.head
-                        , after = Absent
-                    }
-        )
+            Previous ->
+                { optionals
+                    | first = Absent
+                    , last = Present pageSize
+                    , before = anchor List.head
+                    , after = Absent
+                }

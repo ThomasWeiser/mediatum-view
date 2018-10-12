@@ -1,16 +1,15 @@
-module Folder
-    exposing
-        ( FolderId
-        , Folder
-        , FolderCounts
-        , dummy
-        , init
-        , idToInt
-        , idFromInt
-        , isRoot
-        , hasSubfolder
-        , view
-        )
+module Folder exposing
+    ( Folder
+    , FolderCounts
+    , FolderId
+    , dummy
+    , hasSubfolder
+    , idFromInt
+    , idToInt
+    , init
+    , isRoot
+    , view
+    )
 
 import Dict exposing (Dict)
 import Html exposing (Html)
@@ -111,6 +110,7 @@ view folder maybeCount selected expanded =
         ]
         ([ if hasSubfolder folder then
             Icons.expando
+
            else
             Icons.leaf
          , Html.span

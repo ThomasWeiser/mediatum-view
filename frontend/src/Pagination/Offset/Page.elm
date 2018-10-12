@@ -1,15 +1,14 @@
-module Pagination.Offset.Page
-    exposing
-        ( Page
-        , entries
-        , isFirstPage
-        , PageResult
-        , initialPageResult
-        , updatePageResultFromResult
-        , loadingPageResult
-        , Position(..)
-        , positionToOffset
-        )
+module Pagination.Offset.Page exposing
+    ( Page
+    , PageResult
+    , Position(..)
+    , entries
+    , initialPageResult
+    , isFirstPage
+    , loadingPageResult
+    , positionToOffset
+    , updatePageResultFromResult
+    )
 
 import Graphqelm.Extra
 
@@ -98,5 +97,6 @@ positionToOffset pageSize referencePage position =
                 Just { offset, hasNextPage } ->
                     if hasNextPage then
                         offset + pageSize
+
                     else
                         offset

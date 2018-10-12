@@ -1,10 +1,9 @@
-module Utils
-    exposing
-        ( noBreakSpace
-        , when
-        , tupleAddThird
-        , tupleRemoveThird
-        )
+module Utils exposing
+    ( noBreakSpace
+    , tupleAddThird
+    , tupleRemoveThird
+    , when
+    )
 
 import Char
 
@@ -18,6 +17,7 @@ when : (a -> a) -> Bool -> a -> a
 when fn cond =
     if cond then
         fn
+
     else
         identity
 

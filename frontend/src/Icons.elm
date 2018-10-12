@@ -1,15 +1,14 @@
-module Icons
-    exposing
-        ( definitions
-        , expando
-        , leaf
-        , search
-        , spinner
-        )
+module Icons exposing
+    ( definitions
+    , expando
+    , leaf
+    , search
+    , spinner
+    )
 
+import Html exposing (Html)
 import Svg exposing (Svg)
 import Svg.Attributes
-import Html exposing (Html)
 
 
 definitions : Html msg
@@ -79,30 +78,30 @@ spinner =
                 , Svg.Attributes.strokeOpacity strokeOpacity
                 ]
     in
-        Svg.svg
-            [ Svg.Attributes.class "spinner"
-            , Svg.Attributes.viewBox "0 0 45 45"
-            , Svg.Attributes.stroke "black"
+    Svg.svg
+        [ Svg.Attributes.class "spinner"
+        , Svg.Attributes.viewBox "0 0 45 45"
+        , Svg.Attributes.stroke "black"
+        ]
+        [ Svg.g
+            [ Svg.Attributes.transform "translate(1 1)"
+            , Svg.Attributes.fill "none"
+            , Svg.Attributes.fillRule "evenodd"
+            , Svg.Attributes.strokeWidth "2"
             ]
-            [ Svg.g
-                [ Svg.Attributes.transform "translate(1 1)"
-                , Svg.Attributes.fill "none"
-                , Svg.Attributes.fillRule "evenodd"
-                , Svg.Attributes.strokeWidth "2"
+            [ circle "22" "22" "6" "0" <|
+                [ animate "r" "1.5s" "3s" "6;22"
+                , animate "stroke-opacity" "1.5s" "3s" "1;0"
+                , animate "stroke-width" "1.5s" "3s" "2;0"
                 ]
-                [ circle "22" "22" "6" "0" <|
-                    [ animate "r" "1.5s" "3s" "6;22"
-                    , animate "stroke-opacity" "1.5s" "3s" "1;0"
-                    , animate "stroke-width" "1.5s" "3s" "2;0"
-                    ]
-                , circle "22" "22" "6" "0" <|
-                    [ animate "r" "3s" "3s" "6;22"
-                    , animate "stroke-opacity" "3s" "3s" "1;0"
-                    , animate "stroke-width" "3s" "3s" "2;0"
-                    ]
-                , circle "22" "22" "8" "1" <|
-                    [ animate "r" "0s" "1.5s" "6;1;2;3;4;5;6"
-                    , animate "stroke-width" "0s" "1.5s" "2;0.2;0.5;0.8;1.1;1.4;1.7"
-                    ]
+            , circle "22" "22" "6" "0" <|
+                [ animate "r" "3s" "3s" "6;22"
+                , animate "stroke-opacity" "3s" "3s" "1;0"
+                , animate "stroke-width" "3s" "3s" "2;0"
+                ]
+            , circle "22" "22" "8" "1" <|
+                [ animate "r" "0s" "1.5s" "6;1;2;3;4;5;6"
+                , animate "stroke-width" "0s" "1.5s" "2;0.2;0.5;0.8;1.1;1.4;1.7"
                 ]
             ]
+        ]

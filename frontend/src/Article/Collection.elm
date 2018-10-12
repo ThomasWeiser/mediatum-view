@@ -1,15 +1,14 @@
-module Article.Collection
-    exposing
-        ( Model
-        , Context
-        , Msg
-        , init
-        , update
-        , view
-        )
+module Article.Collection exposing
+    ( Context
+    , Model
+    , Msg
+    , init
+    , update
+    , view
+    )
 
-import Html exposing (Html)
 import Folder exposing (Folder)
+import Html exposing (Html)
 
 
 type alias Context =
@@ -44,6 +43,7 @@ view context model =
             if Folder.isRoot context.folder then
                 [ Html.text "Front page for root of all collections"
                 ]
+
             else
                 [ Html.text "Front page for collection \""
                 , Html.text context.folder.name

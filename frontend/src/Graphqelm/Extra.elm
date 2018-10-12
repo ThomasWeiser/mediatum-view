@@ -1,8 +1,7 @@
-module Graphqelm.Extra
-    exposing
-        ( StrippedError
-        , stripError
-        )
+module Graphqelm.Extra exposing
+    ( StrippedError
+    , stripError
+    )
 
 import Graphqelm.Http
 import Graphqelm.Http.GraphqlError

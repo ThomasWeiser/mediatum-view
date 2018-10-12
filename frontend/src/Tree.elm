@@ -1,21 +1,20 @@
-module Tree
-    exposing
-        ( Model
-        , Msg
-        , init
-        , update
-        , view
-        , viewBreadcrumbs
-        , selectedFolder
-        )
+module Tree exposing
+    ( Model
+    , Msg
+    , init
+    , selectedFolder
+    , update
+    , view
+    , viewBreadcrumbs
+    )
 
+import Api exposing (ApiError)
 import Dict exposing (Dict)
-import Maybe.Extra
+import Folder exposing (Folder, FolderCounts, FolderId)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Folder exposing (FolderId, Folder, FolderCounts)
-import Api exposing (ApiError)
+import Maybe.Extra
 
 
 type alias Model =
@@ -58,7 +57,7 @@ init =
 selectedFolder : Model -> Maybe Folder
 selectedFolder model =
     List.head model.selection
-        |> Maybe.andThen (flip Dict.get model.folderCache)
+        |> Maybe.andThen (\a -> Dict.get a model.folderCache)
         |> Maybe.map .folder
 
 
@@ -133,10 +132,10 @@ addRootFolders rootFoldersWithSubfolders model =
         rootIds =
             List.map (Tuple.first >> .id) rootFoldersWithSubfolders
     in
-        { modelWithFoldersAdded
-            | rootIds = rootIds
-            , selection = List.take 1 rootIds
-        }
+    { modelWithFoldersAdded
+        | rootIds = rootIds
+        , selection = List.take 1 rootIds
+    }
 
 
 addFolders : List Folder -> Model -> Model
@@ -151,6 +150,7 @@ addFolders folderList model =
                         , subLinks =
                             if Folder.hasSubfolder folder then
                                 Nothing
+
                             else
                                 Just []
                         }
@@ -159,7 +159,7 @@ addFolders folderList model =
                 model.folderCache
                 folderList
     in
-        { model | folderCache = newFolderCache }
+    { model | folderCache = newFolderCache }
 
 
 setSubfolders : FolderId -> List Folder -> Model -> Model
@@ -209,10 +209,10 @@ selectFolder id model =
         alreadySelected =
             List.head model.selection == Just id
     in
-        { model
-            | selection = getPath id model
-            , showSubselection = not alreadySelected || not model.showSubselection
-        }
+    { model
+        | selection = getPath id model
+        , showSubselection = not alreadySelected || not model.showSubselection
+    }
 
 
 loadSubfolder : FolderId -> Model -> ( Model, Cmd Msg )
@@ -263,32 +263,33 @@ viewFolder model folderCounts id =
             List.member id model.selection
                 && (not isSelectedFolder || model.showSubselection)
     in
-        case Dict.get id model.folderCache of
-            Nothing ->
-                -- Cache miss. Should never happen,
-                -- because only cached folders are getting linked.
-                Html.div [] [ Html.text "..." ]
+    case Dict.get id model.folderCache of
+        Nothing ->
+            -- Cache miss. Should never happen,
+            -- because only cached folders are getting linked.
+            Html.div [] [ Html.text "..." ]
 
-            Just { folder } ->
-                Html.div []
-                    [ Html.div
-                        [ Html.Events.onClick (Select id) ]
-                        [ Folder.view
-                            folder
-                            (Dict.get folder.id folderCounts)
-                            isSelectedFolder
-                            expanded
-                        ]
-                    , if expanded then
-                        case getSubLinks id model of
-                            Nothing ->
-                                viewListOfFoldersLoading
-
-                            Just subLinks ->
-                                viewListOfFolders model folderCounts subLinks
-                      else
-                        Html.text ""
+        Just { folder } ->
+            Html.div []
+                [ Html.div
+                    [ Html.Events.onClick (Select id) ]
+                    [ Folder.view
+                        folder
+                        (Dict.get folder.id folderCounts)
+                        isSelectedFolder
+                        expanded
                     ]
+                , if expanded then
+                    case getSubLinks id model of
+                        Nothing ->
+                            viewListOfFoldersLoading
+
+                        Just subLinks ->
+                            viewListOfFolders model folderCounts subLinks
+
+                  else
+                    Html.text ""
+                ]
 
 
 viewBreadcrumbs : Model -> FolderId -> Html msg

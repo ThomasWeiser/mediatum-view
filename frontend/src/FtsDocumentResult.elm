@@ -1,12 +1,11 @@
-module FtsDocumentResult
-    exposing
-        ( FtsDocumentResult
-        , init
-        , view
-        )
+module FtsDocumentResult exposing
+    ( FtsDocumentResult
+    , init
+    , view
+    )
 
-import Html exposing (Html)
 import Document exposing (Document, DocumentId)
+import Html exposing (Html)
 
 
 type alias FtsDocumentResult =

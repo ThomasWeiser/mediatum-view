@@ -1,15 +1,15 @@
 module Main exposing (main)
 
+import Article
+import Article.Fts exposing (SearchType)
 import Dict
-import Maybe.Extra
+import Folder exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
-import Folder exposing (FolderCounts)
+import Maybe.Extra
 import Tree
-import Article
-import Article.Fts exposing (SearchType)
 import Utils
 
 
@@ -63,12 +63,12 @@ init =
             , article = articleModel
             }
     in
-        ( model
-        , Cmd.batch
-            [ Cmd.map TreeMsg treeCmd
-            , Cmd.map ArticleMsg articleCmd
-            ]
-        )
+    ( model
+    , Cmd.batch
+        [ Cmd.map TreeMsg treeCmd
+        , Cmd.map ArticleMsg articleCmd
+        ]
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -92,12 +92,12 @@ update msg model =
                 ( subModel, subCmd, changedSelection ) =
                     Tree.update subMsg model.tree
             in
-                ( { model | tree = subModel }
-                , Cmd.map TreeMsg subCmd
-                )
-                    |> Utils.when
-                        (andThenUpdate Submit)
-                        changedSelection
+            ( { model | tree = subModel }
+            , Cmd.map TreeMsg subCmd
+            )
+                |> Utils.when
+                    (andThenUpdate Submit)
+                    changedSelection
 
         ArticleMsg subMsg ->
             let
@@ -112,12 +112,12 @@ update msg model =
                         Article.FolderCounts folderCounts1 ->
                             folderCounts1
             in
-                ( { model
-                    | folderCounts = folderCounts
-                    , article = subModel
-                  }
-                , Cmd.map ArticleMsg subCmd
-                )
+            ( { model
+                | folderCounts = folderCounts
+                , article = subModel
+              }
+            , Cmd.map ArticleMsg subCmd
+            )
 
         Submit ->
             case model.tree |> Tree.selectedFolder of
@@ -129,12 +129,12 @@ update msg model =
                                 model.searchType
                                 model.searchString
                     in
-                        ( { model
-                            | article = articleModel
-                            , folderCounts = Dict.empty
-                          }
-                        , Cmd.map ArticleMsg articleCmd
-                        )
+                    ( { model
+                        | article = articleModel
+                        , folderCounts = Dict.empty
+                      }
+                    , Cmd.map ArticleMsg articleCmd
+                    )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -146,7 +146,7 @@ andThenUpdate msg ( model1, cmd1 ) =
         ( model2, cmd2 ) =
             update msg model1
     in
-        ( model2, Cmd.batch [ cmd1, cmd2 ] )
+    ( model2, Cmd.batch [ cmd1, cmd2 ] )
 
 
 view : Model -> Html Msg

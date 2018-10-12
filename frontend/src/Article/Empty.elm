@@ -1,11 +1,10 @@
-module Article.Empty
-    exposing
-        ( Model
-        , Msg
-        , init
-        , update
-        , view
-        )
+module Article.Empty exposing
+    ( Model
+    , Msg
+    , init
+    , update
+    , view
+    )
 
 import Html exposing (Html)
 

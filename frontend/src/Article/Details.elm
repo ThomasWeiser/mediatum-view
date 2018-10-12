@@ -1,19 +1,18 @@
-module Article.Details
-    exposing
-        ( Model
-        , Msg
-        , init
-        , update
-        , view
-        )
+module Article.Details exposing
+    ( Model
+    , Msg
+    , init
+    , update
+    , view
+    )
 
-import Maybe.Extra
+import Api
+import Document exposing (Attribute, Document, DocumentId)
+import Graphqelm.Extra
 import Html exposing (Html)
 import Html.Attributes
-import Document exposing (Document, DocumentId, Attribute)
-import Api
-import Graphqelm.Extra
 import Icons
+import Maybe.Extra
 
 
 type Model

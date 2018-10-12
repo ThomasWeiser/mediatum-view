@@ -1,17 +1,17 @@
-module Document
-    exposing
-        ( Document
-        , DocumentId
-        , Attribute
-        , init
-        , idToInt
-        , view
-        )
+module Document exposing
+    ( Attribute
+    , Document
+    , DocumentId
+    , idToInt
+    , init
+    , view
+    )
 
-import Regex
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Regex
+
 
 
 {- Actually, the type should be defined like this:
@@ -99,37 +99,40 @@ viewAttribute attribute =
         isField regex =
             Regex.contains (Regex.regex regex) attribute.field
     in
-        (case attribute.value of
-            Just valueLong ->
-                let
-                    value =
-                        if String.length valueLong > maxAttributeStringLength then
-                            String.left (maxAttributeStringLength - 3) valueLong ++ "..."
-                        else
-                            valueLong
-                in
-                    Html.span
-                        [ Html.Attributes.classList
-                            [ ( "attribute", True )
-                            , ( "author", isField "author" )
-                            , ( "title"
-                              , isField "title"
-                                    && not (isField "congress|journal")
-                              )
-                            ]
-                        , Html.Attributes.title (attribute.name ++ ": " ++ valueLong)
-                        ]
-                        [ Html.text <|
-                            if isField "year" then
-                                String.left 4 value ++ ". "
-                            else if isField "author" then
-                                value ++ ": "
-                            else if isField "title|type" then
-                                value ++ ". "
-                            else
-                                attribute.name ++ ": " ++ value ++ ". "
-                        ]
+    case attribute.value of
+        Just valueLong ->
+            let
+                value =
+                    if String.length valueLong > maxAttributeStringLength then
+                        String.left (maxAttributeStringLength - 3) valueLong ++ "..."
 
-            Nothing ->
-                Html.text ""
-        )
+                    else
+                        valueLong
+            in
+            Html.span
+                [ Html.Attributes.classList
+                    [ ( "attribute", True )
+                    , ( "author", isField "author" )
+                    , ( "title"
+                      , isField "title"
+                            && not (isField "congress|journal")
+                      )
+                    ]
+                , Html.Attributes.title (attribute.name ++ ": " ++ valueLong)
+                ]
+                [ Html.text <|
+                    if isField "year" then
+                        String.left 4 value ++ ". "
+
+                    else if isField "author" then
+                        value ++ ": "
+
+                    else if isField "title|type" then
+                        value ++ ". "
+
+                    else
+                        attribute.name ++ ": " ++ value ++ ". "
+                ]
+
+        Nothing ->
+            Html.text ""

@@ -1,24 +1,23 @@
-module Article
-    exposing
-        ( Model
-        , Msg
-        , Return(..)
-        , initEmpty
-        , initCollectionOrSearch
-        , update
-        , view
-        )
+module Article exposing
+    ( Model
+    , Msg
+    , Return(..)
+    , initCollectionOrSearch
+    , initEmpty
+    , update
+    , view
+    )
 
+import Article.Collection
+import Article.Details
+import Article.Directory
+import Article.Empty
+import Article.Fts exposing (SearchType)
+import Document exposing (DocumentId)
+import Folder exposing (Folder, FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
-import Folder exposing (Folder, FolderCounts)
 import Tree
-import Article.Empty
-import Article.Collection
-import Article.Directory
-import Article.Fts exposing (SearchType)
-import Article.Details
-import Document exposing (DocumentId)
 import Utils
 
 
@@ -60,11 +59,11 @@ initEmpty _ =
         ( subModel, subCmd ) =
             Article.Empty.init ()
     in
-        ( { static = { folder = Folder.dummy }
-          , content = EmptyModel subModel
-          }
-        , Cmd.map EmptyMsg subCmd
-        )
+    ( { static = { folder = Folder.dummy }
+      , content = EmptyModel subModel
+      }
+    , Cmd.map EmptyMsg subCmd
+    )
 
 
 initCollectionOrSearch : Folder -> SearchType -> String -> ( Model, Cmd Msg )
@@ -73,41 +72,43 @@ initCollectionOrSearch folder searchType searchString =
         static =
             { folder = folder }
     in
-        if searchString == "" then
-            if folder.isCollection && searchString == "" then
-                let
-                    ( subModel, subCmd ) =
-                        Article.Collection.init ()
-                in
-                    ( { static = static
-                      , content = CollectionModel subModel
-                      }
-                    , Cmd.map CollectionMsg subCmd
-                    )
-            else
-                let
-                    ( subModel, subCmd ) =
-                        Article.Directory.init static ()
-                in
-                    ( { static = static
-                      , content = DirectoryModel subModel
-                      }
-                    , Cmd.map DirectoryMsg subCmd
-                    )
+    if searchString == "" then
+        if folder.isCollection && searchString == "" then
+            let
+                ( subModel, subCmd ) =
+                    Article.Collection.init ()
+            in
+            ( { static = static
+              , content = CollectionModel subModel
+              }
+            , Cmd.map CollectionMsg subCmd
+            )
+
         else
             let
                 ( subModel, subCmd ) =
-                    Article.Fts.init
-                        static
-                        { searchType = searchType
-                        , searchString = searchString
-                        }
+                    Article.Directory.init static ()
             in
-                ( { static = static
-                  , content = FtsModel subModel
-                  }
-                , Cmd.map FtsMsg subCmd
-                )
+            ( { static = static
+              , content = DirectoryModel subModel
+              }
+            , Cmd.map DirectoryMsg subCmd
+            )
+
+    else
+        let
+            ( subModel, subCmd ) =
+                Article.Fts.init
+                    static
+                    { searchType = searchType
+                    , searchString = searchString
+                    }
+        in
+        ( { static = static
+          , content = FtsModel subModel
+          }
+        , Cmd.map FtsMsg subCmd
+        )
 
 
 initDetails : Folder -> DocumentId -> ( Model, Cmd Msg )
@@ -116,11 +117,11 @@ initDetails folder id =
         ( subModel, subCmd ) =
             Article.Details.init id
     in
-        ( { static = { folder = folder }
-          , content = DetailsModel subModel
-          }
-        , Cmd.map DetailsMsg subCmd
-        )
+    ( { static = { folder = folder }
+      , content = DetailsModel subModel
+      }
+    , Cmd.map DetailsMsg subCmd
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
@@ -131,20 +132,20 @@ update msg model =
                 ( subModel1, subCmd ) =
                     Article.Empty.update subMsg subModel
             in
-                ( { model | content = EmptyModel subModel1 }
-                , Cmd.map EmptyMsg subCmd
-                , NoReturn
-                )
+            ( { model | content = EmptyModel subModel1 }
+            , Cmd.map EmptyMsg subCmd
+            , NoReturn
+            )
 
         ( CollectionMsg subMsg, CollectionModel subModel ) ->
             let
                 ( subModel1, subCmd ) =
                     Article.Collection.update subMsg subModel
             in
-                ( { model | content = CollectionModel subModel1 }
-                , Cmd.map CollectionMsg subCmd
-                , NoReturn
-                )
+            ( { model | content = CollectionModel subModel1 }
+            , Cmd.map CollectionMsg subCmd
+            , NoReturn
+            )
 
         ( DirectoryMsg subMsg, DirectoryModel subModel ) ->
             let
@@ -154,16 +155,16 @@ update msg model =
                         model.static
                         subModel
             in
-                case documentSelection of
-                    Nothing ->
-                        ( { model | content = DirectoryModel subModel1 }
-                        , Cmd.map DirectoryMsg subCmd
-                        , NoReturn
-                        )
+            case documentSelection of
+                Nothing ->
+                    ( { model | content = DirectoryModel subModel1 }
+                    , Cmd.map DirectoryMsg subCmd
+                    , NoReturn
+                    )
 
-                    Just documentId ->
-                        initDetails model.static.folder documentId
-                            |> Utils.tupleAddThird NoReturn
+                Just documentId ->
+                    initDetails model.static.folder documentId
+                        |> Utils.tupleAddThird NoReturn
 
         ( FtsMsg subMsg, FtsModel subModel ) ->
             let
@@ -173,32 +174,32 @@ update msg model =
                         model.static
                         subModel
             in
-                case subReturn of
-                    Article.Fts.NoReturn ->
-                        ( { model | content = FtsModel subModel1 }
-                        , Cmd.map FtsMsg subCmd
-                        , NoReturn
-                        )
+            case subReturn of
+                Article.Fts.NoReturn ->
+                    ( { model | content = FtsModel subModel1 }
+                    , Cmd.map FtsMsg subCmd
+                    , NoReturn
+                    )
 
-                    Article.Fts.FolderCounts folderCounts ->
-                        ( model
-                        , Cmd.none
-                        , FolderCounts folderCounts
-                        )
+                Article.Fts.FolderCounts folderCounts ->
+                    ( model
+                    , Cmd.none
+                    , FolderCounts folderCounts
+                    )
 
-                    Article.Fts.SelectedDocument documentId ->
-                        initDetails model.static.folder documentId
-                            |> Utils.tupleAddThird NoReturn
+                Article.Fts.SelectedDocument documentId ->
+                    initDetails model.static.folder documentId
+                        |> Utils.tupleAddThird NoReturn
 
         ( DetailsMsg subMsg, DetailsModel subModel ) ->
             let
                 ( subModel1, subCmd ) =
                     Article.Details.update subMsg subModel
             in
-                ( { model | content = DetailsModel subModel1 }
-                , Cmd.map DetailsMsg subCmd
-                , NoReturn
-                )
+            ( { model | content = DetailsModel subModel1 }
+            , Cmd.map DetailsMsg subCmd
+            , NoReturn
+            )
 
         _ ->
             -- Message doesn't match model; shouldn't never happen

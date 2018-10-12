@@ -1,29 +1,28 @@
-module Article.Fts
-    exposing
-        ( Model
-        , Specification
-        , SearchType(..)
-        , FtsSearchDomain(..)
-        , FtsSearchLanguage(..)
-        , Msg
-        , Return(..)
-        , init
-        , update
-        , view
-        , searchTypeToLabel
-        , searchTypeFromLabel
-        )
+module Article.Fts exposing
+    ( FtsSearchDomain(..)
+    , FtsSearchLanguage(..)
+    , Model
+    , Msg
+    , Return(..)
+    , SearchType(..)
+    , Specification
+    , init
+    , searchTypeFromLabel
+    , searchTypeToLabel
+    , update
+    , view
+    )
 
+import Api
+import Document exposing (Document, DocumentId)
+import Folder exposing (Folder, FolderCounts)
+import FtsDocumentResult exposing (FtsDocumentResult)
+import Graphqelm.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Pagination.Offset.Page as Page exposing (Page, PageResult)
-import Graphqelm.Extra
-import FtsDocumentResult exposing (FtsDocumentResult)
-import Document exposing (Document, DocumentId)
-import Api
-import Folder exposing (Folder, FolderCounts)
 import Icons
+import Pagination.Offset.Page as Page exposing (Page, PageResult)
 import Utils
 
 
@@ -81,11 +80,11 @@ init context specification =
             , queryFolderCounts = True
             }
     in
-        update
-            (PickPosition Page.First)
-            context
-            model
-            |> Utils.tupleRemoveThird
+    update
+        (PickPosition Page.First)
+        context
+        model
+        |> Utils.tupleRemoveThird
 
 
 update : Msg -> Context -> Model -> ( Model, Cmd Msg, Return )
@@ -122,6 +121,7 @@ update msg context model =
                         (searchTypeDomainToString model.specification.searchType)
                         (searchTypeLanguageToString model.specification.searchType)
                     )
+
               else
                 Cmd.none
             , NoReturn
@@ -150,6 +150,7 @@ view model =
         [ Html.div [] <|
             if model.specification.searchString == "" then
                 [ Html.span [] [ Html.text "All Documents" ] ]
+
             else
                 [ Html.span [] [ Html.text "Search " ]
                 , Html.span [] [ Html.text <| searchTypeToLabel model.specification.searchType ]
@@ -168,6 +169,7 @@ view model =
                     documentPage
         , if model.pageResult.loading then
             Icons.spinner
+
           else
             Html.text ""
         , case model.pageResult.error of
@@ -266,20 +268,19 @@ viewPaginationButtons page targetTagger =
                 ]
                 [ Html.text label ]
     in
-        Html.div
-            [ Html.Attributes.style
-                [ ( "margin", "4px 0px 8px 0px" ) ]
-            ]
-            [ viewButton "First"
-                (targetTagger Page.First)
-                (not (Page.isFirstPage page))
-            , viewButton "Prev"
-                (targetTagger Page.Previous)
-                (not (Page.isFirstPage page))
-            , viewButton "Next"
-                (targetTagger Page.Next)
-                page.hasNextPage
-            ]
+    Html.div
+        [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+        ]
+        [ viewButton "First"
+            (targetTagger Page.First)
+            (not (Page.isFirstPage page))
+        , viewButton "Prev"
+            (targetTagger Page.Previous)
+            (not (Page.isFirstPage page))
+        , viewButton "Next"
+            (targetTagger Page.Next)
+            page.hasNextPage
+        ]
 
 
 viewError : Graphqelm.Extra.StrippedError -> Html msg

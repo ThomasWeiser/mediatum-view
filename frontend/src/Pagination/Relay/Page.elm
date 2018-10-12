@@ -1,15 +1,14 @@
-module Pagination.Relay.Page
-    exposing
-        ( Page
-        , entries
-        , PageResult
-        , initialPageResult
-        , updatePageResultFromResult
-        , loadingPageResult
-        )
+module Pagination.Relay.Page exposing
+    ( Page
+    , PageResult
+    , entries
+    , initialPageResult
+    , loadingPageResult
+    , updatePageResultFromResult
+    )
 
-import Graphql.Scalar
 import Graphqelm.Extra
+import Graphql.Scalar
 import Pagination.Relay.Connection as Connection exposing (Connection)
 
 

@@ -1,13 +1,12 @@
-module Pagination.Relay.Connection
-    exposing
-        ( Connection
-        , Edge
-        , PageInfo
-        , GraphqlObjects
-        , connection
-        , pageInfo
-        , nodes
-        )
+module Pagination.Relay.Connection exposing
+    ( Connection
+    , Edge
+    , GraphqlObjects
+    , PageInfo
+    , connection
+    , nodes
+    , pageInfo
+    )
 
 import Graphqelm.Field
 import Graphqelm.SelectionSet exposing (SelectionSet, with)

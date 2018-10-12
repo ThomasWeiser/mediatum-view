@@ -1,23 +1,22 @@
-module Article.Directory
-    exposing
-        ( Model
-        , Specification
-        , Msg
-        , init
-        , update
-        , view
-        )
+module Article.Directory exposing
+    ( Model
+    , Msg
+    , Specification
+    , init
+    , update
+    , view
+    )
 
+import Api
+import Document exposing (Document, DocumentId)
+import Folder exposing (Folder)
+import Graphqelm.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Pagination.Relay.Pagination as Pagination
-import Pagination.Relay.Page as Page exposing (Page, PageResult)
-import Graphqelm.Extra
-import Document exposing (Document, DocumentId)
-import Api
-import Folder exposing (Folder)
 import Icons
+import Pagination.Relay.Page as Page exposing (Page, PageResult)
+import Pagination.Relay.Pagination as Pagination
 import Utils
 
 
@@ -50,11 +49,11 @@ init context specification =
             , pageResult = Page.initialPageResult
             }
     in
-        update
-            (PickPosition Pagination.First)
-            context
-            model
-            |> Utils.tupleRemoveThird
+    update
+        (PickPosition Pagination.First)
+        context
+        model
+        |> Utils.tupleRemoveThird
 
 
 update : Msg -> Context -> Model -> ( Model, Cmd Msg, Maybe DocumentId )
@@ -107,6 +106,7 @@ view model =
                     documentPage
         , if model.pageResult.loading then
             Icons.spinner
+
           else
             Html.text ""
         , case model.pageResult.error of
@@ -161,32 +161,31 @@ viewPaginationButtons page targetTagger =
                 ]
                 [ Html.text label ]
     in
-        Html.div
-            [ Html.Attributes.style
-                [ ( "margin", "4px 0px 8px 0px" ) ]
-            ]
-            [ -- "Last" currently does not work with our GraphQL API
-              -- Only show "First" and "Next" for now.
-              -- May implement a form of infinite scrolling later.
-              viewButton "First"
-                (targetTagger Pagination.First)
-                page.pageInfo.hasPreviousPage
+    Html.div
+        [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+        ]
+        [ -- "Last" currently does not work with our GraphQL API
+          -- Only show "First" and "Next" for now.
+          -- May implement a form of infinite scrolling later.
+          viewButton "First"
+            (targetTagger Pagination.First)
+            page.pageInfo.hasPreviousPage
 
-            {-
-               , viewButton "Prev"
-                   (targetTagger Pagination.Previous)
-                   page.pageInfo.hasPreviousPage
-            -}
-            , viewButton "Next"
-                (targetTagger Pagination.Next)
-                page.pageInfo.hasNextPage
+        {-
+           , viewButton "Prev"
+               (targetTagger Pagination.Previous)
+               page.pageInfo.hasPreviousPage
+        -}
+        , viewButton "Next"
+            (targetTagger Pagination.Next)
+            page.pageInfo.hasNextPage
 
-            {-
-               , viewButton "Last"
-                   (targetTagger Pagination.Last)
-                   page.pageInfo.hasNextPage
-            -}
-            ]
+        {-
+           , viewButton "Last"
+               (targetTagger Pagination.Last)
+               page.pageInfo.hasNextPage
+        -}
+        ]
 
 
 viewError : Graphqelm.Extra.StrippedError -> Html msg

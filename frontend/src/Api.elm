@@ -1,46 +1,45 @@
-module Api
-    exposing
-        ( Response
-        , ApiError
-        , makeRequest
-        , queryToplevelFolder
-        , querySubfolder
-        , queryFolderDocuments
-        , queryFtsPage
-        , queryFtsFolderCounts
-        , queryDocumentDetails
-        )
+module Api exposing
+    ( ApiError
+    , Response
+    , makeRequest
+    , queryDocumentDetails
+    , queryFolderDocuments
+    , queryFtsFolderCounts
+    , queryFtsPage
+    , querySubfolder
+    , queryToplevelFolder
+    )
 
 import Dict
+import Document exposing (Document, DocumentId)
+import Folder exposing (Folder, FolderCounts, FolderId)
+import FtsDocumentResult exposing (FtsDocumentResult)
+import Graphqelm.Extra
+import Graphqelm.Field
+import Graphqelm.Http
+import Graphqelm.Operation
+import Graphqelm.OptionalArgument exposing (OptionalArgument(..))
+import Graphqelm.SelectionSet exposing (SelectionSet, with)
 import Graphql.Object
-import Graphql.Object.PageInfo
-import Graphql.Object.FoldersConnection
-import Graphql.Object.Folder
-import Graphql.Object.FolderCountsConnection
-import Graphql.Object.FolderCount
 import Graphql.Object.Docset
+import Graphql.Object.Document
 import Graphql.Object.DocumentsConnection
 import Graphql.Object.DocumentsEdge
-import Graphql.Object.Document
+import Graphql.Object.Folder
+import Graphql.Object.FolderCount
+import Graphql.Object.FolderCountsConnection
+import Graphql.Object.FoldersConnection
 import Graphql.Object.FtsDocumentResult
 import Graphql.Object.FtsDocumentResultPage
 import Graphql.Object.Metadatatype
+import Graphql.Object.PageInfo
 import Graphql.Query
 import Graphql.Scalar
 import Json.Decode exposing (Decoder)
-import Graphqelm.Field
-import Graphqelm.OptionalArgument exposing (OptionalArgument(Present))
-import Graphqelm.SelectionSet exposing (SelectionSet, with)
-import Graphqelm.Http
-import Graphqelm.Operation
-import Graphqelm.Extra
-import Pagination.Relay.Connection as Connection
-import Pagination.Relay.Pagination
-import Pagination.Relay.Page
 import Pagination.Offset.Page
-import Folder exposing (FolderId, Folder, FolderCounts)
-import Document exposing (Document, DocumentId)
-import FtsDocumentResult exposing (FtsDocumentResult)
+import Pagination.Relay.Connection as Connection
+import Pagination.Relay.Page
+import Pagination.Relay.Pagination
 
 
 pageSize : Int
@@ -103,7 +102,7 @@ folderNode : SelectionSet Folder Graphql.Object.Folder
 folderNode =
     Graphql.Object.Folder.selection Folder.init
         |> with (Graphql.Object.Folder.id |> Graphqelm.Field.nonNullOrFail)
-        |> with (Graphql.Object.Folder.parentId)
+        |> with Graphql.Object.Folder.parentId
         |> with (Graphql.Object.Folder.name |> Graphqelm.Field.nonNullOrFail)
         |> with (Graphql.Object.Folder.isCollection |> Graphqelm.Field.nonNullOrFail)
         |> with (Graphql.Object.Folder.numSubfolder |> Graphqelm.Field.nonNullOrFail)
@@ -118,18 +117,18 @@ folderNodeWithSubfolders =
             , subfolder
             )
     in
-        Graphql.Object.Folder.selection constructor
-            |> with (Graphql.Object.Folder.id |> Graphqelm.Field.nonNullOrFail)
-            |> with (Graphql.Object.Folder.parentId)
-            |> with (Graphql.Object.Folder.name |> Graphqelm.Field.nonNullOrFail)
-            |> with (Graphql.Object.Folder.isCollection |> Graphqelm.Field.nonNullOrFail)
-            |> with (Graphql.Object.Folder.numSubfolder |> Graphqelm.Field.nonNullOrFail)
-            |> with
-                (Graphql.Object.Folder.subfolders identity
-                    (Graphql.Object.FoldersConnection.selection identity
-                        |> with (Graphql.Object.FoldersConnection.nodes folderNode)
-                    )
+    Graphql.Object.Folder.selection constructor
+        |> with (Graphql.Object.Folder.id |> Graphqelm.Field.nonNullOrFail)
+        |> with Graphql.Object.Folder.parentId
+        |> with (Graphql.Object.Folder.name |> Graphqelm.Field.nonNullOrFail)
+        |> with (Graphql.Object.Folder.isCollection |> Graphqelm.Field.nonNullOrFail)
+        |> with (Graphql.Object.Folder.numSubfolder |> Graphqelm.Field.nonNullOrFail)
+        |> with
+            (Graphql.Object.Folder.subfolders identity
+                (Graphql.Object.FoldersConnection.selection identity
+                    |> with (Graphql.Object.FoldersConnection.nodes folderNode)
                 )
+            )
 
 
 queryFolderDocuments :
@@ -251,7 +250,7 @@ queryFtsFolderCounts folderId searchString searchDomain searchLanguage =
 
 folderCount : SelectionSet ( FolderId, Int ) Graphql.Object.FolderCount
 folderCount =
-    Graphql.Object.FolderCount.selection (,)
+    Graphql.Object.FolderCount.selection (\a b -> ( a, b ))
         |> with
             (Graphql.Object.FolderCount.folderId
                 |> Graphqelm.Field.nonNullOrFail
