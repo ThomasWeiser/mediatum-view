@@ -55,21 +55,21 @@ comment on function api.document_by_id (id int4) is
     'Gets a document by its mediaTUM node id.';
 
 
-create or replace function api.document_attrs (document api.document, keys text[])
+create or replace function api.document_attributes (document api.document, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs (document.id, keys)
+    select aux.get_document_attributes (document, keys)
 $$ language sql stable;
 
-comment on function api.document_attrs (document api.document, keys text[]) is
+comment on function api.document_attributes (document api.document, keys text[]) is
     'Gets the node attributes of this document as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.document_system_attrs (document api.document, keys text[])
+create or replace function api.document_system_attributes (document api.document, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs (document.id, keys)
+    select aux.get_node_system_attributes (document.id, keys)
 $$ language sql stable;
 
-comment on function api.document_system_attrs (document api.document, keys text[]) is
+comment on function api.document_system_attributes (document api.document, keys text[]) is
     'Gets the node system attributes of this document as a JSON value, optionally filtered by a list of keys.';
 
 

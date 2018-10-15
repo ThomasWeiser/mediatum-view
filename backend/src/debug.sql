@@ -41,15 +41,15 @@ create or replace function debug.node_by_id (id int4)
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_attrs (node debug.mediatum_node, keys text[])
+create or replace function debug.mediatum_node_attributes (node debug.mediatum_node, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs (node.id, keys)
+    select aux.get_node_attributes (node.id, keys)
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_system_attrs (node debug.mediatum_node, keys text[])
+create or replace function debug.mediatum_node_system_attributes (node debug.mediatum_node, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs (node.id, keys)
+    select aux.get_node_system_attributes (node.id, keys)
 $$ language sql stable;
 
 

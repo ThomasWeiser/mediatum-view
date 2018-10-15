@@ -244,7 +244,8 @@ create type api.document as (
 	"type" text,
 	"schema" text,
 	name text,
-	orderpos int4
+	orderpos int4,
+    attrs jsonb
 );
 
 comment on type api.document is
@@ -259,6 +260,8 @@ comment on column api.document.name is
     'The name given to the document, usually the author''s name';
 comment on column api.document.orderpos is
     'A number indicating the position of this document among its siblings';
+comment on column api.document.attrs is
+    '@omit';
 
 
 create type api.fts_document_result as (

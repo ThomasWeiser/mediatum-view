@@ -242,7 +242,8 @@ create or replace view entity.document as
         node.type :: text,
         node.schema :: text,
         node.name :: text,
-        node.orderpos
+        node.orderpos,
+        node.attrs
     from mediatum.node
     join mediatum.nodetype on node.type = nodetype.name
     where not nodetype.is_container
@@ -256,7 +257,8 @@ create or replace view entity.node as
         node.type,
         node.schema,
         node.name,
-        node.orderpos
+        node.orderpos,
+        node.attrs
     from mediatum.node
     where aux.is_public_today (node.id);
 
@@ -276,7 +278,7 @@ create or replace view entity.document_mask_fields as
         maskitem.width as maskitem_width,
         metafield.id as metafield_id,
         metafield.name as metafield_name,
-        aux.get_node_attr (document.id, metafield.name) as value
+        aux.get_node_attribute (document.id, metafield.name) as value
     from entity.document
     join entity.metadatatype on entity.metadatatype.name = entity.document.schema
     join entity.mask on entity.mask.metadatatype_id = entity.metadatatype.id
@@ -299,7 +301,7 @@ create or replace view entity.document_mask_value_object as
                 'width',
                 maskitem_width,
                 'value',
-                aux.get_node_attr (document_id, metafield_name)
+                aux.get_node_attribute (document_id, metafield_name)
             )
         ) as values
     from entity.document_mask_fields
@@ -319,7 +321,7 @@ create or replace view entity.document_mask_value_list as
                 'width',
                 maskitem_width,
                 'value',
-                aux.get_node_attr (document_id, metafield_name)
+                aux.get_node_attribute (document_id, metafield_name)
             )
         ) as values
     from (select * from entity.document_mask_fields order by maskitem_orderpos) as q

@@ -34,7 +34,7 @@ create or replace function aux.fts_document_folder_limited
         , distance float4
         ) as $$
     select
-        (document.id, document.type, document.schema, document.name, document.orderpos)::api.document as document,
+        (document.id, document.type, document.schema, document.name, document.orderpos, document.attrs)::api.document as document,
         fts.distance
     from (select fts.nid as id
                , fts.tsvec <=> fts_query as distance
@@ -170,7 +170,8 @@ create or replace function api.folder_author_search (folder api.folder, text tex
         node.type,
         node.schema,
         node.name,
-        node.orderpos
+        node.orderpos,
+        node.attrs
     from to_tsquery ('german', text) as tsq, -- needs a wellformed tsquery string
          -- to_tsquery ('german', text || ':*') as tsq, -- works only for a single word (i.e. without spaces)
          -- plainto_tsquery ('german', text) as tsq, -- no prefix search

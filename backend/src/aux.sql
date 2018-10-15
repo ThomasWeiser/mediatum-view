@@ -66,7 +66,19 @@ create or replace function aux.jsonb_filter (obj jsonb, keys text[])
 $$ language plpgsql immutable;
 
 
-create or replace function aux.get_node_attrs (nodeId int4, keys text[])
+create or replace function aux.get_document_attributes (document api.document, keys text[])
+    returns jsonb as $$
+    select aux.jsonb_filter (document.attrs, keys)
+$$ language sql stable;
+
+
+create or replace function aux.get_document_attribute (document api.document, key text)
+    returns jsonb as $$
+    select  document.attrs->key
+$$ language sql stable;
+
+
+create or replace function aux.get_node_attributes (nodeId int4, keys text[])
     returns jsonb as $$
     select aux.jsonb_filter (node.attrs, keys)
       from mediatum.node
@@ -74,7 +86,7 @@ create or replace function aux.get_node_attrs (nodeId int4, keys text[])
 $$ language sql stable;
 
 
-create or replace function aux.get_node_attr (nodeId int4, key text)
+create or replace function aux.get_node_attribute (nodeId int4, key text)
     returns jsonb as $$
     select  node.attrs->key
       from mediatum.node
@@ -82,7 +94,7 @@ create or replace function aux.get_node_attr (nodeId int4, key text)
 $$ language sql stable;
 
 
-create or replace function aux.get_node_system_attrs (nodeId int4, keys text[])
+create or replace function aux.get_node_system_attributes (nodeId int4, keys text[])
     returns jsonb as $$
     select aux.jsonb_filter (node.system_attrs, keys)
       from mediatum.node

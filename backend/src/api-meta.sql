@@ -196,75 +196,75 @@ comment on function api.all_mappingfields (name text, is_mandatory boolean, find
     'Reads and enables pagination through all mapping fields, optionally filtered by name and is_mandatory, and searchable by name and description.';
 
 
-create or replace function api.metadatatype_attrs (mdt api.metadatatype, keys text[])
+create or replace function api.metadatatype_attributes (mdt api.metadatatype, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs (mdt.id, keys)
+    select aux.get_node_attributes (mdt.id, keys)
 $$ language sql stable;
 
-comment on function api.metadatatype_attrs (mdt api.metadatatype, keys text[]) is
+comment on function api.metadatatype_attributes (mdt api.metadatatype, keys text[]) is
     'Gets the node attributes of this meta data type as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.metadatatype_system_attrs (mdt api.metadatatype, keys text[])
+create or replace function api.metadatatype_system_attributes (mdt api.metadatatype, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs (mdt.id, keys)
+    select aux.get_node_system_attributes (mdt.id, keys)
 $$ language sql stable;
 
-comment on function api.metadatatype_system_attrs (mdt api.metadatatype, keys text[]) is
+comment on function api.metadatatype_system_attributes (mdt api.metadatatype, keys text[]) is
     'Gets the node system attributes of this meta data type as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.metafield_attrs (metafield api.metafield, keys text[])
+create or replace function api.metafield_attributes (metafield api.metafield, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs (metafield.id, keys)
+    select aux.get_node_attributes (metafield.id, keys)
 $$ language sql stable;
 
-comment on function api.metafield_attrs (metafield api.metafield, keys text[]) is
+comment on function api.metafield_attributes (metafield api.metafield, keys text[]) is
     'Gets the node attributes of this meta field as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.metafield_system_attrs (metafield api.metafield, keys text[])
+create or replace function api.metafield_system_attributes (metafield api.metafield, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs (metafield.id, keys)
+    select aux.get_node_system_attributes (metafield.id, keys)
 $$ language sql stable;
 
-comment on function api.metafield_system_attrs (metafield api.metafield, keys text[]) is
+comment on function api.metafield_system_attributes (metafield api.metafield, keys text[]) is
     'Gets the node system attributes of this meta field as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.mask_attrs (mask api.mask, keys text[])
+create or replace function api.mask_attributes (mask api.mask, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs (mask.id, keys)
+    select aux.get_node_attributes (mask.id, keys)
 $$ language sql stable;
 
-comment on function api.mask_attrs (mask api.mask, keys text[]) is
+comment on function api.mask_attributes (mask api.mask, keys text[]) is
     'Gets the node attributes of this mask as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.mask_system_attrs (mask api.mask, keys text[])
+create or replace function api.mask_system_attributes (mask api.mask, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs (mask.id, keys)
+    select aux.get_node_system_attributes (mask.id, keys)
 $$ language sql stable;
 
-comment on function api.mask_system_attrs (mask api.mask, keys text[]) is
+comment on function api.mask_system_attributes (mask api.mask, keys text[]) is
     'Gets the node system attributes of this mask as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.maskitem_attrs (maskitem api.maskitem, keys text[])
+create or replace function api.maskitem_attributes (maskitem api.maskitem, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs (maskitem.id, keys)
+    select aux.get_node_attributes (maskitem.id, keys)
 $$ language sql stable;
 
-comment on function api.maskitem_attrs (maskitem api.maskitem, keys text[]) is
+comment on function api.maskitem_attributes (maskitem api.maskitem, keys text[]) is
     'Gets the node attributes of this mask item as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.maskitem_system_attrs (maskitem api.maskitem, keys text[])
+create or replace function api.maskitem_system_attributes (maskitem api.maskitem, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs (maskitem.id, keys)
+    select aux.get_node_system_attributes (maskitem.id, keys)
 $$ language sql stable;
 
-comment on function api.maskitem_system_attrs (maskitem api.maskitem, keys text[]) is
+comment on function api.maskitem_system_attributes (maskitem api.maskitem, keys text[]) is
     'Gets the node system attributes of this mask item as a JSON value, optionally filtered by a list of keys.';
 
 
@@ -278,39 +278,39 @@ comment on function api.metafield_metadatatype (mf api.metafield) is
     'Gets the meta data type associated with this meta field.';
 
 
-create or replace function api.mapping_attrs (mapping api.mapping, keys text[])
+create or replace function api.mapping_attributes (mapping api.mapping, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs(mapping.id, keys)
+    select aux.get_node_attributes(mapping.id, keys)
 $$ language sql stable;
 
-comment on function api.mapping_attrs (mapping api.mapping, keys text[]) is
+comment on function api.mapping_attributes (mapping api.mapping, keys text[]) is
     'Gets the node attributes of this mapping as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.mapping_system_attrs (mapping api.mapping, keys text[])
+create or replace function api.mapping_system_attributes (mapping api.mapping, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs(mapping.id, keys)
+    select aux.get_node_system_attributes(mapping.id, keys)
 $$ language sql stable;
 
-comment on function api.mapping_system_attrs (mapping api.mapping, keys text[]) is
+comment on function api.mapping_system_attributes (mapping api.mapping, keys text[]) is
     'Gets the node system attributes of this mapping as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.mappingfield_attrs (mappingfield api.mappingfield, keys text[])
+create or replace function api.mappingfield_attributes (mappingfield api.mappingfield, keys text[])
     returns jsonb as $$
-    select aux.get_node_attrs(mappingfield.id, keys)
+    select aux.get_node_attributes(mappingfield.id, keys)
 $$ language sql stable;
 
-comment on function api.mappingfield_attrs (mappingfield api.mappingfield, keys text[]) is
+comment on function api.mappingfield_attributes (mappingfield api.mappingfield, keys text[]) is
     'Gets the node attributes of this mapping field as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.mappingfield_system_attrs (mappingfield api.mappingfield, keys text[])
+create or replace function api.mappingfield_system_attributes (mappingfield api.mappingfield, keys text[])
     returns jsonb as $$
-    select aux.get_node_system_attrs(mappingfield.id, keys)
+    select aux.get_node_system_attributes(mappingfield.id, keys)
 $$ language sql stable;
 
-comment on function api.mappingfield_system_attrs (mappingfield api.mappingfield, keys text[]) is
+comment on function api.mappingfield_system_attributes (mappingfield api.mappingfield, keys text[]) is
     'Gets the node system attributes of this mapping field as a JSON value, optionally filtered by a list of keys.';
 
 
