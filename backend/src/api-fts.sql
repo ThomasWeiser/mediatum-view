@@ -35,7 +35,7 @@ create or replace function aux.fts_document_folder_limited
     , fts_query tsquery
     , domain text
     , language text
-    , attribute_test api.attribute_test
+    , attribute_tests api.attribute_test[]
     , "limit" integer
     )
     returns table
@@ -60,8 +60,9 @@ create or replace function aux.fts_document_folder_limited
     -- where aux.test_node_lineage (folder_id, document.id)
     where exists (select 1 from mediatum.noderelation where nid = folder_id and cid = document.id)
 
-      and (attribute_test is null or 
-           document.attrs ->> attribute_test.key = attribute_test.value)
+      and (attribute_tests is null or 
+           aux.jsonb_test_list (document.attrs, attribute_tests)
+          )
 
     -- order by fts.distance -- Order obtained from subquery is preserved.
     limit "limit"
@@ -77,7 +78,7 @@ create or replace function aux.fts_document_folder_paginated
     , text text
     , domain text
     , language text
-    , attribute_test api.attribute_test
+    , attribute_tests api.attribute_test[]
     , "limit" integer
     , "offset" integer
     )
@@ -98,7 +99,7 @@ create or replace function aux.fts_document_folder_paginated
                 , plainto_tsquery (language::regconfig, text)
                 , domain
                 , language
-                , attribute_test
+                , attribute_tests
                     , "limit" + "offset" + 1
                 ) as f
             limit "limit"
@@ -112,7 +113,7 @@ create or replace function api.folder_fts_page
     , text text
     , domain text
     , language text
-    , attribute_test api.attribute_test
+    , attribute_tests api.attribute_test[]
     , "limit" integer default 10
     , "offset" integer default 0
     )
@@ -123,7 +124,7 @@ create or replace function api.folder_fts_page
                 from aux.fts_document_folder_paginated
                     ( folder.id
                     , text, domain, language
-                    , attribute_test
+                    , attribute_tests
                     , "limit", "offset"
                     )
             )
@@ -146,7 +147,7 @@ create or replace function api.folder_fts_page_pl
     , text text
     , domain text
     , language text
-    , attribute_test api.attribute_test
+    , attribute_tests api.attribute_test[]
     , "limit" integer default 10
     , "offset" integer default 0
     )
@@ -169,7 +170,7 @@ create or replace function api.folder_fts_page_pl
             aux.fts_document_folder_paginated
                 ( folder.id
                 , text, domain, language
-                , attribute_test
+                , attribute_tests
                 , "limit", "offset"
                 )
         ;

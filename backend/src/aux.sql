@@ -66,6 +66,24 @@ create or replace function aux.jsonb_filter (obj jsonb, keys text[])
 $$ language plpgsql immutable;
 
 
+create or replace function aux.jsonb_test_list (obj jsonb, tests api.attribute_test[])
+    returns boolean as $$
+    declare test api.attribute_test;
+    begin
+        foreach test in array tests
+        loop
+            if not obj ? test.key then
+                return false;
+            end if;
+            if obj ->> test.key != test.value then
+                return false;
+            end if;
+        end loop;
+        return true;
+    end;
+$$ language plpgsql immutable;
+
+
 create or replace function aux.get_document_attributes (document api.document, keys text[])
     returns jsonb as $$
     select aux.jsonb_filter (document.attrs, keys)
