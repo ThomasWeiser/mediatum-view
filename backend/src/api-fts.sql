@@ -35,6 +35,7 @@ create or replace function aux.fts_document_folder_limited
     , fts_query tsquery
     , domain text
     , language text
+    , attribute_test api.attribute_test
     , "limit" integer
     )
     returns table
@@ -59,6 +60,9 @@ create or replace function aux.fts_document_folder_limited
     -- where aux.test_node_lineage (folder_id, document.id)
     where exists (select 1 from mediatum.noderelation where nid = folder_id and cid = document.id)
 
+      and (attribute_test is null or 
+           document.attrs ->> attribute_test.key = attribute_test.value)
+
     -- order by fts.distance -- Order obtained from subquery is preserved.
     limit "limit"
     ;
@@ -73,6 +77,7 @@ create or replace function aux.fts_document_folder_paginated
     , text text
     , domain text
     , language text
+    , attribute_test api.attribute_test
     , "limit" integer
     , "offset" integer
     )
@@ -93,7 +98,8 @@ create or replace function aux.fts_document_folder_paginated
                 , plainto_tsquery (language::regconfig, text)
                 , domain
                 , language
-                , "limit" + "offset" + 1
+                , attribute_test
+                    , "limit" + "offset" + 1
                 ) as f
             limit "limit"
             offset "offset";
@@ -106,6 +112,7 @@ create or replace function api.folder_fts_page
     , text text
     , domain text
     , language text
+    , attribute_test api.attribute_test
     , "limit" integer default 10
     , "offset" integer default 0
     )
@@ -114,7 +121,11 @@ create or replace function api.folder_fts_page
         with search_result as (
                 select *
                 from aux.fts_document_folder_paginated
-                    (folder.id, text, domain, language, "limit", "offset")
+                    ( folder.id
+                    , text, domain, language
+                    , attribute_test
+                    , "limit", "offset"
+                    )
             )
         select
             "offset",
@@ -135,6 +146,7 @@ create or replace function api.folder_fts_page_pl
     , text text
     , domain text
     , language text
+    , attribute_test api.attribute_test
     , "limit" integer default 10
     , "offset" integer default 0
     )
@@ -154,19 +166,25 @@ create or replace function api.folder_fts_page_pl
                 ) as content
         into res
         from
-            aux.fts_document_folder_paginated (folder.id, text, domain, language, "limit", "offset")
+            aux.fts_document_folder_paginated
+                ( folder.id
+                , text, domain, language
+                , attribute_test
+                , "limit", "offset"
+                )
         ;
         return res;
     end;
 $$ language plpgsql stable parallel safe;
 
+/*
 comment on function api.folder_fts_page (folder api.folder, text text, domain text, language text, "limit" integer, "offset" integer) is
     'Reads and enables pagination through all documents within a folder, filtered by a keyword search, and sorted by a search rank.'
     ' Language may currently be "english" and "german".'
     ' Domain may currently be "fulltext" and "attrs".'
     ' For pagination you may specify a limit (defaults to 10) and an offset (defaults to 0).'
     ;
-
+*/
 
 ----------------------------------------------------
 

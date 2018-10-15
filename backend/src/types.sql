@@ -264,6 +264,19 @@ comment on column api.document.attrs is
     '@omit';
 
 
+create type api.attribute_test as (
+    key text,
+    value text
+);
+
+comment on type api.attribute_test is
+    'Specification for testing  a single attribute value of a document';
+comment on column api.attribute_test.key is
+    'Name of the attribute to be tested';
+comment on column api.attribute_test.value is
+    'Comparison value for the attribute to be tested';
+
+
 create type api.fts_document_result as (
     number integer,
     distance float4,
