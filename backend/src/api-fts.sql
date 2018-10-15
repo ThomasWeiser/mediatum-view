@@ -5,8 +5,16 @@
 begin;
 
 
-create or replace function aux.fts_ordered (fts_query tsquery, domain text, language text)
-    returns table (id int4, distance float4, count integer) as $$
+create or replace function aux.fts_ordered
+    (fts_query tsquery
+    , domain text
+    , language text
+    )
+    returns table
+        ( id int4
+        , distance float4
+        , count integer
+        ) as $$
     begin
         return query
         select fts.nid as id
