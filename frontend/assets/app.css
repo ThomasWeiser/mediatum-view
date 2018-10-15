@@ -1,6 +1,4 @@
-<!doctype html>
-<link rel="stylesheet" type="text/css" href="assets/fonts.css">
-<style>
+
 html {
   box-sizing: border-box;
 }
@@ -152,15 +150,3 @@ ul.folder-list ul.folder-list {
 .article .details table td + td {
   padding-left: 0.4em;
 }
-
-</style>
-<body>
-  <div></div>
-  <script src="assets/debug/elm-remotedev.js"></script>
-  <script src="elm.js"></script>
-  <script>
-    Elm.Main.init({
-      node: document.querySelector("div")
-    });
-  </script>
-</body>
