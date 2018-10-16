@@ -6,14 +6,20 @@
 begin;
 
 
-create or replace function api.all_documents (folder_id int4, type text, name text)
+create or replace function api.all_documents
+    ( folder_id int4
+    , type text
+    , name text
+    , attribute_tests api.attribute_test[]
+    )
     returns setof api.document as $$
     select document.*
     from entity.document
     join aux.node_lineage on document.id = node_lineage.descendant
     where folder_id = node_lineage.ancestor
     and (all_documents.type is null or document.type = all_documents.type)
-    and (all_documents.name is null or document.name = all_documents.name);
+    and (all_documents.name is null or document.name = all_documents.name)
+    and (attribute_tests is null or aux.jsonb_test_list (document.attrs, attribute_tests));
 $$ language sql stable rows 10000;
 
 /*
@@ -40,8 +46,9 @@ create or replace function api.all_documents (folder_id int4, type text='', name
 $$ language sql stable strict rows 10000;
 */
 
-comment on function api.all_documents (folder_id int4, type text, name text) is
-    'Reads and enables pagination through all documents in a folder, optionally filtered by type and name.';
+
+comment on function api.all_documents (folder_id int4, type text, name text, attribute_tests api.attribute_test[]) is
+    'Reads and enables pagination through all documents in a folder, optionally filtered by type and name and a list of attribute tests';
 
 
 create or replace function api.document_by_id (id int4)
