@@ -264,9 +264,13 @@ comment on column api.document.attrs is
     '@omit';
 
 
+create type api.attribute_test_operator as enum (
+    'equality', 'ilike', 'simplefts', 'daterange'
+);
+
 create type api.attribute_test as (
     key text,
-    operator text,
+    operator api.attribute_test_operator,
     value text,
     extra text
 );
