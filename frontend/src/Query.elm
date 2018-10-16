@@ -3,6 +3,7 @@ module Query exposing
     , FtsSearchLanguage(..)
     , Query
     , SearchType(..)
+    , exampleAttributeTests
     , searchTypeDomainToString
     , searchTypeFromLabel
     , searchTypeLanguageToString
@@ -11,6 +12,13 @@ module Query exposing
 
 import Folder exposing (Folder, FolderCounts)
 import Query.Attribute
+
+
+exampleAttributeTests =
+    [ { key = "year"
+      , operation = Query.Attribute.DateRange "2001" "2002"
+      }
+    ]
 
 
 type alias Query =
