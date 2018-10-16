@@ -266,15 +266,21 @@ comment on column api.document.attrs is
 
 create type api.attribute_test as (
     key text,
-    value text
+    operator text,
+    value text,
+    extra text
 );
 
 comment on type api.attribute_test is
     'Specification for testing  a single attribute value of a document';
 comment on column api.attribute_test.key is
     'Name of the attribute to be tested';
+comment on column api.attribute_test.operator is
+    'The test to perform; maybe "equality", "simplefts", "daterange"';
 comment on column api.attribute_test.value is
     'Comparison value for the attribute to be tested';
+comment on column api.attribute_test.extra is
+    'Second comparison value, used if operator needs two values, like "daterange"';
 
 
 create type api.fts_document_result as (

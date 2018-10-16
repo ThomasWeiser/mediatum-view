@@ -69,15 +69,31 @@ $$ language plpgsql immutable;
 create or replace function aux.jsonb_test_list (obj jsonb, tests api.attribute_test[])
     returns boolean as $$
     declare test api.attribute_test;
+    declare key_value text;
     begin
         foreach test in array tests
         loop
-            if not obj ? test.key then
+            key_value := obj ->> test.key;
+            if key_value is null then
                 return false;
             end if;
-            if obj ->> test.key != test.value then
-                return false;
-            end if;
+            case test.operator
+                when 'equality' then
+                    if key_value != test.value then
+                        return false;
+                    end if;
+                when 'simplefts' then
+                    if not to_tsvector('simple', key_value) @@ plainto_tsquery('simple', test.value) then
+                        return false;
+                    end if;
+                when 'daterange' then
+                    if left(key_value, length (test.value)) < test.value then
+                        return false;
+                    end if;
+                    if left(key_value, length (test.extra)) > test.extra then
+                        return false;
+                    end if;
+            end case;
         end loop;
         return true;
     end;
