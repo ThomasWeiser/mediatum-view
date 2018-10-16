@@ -57,8 +57,8 @@ create or replace function aux.fts_document_folder_limited
     join entity.document on document.id = fts.id
 
     -- Performance: Using exists with a subquery is faster than current implementation of aux.test_node_lineage
-    -- where aux.test_node_lineage (folder_id, document.id)
-    where exists (select 1 from mediatum.noderelation where nid = folder_id and cid = document.id)
+    -- where aux.test_node_lineage (folder_id, fts.id)
+    where exists (select 1 from mediatum.noderelation where nid = folder_id and cid = fts.id)
 
       and (attribute_tests is null or 
            aux.jsonb_test_list (document.attrs, attribute_tests)

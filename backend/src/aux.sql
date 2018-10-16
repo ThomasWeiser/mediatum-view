@@ -82,6 +82,13 @@ create or replace function aux.jsonb_test_list (obj jsonb, tests api.attribute_t
                     if key_value != test.value then
                         return false;
                     end if;
+                when 'ilike' then
+                    if not (key_value ilike test.value
+                            or (test.extra is not null and key_value ilike test.extra)
+                           )
+                    then
+                        return false;
+                    end if;
                 when 'simplefts' then
                     if not to_tsvector('simple', key_value) @@ plainto_tsquery('simple', test.value) then
                         return false;

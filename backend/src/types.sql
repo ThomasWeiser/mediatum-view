@@ -276,11 +276,11 @@ comment on type api.attribute_test is
 comment on column api.attribute_test.key is
     'Name of the attribute to be tested';
 comment on column api.attribute_test.operator is
-    'The test to perform; maybe "equality", "simplefts", "daterange"';
+    'The test to perform; maybe "equality", "ilike", "simplefts", "daterange"';
 comment on column api.attribute_test.value is
     'Comparison value for the attribute to be tested';
 comment on column api.attribute_test.extra is
-    'Second comparison value, used if operator needs two values, like "daterange"';
+    'Second comparison value, used if operator may take two values, like "ilike" or "daterange"';
 
 
 create type api.fts_document_result as (
