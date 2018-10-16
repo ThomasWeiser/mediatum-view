@@ -68,10 +68,7 @@ update msg model =
                 (Api.queryFtsPage
                     model.pageResult.page
                     paginationPosition
-                    model.query.folder.id
-                    model.query.searchString
-                    (Query.searchTypeDomainToString model.query.searchType)
-                    (Query.searchTypeLanguageToString model.query.searchType)
+                    model.query
                 )
             , NoReturn
             )
@@ -85,10 +82,7 @@ update msg model =
                 Api.makeRequest
                     ApiResponseFtsFolderCounts
                     (Api.queryFtsFolderCounts
-                        model.query.folder.id
-                        model.query.searchString
-                        (Query.searchTypeDomainToString model.query.searchType)
-                        (Query.searchTypeLanguageToString model.query.searchType)
+                        model.query
                     )
 
               else

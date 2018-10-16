@@ -10,12 +10,14 @@ module Query exposing
     )
 
 import Folder exposing (Folder, FolderCounts)
+import Query.Attribute
 
 
 type alias Query =
     { folder : Folder
     , searchType : SearchType
     , searchString : String
+    , attributeTests : Query.Attribute.Tests
     }
 
 

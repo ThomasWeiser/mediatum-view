@@ -40,6 +40,8 @@ import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
+import Query exposing (Query)
+import Query.Attribute
 
 
 pageSize : Int
@@ -160,18 +162,15 @@ queryFolderDocuments referencePage paginationPosition folderId =
 queryFtsPage :
     Maybe (Pagination.Offset.Page.Page FtsDocumentResult)
     -> Pagination.Offset.Page.Position
-    -> FolderId
-    -> String
-    -> String
-    -> String
+    -> Query
     -> SelectionSet (Pagination.Offset.Page.Page FtsDocumentResult) Graphql.Operation.RootQuery
-queryFtsPage referencePage paginationPosition folderId searchString searchDomain searchLanguage =
+queryFtsPage referencePage paginationPosition query =
     Graphql.Query.selection identity
         |> with
             (Graphql.Query.folderById
                 (\optionals ->
                     { optionals
-                        | id = Present (Folder.idToInt folderId)
+                        | id = Present (Folder.idToInt query.folder.id)
                     }
                 )
                 (Graphql.Object.Folder.selection identity
@@ -179,9 +178,10 @@ queryFtsPage referencePage paginationPosition folderId searchString searchDomain
                         (Graphql.Object.Folder.ftsPage
                             (\optionals ->
                                 { optionals
-                                    | text = Present searchString
-                                    , domain = Present searchDomain
-                                    , language = Present searchLanguage
+                                    | text = Present query.searchString
+                                    , domain = Present (Query.searchTypeDomainToString query.searchType)
+                                    , language = Present (Query.searchTypeLanguageToString query.searchType)
+                                    , attributeTests = Present (Query.Attribute.testsAsGraphqlArgument query.attributeTests)
                                     , limit = Present pageSize
                                     , offset =
                                         Present <|
@@ -200,18 +200,15 @@ queryFtsPage referencePage paginationPosition folderId searchString searchDomain
 
 
 queryFtsFolderCounts :
-    FolderId
-    -> String
-    -> String
-    -> String
+    Query
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-queryFtsFolderCounts folderId searchString searchDomain searchLanguage =
+queryFtsFolderCounts query =
     Graphql.Query.selection identity
         |> with
             (Graphql.Query.folderById
                 (\optionals ->
                     { optionals
-                        | id = Present (Folder.idToInt folderId)
+                        | id = Present (Folder.idToInt query.folder.id)
                     }
                 )
                 (Graphql.Object.Folder.selection Dict.fromList
@@ -219,9 +216,10 @@ queryFtsFolderCounts folderId searchString searchDomain searchLanguage =
                         (Graphql.Object.Folder.ftsDocset
                             (\optionals ->
                                 { optionals
-                                    | text = Present searchString
-                                    , domain = Present searchDomain
-                                    , language = Present searchLanguage
+                                    | text = Present query.searchString
+                                    , domain = Present (Query.searchTypeDomainToString query.searchType)
+                                    , language = Present (Query.searchTypeLanguageToString query.searchType)
+                                    , attributeTests = Present (Query.Attribute.testsAsGraphqlArgument query.attributeTests)
                                 }
                             )
                             (Graphql.Object.Docset.selection (::)

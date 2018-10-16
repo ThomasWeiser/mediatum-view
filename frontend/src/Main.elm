@@ -126,7 +126,11 @@ update msg model =
                     let
                         ( articleModel, articleCmd ) =
                             Article.initCollectionOrSearch
-                                (Query selectedFolder model.searchType model.searchString)
+                                { folder = selectedFolder
+                                , searchType = model.searchType
+                                , searchString = model.searchString
+                                , attributeTests = []
+                                }
                     in
                     ( { model
                         | article = articleModel
