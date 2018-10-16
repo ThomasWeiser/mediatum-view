@@ -27,9 +27,7 @@ type Operation
     | DateRange String String
 
 
-testsAsGraphqlArgument :
-    Tests
-    -> List (Maybe AttributeTestInput)
+testsAsGraphqlArgument : Tests -> List (Maybe AttributeTestInput)
 testsAsGraphqlArgument tests =
     List.map
         (testInput >> Just)

@@ -129,7 +129,7 @@ update msg model =
                                 { folder = selectedFolder
                                 , searchType = model.searchType
                                 , searchString = model.searchString
-                                , attributeTests = 
+                                , attributeTests =
                                     Query.exampleAttributeTests
                                 }
                     in
