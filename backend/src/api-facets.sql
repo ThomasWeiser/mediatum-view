@@ -10,6 +10,7 @@ create or replace function aux.fts_folder_docset
     , fts_query tsquery
     , domain text
     , language text
+    , attribute_tests api.attribute_test[]
     )
     returns api.docset
     as $$ 
@@ -29,7 +30,10 @@ create or replace function aux.fts_folder_docset
         where exists ( select 1
                       from mediatum.noderelation
                       where nid = folder_id and cid = fts.id
-                    )
+                     )
+              and ( attribute_tests is null or 
+                    aux.jsonb_test_list (document.attrs, attribute_tests)
+                  )
         ; 
         return res;
     end;
@@ -41,6 +45,7 @@ create or replace function api.folder_fts_docset
     , text text
     , domain text
     , language text
+    , attribute_tests api.attribute_test[]
     )
     returns api.docset
     as $$ 
@@ -50,6 +55,7 @@ create or replace function api.folder_fts_docset
           , plainto_tsquery (language::regconfig, text)
           , domain
           , language
+          , attribute_tests
           );
     end;
 $$ language plpgsql stable parallel safe;
