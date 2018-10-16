@@ -1,7 +1,6 @@
 module Main exposing (main)
 
 import Article
-import Article.Fts exposing (SearchType)
 import Browser
 import Dict
 import Folder exposing (FolderCounts)
@@ -10,12 +9,13 @@ import Html.Attributes
 import Html.Events
 import Icons
 import Maybe.Extra
+import Query exposing (Query)
 import Tree
 import Utils
 
 
 type alias Model =
-    { searchType : SearchType
+    { searchType : Query.SearchType
     , searchString : String
     , tree : Tree.Model
     , folderCounts : FolderCounts
@@ -36,7 +36,7 @@ main =
 type Msg
     = NoOp
     | SearchString String
-    | SetSearchType SearchType
+    | SetSearchType Query.SearchType
     | Submit
     | TreeMsg Tree.Msg
     | ArticleMsg Article.Msg
@@ -46,9 +46,9 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     let
         initialSearchType =
-            Article.Fts.FtsSearch
-                Article.Fts.SearchFulltext
-                Article.Fts.English
+            Query.FtsSearch
+                Query.SearchFulltext
+                Query.English
 
         ( treeModel, treeCmd ) =
             Tree.init
@@ -126,9 +126,7 @@ update msg model =
                     let
                         ( articleModel, articleCmd ) =
                             Article.initCollectionOrSearch
-                                selectedFolder
-                                model.searchType
-                                model.searchString
+                                (Query selectedFolder model.searchType model.searchString)
                     in
                     ( { model
                         | article = articleModel
@@ -189,7 +187,7 @@ viewSearchControls model =
         ]
         [ Html.select
             [ Html.Events.onInput
-                (Article.Fts.searchTypeFromLabel
+                (Query.searchTypeFromLabel
                     >> Maybe.Extra.unwrap NoOp SetSearchType
                 )
             ]
@@ -197,26 +195,18 @@ viewSearchControls model =
                 (\searchType ->
                     Html.option
                         [ Html.Attributes.value
-                            (Article.Fts.searchTypeToLabel searchType)
+                            (Query.searchTypeToLabel searchType)
                         , Html.Attributes.selected
                             (model.searchType == searchType)
                         ]
                         [ Html.text
-                            (Article.Fts.searchTypeToLabel searchType)
+                            (Query.searchTypeToLabel searchType)
                         ]
                 )
-                [ Article.Fts.FtsSearch
-                    Article.Fts.SearchAttributes
-                    Article.Fts.English
-                , Article.Fts.FtsSearch
-                    Article.Fts.SearchAttributes
-                    Article.Fts.German
-                , Article.Fts.FtsSearch
-                    Article.Fts.SearchFulltext
-                    Article.Fts.English
-                , Article.Fts.FtsSearch
-                    Article.Fts.SearchFulltext
-                    Article.Fts.German
+                [ Query.FtsSearch Query.SearchAttributes Query.English
+                , Query.FtsSearch Query.SearchAttributes Query.German
+                , Query.FtsSearch Query.SearchFulltext Query.English
+                , Query.FtsSearch Query.SearchFulltext Query.German
                 ]
             )
         , Html.input

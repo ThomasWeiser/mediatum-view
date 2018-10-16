@@ -12,11 +12,12 @@ import Article.Collection
 import Article.Details
 import Article.Directory
 import Article.Empty
-import Article.Fts exposing (SearchType)
+import Article.Fts
 import Document exposing (DocumentId)
 import Folder exposing (Folder, FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
+import Query exposing (Query)
 import Tree
 import Utils
 
@@ -66,14 +67,14 @@ initEmpty _ =
     )
 
 
-initCollectionOrSearch : Folder -> SearchType -> String -> ( Model, Cmd Msg )
-initCollectionOrSearch folder searchType searchString =
+initCollectionOrSearch : Query -> ( Model, Cmd Msg )
+initCollectionOrSearch query =
     let
         static =
-            { folder = folder }
+            { folder = query.folder }
     in
-    if searchString == "" then
-        if folder.isCollection && searchString == "" then
+    if query.searchString == "" then
+        if query.folder.isCollection then
             let
                 ( subModel, subCmd ) =
                     Article.Collection.init ()
@@ -98,11 +99,7 @@ initCollectionOrSearch folder searchType searchString =
     else
         let
             ( subModel, subCmd ) =
-                Article.Fts.init
-                    static
-                    { searchType = searchType
-                    , searchString = searchString
-                    }
+                Article.Fts.init query
         in
         ( { static = static
           , content = FtsModel subModel
@@ -171,7 +168,6 @@ update msg model =
                 ( subModel1, subCmd, subReturn ) =
                     Article.Fts.update
                         subMsg
-                        model.static
                         subModel
             in
             case subReturn of

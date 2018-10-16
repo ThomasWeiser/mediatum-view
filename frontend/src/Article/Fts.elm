@@ -1,14 +1,8 @@
 module Article.Fts exposing
-    ( FtsSearchDomain(..)
-    , FtsSearchLanguage(..)
-    , Model
+    ( Model
     , Msg
     , Return(..)
-    , SearchType(..)
-    , Specification
     , init
-    , searchTypeFromLabel
-    , searchTypeToLabel
     , update
     , view
     )
@@ -23,39 +17,15 @@ import Html.Attributes
 import Html.Events
 import Icons
 import Pagination.Offset.Page as Page exposing (Page, PageResult)
+import Query exposing (Query)
 import Utils
 
 
-type alias Context =
-    { folder : Folder
-    }
-
-
 type alias Model =
-    { specification : Specification
+    { query : Query
     , pageResult : PageResult FtsDocumentResult
     , queryFolderCounts : Bool
     }
-
-
-type alias Specification =
-    { searchType : SearchType
-    , searchString : String
-    }
-
-
-type SearchType
-    = FtsSearch FtsSearchDomain FtsSearchLanguage
-
-
-type FtsSearchDomain
-    = SearchAttributes
-    | SearchFulltext
-
-
-type FtsSearchLanguage
-    = English
-    | German
 
 
 type Msg
@@ -71,24 +41,23 @@ type Return
     | FolderCounts FolderCounts
 
 
-init : Context -> Specification -> ( Model, Cmd Msg )
-init context specification =
+init : Query -> ( Model, Cmd Msg )
+init query =
     let
         model =
-            { specification = specification
+            { query = query
             , pageResult = Page.initialPageResult
             , queryFolderCounts = True
             }
     in
     update
         (PickPosition Page.First)
-        context
         model
         |> Utils.tupleRemoveThird
 
 
-update : Msg -> Context -> Model -> ( Model, Cmd Msg, Return )
-update msg context model =
+update : Msg -> Model -> ( Model, Cmd Msg, Return )
+update msg model =
     case msg of
         PickPosition paginationPosition ->
             ( { model
@@ -99,10 +68,10 @@ update msg context model =
                 (Api.queryFtsPage
                     model.pageResult.page
                     paginationPosition
-                    context.folder.id
-                    model.specification.searchString
-                    (searchTypeDomainToString model.specification.searchType)
-                    (searchTypeLanguageToString model.specification.searchType)
+                    model.query.folder.id
+                    model.query.searchString
+                    (Query.searchTypeDomainToString model.query.searchType)
+                    (Query.searchTypeLanguageToString model.query.searchType)
                 )
             , NoReturn
             )
@@ -116,10 +85,10 @@ update msg context model =
                 Api.makeRequest
                     ApiResponseFtsFolderCounts
                     (Api.queryFtsFolderCounts
-                        context.folder.id
-                        model.specification.searchString
-                        (searchTypeDomainToString model.specification.searchType)
-                        (searchTypeLanguageToString model.specification.searchType)
+                        model.query.folder.id
+                        model.query.searchString
+                        (Query.searchTypeDomainToString model.query.searchType)
+                        (Query.searchTypeLanguageToString model.query.searchType)
                     )
 
               else
@@ -148,14 +117,17 @@ view : Model -> Html Msg
 view model =
     Html.div []
         [ Html.div [] <|
-            if model.specification.searchString == "" then
+            if model.query.searchString == "" then
                 [ Html.span [] [ Html.text "All Documents" ] ]
 
             else
                 [ Html.span [] [ Html.text "Search " ]
-                , Html.span [] [ Html.text <| searchTypeToLabel model.specification.searchType ]
+                , Html.span []
+                    [ Html.text <|
+                        Query.searchTypeToLabel model.query.searchType
+                    ]
                 , Html.span [] [ Html.text ": \"" ]
-                , Html.span [] [ Html.text model.specification.searchString ]
+                , Html.span [] [ Html.text model.query.searchString ]
                 , Html.span [] [ Html.text "\"" ]
                 ]
         , case model.pageResult.page of
@@ -179,61 +151,6 @@ view model =
             Just error ->
                 viewError error
         ]
-
-
-searchTypeDomainToString : SearchType -> String
-searchTypeDomainToString searchType =
-    case searchType of
-        FtsSearch SearchAttributes _ ->
-            "attrs"
-
-        FtsSearch SearchFulltext _ ->
-            "fulltext"
-
-
-searchTypeLanguageToString : SearchType -> String
-searchTypeLanguageToString searchType =
-    case searchType of
-        FtsSearch _ English ->
-            "english"
-
-        FtsSearch _ German ->
-            "german"
-
-
-searchTypeToLabel : SearchType -> String
-searchTypeToLabel searchType =
-    case searchType of
-        FtsSearch SearchAttributes English ->
-            "All Attributes - English"
-
-        FtsSearch SearchAttributes German ->
-            "All Attributes - German"
-
-        FtsSearch SearchFulltext English ->
-            "Fulltext - English"
-
-        FtsSearch SearchFulltext German ->
-            "Fulltext - German"
-
-
-searchTypeFromLabel : String -> Maybe SearchType
-searchTypeFromLabel label =
-    case label of
-        "All Attributes - English" ->
-            Just <| FtsSearch SearchAttributes English
-
-        "All Attributes - German" ->
-            Just <| FtsSearch SearchAttributes German
-
-        "Fulltext - English" ->
-            Just <| FtsSearch SearchFulltext English
-
-        "Fulltext - German" ->
-            Just <| FtsSearch SearchFulltext German
-
-        _ ->
-            Nothing
 
 
 viewResponse :
