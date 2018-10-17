@@ -110,20 +110,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     Html.div []
-        [ Html.div [] <|
-            if model.query.searchString == "" then
-                [ Html.span [] [ Html.text "All Documents" ] ]
-
-            else
-                [ Html.span [] [ Html.text "Search " ]
-                , Html.span []
-                    [ Html.text <|
-                        Query.searchTypeToLabel model.query.searchType
-                    ]
-                , Html.span [] [ Html.text ": \"" ]
-                , Html.span [] [ Html.text model.query.searchString ]
-                , Html.span [] [ Html.text "\"" ]
-                ]
+        [ Query.view model.query
         , case model.pageResult.page of
             Nothing ->
                 Html.text ""

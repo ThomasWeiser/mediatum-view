@@ -3,21 +3,26 @@ module Query exposing
     , FtsSearchLanguage(..)
     , Query
     , SearchType(..)
-    , exampleFilter
     , attributeTests
+    , exampleFilters
     , searchTypeDomainToString
     , searchTypeFromLabel
     , searchTypeLanguageToString
     , searchTypeToLabel
+    , view
     )
 
 import Folder exposing (Folder, FolderCounts)
+import Html exposing (Html)
 import Query.Attribute
 import Query.Filter exposing (Filter)
 
 
-exampleFilter =
-    Query.Filter.YearWithin "2001" "2002"
+exampleFilters =
+    [ Query.Filter.YearWithin "2000" "2010"
+    , Query.Filter.YearWithin "2001" "2002"
+    , Query.Filter.YearWithin "2000" "2010"
+    ]
 
 
 type alias Query =
@@ -40,6 +45,40 @@ type FtsSearchDomain
 type FtsSearchLanguage
     = English
     | German
+
+
+view : Query -> Html msg
+view query =
+    Html.div []
+        [ viewSearch query
+        , viewFilters query.filters
+        ]
+
+
+viewSearch : Query -> Html msg
+viewSearch query =
+    Html.div [] <|
+        if query.searchString == "" then
+            [ Html.span [] [ Html.text "All Documents" ] ]
+
+        else
+            [ Html.span [] [ Html.text "Search " ]
+            , Html.span []
+                [ Html.text <|
+                    searchTypeToLabel query.searchType
+                ]
+            , Html.span [] [ Html.text ": \"" ]
+            , Html.span [] [ Html.text query.searchString ]
+            , Html.span [] [ Html.text "\"" ]
+            ]
+
+
+viewFilters : List Filter -> Html msg
+viewFilters filters =
+    Html.div [] <|
+        List.map
+            Query.Filter.view
+            filters
 
 
 attributeTests : Query -> List Query.Attribute.Test
