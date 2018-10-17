@@ -129,8 +129,8 @@ update msg model =
                                 { folder = selectedFolder
                                 , searchType = model.searchType
                                 , searchString = model.searchString
-                                , attributeTests =
-                                    Query.exampleAttributeTests
+                                , filters =
+                                    [ Query.exampleFilter ]
                                 }
                     in
                     ( { model

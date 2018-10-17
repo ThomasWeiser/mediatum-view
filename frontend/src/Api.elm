@@ -181,7 +181,11 @@ queryFtsPage referencePage paginationPosition query =
                                     | text = Present query.searchString
                                     , domain = Present (Query.searchTypeDomainToString query.searchType)
                                     , language = Present (Query.searchTypeLanguageToString query.searchType)
-                                    , attributeTests = Present (Query.Attribute.testsAsGraphqlArgument query.attributeTests)
+                                    , attributeTests =
+                                        query
+                                            |> Query.attributeTests
+                                            |> Query.Attribute.testsAsGraphqlArgument
+                                            |> Present
                                     , limit = Present pageSize
                                     , offset =
                                         Present <|
@@ -219,7 +223,11 @@ queryFtsFolderCounts query =
                                     | text = Present query.searchString
                                     , domain = Present (Query.searchTypeDomainToString query.searchType)
                                     , language = Present (Query.searchTypeLanguageToString query.searchType)
-                                    , attributeTests = Present (Query.Attribute.testsAsGraphqlArgument query.attributeTests)
+                                    , attributeTests =
+                                        query
+                                            |> Query.attributeTests
+                                            |> Query.Attribute.testsAsGraphqlArgument
+                                            |> Present
                                 }
                             )
                             (Graphql.Object.Docset.selection (::)

@@ -1,17 +1,12 @@
 module Query.Attribute exposing
     ( Operation(..)
     , Test
-    , Tests
     , testsAsGraphqlArgument
     )
 
 import Graphql.Enum.AttributeTestOperator as Operator
 import Graphql.InputObject exposing (AttributeTestInput)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
-
-
-type alias Tests =
-    List Test
 
 
 type alias Test =
@@ -27,7 +22,7 @@ type Operation
     | DateRange String String
 
 
-testsAsGraphqlArgument : Tests -> List (Maybe AttributeTestInput)
+testsAsGraphqlArgument : List Test -> List (Maybe AttributeTestInput)
 testsAsGraphqlArgument tests =
     List.map
         (testInput >> Just)

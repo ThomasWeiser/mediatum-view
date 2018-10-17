@@ -3,7 +3,8 @@ module Query exposing
     , FtsSearchLanguage(..)
     , Query
     , SearchType(..)
-    , exampleAttributeTests
+    , exampleFilter
+    , attributeTests
     , searchTypeDomainToString
     , searchTypeFromLabel
     , searchTypeLanguageToString
@@ -12,20 +13,18 @@ module Query exposing
 
 import Folder exposing (Folder, FolderCounts)
 import Query.Attribute
+import Query.Filter exposing (Filter)
 
 
-exampleAttributeTests =
-    [ { key = "year"
-      , operation = Query.Attribute.DateRange "2001" "2002"
-      }
-    ]
+exampleFilter =
+    Query.Filter.YearWithin "2001" "2002"
 
 
 type alias Query =
     { folder : Folder
     , searchType : SearchType
     , searchString : String
-    , attributeTests : Query.Attribute.Tests
+    , filters : List Filter
     }
 
 
@@ -41,6 +40,11 @@ type FtsSearchDomain
 type FtsSearchLanguage
     = English
     | German
+
+
+attributeTests : Query -> List Query.Attribute.Test
+attributeTests query =
+    List.map Query.Filter.toAttributeTest query.filters
 
 
 searchTypeDomainToString : SearchType -> String
