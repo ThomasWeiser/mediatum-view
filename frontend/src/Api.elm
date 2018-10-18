@@ -162,15 +162,15 @@ queryFolderDocuments referencePage paginationPosition folderId =
 queryFtsPage :
     Maybe (Pagination.Offset.Page.Page FtsDocumentResult)
     -> Pagination.Offset.Page.Position
-    -> Query
+    -> Query.Fts
     -> SelectionSet (Pagination.Offset.Page.Page FtsDocumentResult) Graphql.Operation.RootQuery
-queryFtsPage referencePage paginationPosition query =
+queryFtsPage referencePage paginationPosition ftsQuery =
     Graphql.Query.selection identity
         |> with
             (Graphql.Query.folderById
                 (\optionals ->
                     { optionals
-                        | id = Present (Folder.idToInt query.folder.id)
+                        | id = ftsQuery.folder |> .id |> Folder.idToInt |> Present
                     }
                 )
                 (Graphql.Object.Folder.selection identity
@@ -178,12 +178,12 @@ queryFtsPage referencePage paginationPosition query =
                         (Graphql.Object.Folder.ftsPage
                             (\optionals ->
                                 { optionals
-                                    | text = Present query.searchString
-                                    , domain = Present (Query.searchTypeDomainToString query.searchType)
-                                    , language = Present (Query.searchTypeLanguageToString query.searchType)
+                                    | text = Present ftsQuery.searchTerm
+                                    , domain = Present (Query.ftsOptionsDomainToString ftsQuery.options)
+                                    , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
                                     , attributeTests =
-                                        query
-                                            |> Query.attributeTests
+                                        ftsQuery.filters
+                                            |> Query.filtersToAttributeTests
                                             |> Query.Attribute.testsAsGraphqlArgument
                                             |> Present
                                     , limit = Present pageSize
@@ -204,15 +204,15 @@ queryFtsPage referencePage paginationPosition query =
 
 
 queryFtsFolderCounts :
-    Query
+    Query.Fts
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-queryFtsFolderCounts query =
+queryFtsFolderCounts ftsQuery =
     Graphql.Query.selection identity
         |> with
             (Graphql.Query.folderById
                 (\optionals ->
                     { optionals
-                        | id = Present (Folder.idToInt query.folder.id)
+                        | id = ftsQuery.folder |> .id |> Folder.idToInt |> Present
                     }
                 )
                 (Graphql.Object.Folder.selection Dict.fromList
@@ -220,12 +220,12 @@ queryFtsFolderCounts query =
                         (Graphql.Object.Folder.ftsDocset
                             (\optionals ->
                                 { optionals
-                                    | text = Present query.searchString
-                                    , domain = Present (Query.searchTypeDomainToString query.searchType)
-                                    , language = Present (Query.searchTypeLanguageToString query.searchType)
+                                    | text = Present ftsQuery.searchTerm
+                                    , domain = Present (Query.ftsOptionsDomainToString ftsQuery.options)
+                                    , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
                                     , attributeTests =
-                                        query
-                                            |> Query.attributeTests
+                                        ftsQuery.filters
+                                            |> Query.filtersToAttributeTests
                                             |> Query.Attribute.testsAsGraphqlArgument
                                             |> Present
                                 }

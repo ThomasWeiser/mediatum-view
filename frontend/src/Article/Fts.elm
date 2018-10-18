@@ -22,7 +22,7 @@ import Utils
 
 
 type alias Model =
-    { query : Query
+    { ftsQuery : Query.Fts
     , pageResult : PageResult FtsDocumentResult
     , queryFolderCounts : Bool
     }
@@ -41,11 +41,11 @@ type Return
     | FolderCounts FolderCounts
 
 
-init : Query -> ( Model, Cmd Msg )
-init query =
+init : Query.Fts -> ( Model, Cmd Msg )
+init ftsQuery =
     let
         model =
-            { query = query
+            { ftsQuery = ftsQuery
             , pageResult = Page.initialPageResult
             , queryFolderCounts = True
             }
@@ -68,7 +68,7 @@ update msg model =
                 (Api.queryFtsPage
                     model.pageResult.page
                     paginationPosition
-                    model.query
+                    model.ftsQuery
                 )
             , NoReturn
             )
@@ -82,7 +82,7 @@ update msg model =
                 Api.makeRequest
                     ApiResponseFtsFolderCounts
                     (Api.queryFtsFolderCounts
-                        model.query
+                        model.ftsQuery
                     )
 
               else
@@ -110,8 +110,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     Html.div []
-        [ Query.view model.query
-        , case model.pageResult.page of
+        [ case model.pageResult.page of
             Nothing ->
                 Html.text ""
 

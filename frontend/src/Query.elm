@@ -1,14 +1,18 @@
 module Query exposing
-    ( FtsSearchDomain(..)
+    ( FtsOptions
+    , FtsSearchDomain(..)
     , FtsSearchLanguage(..)
-    , Query
-    , SearchType(..)
-    , attributeTests
+    , Fts
+    , Query(..)
     , exampleFilters
-    , searchTypeDomainToString
-    , searchTypeFromLabel
-    , searchTypeLanguageToString
-    , searchTypeToLabel
+    , ftsOptionsDomainToString
+    , ftsOptionsFromLabel
+    , ftsOptionsLanguageToString
+    , ftsOptionsToLabel
+    , filtersToAttributeTests
+    , getFilters
+    , getFolder
+    , isFts
     , view
     )
 
@@ -25,16 +29,22 @@ exampleFilters =
     ]
 
 
-type alias Query =
+type Query
+    = FtsQuery Fts
+
+
+type alias Fts =
     { folder : Folder
-    , searchType : SearchType
-    , searchString : String
     , filters : List Filter
+    , options : FtsOptions
+    , searchTerm : String
     }
 
 
-type SearchType
-    = FtsSearch FtsSearchDomain FtsSearchLanguage
+type alias FtsOptions =
+    { domain : FtsSearchDomain
+    , language : FtsSearchLanguage
+    }
 
 
 type FtsSearchDomain
@@ -47,95 +57,115 @@ type FtsSearchLanguage
     | German
 
 
+getFolder : Query -> Folder
+getFolder query =
+    case query of
+        FtsQuery { folder } ->
+            folder
+
+
+getFilters : Query -> List Filter
+getFilters query =
+    case query of
+        FtsQuery { filters } ->
+            filters
+
+
+isFts : Query -> Bool
+isFts query =
+    case query of
+        FtsQuery { searchTerm } ->
+            searchTerm /= ""
+
+
 view : Query -> Html msg
 view query =
     Html.div []
         [ viewSearch query
-        , viewFilters query.filters
+        , viewFilters (getFilters query)
         ]
 
 
 viewSearch : Query -> Html msg
 viewSearch query =
     Html.div [] <|
-        if query.searchString == "" then
+        if not (isFts query) then
             [ Html.span [] [ Html.text "All Documents" ] ]
 
         else
-            [ Html.span [] [ Html.text "Search " ]
-            , Html.span []
-                [ Html.text <|
-                    searchTypeToLabel query.searchType
-                ]
-            , Html.span [] [ Html.text ": \"" ]
-            , Html.span [] [ Html.text query.searchString ]
-            , Html.span [] [ Html.text "\"" ]
-            ]
+            case query of
+                FtsQuery { options, searchTerm } ->
+                    [ Html.span [] [ Html.text "Search " ]
+                    , Html.span [] [ Html.text (ftsOptionsToLabel options) ]
+                    , Html.span [] [ Html.text ": \"" ]
+                    , Html.span [] [ Html.text searchTerm ]
+                    , Html.span [] [ Html.text "\"" ]
+                    ]
 
 
 viewFilters : List Filter -> Html msg
-viewFilters filters =
+viewFilters filters1 =
     Html.div [] <|
         List.map
             Query.Filter.view
-            filters
+            filters1
 
 
-attributeTests : Query -> List Query.Attribute.Test
-attributeTests query =
-    List.map Query.Filter.toAttributeTest query.filters
+filtersToAttributeTests : List Filter -> List Query.Attribute.Test
+filtersToAttributeTests filters =
+    List.map Query.Filter.toAttributeTest filters
 
 
-searchTypeDomainToString : SearchType -> String
-searchTypeDomainToString searchType =
-    case searchType of
-        FtsSearch SearchAttributes _ ->
+ftsOptionsDomainToString : FtsOptions -> String
+ftsOptionsDomainToString options =
+    case options.domain of
+        SearchAttributes ->
             "attrs"
 
-        FtsSearch SearchFulltext _ ->
+        SearchFulltext ->
             "fulltext"
 
 
-searchTypeLanguageToString : SearchType -> String
-searchTypeLanguageToString searchType =
-    case searchType of
-        FtsSearch _ English ->
+ftsOptionsLanguageToString : FtsOptions -> String
+ftsOptionsLanguageToString options =
+    case options.language of
+        English ->
             "english"
 
-        FtsSearch _ German ->
+        German ->
             "german"
 
 
-searchTypeToLabel : SearchType -> String
-searchTypeToLabel searchType =
-    case searchType of
-        FtsSearch SearchAttributes English ->
-            "All Attributes - English"
+ftsOptionsToLabel : FtsOptions -> String
+ftsOptionsToLabel options =
+    case ( options.domain, options.language ) of
+        ( SearchAttributes, English ) ->
+            "All Attributes, using English dictionary"
 
-        FtsSearch SearchAttributes German ->
-            "All Attributes - German"
+        ( SearchAttributes, German ) ->
+            "All Attributes, using German dictionary"
 
-        FtsSearch SearchFulltext English ->
-            "Fulltext - English"
+        ( SearchFulltext, English ) ->
+            "Fulltext, using English dictionary"
 
-        FtsSearch SearchFulltext German ->
-            "Fulltext - German"
+        ( SearchFulltext, German ) ->
+            "Fulltext, using German dictionary"
 
 
-searchTypeFromLabel : String -> Maybe SearchType
-searchTypeFromLabel label =
+ftsOptionsFromLabel : String -> Maybe FtsOptions
+ftsOptionsFromLabel label =
     case label of
-        "All Attributes - English" ->
-            Just <| FtsSearch SearchAttributes English
+        "All Attributes, using English dictionary" ->
+            Just <| FtsOptions SearchAttributes English
 
-        "All Attributes - German" ->
-            Just <| FtsSearch SearchAttributes German
+        "All Attributes, using German dictionary" ->
+            Just <| FtsOptions SearchAttributes German
 
-        "Fulltext - English" ->
-            Just <| FtsSearch SearchFulltext English
+        "Fulltext, using English dictionary" ->
+            Just <| FtsOptions SearchFulltext English
 
-        "Fulltext - German" ->
-            Just <| FtsSearch SearchFulltext German
+        "Fulltext, using German dictionary" ->
+            Just <| FtsOptions SearchFulltext German
 
         _ ->
             Nothing

@@ -71,10 +71,10 @@ initCollectionOrSearch : Query -> ( Model, Cmd Msg )
 initCollectionOrSearch query =
     let
         static =
-            { folder = query.folder }
+            { folder = Query.getFolder query }
     in
-    if query.searchString == "" then
-        if query.folder.isCollection then
+    if not (Query.isFts query) then
+        if .isCollection (Query.getFolder query) then
             let
                 ( subModel, subCmd ) =
                     Article.Collection.init ()
@@ -98,8 +98,13 @@ initCollectionOrSearch query =
 
     else
         let
+            ftsQuery =
+                case query of
+                    Query.FtsQuery fts ->
+                        fts
+
             ( subModel, subCmd ) =
-                Article.Fts.init query
+                Article.Fts.init ftsQuery
         in
         ( { static = static
           , content = FtsModel subModel
@@ -208,6 +213,7 @@ view tree model =
         [ Html.div
             [ Html.Attributes.class "breadcrumbs" ]
             [ Tree.viewBreadcrumbs tree model.static.folder.id ]
+        -- TODO View Query
         , viewContent model
         ]
 

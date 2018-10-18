@@ -15,8 +15,8 @@ import Utils
 
 
 type alias Model =
-    { searchType : Query.SearchType
-    , searchString : String
+    { searchOptions : Query.FtsOptions
+    , searchTerm : String
     , tree : Tree.Model
     , folderCounts : FolderCounts
     , article : Article.Model
@@ -35,8 +35,8 @@ main =
 
 type Msg
     = NoOp
-    | SearchString String
-    | SetSearchType Query.SearchType
+    | SetSearchTerm String
+    | SetSearchOptions Query.FtsOptions
     | Submit
     | TreeMsg Tree.Msg
     | ArticleMsg Article.Msg
@@ -46,7 +46,7 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     let
         initialSearchType =
-            Query.FtsSearch
+            Query.FtsOptions
                 Query.SearchFulltext
                 Query.English
 
@@ -57,8 +57,8 @@ init _ =
             Article.initEmpty ()
 
         model =
-            { searchType = initialSearchType
-            , searchString = ""
+            { searchOptions = initialSearchType
+            , searchTerm = ""
             , tree = treeModel
             , folderCounts = Dict.empty
             , article = articleModel
@@ -78,13 +78,13 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        SearchString str ->
-            ( { model | searchString = str }
+        SetSearchTerm str ->
+            ( { model | searchTerm = str }
             , Cmd.none
             )
 
-        SetSearchType searchType ->
-            ( { model | searchType = searchType }
+        SetSearchOptions searchOptions ->
+            ( { model | searchOptions = searchOptions }
             , Cmd.none
             )
 
@@ -125,12 +125,13 @@ update msg model =
                 Just selectedFolder ->
                     let
                         ( articleModel, articleCmd ) =
-                            Article.initCollectionOrSearch
-                                { folder = selectedFolder
-                                , searchType = model.searchType
-                                , searchString = model.searchString
-                                , filters = Query.exampleFilters
-                                }
+                            Article.initCollectionOrSearch <|
+                                Query.FtsQuery
+                                    { folder = selectedFolder
+                                    , options = model.searchOptions
+                                    , searchTerm = model.searchTerm
+                                    , filters = Query.exampleFilters
+                                    }
                     in
                     ( { model
                         | article = articleModel
@@ -191,34 +192,34 @@ viewSearchControls model =
         ]
         [ Html.select
             [ Html.Events.onInput
-                (Query.searchTypeFromLabel
-                    >> Maybe.Extra.unwrap NoOp SetSearchType
+                (Query.ftsOptionsFromLabel
+                    >> Maybe.Extra.unwrap NoOp SetSearchOptions
                 )
             ]
             (List.map
-                (\searchType ->
+                (\ftsOptions ->
                     Html.option
                         [ Html.Attributes.value
-                            (Query.searchTypeToLabel searchType)
+                            (Query.ftsOptionsToLabel ftsOptions)
                         , Html.Attributes.selected
-                            (model.searchType == searchType)
+                            (model.searchOptions == ftsOptions)
                         ]
                         [ Html.text
-                            (Query.searchTypeToLabel searchType)
+                            (Query.ftsOptionsToLabel ftsOptions)
                         ]
                 )
-                [ Query.FtsSearch Query.SearchAttributes Query.English
-                , Query.FtsSearch Query.SearchAttributes Query.German
-                , Query.FtsSearch Query.SearchFulltext Query.English
-                , Query.FtsSearch Query.SearchFulltext Query.German
+                [ Query.FtsOptions Query.SearchAttributes Query.English
+                , Query.FtsOptions Query.SearchAttributes Query.German
+                , Query.FtsOptions Query.SearchFulltext Query.English
+                , Query.FtsOptions Query.SearchFulltext Query.German
                 ]
             )
         , Html.input
             [ Html.Attributes.class "search-input"
             , Html.Attributes.type_ "search"
             , Html.Attributes.placeholder "Search ..."
-            , Html.Attributes.value model.searchString
-            , Html.Events.onInput SearchString
+            , Html.Attributes.value model.searchTerm
+            , Html.Events.onInput SetSearchTerm
             ]
             []
         , Html.button
