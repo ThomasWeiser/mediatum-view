@@ -105,7 +105,10 @@ update msg model =
         ArticleMsg subMsg ->
             let
                 ( subModel, subCmd, subReturn ) =
-                    Article.update subMsg model.article
+                    Article.update
+                        subMsg
+                        { query = model.query }
+                        model.article
 
                 folderCounts =
                     case subReturn of
@@ -183,7 +186,10 @@ view model =
             , Html.article
                 [ Html.Attributes.class "article" ]
                 [ Html.map ArticleMsg <|
-                    Article.view model.tree model.article
+                    Article.view
+                        model.tree
+                        { query = model.query }
+                        model.article
                 ]
             ]
         ]

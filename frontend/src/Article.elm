@@ -2,8 +2,8 @@ module Article exposing
     ( Model
     , Msg
     , Return(..)
-    , initWithQuery
     , initEmpty
+    , initWithQuery
     , update
     , view
     )
@@ -22,14 +22,13 @@ import Tree
 import Utils
 
 
-type alias Model =
-    { static : Static
-    , content : Content
+type alias Context =
+    { query : Query
     }
 
 
-type alias Static =
-    { folder : Folder
+type alias Model =
+    { content : Content
     }
 
 
@@ -60,39 +59,30 @@ initEmpty _ =
         ( subModel, subCmd ) =
             Article.Empty.init ()
     in
-    ( { static = { folder = Folder.dummy }
-      , content = EmptyModel subModel
-      }
+    ( { content = EmptyModel subModel }
     , Cmd.map EmptyMsg subCmd
     )
 
 
 initWithQuery : Query -> ( Model, Cmd Msg )
 initWithQuery query =
-    let
-        static =
-            { folder = Query.getFolder query }
-    in
     if not (Query.isFts query) then
         if .isCollection (Query.getFolder query) then
             let
                 ( subModel, subCmd ) =
                     Article.Collection.init ()
             in
-            ( { static = static
-              , content = CollectionModel subModel
-              }
+            ( { content = CollectionModel subModel }
             , Cmd.map CollectionMsg subCmd
             )
 
         else
             let
                 ( subModel, subCmd ) =
-                    Article.Directory.init static ()
+                    Article.Directory.init
+                        { folder = Query.getFolder query }
             in
-            ( { static = static
-              , content = DirectoryModel subModel
-              }
+            ( { content = DirectoryModel subModel }
             , Cmd.map DirectoryMsg subCmd
             )
 
@@ -104,11 +94,9 @@ initWithQuery query =
                         fts
 
             ( subModel, subCmd ) =
-                Article.Fts.init ftsQuery
+                Article.Fts.init { ftsQuery = ftsQuery }
         in
-        ( { static = static
-          , content = FtsModel subModel
-          }
+        ( { content = FtsModel subModel }
         , Cmd.map FtsMsg subCmd
         )
 
@@ -119,17 +107,15 @@ initDetails folder id =
         ( subModel, subCmd ) =
             Article.Details.init id
     in
-    ( { static = { folder = folder }
-      , content = DetailsModel subModel
-      }
+    ( { content = DetailsModel subModel }
     , Cmd.map DetailsMsg subCmd
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, Return )
-update msg model =
-    case ( msg, model.content ) of
-        ( EmptyMsg subMsg, EmptyModel subModel ) ->
+update : Msg -> Context -> Model -> ( Model, Cmd Msg, Return )
+update msg context model =
+    case ( msg, model.content, context.query ) of
+        ( EmptyMsg subMsg, EmptyModel subModel, _ ) ->
             let
                 ( subModel1, subCmd ) =
                     Article.Empty.update subMsg subModel
@@ -139,7 +125,7 @@ update msg model =
             , NoReturn
             )
 
-        ( CollectionMsg subMsg, CollectionModel subModel ) ->
+        ( CollectionMsg subMsg, CollectionModel subModel, _ ) ->
             let
                 ( subModel1, subCmd ) =
                     Article.Collection.update subMsg subModel
@@ -149,12 +135,12 @@ update msg model =
             , NoReturn
             )
 
-        ( DirectoryMsg subMsg, DirectoryModel subModel ) ->
+        ( DirectoryMsg subMsg, DirectoryModel subModel, query ) ->
             let
                 ( subModel1, subCmd, documentSelection ) =
                     Article.Directory.update
                         subMsg
-                        model.static
+                        { folder = Query.getFolder query }
                         subModel
             in
             case documentSelection of
@@ -165,14 +151,17 @@ update msg model =
                     )
 
                 Just documentId ->
-                    initDetails model.static.folder documentId
+                    initDetails
+                        (Query.getFolder query)
+                        documentId
                         |> Utils.tupleAddThird NoReturn
 
-        ( FtsMsg subMsg, FtsModel subModel ) ->
+        ( FtsMsg subMsg, FtsModel subModel, Query.FtsQuery ftsQuery ) ->
             let
                 ( subModel1, subCmd, subReturn ) =
                     Article.Fts.update
                         subMsg
+                        { ftsQuery = ftsQuery }
                         subModel
             in
             case subReturn of
@@ -189,10 +178,11 @@ update msg model =
                     )
 
                 Article.Fts.SelectedDocument documentId ->
-                    initDetails model.static.folder documentId
+                    initDetails ftsQuery.folder
+                        documentId
                         |> Utils.tupleAddThird NoReturn
 
-        ( DetailsMsg subMsg, DetailsModel subModel ) ->
+        ( DetailsMsg subMsg, DetailsModel subModel, _ ) ->
             let
                 ( subModel1, subCmd ) =
                     Article.Details.update subMsg subModel
@@ -204,29 +194,35 @@ update msg model =
 
         _ ->
             -- Message doesn't match model; shouldn't never happen
+            -- Or model doesn't match query-context; TODO: Can this happen?
             ( model, Cmd.none, NoReturn )
 
 
-view : Tree.Model -> Model -> Html Msg
-view tree model =
+view : Tree.Model -> Context -> Model -> Html Msg
+view tree context model =
     Html.div []
         [ Html.div
             [ Html.Attributes.class "breadcrumbs" ]
-            [ Tree.viewBreadcrumbs tree model.static.folder.id ]
+            [ Tree.viewBreadcrumbs tree
+                (Query.getFolder context.query |> .id)
+            ]
+
         -- TODO View Query
-        , viewContent model
+        , viewContent context model
         ]
 
 
-viewContent : Model -> Html Msg
-viewContent model =
+viewContent : Context -> Model -> Html Msg
+viewContent context model =
     case model.content of
         EmptyModel subModel ->
             Article.Empty.view subModel
                 |> Html.map EmptyMsg
 
         CollectionModel subModel ->
-            Article.Collection.view model.static subModel
+            Article.Collection.view
+                { folder = Query.getFolder context.query }
+                subModel
                 |> Html.map CollectionMsg
 
         DirectoryModel subModel ->

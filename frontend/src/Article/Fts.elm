@@ -21,9 +21,13 @@ import Query exposing (Query)
 import Utils
 
 
-type alias Model =
+type alias Context =
     { ftsQuery : Query.Fts
-    , pageResult : PageResult FtsDocumentResult
+    }
+
+
+type alias Model =
+    { pageResult : PageResult FtsDocumentResult
     , queryFolderCounts : Bool
     }
 
@@ -41,23 +45,23 @@ type Return
     | FolderCounts FolderCounts
 
 
-init : Query.Fts -> ( Model, Cmd Msg )
-init ftsQuery =
+init : Context -> ( Model, Cmd Msg )
+init context =
     let
         model =
-            { ftsQuery = ftsQuery
-            , pageResult = Page.initialPageResult
+            { pageResult = Page.initialPageResult
             , queryFolderCounts = True
             }
     in
     update
         (PickPosition Page.First)
+        context
         model
         |> Utils.tupleRemoveThird
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, Return )
-update msg model =
+update : Msg -> Context -> Model -> ( Model, Cmd Msg, Return )
+update msg context model =
     case msg of
         PickPosition paginationPosition ->
             ( { model
@@ -68,7 +72,7 @@ update msg model =
                 (Api.queryFtsPage
                     model.pageResult.page
                     paginationPosition
-                    model.ftsQuery
+                    context.ftsQuery
                 )
             , NoReturn
             )
@@ -82,7 +86,7 @@ update msg model =
                 Api.makeRequest
                     ApiResponseFtsFolderCounts
                     (Api.queryFtsFolderCounts
-                        model.ftsQuery
+                        context.ftsQuery
                     )
 
               else
