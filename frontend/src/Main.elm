@@ -106,8 +106,8 @@ update msg model =
             let
                 ( subModel, subCmd, subReturn ) =
                     Article.update
-                        subMsg
                         { query = model.query }
+                        subMsg
                         model.article
 
                 folderCounts =

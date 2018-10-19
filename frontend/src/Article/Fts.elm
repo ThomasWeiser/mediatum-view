@@ -54,14 +54,14 @@ init context =
             }
     in
     update
-        (PickPosition Page.First)
         context
+        (PickPosition Page.First)
         model
         |> Utils.tupleRemoveThird
 
 
-update : Msg -> Context -> Model -> ( Model, Cmd Msg, Return )
-update msg context model =
+update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
+update context msg model =
     case msg of
         PickPosition paginationPosition ->
             ( { model

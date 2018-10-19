@@ -42,17 +42,17 @@ init context =
             { pageResult = Page.initialPageResult }
     in
     update
-        (PickPosition Pagination.First)
         context
+        (PickPosition Pagination.First)
         model
         |> Utils.tupleRemoveThird
 
 
-update : Msg -> Context -> Model -> ( Model, Cmd Msg, Maybe DocumentId )
-update msg context model =
+update : Context -> Msg -> Model -> ( Model, Cmd Msg, Maybe DocumentId )
+update context msg model =
     case msg of
         PickPosition position ->
-            sendSearchQuery position context model
+            sendSearchQuery context position model
                 |> Utils.tupleAddThird Nothing
 
         ApiResponse result ->
@@ -67,8 +67,8 @@ update msg context model =
             ( model, Cmd.none, Just id )
 
 
-sendSearchQuery : Pagination.Position -> Context -> Model -> ( Model, Cmd Msg )
-sendSearchQuery paginationPosition context model =
+sendSearchQuery : Context -> Pagination.Position -> Model -> ( Model, Cmd Msg )
+sendSearchQuery context paginationPosition model =
     ( { model
         | pageResult = Page.loadingPageResult model.pageResult
       }

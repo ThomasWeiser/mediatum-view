@@ -112,8 +112,8 @@ initDetails folder id =
     )
 
 
-update : Msg -> Context -> Model -> ( Model, Cmd Msg, Return )
-update msg context model =
+update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
+update context msg model =
     case ( msg, model.content, context.query ) of
         ( EmptyMsg subMsg, EmptyModel subModel, _ ) ->
             let
@@ -139,8 +139,8 @@ update msg context model =
             let
                 ( subModel1, subCmd, documentSelection ) =
                     Article.Directory.update
-                        subMsg
                         { folder = Query.getFolder query }
+                        subMsg
                         subModel
             in
             case documentSelection of
@@ -160,8 +160,8 @@ update msg context model =
             let
                 ( subModel1, subCmd, subReturn ) =
                     Article.Fts.update
-                        subMsg
                         { ftsQuery = ftsQuery }
+                        subMsg
                         subModel
             in
             case subReturn of
