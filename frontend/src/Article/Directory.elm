@@ -1,7 +1,6 @@
 module Article.Directory exposing
     ( Model
     , Msg
-    , Specification
     , init
     , update
     , view
@@ -26,13 +25,8 @@ type alias Context =
 
 
 type alias Model =
-    { specification : Specification
-    , pageResult : PageResult Document
+    { pageResult : PageResult Document
     }
-
-
-type alias Specification =
-    ()
 
 
 type Msg
@@ -41,13 +35,11 @@ type Msg
     | SelectDocument DocumentId
 
 
-init : Context -> Specification -> ( Model, Cmd Msg )
-init context specification =
+init : Context -> ( Model, Cmd Msg )
+init context =
     let
         model =
-            { specification = specification
-            , pageResult = Page.initialPageResult
-            }
+            { pageResult = Page.initialPageResult }
     in
     update
         (PickPosition Pagination.First)
