@@ -206,8 +206,7 @@ view tree context model =
             [ Tree.viewBreadcrumbs tree
                 (Query.getFolder context.query |> .id)
             ]
-
-        -- TODO View Query
+        , Query.view context.query
         , viewContent context model
         ]
 
