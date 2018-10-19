@@ -130,15 +130,26 @@ update msg model =
                 Just selectedFolder ->
                     let
                         query =
-                            Query.FtsQuery
-                                { folder = selectedFolder
-                                , options = model.searchOptions
-                                , searchTerm = model.searchTerm
-                                , filters = Query.exampleFilters
-                                }
+                            if model.searchTerm == "" then
+                                Query.DirectoryQuery
+                                    { folder = selectedFolder
+                                    , filters = Query.exampleFilters
+                                    }
+
+                            else
+                                Query.FtsQuery
+                                    { folder = selectedFolder
+                                    , filters = Query.exampleFilters
+                                    , options = model.searchOptions
+                                    , searchTerm = model.searchTerm
+                                    }
 
                         ( articleModel, articleCmd ) =
-                            Article.initWithQuery query
+                            if model.searchTerm == "" && selectedFolder.isCollection then
+                                Article.initCollection selectedFolder
+
+                            else
+                                Article.initWithQuery query
                     in
                     ( { model
                         | query = query

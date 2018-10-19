@@ -1,19 +1,18 @@
 module Query exposing
-    ( FtsOptions
+    ( Fts
+    , FtsOptions
     , FtsSearchDomain(..)
     , FtsSearchLanguage(..)
-    , Fts
     , Query(..)
     , emptyQuery
     , exampleFilters
+    , filtersToAttributeTests
     , ftsOptionsDomainToString
     , ftsOptionsFromLabel
     , ftsOptionsLanguageToString
     , ftsOptionsToLabel
-    , filtersToAttributeTests
     , getFilters
     , getFolder
-    , isFts
     , view
     )
 
@@ -31,7 +30,14 @@ exampleFilters =
 
 
 type Query
-    = FtsQuery Fts
+    = DirectoryQuery Directory
+    | FtsQuery Fts
+
+
+type alias Directory =
+    { folder : Folder
+    , filters : List Filter
+    }
 
 
 type alias Fts =
@@ -60,18 +66,21 @@ type FtsSearchLanguage
 
 emptyQuery : Query
 emptyQuery =
-  FtsQuery
-    { folder = Folder.dummy
-    , filters = []
-    , options = { domain = SearchAttributes, language = English }
-    , searchTerm = ""
-    }
+    FtsQuery
+        { folder = Folder.dummy
+        , filters = []
+        , options = { domain = SearchAttributes, language = English }
+        , searchTerm = ""
+        }
 
 
 getFolder : Query -> Folder
 getFolder query =
     case query of
         FtsQuery { folder } ->
+            folder
+
+        DirectoryQuery { folder } ->
             folder
 
 
@@ -81,12 +90,8 @@ getFilters query =
         FtsQuery { filters } ->
             filters
 
-
-isFts : Query -> Bool
-isFts query =
-    case query of
-        FtsQuery { searchTerm } ->
-            searchTerm /= ""
+        DirectoryQuery { filters } ->
+            filters
 
 
 view : Query -> Html msg
@@ -100,18 +105,17 @@ view query =
 viewSearch : Query -> Html msg
 viewSearch query =
     Html.div [] <|
-        if not (isFts query) then
-            [ Html.span [] [ Html.text "All Documents" ] ]
+        case query of
+            DirectoryQuery _ ->
+                [ Html.span [] [ Html.text "All Documents" ] ]
 
-        else
-            case query of
-                FtsQuery { options, searchTerm } ->
-                    [ Html.span [] [ Html.text "Search " ]
-                    , Html.span [] [ Html.text (ftsOptionsToLabel options) ]
-                    , Html.span [] [ Html.text ": \"" ]
-                    , Html.span [] [ Html.text searchTerm ]
-                    , Html.span [] [ Html.text "\"" ]
-                    ]
+            FtsQuery { options, searchTerm } ->
+                [ Html.span [] [ Html.text "Search " ]
+                , Html.span [] [ Html.text (ftsOptionsToLabel options) ]
+                , Html.span [] [ Html.text ": \"" ]
+                , Html.span [] [ Html.text searchTerm ]
+                , Html.span [] [ Html.text "\"" ]
+                ]
 
 
 viewFilters : List Filter -> Html msg

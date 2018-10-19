@@ -2,6 +2,7 @@ module Article exposing
     ( Model
     , Msg
     , Return(..)
+    , initCollection
     , initEmpty
     , initWithQuery
     , update
@@ -66,39 +67,36 @@ initEmpty _ =
 
 initWithQuery : Query -> ( Model, Cmd Msg )
 initWithQuery query =
-    if not (Query.isFts query) then
-        if .isCollection (Query.getFolder query) then
-            let
-                ( subModel, subCmd ) =
-                    Article.Collection.init ()
-            in
-            ( { content = CollectionModel subModel }
-            , Cmd.map CollectionMsg subCmd
-            )
-
-        else
+    case query of
+        Query.DirectoryQuery directoryQuery ->
             let
                 ( subModel, subCmd ) =
                     Article.Directory.init
-                        { folder = Query.getFolder query }
+                        { folder = directoryQuery.folder }
             in
             ( { content = DirectoryModel subModel }
             , Cmd.map DirectoryMsg subCmd
             )
 
-    else
-        let
-            ftsQuery =
-                case query of
-                    Query.FtsQuery fts ->
-                        fts
+        Query.FtsQuery ftsQuery ->
+            let
+                ( subModel, subCmd ) =
+                    Article.Fts.init { ftsQuery = ftsQuery }
+            in
+            ( { content = FtsModel subModel }
+            , Cmd.map FtsMsg subCmd
+            )
 
-            ( subModel, subCmd ) =
-                Article.Fts.init { ftsQuery = ftsQuery }
-        in
-        ( { content = FtsModel subModel }
-        , Cmd.map FtsMsg subCmd
-        )
+
+initCollection : Folder -> ( Model, Cmd Msg )
+initCollection folder =
+    let
+        ( subModel, subCmd ) =
+            Article.Collection.init ()
+    in
+    ( { content = CollectionModel subModel }
+    , Cmd.map CollectionMsg subCmd
+    )
 
 
 initDetails : Folder -> DocumentId -> ( Model, Cmd Msg )
