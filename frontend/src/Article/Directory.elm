@@ -78,7 +78,7 @@ sendSearchQuery context paginationPosition model =
         (Api.queryFolderDocuments
             model.pageResult.page
             paginationPosition
-            context.directoryQuery.folder.id
+            context.directoryQuery
         )
     )
 

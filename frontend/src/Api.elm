@@ -136,15 +136,20 @@ folderNodeWithSubfolders =
 queryFolderDocuments :
     Maybe (Pagination.Relay.Page.Page Document)
     -> Pagination.Relay.Pagination.Position
-    -> FolderId
+    -> Query.Directory
     -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-queryFolderDocuments referencePage paginationPosition folderId =
+queryFolderDocuments referencePage paginationPosition directoryQuery =
     Graphql.Query.selection identity
         |> with
             (Graphql.Query.allDocuments
                 ((\optionals ->
                     { optionals
-                        | folderId = Present (Folder.idToInt folderId)
+                        | folderId = directoryQuery.folder |> .id |> Folder.idToInt |> Present
+                        , attributeTests =
+                            directoryQuery.filters
+                                |> Query.filtersToAttributeTests
+                                |> Query.Attribute.testsAsGraphqlArgument
+                                |> Present
                     }
                  )
                     >> Pagination.Relay.Pagination.paginationArguments
