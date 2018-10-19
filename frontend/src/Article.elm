@@ -2,7 +2,6 @@ module Article exposing
     ( Model
     , Msg
     , Return(..)
-    , initCollection
     , initEmpty
     , initWithQuery
     , update
@@ -68,6 +67,25 @@ initEmpty _ =
 initWithQuery : Query -> ( Model, Cmd Msg )
 initWithQuery query =
     case query of
+        Query.CollectionQuery collectionQuery ->
+            let
+                ( subModel, subCmd ) =
+                    Article.Collection.init ()
+            in
+            ( { content = CollectionModel subModel }
+            , Cmd.map CollectionMsg subCmd
+            )
+
+        Query.DetailsQuery detailsQuery ->
+            let
+                ( subModel, subCmd ) =
+                    Article.Details.init <|
+                        { detailsQuery = detailsQuery }
+            in
+            ( { content = DetailsModel subModel }
+            , Cmd.map DetailsMsg subCmd
+            )
+
         Query.DirectoryQuery directoryQuery ->
             let
                 ( subModel, subCmd ) =
@@ -88,22 +106,14 @@ initWithQuery query =
             )
 
 
-initCollection : Folder -> ( Model, Cmd Msg )
-initCollection folder =
-    let
-        ( subModel, subCmd ) =
-            Article.Collection.init ()
-    in
-    ( { content = CollectionModel subModel }
-    , Cmd.map CollectionMsg subCmd
-    )
-
-
 initDetails : Folder -> DocumentId -> ( Model, Cmd Msg )
 initDetails folder id =
     let
         ( subModel, subCmd ) =
-            Article.Details.init id
+            Article.Details.init <|
+                { detailsQuery =
+                    { folder = folder, documentId = id }
+                }
     in
     ( { content = DetailsModel subModel }
     , Cmd.map DetailsMsg subCmd
@@ -218,7 +228,11 @@ viewContent context model =
 
         CollectionModel subModel ->
             Article.Collection.view
-                { folder = Query.getFolder context.query }
+                { -- TODO: We construct a synthetic collectionQuery here.
+                  --       We should probably use the one from context.query
+                  collectionQuery =
+                    { folder = Query.getFolder context.query }
+                }
                 subModel
                 |> Html.map CollectionMsg
 

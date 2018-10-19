@@ -9,10 +9,11 @@ module Article.Collection exposing
 
 import Folder exposing (Folder)
 import Html exposing (Html)
+import Query
 
 
 type alias Context =
-    { folder : Folder
+    { collectionQuery : Query.Collection
     }
 
 
@@ -40,13 +41,13 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.div []
         [ Html.h3 [] <|
-            if Folder.isRoot context.folder then
+            if Folder.isRoot context.collectionQuery.folder then
                 [ Html.text "Front page for root of all collections"
                 ]
 
             else
                 [ Html.text "Front page for collection \""
-                , Html.text context.folder.name
+                , Html.text context.collectionQuery.folder.name
                 , Html.text "\""
                 ]
         ]

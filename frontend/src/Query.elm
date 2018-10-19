@@ -1,5 +1,7 @@
 module Query exposing
-    ( Directory
+    ( Collection
+    , Details
+    , Directory
     , Fts
     , FtsOptions
     , FtsSearchDomain(..)
@@ -12,11 +14,11 @@ module Query exposing
     , ftsOptionsFromLabel
     , ftsOptionsLanguageToString
     , ftsOptionsToLabel
-    , getFilters
     , getFolder
     , view
     )
 
+import Document exposing (DocumentId)
 import Folder exposing (Folder, FolderCounts)
 import Html exposing (Html)
 import Query.Attribute
@@ -31,8 +33,21 @@ exampleFilters =
 
 
 type Query
-    = DirectoryQuery Directory
+    = CollectionQuery Collection
+    | DetailsQuery Details
+    | DirectoryQuery Directory
     | FtsQuery Fts
+
+
+type alias Collection =
+    { folder : Folder
+    }
+
+
+type alias Details =
+    { folder : Folder
+    , documentId : DocumentId
+    }
 
 
 type alias Directory =
@@ -78,44 +93,44 @@ emptyQuery =
 getFolder : Query -> Folder
 getFolder query =
     case query of
-        FtsQuery { folder } ->
+        CollectionQuery { folder } ->
+            folder
+
+        DetailsQuery { folder } ->
             folder
 
         DirectoryQuery { folder } ->
             folder
 
-
-getFilters : Query -> List Filter
-getFilters query =
-    case query of
-        FtsQuery { filters } ->
-            filters
-
-        DirectoryQuery { filters } ->
-            filters
+        FtsQuery { folder } ->
+            folder
 
 
 view : Query -> Html msg
 view query =
-    Html.div []
-        [ viewSearch query
-        , viewFilters (getFilters query)
-        ]
-
-
-viewSearch : Query -> Html msg
-viewSearch query =
     Html.div [] <|
         case query of
-            DirectoryQuery _ ->
-                [ Html.span [] [ Html.text "All Documents" ] ]
+            CollectionQuery _ ->
+                []
 
-            FtsQuery { options, searchTerm } ->
-                [ Html.span [] [ Html.text "Search " ]
-                , Html.span [] [ Html.text (ftsOptionsToLabel options) ]
-                , Html.span [] [ Html.text ": \"" ]
-                , Html.span [] [ Html.text searchTerm ]
-                , Html.span [] [ Html.text "\"" ]
+            DetailsQuery _ ->
+                []
+
+            DirectoryQuery { filters } ->
+                [ Html.div []
+                    [ Html.span [] [ Html.text "All Documents" ] ]
+                , viewFilters filters
+                ]
+
+            FtsQuery { filters, options, searchTerm } ->
+                [ Html.div []
+                    [ Html.span [] [ Html.text "Search " ]
+                    , Html.span [] [ Html.text (ftsOptionsToLabel options) ]
+                    , Html.span [] [ Html.text ": \"" ]
+                    , Html.span [] [ Html.text searchTerm ]
+                    , Html.span [] [ Html.text "\"" ]
+                    ]
+                , viewFilters filters
                 ]
 
 

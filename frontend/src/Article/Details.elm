@@ -1,5 +1,6 @@
 module Article.Details exposing
-    ( Model
+    ( Context
+    , Model
     , Msg
     , init
     , update
@@ -13,6 +14,12 @@ import Html exposing (Html)
 import Html.Attributes
 import Icons
 import Maybe.Extra
+import Query
+
+
+type alias Context =
+    { detailsQuery : Query.Details
+    }
 
 
 type Model
@@ -26,10 +33,10 @@ type Msg
     = ApiResponse DocumentId (Api.Response (Maybe Document))
 
 
-init : DocumentId -> ( Model, Cmd Msg )
-init id =
+init : Context -> ( Model, Cmd Msg )
+init context =
     ( Loading
-    , sendDocumentQuery id
+    , sendDocumentQuery context.detailsQuery.documentId
     )
 
 
