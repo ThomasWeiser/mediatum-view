@@ -16,11 +16,12 @@ import Html.Events
 import Icons
 import Pagination.Relay.Page as Page exposing (Page, PageResult)
 import Pagination.Relay.Pagination as Pagination
+import Query
 import Utils
 
 
 type alias Context =
-    { folder : Folder
+    { directoryQuery : Query.Directory
     }
 
 
@@ -77,7 +78,7 @@ sendSearchQuery context paginationPosition model =
         (Api.queryFolderDocuments
             model.pageResult.page
             paginationPosition
-            context.folder.id
+            context.directoryQuery.folder.id
         )
     )
 

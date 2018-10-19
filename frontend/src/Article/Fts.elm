@@ -17,7 +17,7 @@ import Html.Attributes
 import Html.Events
 import Icons
 import Pagination.Offset.Page as Page exposing (Page, PageResult)
-import Query exposing (Query)
+import Query
 import Utils
 
 

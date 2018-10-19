@@ -72,7 +72,7 @@ initWithQuery query =
             let
                 ( subModel, subCmd ) =
                     Article.Directory.init
-                        { folder = directoryQuery.folder }
+                        { directoryQuery = directoryQuery }
             in
             ( { content = DirectoryModel subModel }
             , Cmd.map DirectoryMsg subCmd
@@ -133,11 +133,11 @@ update context msg model =
             , NoReturn
             )
 
-        ( DirectoryMsg subMsg, DirectoryModel subModel, query ) ->
+        ( DirectoryMsg subMsg, DirectoryModel subModel, Query.DirectoryQuery directoryQuery ) ->
             let
                 ( subModel1, subCmd, documentSelection ) =
                     Article.Directory.update
-                        { folder = Query.getFolder query }
+                        { directoryQuery = directoryQuery }
                         subMsg
                         subModel
             in
@@ -150,7 +150,7 @@ update context msg model =
 
                 Just documentId ->
                     initDetails
-                        (Query.getFolder query)
+                        directoryQuery.folder
                         documentId
                         |> Utils.tupleAddThird NoReturn
 

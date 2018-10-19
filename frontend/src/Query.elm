@@ -1,5 +1,6 @@
 module Query exposing
-    ( Fts
+    ( Directory
+    , Fts
     , FtsOptions
     , FtsSearchDomain(..)
     , FtsSearchLanguage(..)
