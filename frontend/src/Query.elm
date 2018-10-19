@@ -4,6 +4,7 @@ module Query exposing
     , FtsSearchLanguage(..)
     , Fts
     , Query(..)
+    , emptyQuery
     , exampleFilters
     , ftsOptionsDomainToString
     , ftsOptionsFromLabel
@@ -55,6 +56,16 @@ type FtsSearchDomain
 type FtsSearchLanguage
     = English
     | German
+
+
+emptyQuery : Query
+emptyQuery =
+  FtsQuery
+    { folder = Folder.dummy
+    , filters = []
+    , options = { domain = SearchAttributes, language = English }
+    , searchTerm = ""
+    }
 
 
 getFolder : Query -> Folder

@@ -2,7 +2,7 @@ module Article exposing
     ( Model
     , Msg
     , Return(..)
-    , initCollectionOrSearch
+    , initWithQuery
     , initEmpty
     , update
     , view
@@ -67,8 +67,8 @@ initEmpty _ =
     )
 
 
-initCollectionOrSearch : Query -> ( Model, Cmd Msg )
-initCollectionOrSearch query =
+initWithQuery : Query -> ( Model, Cmd Msg )
+initWithQuery query =
     let
         static =
             { folder = Query.getFolder query }

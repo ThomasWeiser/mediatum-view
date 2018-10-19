@@ -17,6 +17,7 @@ import Utils
 type alias Model =
     { searchOptions : Query.FtsOptions
     , searchTerm : String
+    , query : Query
     , tree : Tree.Model
     , folderCounts : FolderCounts
     , article : Article.Model
@@ -59,6 +60,7 @@ init _ =
         model =
             { searchOptions = initialSearchType
             , searchTerm = ""
+            , query = Query.emptyQuery
             , tree = treeModel
             , folderCounts = Dict.empty
             , article = articleModel
@@ -124,17 +126,20 @@ update msg model =
             case model.tree |> Tree.selectedFolder of
                 Just selectedFolder ->
                     let
+                        query =
+                            Query.FtsQuery
+                                { folder = selectedFolder
+                                , options = model.searchOptions
+                                , searchTerm = model.searchTerm
+                                , filters = Query.exampleFilters
+                                }
+
                         ( articleModel, articleCmd ) =
-                            Article.initCollectionOrSearch <|
-                                Query.FtsQuery
-                                    { folder = selectedFolder
-                                    , options = model.searchOptions
-                                    , searchTerm = model.searchTerm
-                                    , filters = Query.exampleFilters
-                                    }
+                            Article.initWithQuery query
                     in
                     ( { model
-                        | article = articleModel
+                        | query = query
+                        , article = articleModel
                         , folderCounts = Dict.empty
                       }
                     , Cmd.map ArticleMsg articleCmd
