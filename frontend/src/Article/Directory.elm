@@ -1,12 +1,14 @@
 module Article.Directory exposing
     ( Model
     , Msg
+    , Return(..)
     , init
     , update
     , view
     )
 
 import Api
+import Article.Iterator as Iterator
 import Document exposing (Document, DocumentId)
 import Folder exposing (Folder)
 import Graphql.Extra
@@ -25,8 +27,14 @@ type alias Context =
     }
 
 
+type Return
+    = NoReturn {- | FolderCounts FolderCounts -}
+    | ShowDocument DocumentId
+
+
 type alias Model =
     { pageResult : PageResult Document
+    , iterator : Maybe Iterator.Model
     }
 
 
@@ -34,13 +42,16 @@ type Msg
     = ApiResponse (Api.Response (Page Document))
     | PickPosition Pagination.Position
     | SelectDocument DocumentId
+    | IteratorMsg Iterator.Msg
 
 
 init : Context -> ( Model, Cmd Msg )
 init context =
     let
         model =
-            { pageResult = Page.initialPageResult }
+            { pageResult = Page.initialPageResult
+            , iterator = Nothing
+            }
     in
     update
         context
@@ -49,23 +60,66 @@ init context =
         |> Utils.tupleRemoveThird
 
 
-update : Context -> Msg -> Model -> ( Model, Cmd Msg, Maybe DocumentId )
+update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
         PickPosition position ->
             sendSearchQuery context position model
-                |> Utils.tupleAddThird Nothing
+                |> Utils.tupleAddThird NoReturn
 
         ApiResponse result ->
             ( { model
                 | pageResult = Page.updatePageResultFromResult result model.pageResult
               }
             , Cmd.none
-            , Nothing
+            , NoReturn
             )
 
         SelectDocument id ->
-            ( model, Cmd.none, Just id )
+            let
+                ( subModel, subCmd ) =
+                    Iterator.init
+                        { folder = context.directoryQuery.folder
+                        , idList = [] -- TODO
+                        }
+                        id
+            in
+            ( { model | iterator = Just subModel }
+            , subCmd |> Cmd.map IteratorMsg
+            , NoReturn
+            )
+
+        IteratorMsg subMsg ->
+            case model.iterator of
+                Nothing ->
+                    ( model, Cmd.none, NoReturn )
+
+                Just iterator ->
+                    let
+                        ( subModel, subCmd, subReturn ) =
+                            Iterator.update
+                                { folder = context.directoryQuery.folder
+                                , idList = [] -- TODO
+                                }
+                                subMsg
+                                iterator
+                    in
+                    ( { model
+                        | iterator =
+                            if subReturn == Iterator.CloseIterator then
+                                Nothing
+
+                            else
+                                Just subModel
+                      }
+                    , Cmd.map IteratorMsg subCmd
+                    , case subReturn of
+                        Iterator.ShowDocument id ->
+                            ShowDocument id
+
+                        _ ->
+                            NoReturn
+                    )
 
 
 sendSearchQuery : Context -> Pagination.Position -> Model -> ( Model, Cmd Msg )
@@ -108,6 +162,12 @@ view model =
 
             Just error ->
                 viewError error
+        , case model.iterator of
+            Nothing ->
+                Html.text ""
+
+            Just iterator ->
+                Iterator.view iterator |> Html.map IteratorMsg
         ]
 
 

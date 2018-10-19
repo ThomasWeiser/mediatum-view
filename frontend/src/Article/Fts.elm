@@ -8,6 +8,7 @@ module Article.Fts exposing
     )
 
 import Api
+import Article.Iterator as Iterator
 import Document exposing (Document, DocumentId)
 import Folder exposing (Folder, FolderCounts)
 import FtsDocumentResult exposing (FtsDocumentResult)
@@ -26,9 +27,16 @@ type alias Context =
     }
 
 
+type Return
+    = NoReturn
+    | ShowDocument DocumentId
+    | FolderCounts FolderCounts
+
+
 type alias Model =
     { pageResult : PageResult FtsDocumentResult
     , queryFolderCounts : Bool
+    , iterator : Maybe Iterator.Model
     }
 
 
@@ -37,12 +45,7 @@ type Msg
     | ApiResponseFtsFolderCounts (Api.Response FolderCounts)
     | PickPosition Page.Position
     | SelectDocument DocumentId
-
-
-type Return
-    = NoReturn
-    | SelectedDocument DocumentId
-    | FolderCounts FolderCounts
+    | IteratorMsg Iterator.Msg
 
 
 init : Context -> ( Model, Cmd Msg )
@@ -51,6 +54,7 @@ init context =
         model =
             { pageResult = Page.initialPageResult
             , queryFolderCounts = True
+            , iterator = Nothing
             }
     in
     update
@@ -108,7 +112,50 @@ update context msg model =
             )
 
         SelectDocument id ->
-            ( model, Cmd.none, SelectedDocument id )
+            let
+                ( subModel, subCmd ) =
+                    Iterator.init
+                        { folder = context.ftsQuery.folder
+                        , idList = [] -- TODO
+                        }
+                        id
+            in
+            ( { model | iterator = Just subModel }
+            , subCmd |> Cmd.map IteratorMsg
+            , NoReturn
+            )
+
+        IteratorMsg subMsg ->
+            case model.iterator of
+                Nothing ->
+                    ( model, Cmd.none, NoReturn )
+
+                Just iterator ->
+                    let
+                        ( subModel, subCmd, subReturn ) =
+                            Iterator.update
+                                { folder = context.ftsQuery.folder
+                                , idList = [] -- TODO
+                                }
+                                subMsg
+                                iterator
+                    in
+                    ( { model
+                        | iterator =
+                            if subReturn == Iterator.CloseIterator then
+                                Nothing
+
+                            else
+                                Just subModel
+                      }
+                    , Cmd.map IteratorMsg subCmd
+                    , case subReturn of
+                        Iterator.ShowDocument id ->
+                            ShowDocument id
+
+                        _ ->
+                            NoReturn
+                    )
 
 
 view : Model -> Html Msg
@@ -134,6 +181,12 @@ view model =
 
             Just error ->
                 viewError error
+        , case model.iterator of
+            Nothing ->
+                Html.text ""
+
+            Just iterator ->
+                Iterator.view iterator |> Html.map IteratorMsg
         ]
 
 

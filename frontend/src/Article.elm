@@ -27,6 +27,11 @@ type alias Context =
     }
 
 
+type Return
+    = NoReturn
+    | FolderCounts FolderCounts
+
+
 type alias Model =
     { content : Content
     }
@@ -46,11 +51,6 @@ type Msg
     | DirectoryMsg Article.Directory.Msg
     | FtsMsg Article.Fts.Msg
     | DetailsMsg Article.Details.Msg
-
-
-type Return
-    = NoReturn
-    | FolderCounts FolderCounts
 
 
 initEmpty : () -> ( Model, Cmd Msg )
@@ -152,13 +152,13 @@ update context msg model =
                         subModel
             in
             case documentSelection of
-                Nothing ->
+                Article.Directory.NoReturn ->
                     ( { model | content = DirectoryModel subModel1 }
                     , Cmd.map DirectoryMsg subCmd
                     , NoReturn
                     )
 
-                Just documentId ->
+                Article.Directory.ShowDocument documentId ->
                     initDetails
                         directoryQuery.folder
                         documentId
@@ -185,7 +185,7 @@ update context msg model =
                     , FolderCounts folderCounts
                     )
 
-                Article.Fts.SelectedDocument documentId ->
+                Article.Fts.ShowDocument documentId ->
                     initDetails ftsQuery.folder
                         documentId
                         |> Utils.tupleAddThird NoReturn
