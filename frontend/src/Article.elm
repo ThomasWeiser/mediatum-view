@@ -30,6 +30,7 @@ type alias Context =
 type Return
     = NoReturn
     | FolderCounts FolderCounts
+    | SetQuery Query
 
 
 type alias Model =
@@ -159,10 +160,14 @@ update context msg model =
                     )
 
                 Article.Directory.ShowDocument documentId ->
-                    initDetails
-                        directoryQuery.folder
-                        documentId
-                        |> Utils.tupleAddThird NoReturn
+                    ( model
+                    , Cmd.none
+                    , SetQuery <|
+                        Query.DetailsQuery
+                            { folder = directoryQuery.folder
+                            , documentId = documentId
+                            }
+                    )
 
         ( FtsMsg subMsg, FtsModel subModel, Query.FtsQuery ftsQuery ) ->
             let
@@ -186,9 +191,14 @@ update context msg model =
                     )
 
                 Article.Fts.ShowDocument documentId ->
-                    initDetails ftsQuery.folder
-                        documentId
-                        |> Utils.tupleAddThird NoReturn
+                    ( model
+                    , Cmd.none
+                    , SetQuery <|
+                        Query.DetailsQuery
+                            { folder = ftsQuery.folder
+                            , documentId = documentId
+                            }
+                    )
 
         ( DetailsMsg subMsg, DetailsModel subModel, _ ) ->
             let

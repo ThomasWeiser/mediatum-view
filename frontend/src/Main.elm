@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Article
 import Browser
+import Cmd.Extra
 import Dict
 import Folder exposing (FolderCounts)
 import Html exposing (Html)
@@ -109,21 +110,37 @@ update msg model =
                         { query = model.query }
                         subMsg
                         model.article
-
-                folderCounts =
-                    case subReturn of
-                        Article.NoReturn ->
-                            model.folderCounts
-
-                        Article.FolderCounts folderCounts1 ->
-                            folderCounts1
             in
-            ( { model
-                | folderCounts = folderCounts
-                , article = subModel
-              }
-            , Cmd.map ArticleMsg subCmd
+            (case subReturn of
+                Article.SetQuery query ->
+                    let
+                        ( articleModel, articleCmd ) =
+                            Article.initWithQuery query
+                    in
+                    ( { model
+                        | query = query
+                        , article = articleModel
+                        , folderCounts = Dict.empty
+                      }
+                    , Cmd.map ArticleMsg articleCmd
+                    )
+
+                Article.NoReturn ->
+                    ( { model
+                        | article = subModel
+                      }
+                    , Cmd.none
+                    )
+
+                Article.FolderCounts folderCounts1 ->
+                    ( { model
+                        | folderCounts = folderCounts1
+                        , article = subModel
+                      }
+                    , Cmd.none
+                    )
             )
+                |> Cmd.Extra.addCmd (Cmd.map ArticleMsg subCmd)
 
         Submit ->
             case model.tree |> Tree.selectedFolder of
@@ -149,20 +166,26 @@ update msg model =
                                     , options = model.searchOptions
                                     , searchTerm = model.searchTerm
                                     }
-
-                        ( articleModel, articleCmd ) =
-                            Article.initWithQuery query
                     in
-                    ( { model
-                        | query = query
-                        , article = articleModel
-                        , folderCounts = Dict.empty
-                      }
-                    , Cmd.map ArticleMsg articleCmd
-                    )
+                    startQuery query model
 
                 Nothing ->
                     ( model, Cmd.none )
+
+
+startQuery : Query -> Model -> ( Model, Cmd Msg )
+startQuery query model =
+    let
+        ( articleModel, articleCmd ) =
+            Article.initWithQuery query
+    in
+    ( { model
+        | query = query
+        , article = articleModel
+        , folderCounts = Dict.empty
+      }
+    , Cmd.map ArticleMsg articleCmd
+    )
 
 
 andThenUpdate : Msg -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
