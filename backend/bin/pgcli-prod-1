@@ -1,0 +1,3 @@
+#!/bin/sh
+
+pgcli -d mediatum_tu_prod_1 -U mediatum $*
