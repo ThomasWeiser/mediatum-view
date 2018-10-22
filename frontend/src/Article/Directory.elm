@@ -16,6 +16,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
+import Maybe.Extra
 import Pagination.Relay.Page as Page exposing (Page, PageResult)
 import Pagination.Relay.Pagination as Pagination
 import Query
@@ -43,6 +44,14 @@ type Msg
     | PickPosition Pagination.Position
     | SelectDocument DocumentId
     | IteratorMsg Iterator.Msg
+
+
+iteratorContext : Context -> Model -> Iterator.Context Document
+iteratorContext context model =
+    { folder = context.directoryQuery.folder
+    , itemList = Maybe.Extra.unwrap [] Page.entries model.pageResult.page
+    , itemId = .id
+    }
 
 
 init : Context -> ( Model, Cmd Msg )
@@ -79,9 +88,7 @@ update context msg model =
             let
                 ( subModel, subCmd ) =
                     Iterator.init
-                        { folder = context.directoryQuery.folder
-                        , idList = [] -- TODO
-                        }
+                        (iteratorContext context model)
                         id
             in
             ( { model | iterator = Just subModel }
@@ -98,9 +105,7 @@ update context msg model =
                     let
                         ( subModel, subCmd, subReturn ) =
                             Iterator.update
-                                { folder = context.directoryQuery.folder
-                                , idList = [] -- TODO
-                                }
+                                (iteratorContext context model)
                                 subMsg
                                 iterator
                     in
@@ -137,14 +142,12 @@ sendSearchQuery context paginationPosition model =
     )
 
 
-view : Model -> Html Msg
-view model =
+view : Context -> Model -> Html Msg
+view context model =
     Html.div [] <|
         case model.iterator of
             Nothing ->
-                [ Html.div [] <|
-                    [ Html.span [] [ Html.text "All Documents" ] ]
-                , case model.pageResult.page of
+                [ case model.pageResult.page of
                     Nothing ->
                         Html.text ""
 
@@ -167,7 +170,11 @@ view model =
                 ]
 
             Just iterator ->
-                [ Iterator.view iterator |> Html.map IteratorMsg ]
+                [ Iterator.view
+                    (iteratorContext context model)
+                    iterator
+                    |> Html.map IteratorMsg
+                ]
 
 
 viewResponse :

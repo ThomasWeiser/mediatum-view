@@ -11,14 +11,17 @@ module Article.Iterator exposing
 import Article.Details as Details
 import Document exposing (DocumentId)
 import Folder exposing (Folder)
+import FtsDocumentResult exposing (FtsDocumentResult)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Utils
 
 
 type alias Context item =
     { folder : Folder
-    , idList : List item
+    , itemList : List item
+    , itemId : item -> DocumentId
     }
 
 
@@ -78,15 +81,20 @@ update context msg model =
             ( model, Cmd.none, ShowDocument model.currentId )
 
 
-view : Model -> Html Msg
-view model =
+view : Context item -> Model -> Html Msg
+view context model =
     Html.div [ Html.Attributes.class "iterator" ]
         [ Html.button
             [ Html.Events.onClick Show ]
             [ Html.text "Show" ]
         , Html.button
             [ Html.Events.onClick Close ]
-            [ Html.text "Close" ]
+            [ Html.text "All Results" ]
+        , Html.text <|
+            Debug.toString <|
+                Utils.findAdjacent
+                    context.itemList
+                    (\item -> context.itemId item == model.currentId)
         , Details.view model.details
             |> Html.map DetailsMsg
         ]

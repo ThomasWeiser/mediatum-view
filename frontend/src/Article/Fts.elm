@@ -17,6 +17,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
+import Maybe.Extra
 import Pagination.Offset.Page as Page exposing (Page, PageResult)
 import Query
 import Utils
@@ -46,6 +47,14 @@ type Msg
     | PickPosition Page.Position
     | SelectDocument DocumentId
     | IteratorMsg Iterator.Msg
+
+
+iteratorContext : Context -> Model -> Iterator.Context FtsDocumentResult
+iteratorContext context model =
+    { folder = context.ftsQuery.folder
+    , itemList = Maybe.Extra.unwrap [] Page.entries model.pageResult.page
+    , itemId = .document >> .id
+    }
 
 
 init : Context -> ( Model, Cmd Msg )
@@ -115,9 +124,7 @@ update context msg model =
             let
                 ( subModel, subCmd ) =
                     Iterator.init
-                        { folder = context.ftsQuery.folder
-                        , idList = [] -- TODO
-                        }
+                        (iteratorContext context model)
                         id
             in
             ( { model | iterator = Just subModel }
@@ -134,9 +141,7 @@ update context msg model =
                     let
                         ( subModel, subCmd, subReturn ) =
                             Iterator.update
-                                { folder = context.ftsQuery.folder
-                                , idList = [] -- TODO
-                                }
+                                (iteratorContext context model)
                                 subMsg
                                 iterator
                     in
@@ -158,8 +163,8 @@ update context msg model =
                     )
 
 
-view : Model -> Html Msg
-view model =
+view : Context -> Model -> Html Msg
+view context model =
     Html.div [] <|
         case model.iterator of
             Nothing ->
@@ -183,16 +188,13 @@ view model =
 
                     Just error ->
                         viewError error
-                , case model.iterator of
-                    Nothing ->
-                        Html.text ""
-
-                    Just iterator ->
-                        Iterator.view iterator |> Html.map IteratorMsg
                 ]
 
             Just iterator ->
-                [ Iterator.view iterator |> Html.map IteratorMsg
+                [ Iterator.view
+                    (iteratorContext context model)
+                    iterator
+                    |> Html.map IteratorMsg
                 ]
 
 

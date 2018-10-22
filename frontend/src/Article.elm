@@ -222,12 +222,12 @@ view tree context model =
 
 viewContent : Context -> Model -> Html Msg
 viewContent context model =
-    case model.content of
-        EmptyModel subModel ->
+    case ( model.content, context.query ) of
+        ( EmptyModel subModel, _ ) ->
             Article.Empty.view subModel
                 |> Html.map EmptyMsg
 
-        CollectionModel subModel ->
+        ( CollectionModel subModel, _ ) ->
             Article.Collection.view
                 { -- TODO: We construct a synthetic collectionQuery here.
                   --       We should probably use the one from context.query
@@ -237,14 +237,22 @@ viewContent context model =
                 subModel
                 |> Html.map CollectionMsg
 
-        DirectoryModel subModel ->
-            Article.Directory.view subModel
+        ( DirectoryModel subModel, Query.DirectoryQuery directoryQuery ) ->
+            Article.Directory.view
+                { directoryQuery = directoryQuery }
+                subModel
                 |> Html.map DirectoryMsg
 
-        FtsModel subModel ->
-            Article.Fts.view subModel
+        ( FtsModel subModel, Query.FtsQuery ftsQuery ) ->
+            Article.Fts.view
+                { ftsQuery = ftsQuery }
+                subModel
                 |> Html.map FtsMsg
 
-        DetailsModel subModel ->
+        ( DetailsModel subModel, _ ) ->
             Article.Details.view subModel
                 |> Html.map DetailsMsg
+
+        _ ->
+            -- Model doesn't match query-context; TODO: Can this happen?
+            Html.text ""
