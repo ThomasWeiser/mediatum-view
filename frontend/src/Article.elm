@@ -107,20 +107,6 @@ initWithQuery query =
             )
 
 
-initDetails : Folder -> DocumentId -> ( Model, Cmd Msg )
-initDetails folder id =
-    let
-        ( subModel, subCmd ) =
-            Article.Details.init <|
-                { detailsQuery =
-                    { folder = folder, documentId = id }
-                }
-    in
-    ( { content = DetailsModel subModel }
-    , Cmd.map DetailsMsg subCmd
-    )
-
-
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case ( msg, model.content, context.query ) of
