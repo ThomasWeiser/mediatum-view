@@ -184,11 +184,8 @@ view model =
                     [ Html.span [ Html.Attributes.class "title" ]
                         [ Html.text "mediaTUM view" ]
                     , Html.span [ Html.Attributes.class "subtitle" ]
-                        [ Html.text "WIP 2018-10-09" ]
+                        [ Html.text "WIP 2018-10-22" ]
                     ]
-                , Html.div
-                    [ Html.Attributes.class "subtitle" ]
-                    [ Html.text "PostgreSQL · PostGraphile · GraphQL · Elm" ]
                 ]
             , viewSearchControls model
             ]
@@ -196,14 +193,11 @@ view model =
             [ Html.aside []
                 [ Html.map TreeMsg <| Tree.view model.tree model.folderCounts
                 ]
-            , Html.article
-                [ Html.Attributes.class "article" ]
-                [ Html.map ArticleMsg <|
-                    Article.view
-                        model.tree
-                        { query = model.query }
-                        model.article
-                ]
+            , Html.map ArticleMsg <|
+                Article.view
+                    model.tree
+                    { query = model.query }
+                    model.article
             ]
         ]
 

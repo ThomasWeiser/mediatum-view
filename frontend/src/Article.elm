@@ -208,7 +208,8 @@ update context msg model =
 
 view : Tree.Model -> Context -> Model -> Html Msg
 view tree context model =
-    Html.div []
+    Html.article
+        [ Html.Attributes.class "article" ]
         [ Html.div
             [ Html.Attributes.class "breadcrumbs" ]
             [ Tree.viewBreadcrumbs tree
