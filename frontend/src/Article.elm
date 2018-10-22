@@ -18,6 +18,7 @@ import Folder exposing (Folder, FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Query exposing (Query)
+import Query.Filter exposing (Filter)
 import Tree
 import Utils
 
@@ -30,7 +31,7 @@ type alias Context =
 type Return
     = NoReturn
     | FolderCounts FolderCounts
-    | SetQuery Query
+    | MapQuery (Query -> Query)
 
 
 type alias Model =
@@ -52,6 +53,7 @@ type Msg
     | DirectoryMsg Article.Directory.Msg
     | FtsMsg Article.Fts.Msg
     | DetailsMsg Article.Details.Msg
+    | QueryMsg Query.Msg
 
 
 initEmpty : () -> ( Model, Cmd Msg )
@@ -110,6 +112,13 @@ initWithQuery query =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case ( msg, model.content, context.query ) of
+        ( QueryMsg subMsg, _, _ ) ->
+            ( model
+            , Cmd.none
+            , MapQuery
+                (Query.update subMsg)
+            )
+
         ( EmptyMsg subMsg, EmptyModel subModel, _ ) ->
             let
                 ( subModel1, subCmd ) =
@@ -148,11 +157,12 @@ update context msg model =
                 Article.Directory.ShowDocument documentId ->
                     ( model
                     , Cmd.none
-                    , SetQuery <|
-                        Query.DetailsQuery
-                            { folder = directoryQuery.folder
-                            , documentId = documentId
-                            }
+                    , MapQuery <|
+                        always <|
+                            Query.DetailsQuery
+                                { folder = directoryQuery.folder
+                                , documentId = documentId
+                                }
                     )
 
         ( FtsMsg subMsg, FtsModel subModel, Query.FtsQuery ftsQuery ) ->
@@ -179,11 +189,12 @@ update context msg model =
                 Article.Fts.ShowDocument documentId ->
                     ( model
                     , Cmd.none
-                    , SetQuery <|
-                        Query.DetailsQuery
-                            { folder = ftsQuery.folder
-                            , documentId = documentId
-                            }
+                    , MapQuery <|
+                        always <|
+                            Query.DetailsQuery
+                                { folder = ftsQuery.folder
+                                , documentId = documentId
+                                }
                     )
 
         ( DetailsMsg subMsg, DetailsModel subModel, _ ) ->
@@ -212,6 +223,7 @@ view tree context model =
                 (Query.getFolder context.query |> .id)
             ]
         , Query.view context.query
+            |> Html.map QueryMsg
         , viewContent context model
         ]
 

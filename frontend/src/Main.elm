@@ -110,35 +110,23 @@ update msg model =
                         { query = model.query }
                         subMsg
                         model.article
+
+                model1 =
+                    { model | article = subModel }
             in
             (case subReturn of
-                Article.SetQuery query ->
-                    let
-                        ( articleModel, articleCmd ) =
-                            Article.initWithQuery query
-                    in
-                    ( { model
-                        | query = query
-                        , article = articleModel
-                        , folderCounts = Dict.empty
-                      }
-                    , Cmd.map ArticleMsg articleCmd
-                    )
-
                 Article.NoReturn ->
-                    ( { model
-                        | article = subModel
-                      }
+                    ( model1
                     , Cmd.none
                     )
 
                 Article.FolderCounts folderCounts1 ->
-                    ( { model
-                        | folderCounts = folderCounts1
-                        , article = subModel
-                      }
+                    ( { model1 | folderCounts = folderCounts1 }
                     , Cmd.none
                     )
+
+                Article.MapQuery queryMapping ->
+                    startQuery (queryMapping model1.query) model1
             )
                 |> Cmd.Extra.addCmd (Cmd.map ArticleMsg subCmd)
 
