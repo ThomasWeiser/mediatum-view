@@ -160,34 +160,40 @@ update context msg model =
 
 view : Model -> Html Msg
 view model =
-    Html.div []
-        [ case model.pageResult.page of
+    Html.div [] <|
+        case model.iterator of
             Nothing ->
-                Html.text ""
+                [ case model.pageResult.page of
+                    Nothing ->
+                        Html.text ""
 
-            Just documentPage ->
-                viewResponse
-                    PickPosition
-                    (viewPage (FtsDocumentResult.view SelectDocument))
-                    documentPage
-        , if model.pageResult.loading then
-            Icons.spinner
+                    Just documentPage ->
+                        viewResponse
+                            PickPosition
+                            (viewPage (FtsDocumentResult.view SelectDocument))
+                            documentPage
+                , if model.pageResult.loading then
+                    Icons.spinner
 
-          else
-            Html.text ""
-        , case model.pageResult.error of
-            Nothing ->
-                Html.text ""
+                  else
+                    Html.text ""
+                , case model.pageResult.error of
+                    Nothing ->
+                        Html.text ""
 
-            Just error ->
-                viewError error
-        , case model.iterator of
-            Nothing ->
-                Html.text ""
+                    Just error ->
+                        viewError error
+                , case model.iterator of
+                    Nothing ->
+                        Html.text ""
+
+                    Just iterator ->
+                        Iterator.view iterator |> Html.map IteratorMsg
+                ]
 
             Just iterator ->
-                Iterator.view iterator |> Html.map IteratorMsg
-        ]
+                [ Iterator.view iterator |> Html.map IteratorMsg
+                ]
 
 
 viewResponse :
