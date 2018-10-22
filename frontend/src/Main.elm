@@ -95,13 +95,26 @@ update msg model =
             let
                 ( subModel, subCmd, changedSelection ) =
                     Tree.update subMsg model.tree
+
+                model1 =
+                    { model | tree = subModel }
+
+                maybeSelectedFolder =
+                    Tree.selectedFolder model1.tree
             in
-            ( { model | tree = subModel }
-            , Cmd.map TreeMsg subCmd
+            (case ( changedSelection, maybeSelectedFolder ) of
+                ( True, Just selectedFolder ) ->
+                    startQuery
+                        (Query.setFolder
+                            selectedFolder
+                            model1.query
+                        )
+                        model1
+
+                _ ->
+                    ( model1, Cmd.none )
             )
-                |> Utils.when
-                    (andThenUpdate Submit)
-                    changedSelection
+                |> Cmd.Extra.addCmd (Cmd.map TreeMsg subCmd)
 
         ArticleMsg subMsg ->
             let
