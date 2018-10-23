@@ -3,6 +3,7 @@ module Main exposing (main)
 import Article
 import Browser
 import Cmd.Extra
+import Controls
 import Dict
 import Folder exposing (FolderCounts)
 import Html exposing (Html)
@@ -12,14 +13,12 @@ import Icons
 import Maybe.Extra
 import Query exposing (Query)
 import Tree
-import Utils
 
 
 type alias Model =
-    { searchOptions : Query.FtsOptions
-    , searchTerm : String
-    , query : Query
+    { query : Query
     , tree : Tree.Model
+    , controls : Controls.Model
     , folderCounts : FolderCounts
     , article : Article.Model
     }
@@ -37,32 +36,27 @@ main =
 
 type Msg
     = NoOp
-    | SetSearchTerm String
-    | SetSearchOptions Query.FtsOptions
-    | Submit
     | TreeMsg Tree.Msg
+    | ControlsMsg Controls.Msg
     | ArticleMsg Article.Msg
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     let
-        initialSearchType =
-            Query.FtsOptions
-                Query.SearchFulltext
-                Query.English
-
         ( treeModel, treeCmd ) =
             Tree.init
+
+        controlsModel =
+            Controls.init ()
 
         ( articleModel, articleCmd ) =
             Article.initEmpty ()
 
         model =
-            { searchOptions = initialSearchType
-            , searchTerm = ""
-            , query = Query.emptyQuery
+            { query = Query.emptyQuery
             , tree = treeModel
+            , controls = controlsModel
             , folderCounts = Dict.empty
             , article = articleModel
             }
@@ -80,16 +74,6 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
-
-        SetSearchTerm str ->
-            ( { model | searchTerm = str }
-            , Cmd.none
-            )
-
-        SetSearchOptions searchOptions ->
-            ( { model | searchOptions = searchOptions }
-            , Cmd.none
-            )
 
         TreeMsg subMsg ->
             let
@@ -116,6 +100,26 @@ update msg model =
             )
                 |> Cmd.Extra.addCmd (Cmd.map TreeMsg subCmd)
 
+        ControlsMsg subMsg ->
+            let
+                ( subModel, subCmd, subReturn ) =
+                    Controls.update
+                        { query = model.query }
+                        subMsg
+                        model.controls
+
+                model1 =
+                    { model | controls = subModel }
+            in
+            (case subReturn of
+                Controls.NoReturn ->
+                    ( model1, Cmd.none )
+
+                Controls.MapQuery queryMapping ->
+                    startQuery (queryMapping model1.query) model1
+            )
+                |> Cmd.Extra.addCmd (Cmd.map ControlsMsg subCmd)
+
         ArticleMsg subMsg ->
             let
                 ( subModel, subCmd, subReturn ) =
@@ -129,9 +133,7 @@ update msg model =
             in
             (case subReturn of
                 Article.NoReturn ->
-                    ( model1
-                    , Cmd.none
-                    )
+                    ( model1, Cmd.none )
 
                 Article.FolderCounts folderCounts1 ->
                     ( { model1 | folderCounts = folderCounts1 }
@@ -142,30 +144,6 @@ update msg model =
                     startQuery (queryMapping model1.query) model1
             )
                 |> Cmd.Extra.addCmd (Cmd.map ArticleMsg subCmd)
-
-        Submit ->
-            case model.tree |> Tree.selectedFolder of
-                Just selectedFolder ->
-                    let
-                        query =
-                            if model.searchTerm == "" then
-                                Query.OnFolder
-                                    { folder = selectedFolder
-                                    , filters = Query.exampleFilters
-                                    }
-
-                            else
-                                Query.OnFts
-                                    { folder = selectedFolder
-                                    , filters = Query.exampleFilters
-                                    , options = model.searchOptions
-                                    , searchTerm = model.searchTerm
-                                    }
-                    in
-                    startQuery query model
-
-                Nothing ->
-                    ( model, Cmd.none )
 
 
 startQuery : Query -> Model -> ( Model, Cmd Msg )
@@ -205,7 +183,8 @@ view model =
                         [ Html.text "WIP 2018-10-22" ]
                     ]
                 ]
-            , viewSearchControls model
+            , Controls.view { query = model.query } model.controls
+                |> Html.map ControlsMsg
             ]
         , Html.main_ []
             [ Html.aside []
@@ -217,50 +196,4 @@ view model =
                     { query = model.query }
                     model.article
             ]
-        ]
-
-
-viewSearchControls : Model -> Html Msg
-viewSearchControls model =
-    Html.form
-        [ Html.Attributes.class "search-bar"
-        , Html.Events.onSubmit Submit
-        ]
-        [ Html.select
-            [ Html.Events.onInput
-                (Query.ftsOptionsFromLabel
-                    >> Maybe.Extra.unwrap NoOp SetSearchOptions
-                )
-            ]
-            (List.map
-                (\ftsOptions ->
-                    Html.option
-                        [ Html.Attributes.value
-                            (Query.ftsOptionsToLabel ftsOptions)
-                        , Html.Attributes.selected
-                            (model.searchOptions == ftsOptions)
-                        ]
-                        [ Html.text
-                            (Query.ftsOptionsToLabel ftsOptions)
-                        ]
-                )
-                [ Query.FtsOptions Query.SearchAttributes Query.English
-                , Query.FtsOptions Query.SearchAttributes Query.German
-                , Query.FtsOptions Query.SearchFulltext Query.English
-                , Query.FtsOptions Query.SearchFulltext Query.German
-                ]
-            )
-        , Html.input
-            [ Html.Attributes.class "search-input"
-            , Html.Attributes.type_ "search"
-            , Html.Attributes.placeholder "Search ..."
-            , Html.Attributes.value model.searchTerm
-            , Html.Events.onInput SetSearchTerm
-            ]
-            []
-        , Html.button
-            [ Html.Attributes.type_ "submit"
-            , Html.Attributes.value "Search"
-            ]
-            [ Icons.search ]
         ]
