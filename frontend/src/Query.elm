@@ -5,7 +5,6 @@ module Query exposing
     , FtsQuery
     , FtsSearchDomain(..)
     , FtsSearchLanguage(..)
-    , Msg
     , Query(..)
     , emptyQuery
     , exampleFilters
@@ -18,7 +17,6 @@ module Query exposing
     , getFolder
     , mapFilters
     , setFolder
-    , update
     , view
     )
 
@@ -140,33 +138,23 @@ mapFilters mapping query =
             OnFts { subQuery | filters = mapping subQuery.filters }
 
 
-update : Msg -> Query -> Query
-update msg query =
-    case msg of
-        RemoveFilter index ->
-            mapFilters
-                (List.Extra.removeAt index)
-                query
-
-
-view : Query -> Html Msg
+view : Query -> Html Never
 view query =
     Html.div [] <|
         case query of
             OnDetails _ ->
                 []
 
-            OnFolder { folder, filters } ->
+            OnFolder { folder } ->
                 if folder.isCollection then
                     []
 
                 else
                     [ Html.div []
                         [ Html.span [] [ Html.text "All Documents" ] ]
-                    , viewFilters filters
                     ]
 
-            OnFts { filters, options, searchTerm } ->
+            OnFts { options, searchTerm } ->
                 [ Html.div []
                     [ Html.span [] [ Html.text "Search " ]
                     , Html.span [] [ Html.text (ftsOptionsToLabel options) ]
@@ -174,24 +162,7 @@ view query =
                     , Html.span [] [ Html.text searchTerm ]
                     , Html.span [] [ Html.text "\"" ]
                     ]
-                , viewFilters filters
                 ]
-
-
-viewFilters : List Filter -> Html Msg
-viewFilters filters =
-    Html.div [] <|
-        List.indexedMap
-            (\index filter ->
-                Query.Filter.view filter
-                    |> Html.map
-                        (\filterMsg ->
-                            case filterMsg of
-                                Query.Filter.Remove ->
-                                    RemoveFilter index
-                        )
-            )
-            filters
 
 
 filtersToAttributeTests : List Filter -> List Query.Attribute.Test

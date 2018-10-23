@@ -53,7 +53,6 @@ type Msg
     | DirectoryMsg Article.Directory.Msg
     | FtsMsg Article.Fts.Msg
     | DetailsMsg Article.Details.Msg
-    | QueryMsg Query.Msg
 
 
 initEmpty : () -> ( Model, Cmd Msg )
@@ -113,13 +112,6 @@ initWithQuery query =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case ( msg, model.content, context.query ) of
-        ( QueryMsg subMsg, _, _ ) ->
-            ( model
-            , Cmd.none
-            , MapQuery
-                (Query.update subMsg)
-            )
-
         ( EmptyMsg subMsg, EmptyModel subModel, _ ) ->
             let
                 ( subModel1, subCmd ) =
@@ -224,7 +216,7 @@ view tree context model =
                 (Query.getFolder context.query |> .id)
             ]
         , Query.view context.query
-            |> Html.map QueryMsg
+            |> Html.map never
         , viewContent context model
         ]
 
