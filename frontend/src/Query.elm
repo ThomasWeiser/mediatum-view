@@ -1,9 +1,9 @@
 module Query exposing
-    ( Collection
-    , Details
-    , Directory
-    , Fts
+    ( CollectionQuery
+    , DetailsQuery
+    , DirectoryQuery
     , FtsOptions
+    , FtsQuery
     , FtsSearchDomain(..)
     , FtsSearchLanguage(..)
     , Msg
@@ -38,30 +38,30 @@ exampleFilters =
 
 
 type Query
-    = CollectionQuery Collection
-    | DetailsQuery Details
-    | DirectoryQuery Directory
-    | FtsQuery Fts
+    = OnCollection CollectionQuery
+    | OnDetails DetailsQuery
+    | OnDirectory DirectoryQuery
+    | OnFts FtsQuery
 
 
-type alias Collection =
+type alias CollectionQuery =
     { folder : Folder
     }
 
 
-type alias Details =
+type alias DetailsQuery =
     { folder : Folder
     , documentId : DocumentId
     }
 
 
-type alias Directory =
+type alias DirectoryQuery =
     { folder : Folder
     , filters : List Filter
     }
 
 
-type alias Fts =
+type alias FtsQuery =
     { folder : Folder
     , filters : List Filter
     , options : FtsOptions
@@ -91,71 +91,71 @@ type Msg
 
 emptyQuery : Query
 emptyQuery =
-    CollectionQuery { folder = Folder.dummy }
+    OnCollection { folder = Folder.dummy }
 
 
 getFolder : Query -> Folder
 getFolder query =
     case query of
-        CollectionQuery { folder } ->
+        OnCollection { folder } ->
             folder
 
-        DetailsQuery { folder } ->
+        OnDetails { folder } ->
             folder
 
-        DirectoryQuery { folder } ->
+        OnDirectory { folder } ->
             folder
 
-        FtsQuery { folder } ->
+        OnFts { folder } ->
             folder
 
 
 setFolder : Folder -> Query -> Query
 setFolder folder query =
     case query of
-        CollectionQuery subQuery ->
-            CollectionQuery { subQuery | folder = folder }
+        OnCollection subQuery ->
+            OnCollection { subQuery | folder = folder }
 
-        DetailsQuery subQuery ->
-            DetailsQuery { subQuery | folder = folder }
+        OnDetails subQuery ->
+            OnDetails { subQuery | folder = folder }
 
-        DirectoryQuery subQuery ->
-            DirectoryQuery { subQuery | folder = folder }
+        OnDirectory subQuery ->
+            OnDirectory { subQuery | folder = folder }
 
-        FtsQuery subQuery ->
-            FtsQuery { subQuery | folder = folder }
+        OnFts subQuery ->
+            OnFts { subQuery | folder = folder }
 
 
 getFilters : Query -> Maybe (List Filter)
 getFilters query =
     case query of
-        CollectionQuery { folder } ->
+        OnCollection { folder } ->
             Nothing
 
-        DetailsQuery { folder } ->
+        OnDetails { folder } ->
             Nothing
 
-        DirectoryQuery { filters } ->
+        OnDirectory { filters } ->
             Just filters
 
-        FtsQuery { filters } ->
+        OnFts { filters } ->
             Just filters
 
 
 mapFilters : (List Filter -> List Filter) -> Query -> Query
 mapFilters mapping query =
     case query of
-        CollectionQuery _ ->
+        OnCollection _ ->
             query
 
-        DetailsQuery _ ->
+        OnDetails _ ->
             query
 
-        DirectoryQuery subQuery ->
-            DirectoryQuery { subQuery | filters = mapping subQuery.filters }
+        OnDirectory subQuery ->
+            OnDirectory { subQuery | filters = mapping subQuery.filters }
 
-        FtsQuery subQuery ->
-            FtsQuery { subQuery | filters = mapping subQuery.filters }
+        OnFts subQuery ->
+            OnFts { subQuery | filters = mapping subQuery.filters }
 
 
 update : Msg -> Query -> Query
@@ -171,19 +171,19 @@ view : Query -> Html Msg
 view query =
     Html.div [] <|
         case query of
-            CollectionQuery _ ->
+            OnCollection _ ->
                 []
 
-            DetailsQuery _ ->
+            OnDetails _ ->
                 []
 
-            DirectoryQuery { filters } ->
+            OnDirectory { filters } ->
                 [ Html.div []
                     [ Html.span [] [ Html.text "All Documents" ] ]
                 , viewFilters filters
                 ]
 
-            FtsQuery { filters, options, searchTerm } ->
+            OnFts { filters, options, searchTerm } ->
                 [ Html.div []
                     [ Html.span [] [ Html.text "Search " ]
                     , Html.span [] [ Html.text (ftsOptionsToLabel options) ]

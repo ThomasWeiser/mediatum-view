@@ -150,18 +150,18 @@ update msg model =
                         query =
                             if model.searchTerm == "" then
                                 if selectedFolder.isCollection then
-                                    Query.CollectionQuery
+                                    Query.OnCollection
                                         { folder = selectedFolder
                                         }
 
                                 else
-                                    Query.DirectoryQuery
+                                    Query.OnDirectory
                                         { folder = selectedFolder
                                         , filters = Query.exampleFilters
                                         }
 
                             else
-                                Query.FtsQuery
+                                Query.OnFts
                                     { folder = selectedFolder
                                     , filters = Query.exampleFilters
                                     , options = model.searchOptions
