@@ -24,7 +24,7 @@ import Utils
 
 
 type alias Context =
-    { ftsQuery : Query.Fts
+    { ftsQuery : Query.FtsQuery
     }
 
 

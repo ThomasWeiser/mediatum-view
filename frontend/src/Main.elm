@@ -149,16 +149,10 @@ update msg model =
                     let
                         query =
                             if model.searchTerm == "" then
-                                if selectedFolder.isCollection then
-                                    Query.OnCollection
-                                        { folder = selectedFolder
-                                        }
-
-                                else
-                                    Query.OnDirectory
-                                        { folder = selectedFolder
-                                        , filters = Query.exampleFilters
-                                        }
+                                Query.OnFolder
+                                    { folder = selectedFolder
+                                    , filters = Query.exampleFilters
+                                    }
 
                             else
                                 Query.OnFts
@@ -181,7 +175,7 @@ startQuery query model =
             Article.initWithQuery query
     in
     ( { model
-        | query = query
+        | query = Debug.log "startQuery" query
         , article = articleModel
         , folderCounts = Dict.empty
       }

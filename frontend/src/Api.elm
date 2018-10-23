@@ -136,17 +136,17 @@ folderNodeWithSubfolders =
 queryFolderDocuments :
     Maybe (Pagination.Relay.Page.Page Document)
     -> Pagination.Relay.Pagination.Position
-    -> Query.Directory
+    -> Query.FolderQuery
     -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-queryFolderDocuments referencePage paginationPosition directoryQuery =
+queryFolderDocuments referencePage paginationPosition folderQuery =
     Graphql.Query.selection identity
         |> with
             (Graphql.Query.allDocuments
                 ((\optionals ->
                     { optionals
-                        | folderId = directoryQuery.folder |> .id |> Folder.idToInt |> Present
+                        | folderId = folderQuery.folder |> .id |> Folder.idToInt |> Present
                         , attributeTests =
-                            directoryQuery.filters
+                            folderQuery.filters
                                 |> Query.filtersToAttributeTests
                                 |> Query.Attribute.testsAsGraphqlArgument
                                 |> Present
@@ -167,7 +167,7 @@ queryFolderDocuments referencePage paginationPosition directoryQuery =
 queryFtsPage :
     Maybe (Pagination.Offset.Page.Page FtsDocumentResult)
     -> Pagination.Offset.Page.Position
-    -> Query.Fts
+    -> Query.FtsQuery
     -> SelectionSet (Pagination.Offset.Page.Page FtsDocumentResult) Graphql.Operation.RootQuery
 queryFtsPage referencePage paginationPosition ftsQuery =
     Graphql.Query.selection identity
@@ -209,7 +209,7 @@ queryFtsPage referencePage paginationPosition ftsQuery =
 
 
 queryFtsFolderCounts :
-    Query.Fts
+    Query.FtsQuery
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
 queryFtsFolderCounts ftsQuery =
     Graphql.Query.selection identity

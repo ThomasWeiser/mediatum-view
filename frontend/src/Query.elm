@@ -1,7 +1,6 @@
 module Query exposing
-    ( CollectionQuery
-    , DetailsQuery
-    , DirectoryQuery
+    ( DetailsQuery
+    , FolderQuery
     , FtsOptions
     , FtsQuery
     , FtsSearchDomain(..)
@@ -38,15 +37,9 @@ exampleFilters =
 
 
 type Query
-    = OnCollection CollectionQuery
-    | OnDetails DetailsQuery
-    | OnDirectory DirectoryQuery
+    = OnDetails DetailsQuery
+    | OnFolder FolderQuery
     | OnFts FtsQuery
-
-
-type alias CollectionQuery =
-    { folder : Folder
-    }
 
 
 type alias DetailsQuery =
@@ -55,7 +48,7 @@ type alias DetailsQuery =
     }
 
 
-type alias DirectoryQuery =
+type alias FolderQuery =
     { folder : Folder
     , filters : List Filter
     }
@@ -91,19 +84,16 @@ type Msg
 
 emptyQuery : Query
 emptyQuery =
-    OnCollection { folder = Folder.dummy }
+    OnFolder { folder = Folder.dummy, filters = [] }
 
 
 getFolder : Query -> Folder
 getFolder query =
     case query of
-        OnCollection { folder } ->
-            folder
-
         OnDetails { folder } ->
             folder
 
-        OnDirectory { folder } ->
+        OnFolder { folder } ->
             folder
 
         OnFts { folder } ->
@@ -113,14 +103,11 @@ getFolder query =
 setFolder : Folder -> Query -> Query
 setFolder folder query =
     case query of
-        OnCollection subQuery ->
-            OnCollection { subQuery | folder = folder }
-
         OnDetails subQuery ->
             OnDetails { subQuery | folder = folder }
 
-        OnDirectory subQuery ->
-            OnDirectory { subQuery | folder = folder }
+        OnFolder subQuery ->
+            OnFolder { subQuery | folder = folder }
 
         OnFts subQuery ->
             OnFts { subQuery | folder = folder }
@@ -129,13 +116,10 @@ setFolder folder query =
 getFilters : Query -> Maybe (List Filter)
 getFilters query =
     case query of
-        OnCollection { folder } ->
-            Nothing
-
         OnDetails { folder } ->
             Nothing
 
-        OnDirectory { filters } ->
+        OnFolder { filters } ->
             Just filters
 
         OnFts { filters } ->
@@ -145,14 +129,11 @@ getFilters query =
 mapFilters : (List Filter -> List Filter) -> Query -> Query
 mapFilters mapping query =
     case query of
-        OnCollection _ ->
-            query
-
         OnDetails _ ->
             query
 
-        OnDirectory subQuery ->
-            OnDirectory { subQuery | filters = mapping subQuery.filters }
+        OnFolder subQuery ->
+            OnFolder { subQuery | filters = mapping subQuery.filters }
 
         OnFts subQuery ->
             OnFts { subQuery | filters = mapping subQuery.filters }
@@ -171,17 +152,18 @@ view : Query -> Html Msg
 view query =
     Html.div [] <|
         case query of
-            OnCollection _ ->
-                []
-
             OnDetails _ ->
                 []
 
-            OnDirectory { filters } ->
-                [ Html.div []
-                    [ Html.span [] [ Html.text "All Documents" ] ]
-                , viewFilters filters
-                ]
+            OnFolder { folder, filters } ->
+                if folder.isCollection then
+                    []
+
+                else
+                    [ Html.div []
+                        [ Html.span [] [ Html.text "All Documents" ] ]
+                    , viewFilters filters
+                    ]
 
             OnFts { filters, options, searchTerm } ->
                 [ Html.div []

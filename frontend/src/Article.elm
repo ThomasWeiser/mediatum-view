@@ -70,16 +70,7 @@ initEmpty _ =
 initWithQuery : Query -> ( Model, Cmd Msg )
 initWithQuery query =
     case query of
-        Query.CollectionQuery collectionQuery ->
-            let
-                ( subModel, subCmd ) =
-                    Article.Collection.init ()
-            in
-            ( { content = CollectionModel subModel }
-            , Cmd.map CollectionMsg subCmd
-            )
-
-        Query.DetailsQuery detailsQuery ->
+        Query.OnDetails detailsQuery ->
             let
                 ( subModel, subCmd ) =
                     Article.Details.init <|
@@ -89,17 +80,27 @@ initWithQuery query =
             , Cmd.map DetailsMsg subCmd
             )
 
-        Query.DirectoryQuery directoryQuery ->
-            let
-                ( subModel, subCmd ) =
-                    Article.Directory.init
-                        { directoryQuery = directoryQuery }
-            in
-            ( { content = DirectoryModel subModel }
-            , Cmd.map DirectoryMsg subCmd
-            )
+        Query.OnFolder folderQuery ->
+            if folderQuery.folder.isCollection then
+                let
+                    ( subModel, subCmd ) =
+                        Article.Collection.init ()
+                in
+                ( { content = CollectionModel subModel }
+                , Cmd.map CollectionMsg subCmd
+                )
 
-        Query.FtsQuery ftsQuery ->
+            else
+                let
+                    ( subModel, subCmd ) =
+                        Article.Directory.init
+                            { folderQuery = folderQuery }
+                in
+                ( { content = DirectoryModel subModel }
+                , Cmd.map DirectoryMsg subCmd
+                )
+
+        Query.OnFts ftsQuery ->
             let
                 ( subModel, subCmd ) =
                     Article.Fts.init { ftsQuery = ftsQuery }
@@ -139,11 +140,11 @@ update context msg model =
             , NoReturn
             )
 
-        ( DirectoryMsg subMsg, DirectoryModel subModel, Query.DirectoryQuery directoryQuery ) ->
+        ( DirectoryMsg subMsg, DirectoryModel subModel, Query.OnFolder folderQuery ) ->
             let
                 ( subModel1, subCmd, documentSelection ) =
                     Article.Directory.update
-                        { directoryQuery = directoryQuery }
+                        { folderQuery = folderQuery }
                         subMsg
                         subModel
             in
@@ -159,13 +160,13 @@ update context msg model =
                     , Cmd.none
                     , MapQuery <|
                         always <|
-                            Query.DetailsQuery
-                                { folder = directoryQuery.folder
+                            Query.OnDetails
+                                { folder = folderQuery.folder
                                 , documentId = documentId
                                 }
                     )
 
-        ( FtsMsg subMsg, FtsModel subModel, Query.FtsQuery ftsQuery ) ->
+        ( FtsMsg subMsg, FtsModel subModel, Query.OnFts ftsQuery ) ->
             let
                 ( subModel1, subCmd, subReturn ) =
                     Article.Fts.update
@@ -191,7 +192,7 @@ update context msg model =
                     , Cmd.none
                     , MapQuery <|
                         always <|
-                            Query.DetailsQuery
+                            Query.OnDetails
                                 { folder = ftsQuery.folder
                                 , documentId = documentId
                                 }
@@ -235,23 +236,19 @@ viewContent context model =
             Article.Empty.view subModel
                 |> Html.map EmptyMsg
 
-        ( CollectionModel subModel, _ ) ->
+        ( CollectionModel subModel, Query.OnFolder folderQuery ) ->
             Article.Collection.view
-                { -- TODO: We construct a synthetic collectionQuery here.
-                  --       We should probably use the one from context.query
-                  collectionQuery =
-                    { folder = Query.getFolder context.query }
-                }
+                { folderQuery = folderQuery }
                 subModel
                 |> Html.map CollectionMsg
 
-        ( DirectoryModel subModel, Query.DirectoryQuery directoryQuery ) ->
+        ( DirectoryModel subModel, Query.OnFolder folderQuery ) ->
             Article.Directory.view
-                { directoryQuery = directoryQuery }
+                { folderQuery = folderQuery }
                 subModel
                 |> Html.map DirectoryMsg
 
-        ( FtsModel subModel, Query.FtsQuery ftsQuery ) ->
+        ( FtsModel subModel, Query.OnFts ftsQuery ) ->
             Article.Fts.view
                 { ftsQuery = ftsQuery }
                 subModel

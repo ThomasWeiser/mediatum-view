@@ -24,7 +24,7 @@ import Utils
 
 
 type alias Context =
-    { directoryQuery : Query.Directory
+    { folderQuery : Query.FolderQuery
     }
 
 
@@ -48,7 +48,7 @@ type Msg
 
 iteratorContext : Context -> Model -> Iterator.Context Document
 iteratorContext context model =
-    { folder = context.directoryQuery.folder
+    { folder = context.folderQuery.folder
     , itemList = Maybe.Extra.unwrap [] Page.entries model.pageResult.page
     , itemId = .id
     }
@@ -137,7 +137,7 @@ sendSearchQuery context paginationPosition model =
         (Api.queryFolderDocuments
             model.pageResult.page
             paginationPosition
-            context.directoryQuery
+            context.folderQuery
         )
     )
 

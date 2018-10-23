@@ -18,7 +18,7 @@ import Query
 
 
 type alias Context =
-    { detailsQuery : Query.Details
+    { detailsQuery : Query.DetailsQuery
     }
 
 

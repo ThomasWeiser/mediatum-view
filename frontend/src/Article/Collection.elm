@@ -13,7 +13,7 @@ import Query
 
 
 type alias Context =
-    { collectionQuery : Query.Collection
+    { folderQuery : Query.FolderQuery
     }
 
 
@@ -41,13 +41,13 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.div []
         [ Html.h3 [] <|
-            if Folder.isRoot context.collectionQuery.folder then
+            if Folder.isRoot context.folderQuery.folder then
                 [ Html.text "Front page for root of all collections"
                 ]
 
             else
                 [ Html.text "Front page for collection \""
-                , Html.text context.collectionQuery.folder.name
+                , Html.text context.folderQuery.folder.name
                 , Html.text "\""
                 ]
         ]
