@@ -91,12 +91,7 @@ type Msg
 
 emptyQuery : Query
 emptyQuery =
-    FtsQuery
-        { folder = Folder.dummy
-        , filters = []
-        , options = { domain = SearchAttributes, language = English }
-        , searchTerm = ""
-        }
+    CollectionQuery { folder = Folder.dummy }
 
 
 getFolder : Query -> Folder
