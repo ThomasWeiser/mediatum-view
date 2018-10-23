@@ -6,6 +6,7 @@ module Query.Filter exposing
     )
 
 import Html exposing (Html)
+import Html.Attributes
 import Html.Events
 import Query.Attribute
 
@@ -28,7 +29,9 @@ view filter =
                 , Html.text " and "
                 , Html.text toYear
                 , Html.button
-                    [ Html.Events.onClick Remove ]
+                    [ Html.Attributes.type_ "button"
+                    , Html.Events.onClick Remove
+                    ]
                     [ Html.text "Remove" ]
                 ]
 

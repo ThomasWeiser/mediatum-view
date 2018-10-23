@@ -13,8 +13,10 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
+import List.Extra
 import Maybe.Extra
 import Query exposing (Query)
+import Query.Filter exposing (Filter)
 import Tree
 
 
@@ -38,6 +40,7 @@ type Msg
     = NoOp
     | SetSearchTerm String
     | SetSearchOptions Query.FtsOptions
+    | RemoveFilter Int
     | Submit
 
 
@@ -66,6 +69,15 @@ update context msg model =
             , NoReturn
             )
 
+        RemoveFilter index ->
+            ( model
+            , Cmd.none
+            , MapQuery
+                (Query.mapFilters
+                    (List.Extra.removeAt index)
+                )
+            )
+
         Submit ->
             let
                 query =
@@ -92,44 +104,67 @@ update context msg model =
 view : Context -> Model -> Html Msg
 view { query } model =
     Html.form
-        [ Html.Attributes.class "search-bar"
-        , Html.Events.onSubmit Submit
+        [ Html.Events.onSubmit Submit
         ]
-        [ Html.select
-            [ Html.Events.onInput
-                (Query.ftsOptionsFromLabel
-                    >> Maybe.Extra.unwrap NoOp SetSearchOptions
-                )
-            ]
-            (List.map
-                (\ftsOptions ->
-                    Html.option
-                        [ Html.Attributes.value
-                            (Query.ftsOptionsToLabel ftsOptions)
-                        , Html.Attributes.selected
-                            (model.searchOptions == ftsOptions)
-                        ]
-                        [ Html.text
-                            (Query.ftsOptionsToLabel ftsOptions)
-                        ]
-                )
-                [ Query.FtsOptions Query.SearchAttributes Query.English
-                , Query.FtsOptions Query.SearchAttributes Query.German
-                , Query.FtsOptions Query.SearchFulltext Query.English
-                , Query.FtsOptions Query.SearchFulltext Query.German
+        [ Html.div [ Html.Attributes.class "search-bar" ]
+            [ Html.select
+                [ Html.Events.onInput
+                    (Query.ftsOptionsFromLabel
+                        >> Maybe.Extra.unwrap NoOp SetSearchOptions
+                    )
                 ]
-            )
-        , Html.input
-            [ Html.Attributes.class "search-input"
-            , Html.Attributes.type_ "search"
-            , Html.Attributes.placeholder "Search ..."
-            , Html.Attributes.value model.searchTerm
-            , Html.Events.onInput SetSearchTerm
+                (List.map
+                    (\ftsOptions ->
+                        Html.option
+                            [ Html.Attributes.value
+                                (Query.ftsOptionsToLabel ftsOptions)
+                            , Html.Attributes.selected
+                                (model.searchOptions == ftsOptions)
+                            ]
+                            [ Html.text
+                                (Query.ftsOptionsToLabel ftsOptions)
+                            ]
+                    )
+                    [ Query.FtsOptions Query.SearchAttributes Query.English
+                    , Query.FtsOptions Query.SearchAttributes Query.German
+                    , Query.FtsOptions Query.SearchFulltext Query.English
+                    , Query.FtsOptions Query.SearchFulltext Query.German
+                    ]
+                )
+            , Html.input
+                [ Html.Attributes.class "search-input"
+                , Html.Attributes.type_ "search"
+                , Html.Attributes.placeholder "Search ..."
+                , Html.Attributes.value model.searchTerm
+                , Html.Events.onInput SetSearchTerm
+                ]
+                []
+            , Html.button
+                [ Html.Attributes.type_ "submit"
+                , Html.Attributes.value "Search"
+                ]
+                [ Icons.search ]
             ]
-            []
-        , Html.button
-            [ Html.Attributes.type_ "submit"
-            , Html.Attributes.value "Search"
+        , Html.div []
+            [ Maybe.Extra.unwrap
+                (Html.text "")
+                viewFilters
+                (Query.getFilters query)
             ]
-            [ Icons.search ]
         ]
+
+
+viewFilters : List Filter -> Html Msg
+viewFilters filters =
+    Html.div [] <|
+        List.indexedMap
+            (\index filter ->
+                Query.Filter.view filter
+                    |> Html.map
+                        (\filterMsg ->
+                            case filterMsg of
+                                Query.Filter.Remove ->
+                                    RemoveFilter index
+                        )
+            )
+            filters

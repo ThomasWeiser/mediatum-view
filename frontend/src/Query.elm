@@ -14,6 +14,7 @@ module Query exposing
     , ftsOptionsFromLabel
     , ftsOptionsLanguageToString
     , ftsOptionsToLabel
+    , getFilters
     , getFolder
     , mapFilters
     , setFolder
