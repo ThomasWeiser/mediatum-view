@@ -80,7 +80,7 @@ update context msg model =
         EditNewFilter ->
             ( { model
                 | editFilter =
-                    Just ( Nothing, EditFilter.init Nothing )
+                    Just ( Nothing, EditFilter.init Filter.initYearWithin )
               }
             , Cmd.none
             , NoReturn
@@ -89,7 +89,7 @@ update context msg model =
         EditExistingFilter filter ->
             ( { model
                 | editFilter =
-                    Just ( Just filter, EditFilter.init (Just filter) )
+                    Just ( Just filter, EditFilter.init filter )
               }
             , Cmd.none
             , NoReturn

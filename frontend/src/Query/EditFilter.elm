@@ -22,48 +22,35 @@ type Return
 
 
 type alias Model =
-    { from : String
-    , to : String
-    }
+    Filter
 
 
 type Msg
-    = SetFrom String
-    | SetTo String
+    = Set Filter
     | Submit
     | Cancel
 
 
-init : Maybe Filter -> Model
-init maybeFilter =
-    case maybeFilter of
-        Nothing ->
-            Model "" ""
-
-        Just (Filter.YearWithin from to) ->
-            Model from to
+init : Filter -> Model
+init filter =
+    filter
 
 
 update : Msg -> Model -> ( Model, Return )
 update msg model =
     case msg of
-        SetFrom input ->
-            ( { model | from = input }
-            , NoReturn
-            )
-
-        SetTo input ->
-            ( { model | to = input }
+        Set filter ->
+            ( filter
             , NoReturn
             )
 
         Submit ->
             ( model
-            , if model.from == "" && model.to == "" then
+            , if Filter.isEmpty model then
                 Removed
 
               else
-                Saved <| Filter.YearWithin model.from model.to
+                Saved (Filter.normalize model)
             )
 
         Cancel ->
@@ -72,25 +59,11 @@ update msg model =
             )
 
 
-inputYear : (String -> Msg) -> String -> String -> Html Msg
-inputYear onChange placeholder value =
-    Html.input
-        [ Html.Attributes.type_ "number"
-        , Html.Attributes.min "1900"
-        , Html.Attributes.max "2100"
-        , Html.Attributes.placeholder placeholder
-        , Html.Attributes.value value
-        , Utils.onChange onChange
-        ]
-        []
-
-
 view : Model -> Html Msg
 view model =
-    Html.form
-        [ Html.Events.onSubmit Submit ]
-        [ inputYear SetFrom "from" model.from
-        , inputYear SetTo "to" model.to
+    Html.form [ Html.Events.onSubmit Submit ] <|
+        [ Filter.viewEdit model
+            |> Html.map Set
         , Html.button
             [ Html.Attributes.type_ "submit" ]
             [ Html.text "Ok" ]
