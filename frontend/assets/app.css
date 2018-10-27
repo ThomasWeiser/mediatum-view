@@ -60,6 +60,9 @@ article {
   flex: 1;
   font-size: 105%;
 }
+.existing-filter.being-edited {
+  opacity: 0.5;
+}
 .document {
   margin: 2ex 0;
 }

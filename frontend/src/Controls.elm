@@ -248,10 +248,10 @@ viewFilters context model =
 viewExistingFilters : Model -> Filters -> Html Msg
 viewExistingFilters model filters =
     Html.div [] <|
-        List.filterMap
+        List.map
             (\filter ->
                 let
-                    isEditing =
+                    beingEdited =
                         case model.editFilter of
                             Just ( Just editingFilter, _ ) ->
                                 filter == editingFilter
@@ -259,27 +259,28 @@ viewExistingFilters model filters =
                             _ ->
                                 False
                 in
-                if isEditing then
-                    Nothing
-
-                else
-                    Just (viewFilter filter)
+                viewExistingFilter beingEdited filter
             )
             (Filters.toList filters)
 
 
-viewFilter : Filter -> Html Msg
-viewFilter filter =
-    Html.span []
+viewExistingFilter : Bool -> Filter -> Html Msg
+viewExistingFilter beingEdited filter =
+    Html.span
+        [ Html.Attributes.class "existing-filter"
+        , Html.Attributes.classList [ ( "being-edited", beingEdited ) ]
+        ]
         [ Filter.view filter
             |> Html.map never
         , Html.button
             [ Html.Attributes.type_ "button"
+            , Html.Attributes.disabled beingEdited
             , Html.Events.onClick (EditExistingFilter filter)
             ]
             [ Html.text "Edit" ]
         , Html.button
             [ Html.Attributes.type_ "button"
+            , Html.Attributes.disabled beingEdited
             , Html.Events.onClick (RemoveFilter filter)
             ]
             [ Html.text "Remove" ]
