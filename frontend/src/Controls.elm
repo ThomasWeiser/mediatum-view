@@ -16,7 +16,8 @@ import Icons
 import List.Extra
 import Maybe.Extra
 import Query exposing (Query)
-import Query.Filter exposing (Filter)
+import Query.EditFilter as EditFilter
+import Query.Filter as Filter exposing (Filter)
 import Tree
 
 
@@ -33,6 +34,7 @@ type Return
 type alias Model =
     { searchOptions : Query.FtsOptions
     , searchTerm : String
+    , editFilter : Maybe EditFilter.Model
     }
 
 
@@ -40,14 +42,17 @@ type Msg
     = NoOp
     | SetSearchTerm String
     | SetSearchOptions Query.FtsOptions
+    | EditNewFilter
     | RemoveFilter Int
     | Submit
+    | EditFilterMsg EditFilter.Msg
 
 
 init : () -> Model
 init _ =
     { searchOptions = Query.FtsOptions Query.SearchFulltext Query.English
     , searchTerm = ""
+    , editFilter = Nothing
     }
 
 
@@ -65,6 +70,12 @@ update context msg model =
 
         SetSearchOptions searchOptions ->
             ( { model | searchOptions = searchOptions }
+            , Cmd.none
+            , NoReturn
+            )
+
+        EditNewFilter ->
+            ( { model | editFilter = Just EditFilter.init }
             , Cmd.none
             , NoReturn
             )
@@ -99,6 +110,32 @@ update context msg model =
             , Cmd.none
             , MapQuery (always query)
             )
+
+        EditFilterMsg subMsg ->
+            case model.editFilter of
+                Just editFilter ->
+                    let
+                        ( subModel, subReturn ) =
+                            EditFilter.update subMsg editFilter
+                    in
+                    case subReturn of
+                        EditFilter.NoReturn ->
+                            ( { model | editFilter = Just subModel }
+                            , Cmd.none
+                            , NoReturn
+                            )
+
+                        EditFilter.NewFilter newFilter ->
+                            ( { model | editFilter = Nothing }
+                            , Cmd.none
+                            , MapQuery
+                                (Query.mapFilters
+                                    (\l -> List.append l [ newFilter ])
+                                )
+                            )
+
+                Nothing ->
+                    ( model, Cmd.none, NoReturn )
 
 
 view : Context -> Model -> Html Msg
@@ -151,6 +188,17 @@ view { query } model =
                 viewFilters
                 (Query.getFilters query)
             ]
+        , case model.editFilter of
+            Nothing ->
+                Html.button
+                    [ Html.Attributes.type_ "button"
+                    , Html.Events.onClick EditNewFilter
+                    ]
+                    [ Html.text "Year" ]
+
+            Just editFilter ->
+                EditFilter.view editFilter
+                    |> Html.map EditFilterMsg
         ]
 
 
@@ -159,11 +207,11 @@ viewFilters filters =
     Html.div [] <|
         List.indexedMap
             (\index filter ->
-                Query.Filter.view filter
+                Filter.view filter
                     |> Html.map
                         (\filterMsg ->
                             case filterMsg of
-                                Query.Filter.Remove ->
+                                Filter.Remove ->
                                     RemoveFilter index
                         )
             )
