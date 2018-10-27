@@ -1,6 +1,5 @@
 module Query.Filter exposing
     ( Filter(..)
-    , Msg(..)
     , toAttributeTest
     , toString
     , view
@@ -14,11 +13,6 @@ import Query.Attribute
 
 type Filter
     = YearWithin String String
-
-
-type Msg
-    = Remove
-    | Edit
 
 
 toString : Filter -> String
@@ -37,23 +31,13 @@ toAttributeTest filter =
             }
 
 
-view : Filter -> Html Msg
+view : Filter -> Html Never
 view filter =
     case filter of
         YearWithin fromYear toYear ->
-            Html.div []
+            Html.span []
                 [ Html.text "Year within "
                 , Html.text fromYear
                 , Html.text " and "
                 , Html.text toYear
-                , Html.button
-                    [ Html.Attributes.type_ "button"
-                    , Html.Events.onClick Edit
-                    ]
-                    [ Html.text "Edit" ]
-                , Html.button
-                    [ Html.Attributes.type_ "button"
-                    , Html.Events.onClick Remove
-                    ]
-                    [ Html.text "Remove" ]
                 ]

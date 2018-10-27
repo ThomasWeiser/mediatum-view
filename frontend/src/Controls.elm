@@ -249,16 +249,24 @@ viewFilters model filters =
                     Nothing
 
                 else
-                    Filter.view filter
-                        |> Html.map
-                            (\filterMsg ->
-                                case filterMsg of
-                                    Filter.Remove ->
-                                        RemoveFilter filter
-
-                                    Filter.Edit ->
-                                        EditExistingFilter filter
-                            )
-                        |> Just
+                    Just (viewFilter filter)
             )
             (Filters.toList filters)
+
+
+viewFilter : Filter -> Html Msg
+viewFilter filter =
+    Html.span []
+        [ Filter.view filter
+            |> Html.map never
+        , Html.button
+            [ Html.Attributes.type_ "button"
+            , Html.Events.onClick (EditExistingFilter filter)
+            ]
+            [ Html.text "Edit" ]
+        , Html.button
+            [ Html.Attributes.type_ "button"
+            , Html.Events.onClick (RemoveFilter filter)
+            ]
+            [ Html.text "Remove" ]
+        ]
