@@ -2,6 +2,7 @@ module Query.Filter exposing
     ( Filter(..)
     , Msg(..)
     , toAttributeTest
+    , toString
     , view
     )
 
@@ -19,6 +20,22 @@ type Msg
     = Remove
 
 
+toString : Filter -> String
+toString filter =
+    case filter of
+        YearWithin fromYear toYear ->
+            "YearWithin-" ++ fromYear ++ "-" ++ toYear
+
+
+toAttributeTest : Filter -> Query.Attribute.Test
+toAttributeTest filter =
+    case filter of
+        YearWithin fromYear toYear ->
+            { key = "year"
+            , operation = Query.Attribute.DateRange fromYear toYear
+            }
+
+
 view : Filter -> Html Msg
 view filter =
     case filter of
@@ -34,12 +51,3 @@ view filter =
                     ]
                     [ Html.text "Remove" ]
                 ]
-
-
-toAttributeTest : Filter -> Query.Attribute.Test
-toAttributeTest filter =
-    case filter of
-        YearWithin fromYear toYear ->
-            { key = "year"
-            , operation = Query.Attribute.DateRange fromYear toYear
-            }

@@ -25,14 +25,16 @@ import Folder exposing (Folder, FolderCounts)
 import Html exposing (Html)
 import List.Extra
 import Query.Attribute
-import Query.Filter exposing (Filter)
+import Query.Filter as Filter exposing (Filter)
+import Query.Filters as Filters exposing (Filters)
 
 
+exampleFilters : Filters
 exampleFilters =
-    [ Query.Filter.YearWithin "2000" "2010"
-    , Query.Filter.YearWithin "2001" "2002"
-    , Query.Filter.YearWithin "2000" "2010"
-    ]
+    Filters.none
+        |> Filters.insert (Filter.YearWithin "2000" "2010")
+        |> Filters.insert (Filter.YearWithin "2001" "2002")
+        |> Filters.insert (Filter.YearWithin "2000" "2010")
 
 
 type Query
@@ -49,13 +51,13 @@ type alias DetailsQuery =
 
 type alias FolderQuery =
     { folder : Folder
-    , filters : List Filter
+    , filters : Filters
     }
 
 
 type alias FtsQuery =
     { folder : Folder
-    , filters : List Filter
+    , filters : Filters
     , options : FtsOptions
     , searchTerm : String
     }
@@ -83,7 +85,10 @@ type Msg
 
 emptyQuery : Query
 emptyQuery =
-    OnFolder { folder = Folder.dummy, filters = [] }
+    OnFolder
+        { folder = Folder.dummy
+        , filters = Filters.none
+        }
 
 
 getFolder : Query -> Folder
@@ -112,7 +117,7 @@ setFolder folder query =
             OnFts { subQuery | folder = folder }
 
 
-getFilters : Query -> Maybe (List Filter)
+getFilters : Query -> Maybe Filters
 getFilters query =
     case query of
         OnDetails { folder } ->
@@ -125,7 +130,7 @@ getFilters query =
             Just filters
 
 
-mapFilters : (List Filter -> List Filter) -> Query -> Query
+mapFilters : (Filters -> Filters) -> Query -> Query
 mapFilters mapping query =
     case query of
         OnDetails _ ->
@@ -165,9 +170,10 @@ view query =
                 ]
 
 
-filtersToAttributeTests : List Filter -> List Query.Attribute.Test
+filtersToAttributeTests : Filters -> List Query.Attribute.Test
 filtersToAttributeTests filters =
-    List.map Query.Filter.toAttributeTest filters
+    Filters.toList filters
+        |> List.map Filter.toAttributeTest
 
 
 ftsOptionsDomainToString : FtsOptions -> String

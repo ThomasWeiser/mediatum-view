@@ -18,6 +18,7 @@ import Maybe.Extra
 import Query exposing (Query)
 import Query.EditFilter as EditFilter
 import Query.Filter as Filter exposing (Filter)
+import Query.Filters as Filters exposing (Filters)
 import Tree
 
 
@@ -43,7 +44,7 @@ type Msg
     | SetSearchTerm String
     | SetSearchOptions Query.FtsOptions
     | EditNewFilter
-    | RemoveFilter Int
+    | RemoveFilter Filter
     | Submit
     | EditFilterMsg EditFilter.Msg
 
@@ -80,12 +81,12 @@ update context msg model =
             , NoReturn
             )
 
-        RemoveFilter index ->
+        RemoveFilter filter ->
             ( model
             , Cmd.none
             , MapQuery
                 (Query.mapFilters
-                    (List.Extra.removeAt index)
+                    (Filters.remove filter)
                 )
             )
 
@@ -130,7 +131,7 @@ update context msg model =
                             , Cmd.none
                             , MapQuery
                                 (Query.mapFilters
-                                    (\l -> List.append l [ newFilter ])
+                                    (Filters.insert newFilter)
                                 )
                             )
 
@@ -202,17 +203,17 @@ view { query } model =
         ]
 
 
-viewFilters : List Filter -> Html Msg
+viewFilters : Filters -> Html Msg
 viewFilters filters =
     Html.div [] <|
-        List.indexedMap
-            (\index filter ->
+        List.map
+            (\filter ->
                 Filter.view filter
                     |> Html.map
                         (\filterMsg ->
                             case filterMsg of
                                 Filter.Remove ->
-                                    RemoveFilter index
+                                    RemoveFilter filter
                         )
             )
-            filters
+            (Filters.toList filters)
