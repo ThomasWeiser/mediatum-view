@@ -35,7 +35,7 @@ type Return
 type alias Model =
     { searchOptions : Query.FtsOptions
     , searchTerm : String
-    , editFilter : Maybe EditFilter.Model
+    , editFilter : Maybe ( Maybe Filter, EditFilter.Model )
     }
 
 
@@ -44,6 +44,7 @@ type Msg
     | SetSearchTerm String
     | SetSearchOptions Query.FtsOptions
     | EditNewFilter
+    | EditExistingFilter Filter
     | RemoveFilter Filter
     | Submit
     | EditFilterMsg EditFilter.Msg
@@ -76,7 +77,19 @@ update context msg model =
             )
 
         EditNewFilter ->
-            ( { model | editFilter = Just EditFilter.init }
+            ( { model
+                | editFilter =
+                    Just ( Nothing, EditFilter.init Nothing )
+              }
+            , Cmd.none
+            , NoReturn
+            )
+
+        EditExistingFilter filter ->
+            ( { model
+                | editFilter =
+                    Just ( Just filter, EditFilter.init (Just filter) )
+              }
             , Cmd.none
             , NoReturn
             )
@@ -114,24 +127,31 @@ update context msg model =
 
         EditFilterMsg subMsg ->
             case model.editFilter of
-                Just editFilter ->
+                Just ( maybeOldFilter, editFilter ) ->
                     let
                         ( subModel, subReturn ) =
                             EditFilter.update subMsg editFilter
                     in
                     case subReturn of
                         EditFilter.NoReturn ->
-                            ( { model | editFilter = Just subModel }
+                            ( { model
+                                | editFilter = Just ( maybeOldFilter, subModel )
+                              }
                             , Cmd.none
                             , NoReturn
                             )
 
-                        EditFilter.NewFilter newFilter ->
+                        EditFilter.Saved newFilter ->
                             ( { model | editFilter = Nothing }
                             , Cmd.none
                             , MapQuery
                                 (Query.mapFilters
-                                    (Filters.insert newFilter)
+                                    (Maybe.Extra.unwrap
+                                        identity
+                                        Filters.remove
+                                        maybeOldFilter
+                                        >> Filters.insert newFilter
+                                    )
                                 )
                             )
 
@@ -186,7 +206,7 @@ view { query } model =
         , Html.div []
             [ Maybe.Extra.unwrap
                 (Html.text "")
-                viewFilters
+                (viewFilters model)
                 (Query.getFilters query)
             ]
         , case model.editFilter of
@@ -197,23 +217,40 @@ view { query } model =
                     ]
                     [ Html.text "Year" ]
 
-            Just editFilter ->
+            Just ( maybeOldFilter, editFilter ) ->
                 EditFilter.view editFilter
                     |> Html.map EditFilterMsg
         ]
 
 
-viewFilters : Filters -> Html Msg
-viewFilters filters =
+viewFilters : Model -> Filters -> Html Msg
+viewFilters model filters =
     Html.div [] <|
-        List.map
+        List.filterMap
             (\filter ->
-                Filter.view filter
-                    |> Html.map
-                        (\filterMsg ->
-                            case filterMsg of
-                                Filter.Remove ->
-                                    RemoveFilter filter
-                        )
+                let
+                    isEditing =
+                        case model.editFilter of
+                            Just ( Just editingFilter, _ ) ->
+                                filter == editingFilter
+
+                            _ ->
+                                False
+                in
+                if isEditing then
+                    Nothing
+
+                else
+                    Filter.view filter
+                        |> Html.map
+                            (\filterMsg ->
+                                case filterMsg of
+                                    Filter.Remove ->
+                                        RemoveFilter filter
+
+                                    Filter.Edit ->
+                                        EditExistingFilter filter
+                            )
+                        |> Just
             )
             (Filters.toList filters)

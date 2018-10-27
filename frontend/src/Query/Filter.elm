@@ -18,6 +18,7 @@ type Filter
 
 type Msg
     = Remove
+    | Edit
 
 
 toString : Filter -> String
@@ -45,6 +46,11 @@ view filter =
                 , Html.text fromYear
                 , Html.text " and "
                 , Html.text toYear
+                , Html.button
+                    [ Html.Attributes.type_ "button"
+                    , Html.Events.onClick Edit
+                    ]
+                    [ Html.text "Edit" ]
                 , Html.button
                     [ Html.Attributes.type_ "button"
                     , Html.Events.onClick Remove

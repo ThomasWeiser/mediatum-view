@@ -15,7 +15,7 @@ import Query.Filter as Filter exposing (Filter)
 
 type Return
     = NoReturn
-    | NewFilter Filter
+    | Saved Filter
 
 
 type alias Model =
@@ -30,9 +30,13 @@ type Msg
     | Submit
 
 
-init : Model
-init =
-    Model "" ""
+init : Maybe Filter -> Model
+init maybeFilter =
+    case maybeFilter of
+        Nothing ->
+            Model "" ""
+        Just (Filter.YearWithin from to) ->
+            Model from to
 
 
 update : Msg -> Model -> ( Model, Return )
@@ -50,7 +54,7 @@ update msg model =
 
         Submit ->
             ( model
-            , NewFilter <| Filter.YearWithin model.from model.to
+            , Saved <| Filter.YearWithin model.from model.to
             )
 
 
