@@ -11,6 +11,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Query.Filter as Filter exposing (Filter)
+import Utils
 
 
 type Return
@@ -74,14 +75,14 @@ view model =
             [ Html.Attributes.type_ "input"
             , Html.Attributes.placeholder "from year"
             , Html.Attributes.value model.from
-            , Html.Events.onInput SetFrom
+            , Utils.onChange SetFrom
             ]
             []
         , Html.input
             [ Html.Attributes.type_ "input"
             , Html.Attributes.placeholder "to year"
             , Html.Attributes.value model.to
-            , Html.Events.onInput SetTo
+            , Utils.onChange SetTo
             ]
             []
         , Html.button

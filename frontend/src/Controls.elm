@@ -20,6 +20,7 @@ import Query.EditFilter as EditFilter
 import Query.Filter as Filter exposing (Filter)
 import Query.Filters as Filters exposing (Filters)
 import Tree
+import Utils
 
 
 type alias Context =
@@ -204,7 +205,7 @@ view { query } model =
                 , Html.Attributes.type_ "search"
                 , Html.Attributes.placeholder "Search ..."
                 , Html.Attributes.value model.searchTerm
-                , Html.Events.onInput SetSearchTerm
+                , Utils.onChange SetSearchTerm
                 ]
                 []
             , Html.button

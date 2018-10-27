@@ -1,12 +1,16 @@
 module Utils exposing
     ( findAdjacent
     , noBreakSpace
+    , onChange
     , tupleAddThird
     , tupleRemoveThird
     , when
     )
 
 import Char
+import Html
+import Html.Events
+import Json.Decode
 
 
 noBreakSpace : String
@@ -59,3 +63,9 @@ findAdjacent list predicate =
 
             else
                 walk head1 tail1
+
+
+onChange : (String -> msg) -> Html.Attribute msg
+onChange tagger =
+    Html.Events.on "change"
+        (Json.Decode.map tagger Html.Events.targetValue)
