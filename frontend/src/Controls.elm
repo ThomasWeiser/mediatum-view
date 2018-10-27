@@ -171,10 +171,17 @@ update context msg model =
 
 
 view : Context -> Model -> Html Msg
-view { query } model =
-    Html.form
-        [ Html.Events.onSubmit Submit
+view context model =
+    Html.div []
+        [ viewSearch context model
+        , viewFilters context model
         ]
+
+
+viewSearch : Context -> Model -> Html Msg
+viewSearch context model =
+    Html.form
+        [ Html.Events.onSubmit Submit ]
         [ Html.div [ Html.Attributes.class "search-bar" ]
             [ Html.select
                 [ Html.Events.onInput
@@ -212,11 +219,17 @@ view { query } model =
                 [ Html.Attributes.type_ "submit" ]
                 [ Icons.search ]
             ]
-        , Html.div []
+        ]
+
+
+viewFilters : Context -> Model -> Html Msg
+viewFilters context model =
+    Html.div []
+        [ Html.div []
             [ Maybe.Extra.unwrap
                 (Html.text "")
-                (viewFilters model)
-                (Query.getFilters query)
+                (viewExistingFilters model)
+                (Query.getFilters context.query)
             ]
         , case model.editFilter of
             Nothing ->
@@ -232,8 +245,8 @@ view { query } model =
         ]
 
 
-viewFilters : Model -> Filters -> Html Msg
-viewFilters model filters =
+viewExistingFilters : Model -> Filters -> Html Msg
+viewExistingFilters model filters =
     Html.div [] <|
         List.filterMap
             (\filter ->
