@@ -17,6 +17,7 @@ import Utils
 type Return
     = NoReturn
     | Saved Filter
+    | Removed
     | Canceled
 
 
@@ -58,7 +59,11 @@ update msg model =
 
         Submit ->
             ( model
-            , Saved <| Filter.YearWithin model.from model.to
+            , if model.from == "" && model.to == "" then
+                Removed
+
+              else
+                Saved <| Filter.YearWithin model.from model.to
             )
 
         Cancel ->
@@ -67,24 +72,25 @@ update msg model =
             )
 
 
+inputYear : (String -> Msg) -> String -> String -> Html Msg
+inputYear onChange placeholder value =
+    Html.input
+        [ Html.Attributes.type_ "number"
+        , Html.Attributes.min "1900"
+        , Html.Attributes.max "2100"
+        , Html.Attributes.placeholder placeholder
+        , Html.Attributes.value value
+        , Utils.onChange onChange
+        ]
+        []
+
+
 view : Model -> Html Msg
 view model =
     Html.form
         [ Html.Events.onSubmit Submit ]
-        [ Html.input
-            [ Html.Attributes.type_ "input"
-            , Html.Attributes.placeholder "from year"
-            , Html.Attributes.value model.from
-            , Utils.onChange SetFrom
-            ]
-            []
-        , Html.input
-            [ Html.Attributes.type_ "input"
-            , Html.Attributes.placeholder "to year"
-            , Html.Attributes.value model.to
-            , Utils.onChange SetTo
-            ]
-            []
+        [ inputYear SetFrom "from" model.from
+        , inputYear SetTo "to" model.to
         , Html.button
             [ Html.Attributes.type_ "submit" ]
             [ Html.text "Ok" ]

@@ -33,11 +33,31 @@ toAttributeTest filter =
 
 view : Filter -> Html Never
 view filter =
-    case filter of
-        YearWithin fromYear toYear ->
-            Html.span []
-                [ Html.text "Year within "
+    Html.span [] <|
+        case filter of
+            YearWithin "" "" ->
+                -- Should never occur here
+                [ Html.text "" ]
+
+            YearWithin fromYear "" ->
+                [ Html.text "Years from "
                 , Html.text fromYear
-                , Html.text " and "
+                ]
+
+            YearWithin "" toYear ->
+                [ Html.text "Years up to "
                 , Html.text toYear
                 ]
+
+            YearWithin fromYear toYear ->
+                if fromYear == toYear then
+                    [ Html.text "Year "
+                    , Html.text fromYear
+                    ]
+
+                else
+                    [ Html.text "Years from "
+                    , Html.text fromYear
+                    , Html.text " to "
+                    , Html.text toYear
+                    ]

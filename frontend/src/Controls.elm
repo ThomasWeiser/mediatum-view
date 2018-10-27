@@ -160,6 +160,19 @@ update context msg model =
                                 )
                             )
 
+                        EditFilter.Removed ->
+                            ( { model | editFilter = Nothing }
+                            , Cmd.none
+                            , MapQuery
+                                (Query.mapFilters
+                                    (Maybe.Extra.unwrap
+                                        identity
+                                        Filters.remove
+                                        maybeOldFilter
+                                    )
+                                )
+                            )
+
                         EditFilter.Canceled ->
                             ( { model | editFilter = Nothing }
                             , Cmd.none
