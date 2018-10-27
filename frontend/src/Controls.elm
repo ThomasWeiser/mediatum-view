@@ -44,7 +44,7 @@ type Msg
     = NoOp
     | SetSearchTerm String
     | SetSearchOptions Query.FtsOptions
-    | EditNewFilter
+    | EditNewFilter Filter
     | EditExistingFilter Filter
     | RemoveFilter Filter
     | Submit
@@ -77,10 +77,10 @@ update context msg model =
             , NoReturn
             )
 
-        EditNewFilter ->
+        EditNewFilter filter ->
             ( { model
                 | editFilter =
-                    Just ( Nothing, EditFilter.init Filter.initYearWithin )
+                    Just ( Nothing, EditFilter.init filter )
               }
             , Cmd.none
             , NoReturn
@@ -246,11 +246,16 @@ viewFilters context model =
             ]
         , case model.editFilter of
             Nothing ->
-                Html.button
-                    [ Html.Attributes.type_ "button"
-                    , Html.Events.onClick EditNewFilter
-                    ]
-                    [ Html.text "Year" ]
+                Html.span [] <|
+                    List.map
+                        (\{ name, initFilter } ->
+                            Html.button
+                                [ Html.Attributes.type_ "button"
+                                , Html.Events.onClick <| EditNewFilter initFilter
+                                ]
+                                [ Html.text name ]
+                        )
+                        Filter.filterTypes
 
             Just ( maybeOldFilter, editFilter ) ->
                 EditFilter.view editFilter

@@ -1,10 +1,11 @@
 module Query.Filter exposing
     ( Filter(..)
-    , initYearWithin
+    , FilterType
+    , filterTypes
     , isEmpty
+    , key
     , normalize
     , toAttributeTest
-    , toString
     , view
     , viewEdit
     )
@@ -18,6 +19,20 @@ import Utils
 
 type Filter
     = YearWithin String String
+    | TitleFts String
+
+
+type alias FilterType =
+    { name : String
+    , initFilter : Filter
+    }
+
+
+filterTypes : List FilterType
+filterTypes =
+    [ { name = "Year", initFilter = initYearWithin }
+    , { name = "Title", initFilter = initTitleFts }
+    ]
 
 
 initYearWithin : Filter
@@ -25,11 +40,19 @@ initYearWithin =
     YearWithin "" ""
 
 
-toString : Filter -> String
-toString filter =
+initTitleFts : Filter
+initTitleFts =
+    TitleFts ""
+
+
+key : Filter -> String
+key filter =
     case filter of
         YearWithin fromYear toYear ->
-            "YearWithin-" ++ fromYear ++ "-" ++ toYear
+            "YearWithin"
+
+        TitleFts searchTerm ->
+            "TitleFts-" ++ searchTerm
 
 
 normalize : Filter -> Filter
@@ -42,11 +65,17 @@ normalize filter =
             else
                 filter
 
+        _ ->
+            filter
+
 
 isEmpty : Filter -> Bool
 isEmpty filter =
     case filter of
         YearWithin "" "" ->
+            True
+
+        TitleFts "" ->
             True
 
         _ ->
@@ -59,6 +88,11 @@ toAttributeTest filter =
         YearWithin fromYear toYear ->
             { key = "year"
             , operation = Query.Attribute.DateRange fromYear toYear
+            }
+
+        TitleFts searchTerm ->
+            { key = "title"
+            , operation = Query.Attribute.SimpleFts searchTerm
             }
 
 
@@ -93,6 +127,15 @@ view filter =
                     , Html.text toYear
                     ]
 
+            TitleFts "" ->
+                -- Should never occur here
+                [ Html.text "" ]
+
+            TitleFts searchTerm ->
+                [ Html.text "Title search: "
+                , Html.text searchTerm
+                ]
+
 
 viewEdit : Filter -> Html Filter
 viewEdit filter =
@@ -103,6 +146,17 @@ viewEdit filter =
                     |> Html.map (\from1 -> YearWithin from1 to)
                 , inputYear "to" to
                     |> Html.map (\to1 -> YearWithin from to1)
+                ]
+
+        TitleFts searchTerm ->
+            Html.span []
+                [ Html.input
+                    [ Html.Attributes.type_ "text"
+                    , Html.Attributes.placeholder "Title full text filter"
+                    , Html.Attributes.value searchTerm
+                    , Utils.onChange TitleFts
+                    ]
+                    []
                 ]
 
 
