@@ -198,9 +198,7 @@ view { query } model =
                 ]
                 []
             , Html.button
-                [ Html.Attributes.type_ "submit"
-                , Html.Attributes.value "Search"
-                ]
+                [ Html.Attributes.type_ "submit" ]
                 [ Icons.search ]
             ]
         , Html.div []

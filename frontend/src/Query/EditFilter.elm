@@ -77,9 +77,6 @@ view model =
             ]
             []
         , Html.button
-            [ Html.Attributes.type_ "submit"
-
-            -- , Html.Attributes.value "Ok" -- TODO ??? (Auch in Controls.elm)
-            ]
+            [ Html.Attributes.type_ "submit" ]            ]
             [ Html.text "Ok" ]
         ]
