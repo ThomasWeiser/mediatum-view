@@ -77,6 +77,6 @@ view model =
             ]
             []
         , Html.button
-            [ Html.Attributes.type_ "submit" ]            ]
+            [ Html.Attributes.type_ "submit" ]
             [ Html.text "Ok" ]
         ]

@@ -7,7 +7,6 @@ module Query exposing
     , FtsSearchLanguage(..)
     , Query(..)
     , emptyQuery
-    , exampleFilters
     , filtersToAttributeTests
     , ftsOptionsDomainToString
     , ftsOptionsFromLabel
@@ -27,14 +26,6 @@ import List.Extra
 import Query.Attribute
 import Query.Filter as Filter exposing (Filter)
 import Query.Filters as Filters exposing (Filters)
-
-
-exampleFilters : Filters
-exampleFilters =
-    Filters.none
-        |> Filters.insert (Filter.YearWithin "2000" "2010")
-        |> Filters.insert (Filter.YearWithin "2001" "2002")
-        |> Filters.insert (Filter.YearWithin "2000" "2010")
 
 
 type Query

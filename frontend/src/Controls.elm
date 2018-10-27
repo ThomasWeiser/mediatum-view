@@ -109,13 +109,15 @@ update context msg model =
                     if model.searchTerm == "" then
                         Query.OnFolder
                             { folder = Query.getFolder context.query
-                            , filters = Query.exampleFilters
+                            , filters = Query.getFilters context.query
+                                |> Maybe.withDefault Filters.none
                             }
 
                     else
                         Query.OnFts
                             { folder = Query.getFolder context.query
-                            , filters = Query.exampleFilters
+                            , filters = Query.getFilters context.query
+                                |> Maybe.withDefault Filters.none
                             , options = model.searchOptions
                             , searchTerm = model.searchTerm
                             }
