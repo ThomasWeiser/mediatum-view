@@ -16,6 +16,7 @@ import Query.Filter as Filter exposing (Filter)
 type Return
     = NoReturn
     | Saved Filter
+    | Canceled
 
 
 type alias Model =
@@ -28,6 +29,7 @@ type Msg
     = SetFrom String
     | SetTo String
     | Submit
+    | Cancel
 
 
 init : Maybe Filter -> Model
@@ -35,6 +37,7 @@ init maybeFilter =
     case maybeFilter of
         Nothing ->
             Model "" ""
+
         Just (Filter.YearWithin from to) ->
             Model from to
 
@@ -55,6 +58,11 @@ update msg model =
         Submit ->
             ( model
             , Saved <| Filter.YearWithin model.from model.to
+            )
+
+        Cancel ->
+            ( model
+            , Canceled
             )
 
 
@@ -79,4 +87,9 @@ view model =
         , Html.button
             [ Html.Attributes.type_ "submit" ]
             [ Html.text "Ok" ]
+        , Html.button
+            [ Html.Attributes.type_ "button"
+            , Html.Events.onClick Cancel
+            ]
+            [ Html.text "Cancel" ]
         ]
