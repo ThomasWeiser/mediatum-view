@@ -118,16 +118,22 @@ view context model =
 
         selectButtonAttrs maybeId =
             Maybe.Extra.unwrap
-                [ Html.Attributes.disabled True ]
+                [ Html.Attributes.type_ "button"
+                , Html.Attributes.disabled True
+                ]
                 (\id -> [ Html.Events.onClick (Select id) ])
                 maybeId
     in
     Html.div [ Html.Attributes.class "iterator" ]
         [ Html.button
-            [ Html.Events.onClick Show ]
+            [ Html.Attributes.type_ "button"
+            , Html.Events.onClick Show
+            ]
             [ Html.text "Show" ]
         , Html.button
-            [ Html.Events.onClick Close ]
+            [ Html.Attributes.type_ "button"
+            , Html.Events.onClick Close
+            ]
             [ Html.text "All Results" ]
         , Html.button
             (selectButtonAttrs first)

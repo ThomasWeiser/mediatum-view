@@ -225,7 +225,8 @@ viewPaginationButtons page targetTagger =
         viewButton : String -> Msg -> Bool -> Html Msg
         viewButton label msg enabled =
             Html.button
-                [ Html.Attributes.disabled (not enabled)
+                [ Html.Attributes.type_ "button"
+                , Html.Attributes.disabled (not enabled)
                 , Html.Events.onClick msg
                 ]
                 [ Html.text label ]
