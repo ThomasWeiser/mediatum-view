@@ -16,7 +16,7 @@ import Icons
 import List.Extra
 import Maybe.Extra
 import Query exposing (Query)
-import Query.EditFilter as EditFilter
+import Query.FilterEditor as FilterEditor
 import Query.Filter as Filter exposing (Filter)
 import Query.Filters as Filters exposing (Filters)
 import Tree
@@ -36,7 +36,7 @@ type Return
 type alias Model =
     { searchOptions : Query.FtsOptions
     , searchTerm : String
-    , editFilter : Maybe ( Maybe Filter, EditFilter.Model )
+    , filterEditor : Maybe ( Maybe Filter, FilterEditor.Model )
     }
 
 
@@ -48,14 +48,14 @@ type Msg
     | EditExistingFilter Filter
     | RemoveFilter Filter
     | Submit
-    | EditFilterMsg EditFilter.Msg
+    | FilterEditorMsg FilterEditor.Msg
 
 
 init : () -> Model
 init _ =
     { searchOptions = Query.FtsOptions Query.SearchFulltext Query.English
     , searchTerm = ""
-    , editFilter = Nothing
+    , filterEditor = Nothing
     }
 
 
@@ -79,27 +79,27 @@ update context msg model =
 
         EditNewFilter filter ->
             let
-                ( editFilterModel, editFilterCmd ) =
-                    EditFilter.init filter
+                ( filterEditorModel, filterEditorCmd ) =
+                    FilterEditor.init filter
             in
             ( { model
-                | editFilter =
-                    Just ( Nothing, editFilterModel )
+                | filterEditor =
+                    Just ( Nothing, filterEditorModel )
               }
-            , editFilterCmd |> Cmd.map (always NoOp)
+            , filterEditorCmd |> Cmd.map (always NoOp)
             , NoReturn
             )
 
         EditExistingFilter filter ->
             let
-                ( editFilterModel, editFilterCmd ) =
-                    EditFilter.init filter
+                ( filterEditorModel, filterEditorCmd ) =
+                    FilterEditor.init filter
             in
             ( { model
-                | editFilter =
-                    Just ( Just filter, editFilterModel )
+                | filterEditor =
+                    Just ( Just filter, filterEditorModel )
               }
-            , editFilterCmd |> Cmd.map (always NoOp)
+            , filterEditorCmd |> Cmd.map (always NoOp)
             , NoReturn
             )
 
@@ -138,24 +138,24 @@ update context msg model =
             , MapQuery (always query)
             )
 
-        EditFilterMsg subMsg ->
-            case model.editFilter of
-                Just ( maybeOldFilter, editFilter ) ->
+        FilterEditorMsg subMsg ->
+            case model.filterEditor of
+                Just ( maybeOldFilter, filterEditor ) ->
                     let
                         ( subModel, subReturn ) =
-                            EditFilter.update subMsg editFilter
+                            FilterEditor.update subMsg filterEditor
                     in
                     case subReturn of
-                        EditFilter.NoReturn ->
+                        FilterEditor.NoReturn ->
                             ( { model
-                                | editFilter = Just ( maybeOldFilter, subModel )
+                                | filterEditor = Just ( maybeOldFilter, subModel )
                               }
                             , Cmd.none
                             , NoReturn
                             )
 
-                        EditFilter.Saved newFilter ->
-                            ( { model | editFilter = Nothing }
+                        FilterEditor.Saved newFilter ->
+                            ( { model | filterEditor = Nothing }
                             , Cmd.none
                             , MapQuery
                                 (Query.mapFilters
@@ -168,8 +168,8 @@ update context msg model =
                                 )
                             )
 
-                        EditFilter.Removed ->
-                            ( { model | editFilter = Nothing }
+                        FilterEditor.Removed ->
+                            ( { model | filterEditor = Nothing }
                             , Cmd.none
                             , MapQuery
                                 (Query.mapFilters
@@ -181,8 +181,8 @@ update context msg model =
                                 )
                             )
 
-                        EditFilter.Canceled ->
-                            ( { model | editFilter = Nothing }
+                        FilterEditor.Canceled ->
+                            ( { model | filterEditor = Nothing }
                             , Cmd.none
                             , NoReturn
                             )
@@ -256,7 +256,7 @@ viewFilters context model =
                 (viewExistingFilters model)
                 (Query.getFilters context.query)
             ]
-        , case model.editFilter of
+        , case model.filterEditor of
             Nothing ->
                 Html.span [] <|
                     List.map
@@ -269,9 +269,9 @@ viewFilters context model =
                         )
                         Filter.filterTypes
 
-            Just ( maybeOldFilter, editFilter ) ->
-                EditFilter.view editFilter
-                    |> Html.map EditFilterMsg
+            Just ( maybeOldFilter, filterEditor ) ->
+                FilterEditor.view filterEditor
+                    |> Html.map FilterEditorMsg
         ]
 
 
@@ -282,7 +282,7 @@ viewExistingFilters model filters =
             (\filter ->
                 let
                     beingEdited =
-                        case model.editFilter of
+                        case model.filterEditor of
                             Just ( Just editingFilter, _ ) ->
                                 filter == editingFilter
 
