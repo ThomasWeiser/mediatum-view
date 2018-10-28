@@ -35,7 +35,7 @@ type Msg
     | Change Filter
     | Submit
     | Cancel
-    | Focus String
+    | Focus String Int
 
 
 init : Filter -> ( Model, Cmd Msg )
@@ -44,7 +44,11 @@ init filter =
       , focusId = "filter-editor-provisional-focus-id"
       }
     , Task.perform
-        (Time.posixToMillis >> String.fromInt >> Focus)
+        (\posix ->
+            Focus
+                (posix |> Time.posixToMillis |> String.fromInt)
+                (posix |> Time.toYear Time.utc)
+        )
         Time.now
     )
 
@@ -80,8 +84,19 @@ update msg model =
             , Canceled
             )
 
-        Focus focusId ->
-            ( { model | focusId = focusId }
+        Focus focusId year ->
+            ( { model
+                | focusId = focusId
+                , filter =
+                    case model.filter of
+                        Filter.YearWithin "" "" ->
+                            Filter.YearWithin
+                                (String.fromInt (year - 9))
+                                (String.fromInt year)
+
+                        _ ->
+                            model.filter
+              }
             , Browser.Dom.focus focusId
                 |> Task.attempt (always NoOp)
             , NoReturn
