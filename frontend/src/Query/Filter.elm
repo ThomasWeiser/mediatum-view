@@ -2,8 +2,8 @@ module Query.Filter exposing
     ( Filter(..)
     , FilterType
     , filterTypes
+    , handle
     , isEmpty
-    , key
     , normalize
     , toAttributeTest
     , view
@@ -45,8 +45,8 @@ initTitleFts =
     TitleFts ""
 
 
-key : Filter -> String
-key filter =
+handle : Filter -> String
+handle filter =
     case filter of
         YearWithin fromYear toYear ->
             "YearWithin"

@@ -88,14 +88,14 @@ update context msg model =
                 ( filterEditorModel, filterEditorCmd ) =
                     FilterEditor.init filter
 
-                filterKey =
-                    Filter.key filter
+                filterHandle =
+                    Filter.handle filter
             in
             ( { model
                 | filterEditors =
-                    Dict.insert filterKey filterEditorModel model.filterEditors
+                    Dict.insert filterHandle filterEditorModel model.filterEditors
               }
-            , filterEditorCmd |> Cmd.map (FilterEditorMsg filterKey)
+            , filterEditorCmd |> Cmd.map (FilterEditorMsg filterHandle)
             , NoReturn
             )
 
@@ -105,7 +105,7 @@ update context msg model =
             , MapQuery <|
                 Query.mapFilters <|
                     Filters.remove <|
-                        Filter.key filter
+                        Filter.handle filter
             )
 
         Submit ->
@@ -155,8 +155,8 @@ update context msg model =
             , MapQuery (always query)
             )
 
-        FilterEditorMsg filterKey subMsg ->
-            case Dict.get filterKey model.filterEditors of
+        FilterEditorMsg filterHandle subMsg ->
+            case Dict.get filterHandle model.filterEditors of
                 Just filterEditor ->
                     let
                         ( subModel, subCmd, subReturn ) =
@@ -165,17 +165,17 @@ update context msg model =
                         modelWithEditorClosed =
                             { model
                                 | filterEditors =
-                                    Dict.remove filterKey model.filterEditors
+                                    Dict.remove filterHandle model.filterEditors
                             }
 
                         cmd =
-                            subCmd |> Cmd.map (FilterEditorMsg filterKey)
+                            subCmd |> Cmd.map (FilterEditorMsg filterHandle)
                     in
                     case subReturn of
                         FilterEditor.NoReturn ->
                             ( { model
                                 | filterEditors =
-                                    Dict.insert filterKey subModel model.filterEditors
+                                    Dict.insert filterHandle subModel model.filterEditors
                               }
                             , cmd
                             , NoReturn
@@ -186,7 +186,7 @@ update context msg model =
                             , cmd
                             , MapQuery
                                 (Query.mapFilters
-                                    (Filters.remove filterKey
+                                    (Filters.remove filterHandle
                                         >> Filters.insert newFilter
                                     )
                                 )
@@ -197,7 +197,7 @@ update context msg model =
                             , cmd
                             , MapQuery
                                 (Query.mapFilters
-                                    (Filters.remove filterKey)
+                                    (Filters.remove filterHandle)
                                 )
                             )
 
@@ -288,9 +288,9 @@ viewFilters context model =
                 Filter.filterTypes
         , Html.div [] <|
             List.map
-                (\( key, filterEditor ) ->
+                (\( filterHandle, filterEditor ) ->
                     FilterEditor.view filterEditor
-                        |> Html.map (FilterEditorMsg key)
+                        |> Html.map (FilterEditorMsg filterHandle)
                 )
                 (Dict.toList model.filterEditors)
         ]
@@ -304,7 +304,7 @@ viewExistingFilters model filters =
                 let
                     beingEdited =
                         Dict.member
-                            (Filter.key filter)
+                            (Filter.handle filter)
                             model.filterEditors
                 in
                 viewExistingFilter beingEdited filter

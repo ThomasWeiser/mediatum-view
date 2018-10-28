@@ -21,12 +21,12 @@ none =
 
 insert : Filter -> Filters -> Filters
 insert filter filters =
-    Dict.insert (Filter.key filter) filter filters
+    Dict.insert (Filter.handle filter) filter filters
 
 
 remove : String -> Filters -> Filters
-remove key filters =
-    Dict.remove key filters
+remove handle filters =
+    Dict.remove handle filters
 
 
 toList : Filters -> List Filter
