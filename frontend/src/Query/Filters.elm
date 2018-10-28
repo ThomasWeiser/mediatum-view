@@ -24,9 +24,9 @@ insert filter filters =
     Dict.insert (Filter.key filter) filter filters
 
 
-remove : Filter -> Filters -> Filters
-remove filter filters =
-    Dict.remove (Filter.key filter) filters
+remove : String -> Filters -> Filters
+remove key filters =
+    Dict.remove key filters
 
 
 toList : Filters -> List Filter
