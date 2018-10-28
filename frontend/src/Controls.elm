@@ -4,6 +4,7 @@ module Controls exposing
     , Msg
     , Return(..)
     , init
+    , submitExampleQuery
     , update
     , view
     )
@@ -48,6 +49,12 @@ type Msg
     | RemoveFilter Filter
     | Submit
     | FilterEditorMsg FilterEditor.Msg
+    | SubmitExampleQuery
+
+
+submitExampleQuery : Msg
+submitExampleQuery =
+    SubmitExampleQuery
 
 
 init : () -> Model
@@ -120,6 +127,27 @@ update context msg model =
                             }
             in
             ( model
+            , Cmd.none
+            , MapQuery (always query)
+            )
+
+        SubmitExampleQuery ->
+            let
+                searchTerm =
+                    "variable"
+
+                query =
+                    Query.OnFts
+                        { folder = Query.getFolder context.query
+                        , filters =
+                            Filters.none
+                                |> Filters.insert (Filter.YearWithin "2000" "2010")
+                                |> Filters.insert (Filter.TitleFts "the")
+                        , options = model.searchOptions
+                        , searchTerm = searchTerm
+                        }
+            in
+            ( { model | searchTerm = searchTerm }
             , Cmd.none
             , MapQuery (always query)
             )

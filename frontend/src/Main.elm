@@ -177,10 +177,15 @@ view model =
         , Html.header []
             [ Html.h2 []
                 [ Html.div []
-                    [ Html.span [ Html.Attributes.class "title" ]
+                    [ Html.span
+                        [ Html.Attributes.class "title" ]
                         [ Html.text "mediaTUM view" ]
-                    , Html.span [ Html.Attributes.class "subtitle" ]
-                        [ Html.text "WIP 2018-10-22" ]
+                    , Html.span
+                        [ Html.Attributes.class "subtitle"
+                        , Html.Attributes.title "You may click here to start an example query."
+                        , Html.Events.onClick (ControlsMsg Controls.submitExampleQuery)
+                        ]
+                        [ Html.text "WIP 2018-10-28" ]
                     ]
                 ]
             , Controls.view { query = model.query } model.controls
