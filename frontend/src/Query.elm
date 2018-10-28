@@ -16,6 +16,7 @@ module Query exposing
     , getFolder
     , mapFilters
     , setFolder
+    , showFilters
     , view
     )
 
@@ -132,6 +133,19 @@ mapFilters mapping query =
 
         OnFts subQuery ->
             OnFts { subQuery | filters = mapping subQuery.filters }
+
+
+showFilters : Query -> Bool
+showFilters query =
+    case query of
+        OnDetails _ ->
+            False
+
+        OnFolder { folder } ->
+            not folder.isCollection
+
+        OnFts _ ->
+            True
 
 
 view : Query -> Html Never

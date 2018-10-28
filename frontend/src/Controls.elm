@@ -187,7 +187,11 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.div []
         [ viewSearch context model
-        , viewFilters context model
+        , if Query.showFilters context.query then
+            viewFilters context model
+
+          else
+            Html.text ""
         ]
 
 
