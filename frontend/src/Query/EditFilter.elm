@@ -7,10 +7,12 @@ module Query.EditFilter exposing
     , view
     )
 
+import Browser.Dom
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Query.Filter as Filter exposing (Filter)
+import Task
 import Utils
 
 
@@ -31,9 +33,12 @@ type Msg
     | Cancel
 
 
-init : Filter -> Model
+init : Filter -> ( Model, Cmd () )
 init filter =
-    filter
+    ( filter
+    , Browser.Dom.focus "edit-filter-focus"
+        |> Task.attempt (always ())
+    )
 
 
 update : Msg -> Model -> ( Model, Return )
@@ -62,7 +67,9 @@ update msg model =
 view : Model -> Html Msg
 view model =
     Html.form [ Html.Events.onSubmit Submit ] <|
-        [ Filter.viewEdit model
+        [ Filter.viewEdit
+            "edit-filter-focus"
+            model
             |> Html.map Set
         , Html.button
             [ Html.Attributes.type_ "submit" ]

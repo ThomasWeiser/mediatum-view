@@ -78,20 +78,28 @@ update context msg model =
             )
 
         EditNewFilter filter ->
+            let
+                ( editFilterModel, editFilterCmd ) =
+                    EditFilter.init filter
+            in
             ( { model
                 | editFilter =
-                    Just ( Nothing, EditFilter.init filter )
+                    Just ( Nothing, editFilterModel )
               }
-            , Cmd.none
+            , editFilterCmd |> Cmd.map (always NoOp)
             , NoReturn
             )
 
         EditExistingFilter filter ->
+            let
+                ( editFilterModel, editFilterCmd ) =
+                    EditFilter.init filter
+            in
             ( { model
                 | editFilter =
-                    Just ( Just filter, EditFilter.init filter )
+                    Just ( Just filter, editFilterModel )
               }
-            , Cmd.none
+            , editFilterCmd |> Cmd.map (always NoOp)
             , NoReturn
             )
 

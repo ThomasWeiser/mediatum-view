@@ -137,37 +137,40 @@ view filter =
                 ]
 
 
-viewEdit : Filter -> Html Filter
-viewEdit filter =
+viewEdit : String -> Filter -> Html Filter
+viewEdit focusId filter =
     case filter of
         YearWithin from to ->
             Html.span []
-                [ inputYear "from" from
-                    |> Html.map (\from1 -> YearWithin from1 to)
-                , inputYear "to" to
-                    |> Html.map (\to1 -> YearWithin from to1)
+                [ Html.input
+                    [ Html.Attributes.id focusId
+                    , Html.Attributes.type_ "number"
+                    , Html.Attributes.min "1900"
+                    , Html.Attributes.max "2100"
+                    , Html.Attributes.placeholder "from"
+                    , Html.Attributes.value from
+                    , Utils.onChange (\from1 -> YearWithin from1 to)
+                    ]
+                    []
+                , Html.input
+                    [ Html.Attributes.type_ "number"
+                    , Html.Attributes.min "1900"
+                    , Html.Attributes.max "2100"
+                    , Html.Attributes.placeholder "to"
+                    , Html.Attributes.value to
+                    , Utils.onChange (\to1 -> YearWithin from to1)
+                    ]
+                    []
                 ]
 
         TitleFts searchTerm ->
             Html.span []
                 [ Html.input
-                    [ Html.Attributes.type_ "text"
+                    [ Html.Attributes.id focusId
+                    , Html.Attributes.type_ "text"
                     , Html.Attributes.placeholder "Title full text filter"
                     , Html.Attributes.value searchTerm
                     , Utils.onChange TitleFts
                     ]
                     []
                 ]
-
-
-inputYear : String -> String -> Html String
-inputYear placeholder value =
-    Html.input
-        [ Html.Attributes.type_ "number"
-        , Html.Attributes.min "1900"
-        , Html.Attributes.max "2100"
-        , Html.Attributes.placeholder placeholder
-        , Html.Attributes.value value
-        , Utils.onChange identity
-        ]
-        []
