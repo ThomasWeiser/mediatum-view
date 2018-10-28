@@ -9,7 +9,7 @@ module Controls exposing
     , view
     )
 
-import Dict
+import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -37,7 +37,7 @@ type Return
 type alias Model =
     { searchOptions : Query.FtsOptions
     , searchTerm : String
-    , filterEditor : Maybe ( String, FilterEditor.Model )
+    , filterEditors : Dict String FilterEditor.Model
     }
 
 
@@ -48,8 +48,8 @@ type Msg
     | EditFilter Filter
     | RemoveFilter Filter
     | Submit
-    | FilterEditorMsg FilterEditor.Msg
     | SubmitExampleQuery
+    | FilterEditorMsg String FilterEditor.Msg
 
 
 submitExampleQuery : Msg
@@ -61,7 +61,7 @@ init : () -> Model
 init _ =
     { searchOptions = Query.FtsOptions Query.SearchFulltext Query.English
     , searchTerm = ""
-    , filterEditor = Nothing
+    , filterEditors = Dict.empty
     }
 
 
@@ -87,12 +87,15 @@ update context msg model =
             let
                 ( filterEditorModel, filterEditorCmd ) =
                     FilterEditor.init filter
+
+                filterKey =
+                    Filter.key filter
             in
             ( { model
-                | filterEditor =
-                    Just ( Filter.key filter, filterEditorModel )
+                | filterEditors =
+                    Dict.insert filterKey filterEditorModel model.filterEditors
               }
-            , filterEditorCmd |> Cmd.map (always NoOp)
+            , filterEditorCmd |> Cmd.map (FilterEditorMsg filterKey)
             , NoReturn
             )
 
@@ -152,25 +155,35 @@ update context msg model =
             , MapQuery (always query)
             )
 
-        FilterEditorMsg subMsg ->
-            case model.filterEditor of
-                Just ( filterKey, filterEditor ) ->
+        FilterEditorMsg filterKey subMsg ->
+            case Dict.get filterKey model.filterEditors of
+                Just filterEditor ->
                     let
-                        ( subModel, subReturn ) =
+                        ( subModel, subCmd, subReturn ) =
                             FilterEditor.update subMsg filterEditor
+
+                        modelWithEditorClosed =
+                            { model
+                                | filterEditors =
+                                    Dict.remove filterKey model.filterEditors
+                            }
+
+                        cmd =
+                            subCmd |> Cmd.map (FilterEditorMsg filterKey)
                     in
                     case subReturn of
                         FilterEditor.NoReturn ->
                             ( { model
-                                | filterEditor = Just ( filterKey, subModel )
+                                | filterEditors =
+                                    Dict.insert filterKey subModel model.filterEditors
                               }
-                            , Cmd.none
+                            , cmd
                             , NoReturn
                             )
 
                         FilterEditor.Saved newFilter ->
-                            ( { model | filterEditor = Nothing }
-                            , Cmd.none
+                            ( modelWithEditorClosed
+                            , cmd
                             , MapQuery
                                 (Query.mapFilters
                                     (Filters.remove filterKey
@@ -180,8 +193,8 @@ update context msg model =
                             )
 
                         FilterEditor.Removed ->
-                            ( { model | filterEditor = Nothing }
-                            , Cmd.none
+                            ( modelWithEditorClosed
+                            , cmd
                             , MapQuery
                                 (Query.mapFilters
                                     (Filters.remove filterKey)
@@ -189,8 +202,8 @@ update context msg model =
                             )
 
                         FilterEditor.Canceled ->
-                            ( { model | filterEditor = Nothing }
-                            , Cmd.none
+                            ( modelWithEditorClosed
+                            , cmd
                             , NoReturn
                             )
 
@@ -263,22 +276,23 @@ viewFilters context model =
                 (viewExistingFilters model)
                 (Query.getFilters context.query)
             ]
-        , case model.filterEditor of
-            Nothing ->
-                Html.span [] <|
-                    List.map
-                        (\{ name, initFilter } ->
-                            Html.button
-                                [ Html.Attributes.type_ "button"
-                                , Html.Events.onClick <| EditFilter initFilter
-                                ]
-                                [ Html.text name ]
-                        )
-                        Filter.filterTypes
-
-            Just ( _, filterEditor ) ->
-                FilterEditor.view filterEditor
-                    |> Html.map FilterEditorMsg
+        , Html.span [] <|
+            List.map
+                (\{ name, initFilter } ->
+                    Html.button
+                        [ Html.Attributes.type_ "button"
+                        , Html.Events.onClick <| EditFilter initFilter
+                        ]
+                        [ Html.text name ]
+                )
+                Filter.filterTypes
+        , Html.div [] <|
+            List.map
+                (\( key, filterEditor ) ->
+                    FilterEditor.view filterEditor
+                        |> Html.map (FilterEditorMsg key)
+                )
+                (Dict.toList model.filterEditors)
         ]
 
 
@@ -289,12 +303,9 @@ viewExistingFilters model filters =
             (\filter ->
                 let
                     beingEdited =
-                        case model.filterEditor of
-                            Just ( filterKey, _ ) ->
-                                Filter.key filter == filterKey
-
-                            _ ->
-                                False
+                        Dict.member
+                            (Filter.key filter)
+                            model.filterEditors
                 in
                 viewExistingFilter beingEdited filter
             )
