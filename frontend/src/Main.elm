@@ -186,6 +186,12 @@ view model =
                         , Html.Events.onClick (ControlsMsg Controls.submitExampleQuery)
                         ]
                         [ Html.text "WIP 2018-10-29" ]
+                    , Html.img
+                        [ Html.Attributes.alt "TUM Logo"
+                        , Html.Attributes.src "logo_tum.png"
+                        , Html.Attributes.style "float" "right"
+                        ]
+                        []
                     ]
                 ]
             , Controls.view { query = model.query } model.controls
