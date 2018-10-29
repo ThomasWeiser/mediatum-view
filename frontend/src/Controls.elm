@@ -145,7 +145,7 @@ update context msg model =
                         , filters =
                             Filters.none
                                 |> Filters.insert (Filter.YearWithin "2000" "2010")
-                                |> Filters.insert (Filter.TitleFts "the")
+                                |> Filters.insert (Filter.TitleFts "with")
                         , options = model.searchOptions
                         , searchTerm = searchTerm
                         }

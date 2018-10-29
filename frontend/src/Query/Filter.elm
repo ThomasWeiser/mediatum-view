@@ -105,25 +105,25 @@ view filter =
 
         YearWithin fromYear "" ->
             [ Html.text "Years from "
-            , Html.text fromYear
+            , quote fromYear
             ]
 
         YearWithin "" toYear ->
             [ Html.text "Years up to "
-            , Html.text toYear
+            , quote toYear
             ]
 
         YearWithin fromYear toYear ->
             if fromYear == toYear then
                 [ Html.text "Year "
-                , Html.text fromYear
+                , quote fromYear
                 ]
 
             else
                 [ Html.text "Years from "
-                , Html.text fromYear
+                , quote fromYear
                 , Html.text " to "
-                , Html.text toYear
+                , quote toYear
                 ]
 
         TitleFts "" ->
@@ -132,7 +132,7 @@ view filter =
 
         TitleFts searchTerm ->
             [ Html.text "Title: "
-            , Html.text searchTerm
+            , quote searchTerm
             ]
 
 
@@ -175,3 +175,8 @@ viewEdit focusId filter =
                     ]
                     []
                 ]
+
+
+quote : String -> Html msg
+quote text =
+    Html.i [] [ Html.text text ]
