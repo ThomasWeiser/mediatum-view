@@ -233,6 +233,7 @@ viewPaginationButtons page targetTagger =
     in
     Html.div
         [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+        , Html.Attributes.class "button-group"
         ]
         [ viewButton "First"
             (targetTagger Page.First)

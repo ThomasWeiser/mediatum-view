@@ -105,17 +105,23 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    Html.form [ Html.Events.onSubmit Submit ] <|
+    Html.form
+        [ Html.Events.onSubmit Submit
+        , Html.Attributes.class "filter-form button-group"
+        ]
         [ Filter.viewEdit
             model.focusId
             model.filter
             |> Html.map Change
         , Html.button
-            [ Html.Attributes.type_ "submit" ]
+            [ Html.Attributes.type_ "submit"
+            , Html.Attributes.class "filter-button"
+            ]
             [ Html.text "Ok" ]
         , Html.button
             [ Html.Attributes.type_ "button"
             , Html.Events.onClick Cancel
+            , Html.Attributes.class "filter-button"
             ]
             [ Html.text "Cancel" ]
         ]

@@ -96,52 +96,52 @@ toAttributeTest filter =
             }
 
 
-view : Filter -> Html Never
+view : Filter -> List (Html msg)
 view filter =
-    Html.span [] <|
-        case filter of
-            YearWithin "" "" ->
-                -- Should never occur here
-                [ Html.text "" ]
+    case filter of
+        YearWithin "" "" ->
+            -- Should never occur here
+            [ Html.text "" ]
 
-            YearWithin fromYear "" ->
-                [ Html.text "Years from "
+        YearWithin fromYear "" ->
+            [ Html.text "Years from "
+            , Html.text fromYear
+            ]
+
+        YearWithin "" toYear ->
+            [ Html.text "Years up to "
+            , Html.text toYear
+            ]
+
+        YearWithin fromYear toYear ->
+            if fromYear == toYear then
+                [ Html.text "Year "
                 , Html.text fromYear
                 ]
 
-            YearWithin "" toYear ->
-                [ Html.text "Years up to "
+            else
+                [ Html.text "Years from "
+                , Html.text fromYear
+                , Html.text " to "
                 , Html.text toYear
                 ]
 
-            YearWithin fromYear toYear ->
-                if fromYear == toYear then
-                    [ Html.text "Year "
-                    , Html.text fromYear
-                    ]
+        TitleFts "" ->
+            -- Should never occur here
+            [ Html.text "" ]
 
-                else
-                    [ Html.text "Years from "
-                    , Html.text fromYear
-                    , Html.text " to "
-                    , Html.text toYear
-                    ]
-
-            TitleFts "" ->
-                -- Should never occur here
-                [ Html.text "" ]
-
-            TitleFts searchTerm ->
-                [ Html.text "Title search: "
-                , Html.text searchTerm
-                ]
+        TitleFts searchTerm ->
+            [ Html.text "Title: "
+            , Html.text searchTerm
+            ]
 
 
 viewEdit : String -> Filter -> Html Filter
 viewEdit focusId filter =
     case filter of
         YearWithin from to ->
-            Html.span []
+            Html.span
+                [ Html.Attributes.class "filter-inputs" ]
                 [ Html.input
                     [ Html.Attributes.id focusId
                     , Html.Attributes.type_ "number"
@@ -164,7 +164,8 @@ viewEdit focusId filter =
                 ]
 
         TitleFts searchTerm ->
-            Html.span []
+            Html.span
+                [ Html.Attributes.class "filter-inputs" ]
                 [ Html.input
                     [ Html.Attributes.id focusId
                     , Html.Attributes.type_ "text"

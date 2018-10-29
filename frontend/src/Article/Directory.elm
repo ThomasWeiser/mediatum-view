@@ -223,6 +223,7 @@ viewPaginationButtons page targetTagger =
     in
     Html.div
         [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+        , Html.Attributes.class "button-group"
         ]
         [ -- "Last" currently does not work with our GraphQL API
           -- Only show "First" and "Next" for now.

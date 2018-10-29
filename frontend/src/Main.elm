@@ -185,7 +185,7 @@ view model =
                         , Html.Attributes.title "You may click here to start an example query."
                         , Html.Events.onClick (ControlsMsg Controls.submitExampleQuery)
                         ]
-                        [ Html.text "WIP 2018-10-28" ]
+                        [ Html.text "WIP 2018-10-29" ]
                     ]
                 ]
             , Controls.view { query = model.query } model.controls

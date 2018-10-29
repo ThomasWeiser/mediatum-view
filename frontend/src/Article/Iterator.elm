@@ -124,26 +124,30 @@ view context model =
                 (\id -> [ Html.Events.onClick (Select id) ])
                 maybeId
     in
-    Html.div [ Html.Attributes.class "iterator" ]
-        [ Html.button
-            [ Html.Attributes.type_ "button"
-            , Html.Events.onClick Show
+    Html.div
+        [ Html.Attributes.class "iterator" ]
+        [ Html.div
+            [ Html.Attributes.class "button-group" ]
+            [ Html.button
+                [ Html.Attributes.type_ "button"
+                , Html.Events.onClick Show
+                ]
+                [ Html.text "Show" ]
+            , Html.button
+                [ Html.Attributes.type_ "button"
+                , Html.Events.onClick Close
+                ]
+                [ Html.text "All Results" ]
+            , Html.button
+                (selectButtonAttrs first)
+                [ Html.text "First" ]
+            , Html.button
+                (selectButtonAttrs prev)
+                [ Html.text "Prev" ]
+            , Html.button
+                (selectButtonAttrs next)
+                [ Html.text "Next" ]
             ]
-            [ Html.text "Show" ]
-        , Html.button
-            [ Html.Attributes.type_ "button"
-            , Html.Events.onClick Close
-            ]
-            [ Html.text "All Results" ]
-        , Html.button
-            (selectButtonAttrs first)
-            [ Html.text "First" ]
-        , Html.button
-            (selectButtonAttrs prev)
-            [ Html.text "Prev" ]
-        , Html.button
-            (selectButtonAttrs next)
-            [ Html.text "Next" ]
         , Details.view model.details
             |> Html.map DetailsMsg
         ]

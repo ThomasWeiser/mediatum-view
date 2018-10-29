@@ -269,24 +269,26 @@ viewSearch context model =
 
 viewFilters : Context -> Model -> Html Msg
 viewFilters context model =
-    Html.div []
-        [ Html.div []
-            [ Maybe.Extra.unwrap
-                (Html.text "")
-                (viewExistingFilters model)
-                (Query.getFilters context.query)
-            ]
-        , Html.span [] <|
+    Html.div [ Html.Attributes.class "filters-bar" ]
+        [ Html.span [] <|
             List.map
                 (\{ name, initFilter } ->
-                    Html.button
-                        [ Html.Attributes.type_ "button"
-                        , Html.Events.onClick <| EditFilter initFilter
+                    Html.span
+                        [ Html.Attributes.class "button-group" ]
+                        [ Html.button
+                            [ Html.Attributes.type_ "button"
+                            , Html.Events.onClick <| EditFilter initFilter
+                            , Html.Attributes.class "filter-button"
+                            ]
+                            [ Html.text <| name ++ "..." ]
                         ]
-                        [ Html.text name ]
                 )
                 Filter.filterTypes
-        , Html.div [] <|
+        , Maybe.Extra.unwrap
+            (Html.text "")
+            (viewExistingFilters model)
+            (Query.getFilters context.query)
+        , Html.span [] <|
             List.map
                 (\( filterHandle, filterEditor ) ->
                     FilterEditor.view filterEditor
@@ -298,7 +300,7 @@ viewFilters context model =
 
 viewExistingFilters : Model -> Filters -> Html Msg
 viewExistingFilters model filters =
-    Html.div [] <|
+    Html.span [] <|
         List.map
             (\filter ->
                 let
@@ -315,21 +317,21 @@ viewExistingFilters model filters =
 viewExistingFilter : Bool -> Filter -> Html Msg
 viewExistingFilter beingEdited filter =
     Html.span
-        [ Html.Attributes.class "existing-filter"
+        [ Html.Attributes.class "button-group"
         , Html.Attributes.classList [ ( "being-edited", beingEdited ) ]
         ]
-        [ Filter.view filter
-            |> Html.map never
-        , Html.button
+        [ Html.button
             [ Html.Attributes.type_ "button"
             , Html.Attributes.disabled beingEdited
             , Html.Events.onClick (EditFilter filter)
+            , Html.Attributes.class "filter-button"
             ]
-            [ Html.text "Edit" ]
+            (Filter.view filter)
         , Html.button
             [ Html.Attributes.type_ "button"
             , Html.Attributes.disabled beingEdited
             , Html.Events.onClick (RemoveFilter filter)
+            , Html.Attributes.class "filter-button"
             ]
-            [ Html.text "Remove" ]
+            [ Html.text "X" ]
         ]
