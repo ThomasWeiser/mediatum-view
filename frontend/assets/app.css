@@ -89,6 +89,7 @@ button, select, .filter-inputs {
 button.filter-button, .filter-inputs {
   background-color: #e2e4d0;
   border-color: #b4b977;
+  padding: 0.25rem .75rem;
 }
 
 .button-group {
