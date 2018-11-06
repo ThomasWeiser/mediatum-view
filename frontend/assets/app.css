@@ -74,6 +74,9 @@ article {
 button:not(:disabled):not(.disabled) {
   cursor: pointer; 
 }
+button:disabled, button.disabled {
+  opacity: .65;
+}
 button, select, .filter-inputs {
   user-select: none;
   border: 1px solid;
