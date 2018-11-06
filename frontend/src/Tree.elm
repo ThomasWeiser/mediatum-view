@@ -48,7 +48,7 @@ init =
       , selection = []
       , showSubselection = True
       }
-    , Api.makeRequest
+    , Api.makeQueryRequest
         ApiResponseToplevelFolder
         Api.queryToplevelFolder
     )
@@ -220,7 +220,7 @@ loadSubfolder superfolderId model =
     case getSubLinks superfolderId model of
         Nothing ->
             ( { model | loading = True }
-            , Api.makeRequest
+            , Api.makeQueryRequest
                 (ApiResponseSubfolder superfolderId)
                 (Api.querySubfolder superfolderId)
             )

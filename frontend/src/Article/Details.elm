@@ -59,7 +59,7 @@ update msg model =
 
 sendDocumentQuery : DocumentId -> Cmd Msg
 sendDocumentQuery id =
-    Api.makeRequest
+    Api.makeQueryRequest
         (ApiResponse id)
         (Api.queryDocumentDetails id)
 

@@ -80,7 +80,7 @@ update context msg model =
             ( { model
                 | pageResult = Page.loadingPageResult model.pageResult
               }
-            , Api.makeRequest
+            , Api.makeQueryRequest
                 ApiResponseFtsPage
                 (Api.queryFtsPage
                     model.pageResult.page
@@ -96,7 +96,7 @@ update context msg model =
                 , queryFolderCounts = False
               }
             , if model.queryFolderCounts then
-                Api.makeRequest
+                Api.makeQueryRequest
                     ApiResponseFtsFolderCounts
                     (Api.queryFtsFolderCounts
                         context.ftsQuery

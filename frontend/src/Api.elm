@@ -1,7 +1,7 @@
 module Api exposing
     ( ApiError
     , Response
-    , makeRequest
+    , makeQueryRequest
     , queryDocumentDetails
     , queryFolderDocuments
     , queryFtsFolderCounts
@@ -57,11 +57,11 @@ type alias ApiError =
     Graphql.Extra.StrippedError
 
 
-makeRequest :
+makeQueryRequest :
     (Response decodesTo -> msg)
     -> SelectionSet decodesTo Graphql.Operation.RootQuery
     -> Cmd msg
-makeRequest tagger selectionSet =
+makeQueryRequest tagger selectionSet =
     selectionSet
         |> Graphql.Http.queryRequest "http://localhost:5000/graphql"
         |> Graphql.Http.send

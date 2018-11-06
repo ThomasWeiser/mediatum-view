@@ -132,7 +132,7 @@ sendSearchQuery context paginationPosition model =
     ( { model
         | pageResult = Page.loadingPageResult model.pageResult
       }
-    , Api.makeRequest
+    , Api.makeQueryRequest
         ApiResponse
         (Api.queryFolderDocuments
             model.pageResult.page
