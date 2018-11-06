@@ -132,7 +132,7 @@ view model =
                 Icons.spinner
 
             Success document ->
-                viewDocument document
+                viewDocument model document
 
             NotFound id ->
                 Html.span []
@@ -143,12 +143,11 @@ view model =
 
             QueryError error ->
                 viewGraphqlError error
-        , viewEditAttribute model
         ]
 
 
-viewDocument : Document -> Html msg
-viewDocument document =
+viewDocument : Model -> Document -> Html Msg
+viewDocument model document =
     Html.div []
         [ Html.div [ Html.Attributes.class "header" ]
             [ Html.div [ Html.Attributes.class "metadatatype" ]
@@ -162,6 +161,7 @@ viewDocument document =
                     viewAttribute
                     document.attributes
             ]
+        , viewEditAttribute model document
         ]
 
 
@@ -183,25 +183,14 @@ viewGraphqlError error =
     viewError (Graphql.Extra.errorToString error)
 
 
-viewEditAttribute : Model -> Html Msg
-viewEditAttribute model =
+viewEditAttribute : Model -> Document -> Html Msg
+viewEditAttribute model document =
     let
-        maybeDocumentId =
-            case model.remoteDocument of
-                Success document ->
-                    Just document.id
-
-                _ ->
-                    Nothing
-
         formDisabled =
             model.mutationState == Pending
     in
     Html.form
-        (Maybe.Extra.unwrap []
-            (\id -> [ Html.Events.onSubmit (SubmitMutation id) ])
-            maybeDocumentId
-        )
+        [ Html.Events.onSubmit (SubmitMutation document.id) ]
         [ Html.div [ Html.Attributes.class "edit-attribute" ]
             [ Html.hr [] []
             , Html.div [] [ Html.text "Edit an Attribute of this Document:" ]
