@@ -33,7 +33,7 @@ import Graphql.Object.FtsDocumentResult
 import Graphql.Object.FtsDocumentResultPage
 import Graphql.Object.Metadatatype
 import Graphql.Object.PageInfo
-import Graphql.Object.SetDocumentAttributePayload
+import Graphql.Object.UpdateDocumentAttributePayload
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.Query
@@ -354,7 +354,7 @@ updateDocumentAttribute :
 updateDocumentAttribute documentId key value =
     Graphql.Mutation.selection Maybe.Extra.join
         |> with
-            (Graphql.Mutation.setDocumentAttribute
+            (Graphql.Mutation.updateDocumentAttribute
                 { input =
                     { clientMutationId = Absent
                     , id = Present (Document.idToInt documentId)
@@ -362,9 +362,9 @@ updateDocumentAttribute documentId key value =
                     , value = Present value
                     }
                 }
-                (Graphql.Object.SetDocumentAttributePayload.selection identity
+                (Graphql.Object.UpdateDocumentAttributePayload.selection identity
                     |> with
-                        (Graphql.Object.SetDocumentAttributePayload.document
+                        (Graphql.Object.UpdateDocumentAttributePayload.document
                             (documentNode "nodebig")
                         )
                 )

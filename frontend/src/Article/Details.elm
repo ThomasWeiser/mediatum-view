@@ -42,12 +42,13 @@ type RemoteDocument
 type MutationState
     = Init
     | Pending
+    | CannotUpdateKey String
     | MutationError Graphql.Extra.StrippedError
 
 
 type Msg
     = ApiQueryResponse DocumentId (Api.Response (Maybe Document))
-    | ApiMutationResponse DocumentId (Api.Response (Maybe Document))
+    | ApiMutationResponse DocumentId String (Api.Response (Maybe Document))
     | SetAttributeKey String
     | SetAttributeValue String
     | SubmitMutation DocumentId
@@ -82,15 +83,19 @@ update msg model =
             , Cmd.none
             )
 
-        ApiMutationResponse _ (Err err) ->
+        ApiMutationResponse _ _ (Err err) ->
             ( { model | mutationState = MutationError err }
             , Cmd.none
             )
 
-        ApiMutationResponse id (Ok result) ->
+        ApiMutationResponse _ key (Ok Nothing) ->
+            ( { model | mutationState = CannotUpdateKey key }
+            , Cmd.none
+            )
+
+        ApiMutationResponse id _ (Ok (Just result)) ->
             ( { model
-                | remoteDocument =
-                    Maybe.Extra.unwrap (NotFound id) Success result
+                | remoteDocument = Success result
                 , mutationState = Init
                 , editAttributeValue = ""
               }
@@ -110,7 +115,7 @@ update msg model =
         SubmitMutation documentId ->
             ( { model | mutationState = Pending }
             , Api.makeMutationRequest
-                (ApiMutationResponse documentId)
+                (ApiMutationResponse documentId model.editAttributeKey)
                 (Api.updateDocumentAttribute
                     documentId
                     model.editAttributeKey
@@ -137,7 +142,7 @@ view model =
                     ]
 
             QueryError error ->
-                viewError error
+                viewGraphqlError error
         , viewEditAttribute model
         ]
 
@@ -173,11 +178,9 @@ viewAttribute attribute =
             Html.text ""
 
 
-viewError : Graphql.Extra.StrippedError -> Html msg
-viewError error =
-    Html.div
-        [ Html.Attributes.class "error" ]
-        [ Html.text (Graphql.Extra.errorToString error) ]
+viewGraphqlError : Graphql.Extra.StrippedError -> Html msg
+viewGraphqlError error =
+    viewError (Graphql.Extra.errorToString error)
 
 
 viewEditAttribute : Model -> Html Msg
@@ -231,8 +234,18 @@ viewEditAttribute model =
                     Pending ->
                         Icons.spinner
 
+                    CannotUpdateKey key ->
+                        viewError <| "Cannot update key \"" ++ key ++ "\""
+
                     MutationError error ->
-                        viewError error
+                        viewGraphqlError error
                 ]
             ]
         ]
+
+
+viewError : String -> Html msg
+viewError defect =
+    Html.div
+        [ Html.Attributes.class "error" ]
+        [ Html.text defect ]
