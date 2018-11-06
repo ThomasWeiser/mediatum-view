@@ -2,6 +2,7 @@ module Document exposing
     ( Attribute
     , Document
     , DocumentId
+    , attributeValue
     , idToInt
     , idToString
     , init
@@ -11,6 +12,7 @@ module Document exposing
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import List.Extra
 import Regex
 
 
@@ -67,6 +69,14 @@ init idAsInt metadatatypeName name attributes =
     , metadatatypeName = metadatatypeName
     , attributes = attributes
     }
+
+
+attributeValue : String -> Document -> Maybe String
+attributeValue key document =
+    List.Extra.find
+        (\attribute -> attribute.field == key)
+        document.attributes
+        |> Maybe.map (.value >> Maybe.withDefault "")
 
 
 view : (DocumentId -> msg) -> Maybe Int -> Document -> Html msg

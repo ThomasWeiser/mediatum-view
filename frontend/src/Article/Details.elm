@@ -80,6 +80,7 @@ update msg model =
                 | remoteDocument =
                     Maybe.Extra.unwrap (NotFound id) Success result
               }
+                |> initEditAttributeValue
             , Cmd.none
             )
 
@@ -97,13 +98,14 @@ update msg model =
             ( { model
                 | remoteDocument = Success result
                 , mutationState = Init
-                , editAttributeValue = ""
               }
+                |> initEditAttributeValue
             , Cmd.none
             )
 
         SetAttributeKey key ->
             ( { model | editAttributeKey = key }
+                |> initEditAttributeValue
             , Cmd.none
             )
 
@@ -122,6 +124,35 @@ update msg model =
                     model.editAttributeValue
                 )
             )
+
+
+initEditAttributeValue : Model -> Model
+initEditAttributeValue model =
+    case model.remoteDocument of
+        Success document ->
+            let
+                ( key1, value1 ) =
+                    case Document.attributeValue model.editAttributeKey document of
+                        Just attributeValue ->
+                            ( model.editAttributeKey, attributeValue )
+
+                        Nothing ->
+                            let
+                                firstKey =
+                                    List.head document.attributes
+                                        |> Maybe.Extra.unwrap "" .field
+                            in
+                            ( firstKey
+                            , Document.attributeValue firstKey document |> Maybe.withDefault ""
+                            )
+            in
+            { model
+                | editAttributeKey = key1
+                , editAttributeValue = value1
+            }
+
+        _ ->
+            model
 
 
 view : Model -> Html Msg
@@ -194,14 +225,21 @@ viewEditAttribute model document =
         [ Html.div [ Html.Attributes.class "edit-attribute" ]
             [ Html.hr [] []
             , Html.div [] [ Html.text "Edit an Attribute of this Document:" ]
-            , Html.input
-                [ Html.Attributes.type_ "text"
-                , Html.Attributes.placeholder "Key"
-                , Html.Attributes.value model.editAttributeKey
+            , Html.select
+                [ Html.Attributes.value model.editAttributeKey
                 , Html.Attributes.disabled formDisabled
                 , Utils.onChange SetAttributeKey
                 ]
-                []
+                (List.map
+                    (\{ field } ->
+                        Html.option
+                            [ Html.Attributes.value field
+                            , Html.Attributes.selected (model.editAttributeKey == field)
+                            ]
+                            [ Html.text field ]
+                    )
+                    document.attributes
+                )
             , Html.input
                 [ Html.Attributes.type_ "text"
                 , Html.Attributes.placeholder "Value"
