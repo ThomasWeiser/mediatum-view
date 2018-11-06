@@ -153,4 +153,15 @@ create or replace function aux.is_public_today (nodeId int4)
 $$ language sql stable;
 
 
+create or replace function aux.nodetype_is_container (nodetype1 varchar)
+    returns boolean as $$
+    select exists
+        ( select 1
+          from mediatum.nodetype
+          where nodetype.name = nodetype1
+          and nodetype.is_container
+        )
+$$ language sql stable;
+
+
 commit;
