@@ -12,9 +12,11 @@ import Document exposing (Attribute, Document, DocumentId)
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
+import Html.Events
 import Icons
 import Maybe.Extra
 import Query
+import Utils
 
 
 type alias Context =
@@ -22,52 +24,105 @@ type alias Context =
     }
 
 
-type Model
+type alias Model =
+    { remoteDocument : RemoteDocument
+    , editAttributeKey : String
+    , editAttributeValue : String
+    , mutationState : MutationState
+    }
+
+
+type RemoteDocument
     = Loading
     | Success Document
     | NotFound DocumentId
-    | Error Graphql.Extra.StrippedError
+    | QueryError Graphql.Extra.StrippedError
+
+
+type MutationState
+    = Init
+    | Pending
+    | MutationError Graphql.Extra.StrippedError
 
 
 type Msg
-    = ApiResponse DocumentId (Api.Response (Maybe Document))
+    = ApiQueryResponse DocumentId (Api.Response (Maybe Document))
+    | ApiMutationResponse DocumentId (Api.Response (Maybe Document))
+    | SetAttributeKey String
+    | SetAttributeValue String
+    | SubmitMutation DocumentId
 
 
 init : Context -> ( Model, Cmd Msg )
 init context =
-    ( Loading
-    , sendDocumentQuery context.detailsQuery.documentId
+    ( { remoteDocument = Loading
+      , editAttributeKey = ""
+      , editAttributeValue = ""
+      , mutationState = Init
+      }
+    , Api.makeQueryRequest
+        (ApiQueryResponse context.detailsQuery.documentId)
+        (Api.queryDocumentDetails context.detailsQuery.documentId)
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ApiResponse _ (Err err) ->
-            ( Error err
+        ApiQueryResponse _ (Err err) ->
+            ( { model | remoteDocument = QueryError err }
             , Cmd.none
             )
 
-        ApiResponse id (Ok result) ->
-            ( Maybe.Extra.unwrap
-                (NotFound id)
-                Success
-                result
+        ApiQueryResponse id (Ok result) ->
+            ( { model
+                | remoteDocument =
+                    Maybe.Extra.unwrap (NotFound id) Success result
+              }
             , Cmd.none
             )
 
+        ApiMutationResponse _ (Err err) ->
+            ( { model | mutationState = MutationError err }
+            , Cmd.none
+            )
 
-sendDocumentQuery : DocumentId -> Cmd Msg
-sendDocumentQuery id =
-    Api.makeQueryRequest
-        (ApiResponse id)
-        (Api.queryDocumentDetails id)
+        ApiMutationResponse id (Ok result) ->
+            ( { model
+                | remoteDocument =
+                    Maybe.Extra.unwrap (NotFound id) Success result
+                , mutationState = Init
+                , editAttributeValue = ""
+              }
+            , Cmd.none
+            )
+
+        SetAttributeKey key ->
+            ( { model | editAttributeKey = key }
+            , Cmd.none
+            )
+
+        SetAttributeValue value ->
+            ( { model | editAttributeValue = value }
+            , Cmd.none
+            )
+
+        SubmitMutation documentId ->
+            ( { model | mutationState = Pending }
+            , Api.makeMutationRequest
+                (ApiMutationResponse documentId)
+                (Api.updateDocumentAttribute
+                    documentId
+                    model.editAttributeKey
+                    model.editAttributeValue
+                )
+            )
 
 
 view : Model -> Html Msg
 view model =
     Html.div [ Html.Attributes.class "details" ]
-        [ case model of
+        [ case model.remoteDocument of
             Loading ->
                 Icons.spinner
 
@@ -81,8 +136,9 @@ view model =
                     , Html.text " not available"
                     ]
 
-            Error error ->
+            QueryError error ->
                 viewError error
+        , viewEditAttribute model
         ]
 
 
@@ -122,3 +178,61 @@ viewError error =
     Html.div
         [ Html.Attributes.class "error" ]
         [ Html.text (Graphql.Extra.errorToString error) ]
+
+
+viewEditAttribute : Model -> Html Msg
+viewEditAttribute model =
+    let
+        maybeDocumentId =
+            case model.remoteDocument of
+                Success document ->
+                    Just document.id
+
+                _ ->
+                    Nothing
+
+        formDisabled =
+            model.mutationState == Pending
+    in
+    Html.form
+        (Maybe.Extra.unwrap []
+            (\id -> [ Html.Events.onSubmit (SubmitMutation id) ])
+            maybeDocumentId
+        )
+        [ Html.div [ Html.Attributes.class "edit-attribute" ]
+            [ Html.hr [] []
+            , Html.div [] [ Html.text "Edit an Attribute of this Document:" ]
+            , Html.input
+                [ Html.Attributes.type_ "text"
+                , Html.Attributes.placeholder "Key"
+                , Html.Attributes.value model.editAttributeKey
+                , Html.Attributes.disabled formDisabled
+                , Utils.onChange SetAttributeKey
+                ]
+                []
+            , Html.input
+                [ Html.Attributes.type_ "text"
+                , Html.Attributes.placeholder "Value"
+                , Html.Attributes.value model.editAttributeValue
+                , Html.Attributes.disabled formDisabled
+                , Utils.onChange SetAttributeValue
+                ]
+                []
+            , Html.button
+                [ Html.Attributes.type_ "submit"
+                , Html.Attributes.disabled (formDisabled || model.editAttributeKey == "")
+                ]
+                [ Html.text "Ok" ]
+            , Html.div []
+                [ case model.mutationState of
+                    Init ->
+                        Html.text ""
+
+                    Pending ->
+                        Icons.spinner
+
+                    MutationError error ->
+                        viewError error
+                ]
+            ]
+        ]
