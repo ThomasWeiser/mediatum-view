@@ -231,12 +231,12 @@ viewEditAttribute model document =
                 , Utils.onChange SetAttributeKey
                 ]
                 (List.map
-                    (\{ field } ->
+                    (\{ field, name } ->
                         Html.option
                             [ Html.Attributes.value field
                             , Html.Attributes.selected (model.editAttributeKey == field)
                             ]
-                            [ Html.text field ]
+                            [ Html.text name ]
                     )
                     document.attributes
                 )
@@ -256,13 +256,13 @@ viewEditAttribute model document =
             , Html.div []
                 [ case model.mutationState of
                     Init ->
-                        Html.text ""
+                        Html.text <| "Attribute key: " ++ model.editAttributeKey
 
                     Pending ->
                         Icons.spinner
 
                     CannotUpdateKey key ->
-                        viewError <| "Cannot update key \"" ++ key ++ "\""
+                        viewError <| "Cannot update key \"" ++ key ++ "\". It's not present in the JSON attributes of the document's node"
 
                     MutationError error ->
                         viewGraphqlError error
