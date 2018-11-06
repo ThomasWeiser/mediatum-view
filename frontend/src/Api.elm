@@ -1,6 +1,7 @@
 module Api exposing
     ( ApiError
     , Response
+    , makeMutationRequest
     , makeQueryRequest
     , queryDocumentDetails
     , queryFolderDocuments
@@ -8,6 +9,7 @@ module Api exposing
     , queryFtsPage
     , querySubfolder
     , queryToplevelFolder
+    , updateDocumentAttribute
     )
 
 import Dict
@@ -17,6 +19,7 @@ import FtsDocumentResult exposing (FtsDocumentResult)
 import Graphql.Extra
 import Graphql.Field
 import Graphql.Http
+import Graphql.Mutation
 import Graphql.Object
 import Graphql.Object.Docset
 import Graphql.Object.Document
@@ -30,12 +33,14 @@ import Graphql.Object.FtsDocumentResult
 import Graphql.Object.FtsDocumentResultPage
 import Graphql.Object.Metadatatype
 import Graphql.Object.PageInfo
+import Graphql.Object.SetDocumentAttributePayload
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.Query
 import Graphql.Scalar
 import Graphql.SelectionSet exposing (SelectionSet, with)
 import Json.Decode exposing (Decoder)
+import Maybe.Extra
 import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
@@ -64,6 +69,17 @@ makeQueryRequest :
 makeQueryRequest tagger selectionSet =
     selectionSet
         |> Graphql.Http.queryRequest "http://localhost:5000/graphql"
+        |> Graphql.Http.send
+            (Result.mapError Graphql.Extra.stripError >> tagger)
+
+
+makeMutationRequest :
+    (Response decodesTo -> msg)
+    -> SelectionSet decodesTo Graphql.Operation.RootMutation
+    -> Cmd msg
+makeMutationRequest tagger selectionSet =
+    selectionSet
+        |> Graphql.Http.mutationRequest "http://localhost:5000/graphql"
         |> Graphql.Http.send
             (Result.mapError Graphql.Extra.stripError >> tagger)
 
@@ -327,6 +343,31 @@ queryDocumentDetails documentId =
                     }
                 )
                 (documentNode "nodebig")
+            )
+
+
+updateDocumentAttribute :
+    DocumentId
+    -> String
+    -> String
+    -> SelectionSet (Maybe Document) Graphql.Operation.RootMutation
+updateDocumentAttribute documentId key value =
+    Graphql.Mutation.selection Maybe.Extra.join
+        |> with
+            (Graphql.Mutation.setDocumentAttribute
+                { input =
+                    { clientMutationId = Absent
+                    , id = Present (Document.idToInt documentId)
+                    , key = Present key
+                    , value = Present value
+                    }
+                }
+                (Graphql.Object.SetDocumentAttributePayload.selection identity
+                    |> with
+                        (Graphql.Object.SetDocumentAttributePayload.document
+                            (documentNode "nodebig")
+                        )
+                )
             )
 
 
