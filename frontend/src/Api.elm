@@ -16,6 +16,7 @@ import Dict
 import Document exposing (Document, DocumentId)
 import Folder exposing (Folder, FolderCounts, FolderId)
 import FtsDocumentResult exposing (FtsDocumentResult)
+import GenericNode exposing (GenericNode)
 import Graphql.Extra
 import Graphql.Field
 import Graphql.Http
@@ -31,6 +32,7 @@ import Graphql.Object.FolderCountsConnection
 import Graphql.Object.FoldersConnection
 import Graphql.Object.FtsDocumentResult
 import Graphql.Object.FtsDocumentResultPage
+import Graphql.Object.GenericNode
 import Graphql.Object.Metadatatype
 import Graphql.Object.PageInfo
 import Graphql.Object.UpdateDocumentAttributePayload
@@ -116,6 +118,37 @@ querySubfolder folderId =
             )
 
 
+queryGenericNode : FolderId -> SelectionSet GenericNode Graphql.Operation.RootQuery
+queryGenericNode folderId =
+    let
+        constructor : Maybe (List Folder) -> Maybe Document -> GenericNode
+        constructor maybeLineage maybeDocument =
+            case ( maybeLineage, maybeDocument ) of
+                ( Just lineage, _ ) ->
+                    GenericNode.IsFolder lineage
+
+                ( Nothing, Just document ) ->
+                    GenericNode.IsDocument document
+
+                ( Nothing, Nothing ) ->
+                    GenericNode.IsNeither
+    in
+    Graphql.Query.selection identity
+        |> with
+            (Graphql.Query.genericNodeById
+                (\optionals ->
+                    { optionals
+                        | id = Present (Folder.idToInt folderId)
+                    }
+                )
+                (Graphql.Object.GenericNode.selection constructor
+                    |> with (Graphql.Object.GenericNode.asFolder folderLineage)
+                    |> with (Graphql.Object.GenericNode.asDocument (documentNode "nodebig"))
+                )
+                |> Graphql.Field.nonNullOrFail
+            )
+
+
 folderNode : SelectionSet Folder Graphql.Object.Folder
 folderNode =
     Graphql.Object.Folder.selection Folder.init
@@ -146,6 +179,16 @@ folderNodeWithSubfolders =
                 (Graphql.Object.FoldersConnection.selection identity
                     |> with (Graphql.Object.FoldersConnection.nodes folderNode)
                 )
+            )
+
+
+folderLineage : SelectionSet (List Folder) Graphql.Object.Folder
+folderLineage =
+    Graphql.Object.Folder.selection Maybe.Extra.values
+        |> with
+            (Graphql.Object.Folder.lineage
+                folderNode
+                |> Graphql.Field.nonNullOrFail
             )
 
 
