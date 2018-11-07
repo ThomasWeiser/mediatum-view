@@ -26,7 +26,7 @@ type alias Model =
 
 main : Program () Model Msg
 main =
-    Browser.element
+    Browser.document
         { init = init
         , update = update
         , subscriptions = always Sub.none
@@ -170,8 +170,15 @@ andThenUpdate msg ( model1, cmd1 ) =
     ( model2, Cmd.batch [ cmd1, cmd2 ] )
 
 
-view : Model -> Html Msg
+view : Model -> Browser.Document Msg
 view model =
+    { title = "mediaTUM View"
+    , body = [ viewPage model ]
+    }
+
+
+viewPage : Model -> Html Msg
+viewPage model =
     Html.div [ Html.Attributes.class "page-container" ]
         [ Icons.definitions
         , Html.header []

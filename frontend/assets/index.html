@@ -2,13 +2,10 @@
 <meta charset="UTF-8">
 <link rel="stylesheet" type="text/css" href="fonts.css">
 <link rel="stylesheet" type="text/css" href="app.css">
+<!-- <script src="debug/elm-remotedev.js"></script> -->
+<script src="app.js"></script>
 <body>
-  <div></div>
-  <!-- <script src="debug/elm-remotedev.js"></script> -->
-  <script src="elm.js"></script>
   <script>
-    Elm.Main.init({
-      node: document.querySelector("div")
-    });
+    var app = Elm.Main.init();
   </script>
 </body>
