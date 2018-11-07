@@ -1,4 +1,4 @@
-module Page exposing
+module App exposing
     ( Model
     , Msg
     , init

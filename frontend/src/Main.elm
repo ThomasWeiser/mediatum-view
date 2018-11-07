@@ -1,17 +1,17 @@
 module Main exposing (main)
 
+import App
 import Browser
 import Browser.Navigation
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Page
 import Url exposing (Url)
 
 
 type alias Model =
     { navigationKey : Browser.Navigation.Key
-    , page : Page.Model
+    , app : App.Model
     }
 
 
@@ -31,19 +31,19 @@ type Msg
     = NoOp
     | UrlRequest Browser.UrlRequest
     | UrlChanged Url.Url
-    | PageMsg Page.Msg
+    | AppMsg App.Msg
 
 
 init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url navigationKey =
     let
-        ( pageModel, pageCmd ) =
-            Page.init ()
+        ( appModel, appCmd ) =
+            App.init ()
     in
     ( { navigationKey = navigationKey
-      , page = pageModel
+      , app = appModel
       }
-    , Cmd.map PageMsg pageCmd
+    , Cmd.map AppMsg appCmd
     )
 
 
@@ -72,15 +72,15 @@ update msg model =
             , Cmd.none
             )
 
-        PageMsg subMsg ->
+        AppMsg subMsg ->
             let
                 ( subModel, subCmd ) =
-                    Page.update subMsg model.page
+                    App.update subMsg model.app
             in
             ( { model
-                | page = subModel
+                | app = subModel
               }
-            , Cmd.map PageMsg subCmd
+            , Cmd.map AppMsg subCmd
             )
 
 
@@ -88,7 +88,7 @@ view : Model -> Browser.Document Msg
 view model =
     { title = "mediaTUM View"
     , body =
-        [ Page.view model.page
-            |> Html.map PageMsg
+        [ App.view model.app
+            |> Html.map AppMsg
         ]
     }
