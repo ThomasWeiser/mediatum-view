@@ -6,6 +6,7 @@ $p src/drop_all.sql
 $p src/types.sql
 $p src/aux.sql
 $p src/entities.sql
+$p src/api-node.sql
 $p src/api-meta.sql
 $p src/api-folder.sql
 $p src/api-document.sql

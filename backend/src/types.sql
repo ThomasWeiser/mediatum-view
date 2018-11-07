@@ -11,6 +11,17 @@ create schema if not exists api;
 create schema if not exists debug;
 
 
+create type api.generic_node as (
+    id int4
+    -- Add more (hidden) columns?
+);
+
+comment on type api.generic_node is
+    'A generic node, which may be a folder or a document';
+comment on column api.generic_node.id is
+    'The mediaTUM node id';
+
+
 create type api.folder as (
     id int4,
 	parent_id int4,
