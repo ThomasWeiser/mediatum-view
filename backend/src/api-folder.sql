@@ -55,4 +55,24 @@ comment on function api.folder_superfolder (child api.folder) is
     'Gets the super-folder of this folder. Returns null if this folder is at the root.';
 
 
+create or replace function api.folder_lineage (current_folder api.folder)
+    returns api.folder[] as $$
+    declare lineage api.folder[] := array[current_folder];
+    begin
+        loop
+            current_folder := api.folder_superfolder (current_folder);
+            if current_folder is null then
+                exit;
+            else
+                lineage := lineage || current_folder;
+            end if;
+        end loop;
+        return lineage;
+    end;
+$$ language plpgsql stable;
+
+comment on function api.folder_lineage (current_folder api.folder) is
+    'Gets a list of folders representing the path from the folder up to the root of the hierarchy.';
+
+
 commit;
