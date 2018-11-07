@@ -2,6 +2,8 @@ module Main exposing (main)
 
 import Article
 import Browser
+import Browser.Navigation
+import Url exposing (Url)
 import Cmd.Extra
 import Controls
 import Dict
@@ -26,11 +28,13 @@ type alias Model =
 
 main : Program () Model Msg
 main =
-    Browser.document
+    Browser.application
         { init = init
         , update = update
         , subscriptions = always Sub.none
         , view = view
+        , onUrlRequest = always NoOp << Debug.log "onUrlRequest"
+        , onUrlChange = always NoOp << Debug.log "onUrlChange"
         }
 
 
@@ -41,8 +45,8 @@ type Msg
     | ArticleMsg Article.Msg
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
+init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init flags url navigationKey =
     let
         ( treeModel, treeCmd ) =
             Tree.init
