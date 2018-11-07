@@ -10,7 +10,8 @@ import Url exposing (Url)
 
 
 type alias Model =
-    { page : Page.Model
+    { navigationKey : Browser.Navigation.Key
+    , page : Page.Model
     }
 
 
@@ -21,13 +22,15 @@ main =
         , update = update
         , subscriptions = always Sub.none
         , view = view
-        , onUrlRequest = always NoOp << Debug.log "onUrlRequest"
-        , onUrlChange = always NoOp << Debug.log "onUrlChange"
+        , onUrlRequest = UrlRequest << Debug.log "onUrlRequest"
+        , onUrlChange = UrlChanged << Debug.log "onUrlChange"
         }
 
 
 type Msg
     = NoOp
+    | UrlRequest Browser.UrlRequest
+    | UrlChanged Url.Url
     | PageMsg Page.Msg
 
 
@@ -37,7 +40,9 @@ init flags url navigationKey =
         ( pageModel, pageCmd ) =
             Page.init ()
     in
-    ( { page = pageModel }
+    ( { navigationKey = navigationKey
+      , page = pageModel
+      }
     , Cmd.map PageMsg pageCmd
     )
 
@@ -47,6 +52,25 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        UrlRequest urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model
+                    , Browser.Navigation.pushUrl
+                        model.navigationKey
+                        (Url.toString url)
+                    )
+
+                Browser.External href ->
+                    ( model
+                    , Browser.Navigation.load href
+                    )
+
+        UrlChanged url ->
+            ( model
+            , Cmd.none
+            )
 
         PageMsg subMsg ->
             let
