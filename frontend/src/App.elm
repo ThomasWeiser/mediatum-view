@@ -1,6 +1,7 @@
 module App exposing
     ( Model
     , Msg
+    , changeRouteTo
     , init
     , update
     , view
@@ -20,6 +21,7 @@ import Icons
 import Maybe.Extra
 import Query exposing (Query)
 import Query.Filters
+import Route exposing (Route)
 import Tree
 import Utils
 
@@ -30,6 +32,7 @@ type alias Model =
     , controls : Controls.Model
     , folderCounts : FolderCounts
     , article : Article.Model
+    , testingOnly_nodeId : String
     }
 
 
@@ -40,10 +43,11 @@ type Msg
     | TreeMsg Tree.Msg
     | ControlsMsg Controls.Msg
     | ArticleMsg Article.Msg
+    | Set_testingOnly_nodeId String
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
+init : Route -> ( Model, Cmd Msg )
+init route =
     let
         ( treeModel, treeCmd ) =
             Tree.init
@@ -54,20 +58,38 @@ init _ =
         ( articleModel, articleCmd ) =
             Article.initEmpty ()
 
-        model =
+        model1 =
             { query = Query.emptyQuery
             , tree = treeModel
             , controls = controlsModel
             , folderCounts = Dict.empty
             , article = articleModel
+            , testingOnly_nodeId = ""
             }
+
+        ( model2, cmd2 ) =
+            changeRouteTo route model1
     in
-    ( model
+    ( model2
     , Cmd.batch
         [ Cmd.map TreeMsg treeCmd
         , Cmd.map ArticleMsg articleCmd
+        , cmd2
         ]
     )
+
+
+changeRouteTo : Route -> Model -> ( Model, Cmd Msg )
+changeRouteTo route model =
+    case route of
+        Route.Home ->
+            ( model, Cmd.none )
+
+        Route.NodeId nodeId ->
+            update (QueryGenericNode nodeId) model
+
+        Route.Invalid errorMsg ->
+            ( model, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -202,6 +224,11 @@ update msg model =
             )
                 |> Cmd.Extra.addCmd (Cmd.map ArticleMsg subCmd)
 
+        Set_testingOnly_nodeId nodeId ->
+            ( { model | testingOnly_nodeId = nodeId }
+            , Cmd.none
+            )
+
 
 startQuery : Query -> Model -> ( Model, Cmd Msg )
 startQuery query model =
@@ -254,11 +281,13 @@ view model =
             , -- Dev-only testing input
               Html.input
                 [ Html.Attributes.type_ "number"
-                , Html.Attributes.placeholder "nodeId"
-                , Utils.onChange
-                    (String.toInt >> Maybe.withDefault 0 >> QueryGenericNode)
+                , Html.Attributes.placeholder "node id"
+                , Utils.onChange Set_testingOnly_nodeId
                 ]
                 []
+            , Html.a
+                [ Html.Attributes.href model.testingOnly_nodeId ]
+                [ Html.text "Link to this node id" ]
             , Controls.view { query = model.query } model.controls
                 |> Html.map ControlsMsg
             ]

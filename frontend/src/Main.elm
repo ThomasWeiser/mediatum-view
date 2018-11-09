@@ -6,6 +6,7 @@ import Browser.Navigation
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Route
 import Url exposing (Url)
 
 
@@ -38,7 +39,7 @@ init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url navigationKey =
     let
         ( appModel, appCmd ) =
-            App.init ()
+            App.init (Route.parseUrl url)
     in
     ( { navigationKey = navigationKey
       , app = appModel
@@ -68,8 +69,17 @@ update msg model =
                     )
 
         UrlChanged url ->
-            ( model
-            , Cmd.none
+            let
+                route =
+                    Route.parseUrl url
+
+                ( subModel, subCmd ) =
+                    App.changeRouteTo route model.app
+            in
+            ( { model
+                | app = subModel
+              }
+            , Cmd.map AppMsg subCmd
             )
 
         AppMsg subMsg ->
