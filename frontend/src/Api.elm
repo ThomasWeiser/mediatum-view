@@ -43,6 +43,7 @@ import Graphql.Query
 import Graphql.Scalar
 import Graphql.SelectionSet exposing (SelectionSet, with)
 import Json.Decode exposing (Decoder)
+import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
@@ -122,7 +123,7 @@ querySubfolder folderIds =
 queryGenericNode : Int -> SelectionSet GenericNode Graphql.Operation.RootQuery
 queryGenericNode nodeId =
     let
-        constructor : Maybe (List Folder) -> Maybe Document -> GenericNode
+        constructor : Maybe (Nonempty Folder) -> Maybe Document -> GenericNode
         constructor maybeLineage maybeDocument =
             case ( maybeLineage, maybeDocument ) of
                 ( Just lineage, _ ) ->
@@ -183,13 +184,18 @@ folderNodeWithSubfolders =
             )
 
 
-folderLineage : SelectionSet (List Folder) Graphql.Object.Folder
+folderLineage : SelectionSet (Nonempty Folder) Graphql.Object.Folder
 folderLineage =
-    Graphql.Object.Folder.selection Maybe.Extra.values
+    Graphql.Object.Folder.selection identity
         |> with
             (Graphql.Object.Folder.lineage
                 folderNode
                 |> Graphql.Field.nonNullOrFail
+                |> Graphql.Field.nonNullElementsOrFail
+                |> Graphql.Field.mapOrFail
+                    (List.Nonempty.fromList
+                        >> Result.fromMaybe "Lineage needs at least one folder"
+                    )
             )
 
 

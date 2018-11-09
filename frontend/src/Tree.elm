@@ -16,6 +16,7 @@ import Folder exposing (Folder, FolderCounts, FolderId)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 
 
@@ -63,18 +64,19 @@ selectedFolder model =
         |> Maybe.map .folder
 
 
-openLineage : List Folder -> Model -> ( Model, Cmd Msg )
+openLineage : Nonempty Folder -> Model -> ( Model, Cmd Msg )
 openLineage lineage model =
-    model
-        |> addFolders lineage
-        |> (case List.head lineage of
-                Just offspring ->
-                    selectFolder offspring.id
+    let
+        offspring =
+            List.Nonempty.head lineage
 
-                Nothing ->
-                    identity
-           )
-        |> loadSubfolders (List.map .id lineage)
+        lineageAsList =
+            List.Nonempty.toList lineage
+    in
+    model
+        |> addFolders lineageAsList
+        |> selectFolder offspring.id
+        |> loadSubfolders (List.map .id lineageAsList)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg, Bool )
