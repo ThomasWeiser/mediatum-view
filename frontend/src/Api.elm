@@ -109,7 +109,7 @@ querySubfolder folderId =
             (Graphql.Query.allFolders
                 (\optionals ->
                     { optionals
-                        | parentId = Present (Folder.idToInt folderId)
+                        | parentIds = Present [ Just <| Folder.idToInt folderId ]
                     }
                 )
                 (Graphql.Object.FoldersConnection.selection identity
