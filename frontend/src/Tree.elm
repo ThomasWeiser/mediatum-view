@@ -2,6 +2,7 @@ module Tree exposing
     ( Model
     , Msg
     , init
+    , openLineage
     , selectedFolder
     , update
     , view
@@ -10,6 +11,7 @@ module Tree exposing
 
 import Api exposing (ApiError)
 import Dict exposing (Dict)
+import Dict.Extra
 import Folder exposing (Folder, FolderCounts, FolderId)
 import Html exposing (Html)
 import Html.Attributes
@@ -20,7 +22,7 @@ import Maybe.Extra
 type alias Model =
     { folderCache : Dict FolderId FolderInTree
     , rootIds : List FolderId
-    , loading : Bool
+    , loading : Int
     , error : Maybe ApiError
     , selection : List FolderId
     , showSubselection : Bool
@@ -34,7 +36,7 @@ type alias FolderInTree =
 
 
 type Msg
-    = ApiResponseSubfolder FolderId (Api.Response (List Folder))
+    = ApiResponseSubfolder (Api.Response (List Folder))
     | ApiResponseToplevelFolder (Api.Response (List ( Folder, List Folder )))
     | Select FolderId
 
@@ -43,7 +45,7 @@ init : ( Model, Cmd Msg )
 init =
     ( { folderCache = Dict.empty
       , rootIds = []
-      , loading = True
+      , loading = 1
       , error = Nothing
       , selection = []
       , showSubselection = True
@@ -61,20 +63,34 @@ selectedFolder model =
         |> Maybe.map .folder
 
 
+openLineage : List Folder -> Model -> ( Model, Cmd Msg )
+openLineage lineage model =
+    model
+        |> addFolders lineage
+        |> (case List.head lineage of
+                Just offspring ->
+                    selectFolder offspring.id
+
+                Nothing ->
+                    identity
+           )
+        |> loadSubfolders (List.map .id lineage)
+
+
 update : Msg -> Model -> ( Model, Cmd Msg, Bool )
 update msg model =
     (case msg of
         ApiResponseToplevelFolder (Err err) ->
             ( { model
-                | loading = False
+                | loading = model.loading - 1
                 , error = Just err
               }
             , Cmd.none
             )
 
-        ApiResponseSubfolder _ (Err err) ->
+        ApiResponseSubfolder (Err err) ->
             ( { model
-                | loading = False
+                | loading = model.loading - 1
                 , error = Just err
               }
             , Cmd.none
@@ -82,27 +98,27 @@ update msg model =
 
         ApiResponseToplevelFolder (Ok listOfRootFoldersWithSubfolders) ->
             ( { model
-                | loading = False
+                | loading = model.loading - 1
                 , error = Nothing
               }
                 |> addRootFolders listOfRootFoldersWithSubfolders
             , Cmd.none
             )
 
-        ApiResponseSubfolder superfolderId (Ok folderList) ->
+        ApiResponseSubfolder (Ok folderList) ->
             ( { model
-                | loading = False
+                | loading = model.loading - 1
                 , error = Nothing
               }
                 |> addFolders folderList
-                |> setSubfolders superfolderId folderList
+                |> linkAsSubfolders folderList
             , Cmd.none
             )
 
         Select id ->
             model
                 |> selectFolder id
-                |> loadSubfolder id
+                |> loadSubfolders [ id ]
     )
         |> (\( newModel, cmd ) ->
                 ( newModel
@@ -126,7 +142,7 @@ addRootFolders rootFoldersWithSubfolders model =
         addRootFolder ( rootFolder, subFolders ) model1 =
             model1
                 |> addFolders (rootFolder :: subFolders)
-                |> setSubfolders rootFolder.id subFolders
+                |> linkAsSubfolders subFolders
 
         rootIds : List FolderId
         rootIds =
@@ -144,7 +160,12 @@ addFolders folderList model =
         newFolderCache =
             List.foldl
                 (\folder dict ->
-                    Dict.insert
+                    Dict.Extra.insertDedupe
+                        (\org new ->
+                            { folder = new.folder
+                            , subLinks = Maybe.Extra.or new.subLinks org.subLinks
+                            }
+                        )
                         folder.id
                         { folder = folder
                         , subLinks =
@@ -162,20 +183,27 @@ addFolders folderList model =
     { model | folderCache = newFolderCache }
 
 
-setSubfolders : FolderId -> List Folder -> Model -> Model
-setSubfolders id folderList model =
+linkAsSubfolders : List Folder -> Model -> Model
+linkAsSubfolders allSubfoldersOfSomeParents model =
     { model
         | folderCache =
-            Dict.update
-                id
-                (Maybe.map
-                    (\folderInTree ->
-                        { folderInTree
-                            | subLinks = Just (List.map .id folderList)
-                        }
+            Dict.Extra.filterGroupBy
+                .parent
+                allSubfoldersOfSomeParents
+                |> Dict.toList
+                |> List.foldl
+                    (\( parentId, subfolders ) ->
+                        Dict.update
+                            parentId
+                            (Maybe.map
+                                (\folderInTree ->
+                                    { folderInTree
+                                        | subLinks = Just (List.map .id subfolders)
+                                    }
+                                )
+                            )
                     )
-                )
-                model.folderCache
+                    model.folderCache
     }
 
 
@@ -215,18 +243,23 @@ selectFolder id model =
     }
 
 
-loadSubfolder : FolderId -> Model -> ( Model, Cmd Msg )
-loadSubfolder superfolderId model =
-    case getSubLinks superfolderId model of
-        Nothing ->
-            ( { model | loading = True }
-            , Api.makeQueryRequest
-                (ApiResponseSubfolder superfolderId)
-                (Api.querySubfolder superfolderId)
-            )
+loadSubfolders : List FolderId -> Model -> ( Model, Cmd Msg )
+loadSubfolders parentIds model =
+    let
+        parentIdsWithUnknownChildren =
+            List.filter
+                (\parentId -> getSubLinks parentId model == Nothing)
+                parentIds
+    in
+    if List.isEmpty parentIdsWithUnknownChildren then
+        ( model, Cmd.none )
 
-        Just _ ->
-            ( model, Cmd.none )
+    else
+        ( { model | loading = model.loading + 1 }
+        , Api.makeQueryRequest
+            ApiResponseSubfolder
+            (Api.querySubfolder parentIdsWithUnknownChildren)
+        )
 
 
 view : Model -> FolderCounts -> Html Msg

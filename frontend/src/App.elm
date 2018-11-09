@@ -6,18 +6,22 @@ module App exposing
     , view
     )
 
+import Api
 import Article
 import Cmd.Extra
 import Controls
 import Dict
 import Folder exposing (FolderCounts)
+import GenericNode exposing (GenericNode)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
 import Maybe.Extra
 import Query exposing (Query)
+import Query.Filters
 import Tree
+import Utils
 
 
 type alias Model =
@@ -31,6 +35,8 @@ type alias Model =
 
 type Msg
     = NoOp
+    | QueryGenericNode Int
+    | GenericNodeQueryResponse (Api.Response GenericNode)
     | TreeMsg Tree.Msg
     | ControlsMsg Controls.Msg
     | ArticleMsg Article.Msg
@@ -69,6 +75,62 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        QueryGenericNode nodeId ->
+            ( model
+            , Api.makeQueryRequest
+                GenericNodeQueryResponse
+                (Api.queryGenericNode nodeId)
+            )
+
+        GenericNodeQueryResponse (Err err) ->
+            let
+                -- TODO
+                _ =
+                    Debug.log "GenericNodeQueryResponse"
+            in
+            ( model, Cmd.none )
+
+        GenericNodeQueryResponse (Ok genericNode) ->
+            case genericNode of
+                GenericNode.IsFolder lineage ->
+                    let
+                        ( treeModel, treeCmd ) =
+                            Tree.openLineage lineage model.tree
+
+                        model1 =
+                            { model | tree = treeModel }
+                    in
+                    (case Tree.selectedFolder treeModel of
+                        Just selectedFolder ->
+                            startQuery
+                                (Query.OnFolder
+                                    { folder = selectedFolder
+                                    , filters = Query.Filters.none
+                                    }
+                                )
+                                model1
+
+                        Nothing ->
+                            ( model1, Cmd.none )
+                    )
+                        |> Cmd.Extra.addCmd (Cmd.map TreeMsg treeCmd)
+
+                GenericNode.IsDocument document ->
+                    -- Currently we fetch the document once again here,
+                    -- which is not a big deal anyway.
+                    -- Will decide later what we really want here.
+                    startQuery
+                        (Query.OnDetails
+                            { folder = Query.getFolder model.query
+                            , documentId = document.id
+                            }
+                        )
+                        model
+
+                GenericNode.IsNeither ->
+                    -- TODO
+                    ( model, Cmd.none )
 
         TreeMsg subMsg ->
             let
@@ -189,6 +251,14 @@ view model =
                         []
                     ]
                 ]
+            , -- Dev-only testing input
+              Html.input
+                [ Html.Attributes.type_ "number"
+                , Html.Attributes.placeholder "nodeId"
+                , Utils.onChange
+                    (String.toInt >> Maybe.withDefault 0 >> QueryGenericNode)
+                ]
+                []
             , Controls.view { query = model.query } model.controls
                 |> Html.map ControlsMsg
             ]

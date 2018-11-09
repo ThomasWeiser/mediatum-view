@@ -7,6 +7,7 @@ module Api exposing
     , queryFolderDocuments
     , queryFtsFolderCounts
     , queryFtsPage
+    , queryGenericNode
     , querySubfolder
     , queryToplevelFolder
     , updateDocumentAttribute
@@ -102,14 +103,14 @@ queryToplevelFolder =
             )
 
 
-querySubfolder : FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
-querySubfolder folderId =
+querySubfolder : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
+querySubfolder folderIds =
     Graphql.Query.selection identity
         |> with
             (Graphql.Query.allFolders
                 (\optionals ->
                     { optionals
-                        | parentIds = Present [ Just <| Folder.idToInt folderId ]
+                        | parentIds = Present <| List.map (Folder.idToInt >> Just) folderIds
                     }
                 )
                 (Graphql.Object.FoldersConnection.selection identity
@@ -118,8 +119,8 @@ querySubfolder folderId =
             )
 
 
-queryGenericNode : FolderId -> SelectionSet GenericNode Graphql.Operation.RootQuery
-queryGenericNode folderId =
+queryGenericNode : Int -> SelectionSet GenericNode Graphql.Operation.RootQuery
+queryGenericNode nodeId =
     let
         constructor : Maybe (List Folder) -> Maybe Document -> GenericNode
         constructor maybeLineage maybeDocument =
@@ -138,7 +139,7 @@ queryGenericNode folderId =
             (Graphql.Query.genericNodeById
                 (\optionals ->
                     { optionals
-                        | id = Present (Folder.idToInt folderId)
+                        | id = Present nodeId
                     }
                 )
                 (Graphql.Object.GenericNode.selection constructor
