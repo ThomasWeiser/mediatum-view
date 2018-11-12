@@ -40,7 +40,6 @@ type alias Model =
     , controls : Controls.Model
     , folderCounts : FolderCounts
     , article : Article.Model
-    , testingOnly_nodeId : String
     }
 
 
@@ -51,7 +50,6 @@ type Msg
     | TreeMsg Tree.Msg
     | ControlsMsg Controls.Msg
     | ArticleMsg Article.Msg
-    | Set_testingOnly_nodeId String
 
 
 init : Route -> ( Model, Cmd Msg )
@@ -73,7 +71,6 @@ init route =
             , controls = controlsModel
             , folderCounts = Dict.empty
             , article = articleModel
-            , testingOnly_nodeId = ""
             }
 
         ( model2, cmd2 ) =
@@ -270,11 +267,6 @@ updateWithoutReturn msg model =
             )
                 |> Cmd.Extra.addCmd (Cmd.map ArticleMsg subCmd)
 
-        Set_testingOnly_nodeId nodeId ->
-            ( { model | testingOnly_nodeId = nodeId }
-            , Cmd.none
-            )
-
 
 startQuery : Query -> Model -> ( Model, Cmd Msg )
 startQuery query model =
@@ -316,16 +308,6 @@ view model =
                         []
                     ]
                 ]
-            , -- Dev-only testing input
-              Html.input
-                [ Html.Attributes.type_ "number"
-                , Html.Attributes.placeholder "node id"
-                , Utils.onChange Set_testingOnly_nodeId
-                ]
-                []
-            , Html.a
-                [ Html.Attributes.href model.testingOnly_nodeId ]
-                [ Html.text "Link to this node id" ]
             , Controls.view { query = model.query } model.controls
                 |> Html.map ControlsMsg
             ]
