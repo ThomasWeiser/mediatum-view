@@ -1,9 +1,9 @@
 module Tree exposing
     ( Model
     , Msg
+    , Return(..)
     , init
     , openLineage
-    , selectedFolder
     , update
     , view
     , viewBreadcrumbs
@@ -18,6 +18,11 @@ import Html.Attributes
 import Html.Events
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
+
+
+type Return
+    = NoReturn
+    | UserSelection Folder
 
 
 type alias Model =
@@ -79,7 +84,7 @@ openLineage lineage model =
         |> loadSubfolders (List.map .id lineageAsList)
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, Bool )
+update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     (case msg of
         ApiResponseToplevelFolder (Err err) ->
@@ -125,7 +130,16 @@ update msg model =
         |> (\( newModel, cmd ) ->
                 ( newModel
                 , cmd
-                , newModel.selection /= model.selection
+                , case
+                    ( newModel.selection /= model.selection
+                    , selectedFolder newModel
+                    )
+                  of
+                    ( True, Just folder ) ->
+                        UserSelection folder
+
+                    _ ->
+                        NoReturn
                 )
            )
 

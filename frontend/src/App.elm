@@ -18,6 +18,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
+import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 import Query exposing (Query)
 import Query.Filters
@@ -123,19 +124,13 @@ update msg model =
                         model1 =
                             { model | tree = treeModel }
                     in
-                    (case Tree.selectedFolder treeModel of
-                        Just selectedFolder ->
-                            startQuery
-                                (Query.OnFolder
-                                    { folder = selectedFolder
-                                    , filters = Query.Filters.none
-                                    }
-                                )
-                                model1
-
-                        Nothing ->
-                            ( model1, Cmd.none )
-                    )
+                    startQuery
+                        (Query.OnFolder
+                            { folder = List.Nonempty.head lineage
+                            , filters = Query.Filters.none
+                            }
+                        )
+                        model1
                         |> Cmd.Extra.addCmd (Cmd.map TreeMsg treeCmd)
 
                 GenericNode.IsDocument document ->
@@ -156,17 +151,14 @@ update msg model =
 
         TreeMsg subMsg ->
             let
-                ( subModel, subCmd, changedSelection ) =
+                ( subModel, subCmd, subReturn ) =
                     Tree.update subMsg model.tree
 
                 model1 =
                     { model | tree = subModel }
-
-                maybeSelectedFolder =
-                    Tree.selectedFolder model1.tree
             in
-            (case ( changedSelection, maybeSelectedFolder ) of
-                ( True, Just selectedFolder ) ->
+            (case subReturn of
+                Tree.UserSelection selectedFolder ->
                     startQuery
                         (Query.setFolder
                             selectedFolder
@@ -174,7 +166,7 @@ update msg model =
                         )
                         model1
 
-                _ ->
+                Tree.NoReturn ->
                     ( model1, Cmd.none )
             )
                 |> Cmd.Extra.addCmd (Cmd.map TreeMsg subCmd)
