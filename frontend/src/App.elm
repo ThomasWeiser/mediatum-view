@@ -67,7 +67,7 @@ init route =
             Article.initEmpty ()
 
         model1 =
-            { route = route
+            { route = Route.Invalid "to be initialized"
             , query = Query.emptyQuery
             , tree = treeModel
             , controls = controlsModel
@@ -99,7 +99,7 @@ changeRouteTo route model =
             ( model1, Cmd.none )
 
         Route.NodeId nodeId ->
-            if model.route /= route then
+            if Debug.log "1" model.route /= Debug.log "2" route then
                 updateWithoutReturn
                     (QueryGenericNode nodeId)
                     model1
