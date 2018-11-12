@@ -14,6 +14,7 @@ import Html.Attributes
 import Html.Events
 import List.Extra
 import Regex
+import Route
 
 
 
@@ -90,7 +91,14 @@ view clickMsg maybeNumber document =
 
                 Nothing ->
                     Html.text ""
-            , Html.span [ Html.Attributes.class "metadatatype" ]
+            , Html.a
+                [ Html.Attributes.class "metadatatype"
+                , document.id
+                    |> idToInt
+                    |> Route.NodeId
+                    |> Route.toString
+                    |> Html.Attributes.href
+                ]
                 [ Html.text document.metadatatypeName ]
             ]
         , Html.div
