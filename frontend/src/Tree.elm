@@ -18,10 +18,12 @@ import Html.Attributes
 import Html.Events
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
+import Utils
 
 
 type Return
     = NoReturn
+    | GotRootFolders (List Folder)
     | UserSelection Folder
 
 
@@ -86,13 +88,14 @@ openLineage lineage model =
 
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
-    (case msg of
+    case msg of
         ApiResponseToplevelFolder (Err err) ->
             ( { model
                 | loading = model.loading - 1
                 , error = Just err
               }
             , Cmd.none
+            , NoReturn
             )
 
         ApiResponseSubfolder (Err err) ->
@@ -101,6 +104,7 @@ update msg model =
                 , error = Just err
               }
             , Cmd.none
+            , NoReturn
             )
 
         ApiResponseToplevelFolder (Ok listOfRootFoldersWithSubfolders) ->
@@ -110,6 +114,8 @@ update msg model =
               }
                 |> addRootFolders listOfRootFoldersWithSubfolders
             , Cmd.none
+            , GotRootFolders
+                (List.map Tuple.first listOfRootFoldersWithSubfolders)
             )
 
         ApiResponseSubfolder (Ok folderList) ->
@@ -120,28 +126,26 @@ update msg model =
                 |> addFolders folderList
                 |> linkAsSubfolders folderList
             , Cmd.none
+            , NoReturn
             )
 
         Select id ->
             model
                 |> selectFolder id
                 |> loadSubfolders [ id ]
-    )
-        |> (\( newModel, cmd ) ->
-                ( newModel
-                , cmd
-                , case
-                    ( newModel.selection /= model.selection
-                    , selectedFolder newModel
-                    )
-                  of
-                    ( True, Just folder ) ->
-                        UserSelection folder
+                |> (\( model1, cmd1 ) ->
+                        ( model1
+                        , cmd1
+                        , if List.head model.selection /= Just id then
+                            Maybe.Extra.unwrap
+                                NoReturn
+                                UserSelection
+                                (selectedFolder model1)
 
-                    _ ->
-                        NoReturn
-                )
-           )
+                          else
+                            NoReturn
+                        )
+                   )
 
 
 addRootFolders : List ( Folder, List Folder ) -> Model -> Model
@@ -166,7 +170,12 @@ addRootFolders rootFoldersWithSubfolders model =
     in
     { modelWithFoldersAdded
         | rootIds = rootIds
-        , selection = List.take 1 rootIds
+        , selection =
+            if List.isEmpty model.selection then
+                List.take 1 rootIds
+
+            else
+                model.selection
     }
 
 

@@ -28,7 +28,8 @@ import Utils
 
 
 type alias Model =
-    { query : Query
+    { route : Route
+    , query : Query
     , tree : Tree.Model
     , controls : Controls.Model
     , folderCounts : FolderCounts
@@ -60,7 +61,8 @@ init route =
             Article.initEmpty ()
 
         model1 =
-            { query = Query.emptyQuery
+            { route = route
+            , query = Query.emptyQuery
             , tree = treeModel
             , controls = controlsModel
             , folderCounts = Dict.empty
@@ -82,15 +84,19 @@ init route =
 
 changeRouteTo : Route -> Model -> ( Model, Cmd Msg )
 changeRouteTo route model =
+    let
+        model1 =
+            { model | route = route }
+    in
     case route of
         Route.Home ->
-            ( model, Cmd.none )
+            ( model1, Cmd.none )
 
         Route.NodeId nodeId ->
-            update (QueryGenericNode nodeId) model
+            update (QueryGenericNode nodeId) model1
 
         Route.Invalid errorMsg ->
-            ( model, Cmd.none )
+            ( model1, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -110,7 +116,7 @@ update msg model =
             let
                 -- TODO
                 _ =
-                    Debug.log "GenericNodeQueryResponse"
+                    Debug.log "GenericNodeQueryResponse" err
             in
             ( model, Cmd.none )
 
@@ -158,6 +164,26 @@ update msg model =
                     { model | tree = subModel }
             in
             (case subReturn of
+                Tree.GotRootFolders rootFolders ->
+                    case ( model.route, List.head rootFolders ) of
+                        ( Route.Home, Just rootFolderToBeQueried ) ->
+                            startQuery
+                                (Query.setFolder
+                                    rootFolderToBeQueried
+                                    model1.query
+                                )
+                                model1
+
+                        _ ->
+                            ( { model1
+                                | query =
+                                    Query.stopgapFolder
+                                        (List.head rootFolders)
+                                        model1.query
+                              }
+                            , Cmd.none
+                            )
+
                 Tree.UserSelection selectedFolder ->
                     startQuery
                         (Query.setFolder

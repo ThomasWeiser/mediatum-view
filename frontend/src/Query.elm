@@ -17,6 +17,7 @@ module Query exposing
     , mapFilters
     , setFolder
     , showFilters
+    , stopgapFolder
     , view
     )
 
@@ -107,6 +108,15 @@ setFolder folder query =
 
         OnFts subQuery ->
             OnFts { subQuery | folder = folder }
+
+
+stopgapFolder : Maybe Folder -> Query -> Query
+stopgapFolder maybeFolder query =
+    if getFolder query == Folder.dummy then
+        setFolder (Maybe.withDefault Folder.dummy maybeFolder) query
+
+    else
+        query
 
 
 getFilters : Query -> Maybe Filters
