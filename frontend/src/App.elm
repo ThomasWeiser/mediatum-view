@@ -1,6 +1,7 @@
 module App exposing
     ( Model
     , Msg
+    , Return(..)
     , changeRouteTo
     , init
     , update
@@ -25,6 +26,11 @@ import Query.Filters
 import Route exposing (Route)
 import Tree
 import Utils
+
+
+type Return
+    = NoReturn
+    | ReflectRoute Route
 
 
 type alias Model =
@@ -93,14 +99,36 @@ changeRouteTo route model =
             ( model1, Cmd.none )
 
         Route.NodeId nodeId ->
-            update (QueryGenericNode nodeId) model1
+            if model.route /= route then
+                updateWithoutReturn
+                    (QueryGenericNode nodeId)
+                    model1
+
+            else
+                ( model1, Cmd.none )
 
         Route.Invalid errorMsg ->
             ( model1, Cmd.none )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
+    let
+        ( model1, cmd1 ) =
+            updateWithoutReturn msg model
+    in
+    ( model1
+    , cmd1
+    , if model1.route /= model.route then
+        ReflectRoute model1.route
+
+      else
+        NoReturn
+    )
+
+
+updateWithoutReturn : Msg -> Model -> ( Model, Cmd Msg )
+updateWithoutReturn msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
@@ -255,21 +283,13 @@ startQuery query model =
             Article.initWithQuery query
     in
     ( { model
-        | query = Debug.log "startQuery" query
+        | route = Query.toRoute query
+        , query = Debug.log "startQuery" query
         , article = articleModel
         , folderCounts = Dict.empty
       }
     , Cmd.map ArticleMsg articleCmd
     )
-
-
-andThenUpdate : Msg -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
-andThenUpdate msg ( model1, cmd1 ) =
-    let
-        ( model2, cmd2 ) =
-            update msg model1
-    in
-    ( model2, Cmd.batch [ cmd1, cmd2 ] )
 
 
 view : Model -> Html Msg

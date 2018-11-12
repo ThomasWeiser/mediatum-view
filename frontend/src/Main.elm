@@ -84,13 +84,23 @@ update msg model =
 
         AppMsg subMsg ->
             let
-                ( subModel, subCmd ) =
+                ( subModel, subCmd, subReturn ) =
                     App.update subMsg model.app
             in
             ( { model
                 | app = subModel
               }
-            , Cmd.map AppMsg subCmd
+            , Cmd.batch
+                [ Cmd.map AppMsg subCmd
+                , case subReturn of
+                    App.ReflectRoute route ->
+                        Browser.Navigation.pushUrl
+                            model.navigationKey
+                            (Route.toString route)
+
+                    App.NoReturn ->
+                        Cmd.none
+                ]
             )
 
 

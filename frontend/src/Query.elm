@@ -18,6 +18,7 @@ module Query exposing
     , setFolder
     , showFilters
     , stopgapFolder
+    , toRoute
     , view
     )
 
@@ -28,6 +29,7 @@ import List.Extra
 import Query.Attribute
 import Query.Filter as Filter exposing (Filter)
 import Query.Filters as Filters exposing (Filters)
+import Route exposing (Route)
 
 
 type Query
@@ -156,6 +158,19 @@ showFilters query =
 
         OnFts _ ->
             True
+
+
+toRoute : Query -> Route
+toRoute query =
+    case query of
+        OnDetails { documentId } ->
+            Route.NodeId <| Document.idToInt documentId
+
+        OnFolder { folder } ->
+            Route.NodeId <| Folder.idToInt folder.id
+
+        OnFts { folder } ->
+            Route.NodeId <| Folder.idToInt folder.id
 
 
 view : Query -> Html Never
