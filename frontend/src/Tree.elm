@@ -18,6 +18,7 @@ import Html.Attributes
 import Html.Events
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
+import Route
 import Utils
 
 
@@ -358,9 +359,19 @@ viewBreadcrumbs model id =
             |> List.map
                 (\id1 ->
                     Html.span []
-                        [ Dict.get id1 model.folderCache
-                            |> Maybe.Extra.unwrap "..." (.folder >> .name)
-                            |> Html.text
+                        [ case Dict.get id1 model.folderCache of
+                            Just { folder } ->
+                                Html.a
+                                    [ folder.id
+                                        |> Folder.idToInt
+                                        |> Route.NodeId
+                                        |> Route.toString
+                                        |> Html.Attributes.href
+                                    ]
+                                    [ Html.text folder.name ]
+
+                            Nothing ->
+                                Html.text "..."
                         ]
                 )
             |> List.intersperse
