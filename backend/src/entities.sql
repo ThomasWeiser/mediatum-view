@@ -269,6 +269,7 @@ create or replace view entity.document_mask_fields as
         document.schema as document_schema,
         document.name as document_name,
         document.orderpos as document_orderpos,
+        document.attrs as document_attrs,
         mask.id as mask_id,
         mask.name as mask_name,
         maskitem.id as maskitem_id,
