@@ -96,7 +96,7 @@ changeRouteTo route model =
             ( model1, Cmd.none )
 
         Route.NodeId nodeId ->
-            if Debug.log "1" model.route /= Debug.log "2" route then
+            if model.route /= route then
                 updateWithoutReturn
                     (QueryGenericNode nodeId)
                     model1
