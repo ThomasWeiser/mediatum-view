@@ -135,6 +135,14 @@ create or replace function aux.get_node_attribute (nodeId int4, key text)
 $$ language sql stable;
 
 
+create or replace function aux.get_node_attribute_text (nodeId int4, key text)
+    returns text as $$
+    select  (node.attrs->key) #>> '{}'
+      from mediatum.node
+     where node.id = nodeId
+$$ language sql stable;
+
+
 create or replace function aux.get_node_system_attributes (nodeId int4, keys text[])
     returns jsonb as $$
     select aux.jsonb_filter (node.system_attrs, keys)

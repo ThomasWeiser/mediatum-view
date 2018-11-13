@@ -277,7 +277,7 @@ create or replace view entity.document_mask_fields as
         maskitem.width as maskitem_width,
         metafield.id as metafield_id,
         metafield.name as metafield_name,
-        aux.get_node_attribute (document.id, metafield.name) as value
+        aux.get_node_attribute_text (document.id, metafield.name) as value
     from entity.document
     join entity.metadatatype on entity.metadatatype.name = entity.document.schema
     join entity.mask on entity.mask.metadatatype_id = entity.metadatatype.id
