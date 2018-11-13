@@ -286,6 +286,22 @@ create or replace view entity.document_mask_fields as
     join entity.metafield on entity.metafield.id = mediatum.nodemapping.cid;
     
 
+create materialized view entity.metadatatype_mask_fields as
+    select
+        metadatatype.name as metadatatype_name,
+        mask.name as mask_name,
+        maskitem.name as maskitem_name,
+        metafield.name as metafield_name
+    from entity.metadatatype
+    join entity.mask on entity.mask.metadatatype_id = entity.metadatatype.id
+    join entity.maskitem on entity.maskitem.parent_id = entity.mask.id
+    join mediatum.nodemapping on mediatum.nodemapping.nid = entity.maskitem.id
+    join entity.metafield on entity.metafield.id = mediatum.nodemapping.cid;
+
+create /* unique */ index ix_metadatatype_mask_fields on entity.metadatatype_mask_fields
+    (metadatatype_name, mask_name, maskitem_name);
+   
+
 create or replace view entity.document_mask_value_object as
     select
         document_id,

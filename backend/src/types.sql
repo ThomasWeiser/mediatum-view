@@ -333,11 +333,42 @@ create type api.folder_count as (
     count integer
 );
 
+comment on type api.folder_count is
+    'Specification of the number of documents of a given set within a folder';
+
+
 create type api.docset as (
     folder_id int4,
     folder_count api.folder_count,
     id_list int4[]
 );
+
+comment on type api.docset is
+    'A set of documents as the result of e.g. a FTS query. '
+    'Intended to be used with a facet or folder counting function.';
+comment on column api.docset.folder_id is
+    'The id of the parent folder, that was used in the query. '
+    'All documents of the set belong to this folder.';
+comment on column api.docset.folder_count is
+    'The total count of documents in the set';
+comment on column api.docset.id_list is
+    'The list of documents in the set. '
+    'Although this field may be queried on its own, '
+    'it is more of a interim result to be consumed by a counting function.';
+
+
+create type api.facet_value as (
+    value text,
+    count integer
+);
+
+comment on type api.facet_value is
+    'A facet instance, i.e. the occurences of an attribute''s value.';
+comment on column api.facet_value.value is
+    'The value of the facet.';
+comment on column api.facet_value.count is
+    'The number of occurences of the facet.';
+
 
 create type debug.mediatum_node as (
 	id int4,

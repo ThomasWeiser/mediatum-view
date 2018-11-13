@@ -60,6 +60,17 @@ create or replace function api.folder_fts_docset
     end;
 $$ language plpgsql stable parallel safe;
 
+comment on function api.folder_fts_docset
+    ( folder api.folder
+    , text text
+    , domain text
+    , language text
+    , attribute_tests api.attribute_test[]
+    ) is
+    'Perform a full-text search to provide a list of document ids, '
+    'intended to be consumed by a facet-counting function.'
+;
+
 
 create or replace function aux.subfolder_counts
     ( docset api.docset
@@ -99,6 +110,124 @@ create or replace function api.docset_subfolder_counts
             select *
             from aux.subfolder_counts (docset, parent_folder_id)
         ;
+    end;
+$$ language plpgsql stable parallel safe rows 50;
+
+comment on function api.docset_subfolder_counts
+    ( docset api.docset
+    , parent_folder_id int4
+    ) is
+    'Count the distribution of the docset in relation to the subfolders of a folder.'
+;
+    
+
+create or replace function api.docset_facet_by_mask
+    ( docset api.docset
+    , mask_name text
+    , maskitem_name text
+    , "limit" integer
+    )
+    returns setof api.facet_value as $$
+        select v.value, count(v.value)::integer
+        from entity.document_mask_fields as v
+        where v.document_id = ANY (docset.id_list)
+        and v.mask_name = docset_facet_by_mask.mask_name
+        and v.maskitem_name = docset_facet_by_mask.maskitem_name
+        group by v.value
+        --order by node.attrs ->> 'year'
+        order by count(v.value) desc, v.value
+        limit "limit"
+        ;
+$$ language sql stable parallel safe rows 50;
+
+comment on function api.docset_facet_by_mask
+    ( docset api.docset
+    , mask_name text
+    , maskitem_name text
+    , "limit" integer
+    ) is
+    'Gather the most frequent values of a facet within the docset. '
+    'The facet in question is specified by maskName and maskitemName.'
+;
+
+-- For testing performance:
+-- Here are variations of this function regarding:
+--  - SQL vs. PLPGSQL
+--  - Usage of the materialized view entity.metadatatype_mask_fields
+-- Results:
+--  - There are no obvious differences in performance.
+--  - Regardless of the variation, the performance is not stable.
+
+create or replace function api.docset_facet_by_mask_plpgsql
+    ( docset api.docset
+    , mask_name text
+    , maskitem_name text
+    , "limit" integer
+    )
+    returns setof api.facet_value as $$
+    begin
+        return query
+
+            select v.value, count(v.value)::integer
+            from entity.document_mask_fields as v
+            where v.document_id = ANY (docset.id_list)
+            and v.mask_name = docset_facet_by_mask_plpgsql.mask_name
+            and v.maskitem_name = docset_facet_by_mask_plpgsql.maskitem_name
+            group by v.value
+            --order by node.attrs ->> 'year'
+            order by count(v.value) desc, v.value
+            limit "limit"
+            ;
+    end;
+$$ language plpgsql stable parallel safe rows 50;
+
+
+create or replace function api.docset_facet_by_mask_materialized
+    ( docset api.docset
+    , mask_name text
+    , maskitem_name text
+    , "limit" integer
+    )
+    returns setof api.facet_value as $$
+        select document.attrs->metafield_name #>> '{}' as value,
+                count(document.attrs->metafield_name #>> '{}')::integer as count 
+        from entity.document
+        join entity.metadatatype_mask_fields on entity.metadatatype_mask_fields.metadatatype_name = entity.document.schema
+        where entity.document.id = ANY (docset.id_list)
+        and metadatatype_mask_fields.mask_name = docset_facet_by_mask_materialized.mask_name
+        and metadatatype_mask_fields.maskitem_name = docset_facet_by_mask_materialized.maskitem_name
+        group by document.attrs->metafield_name #>> '{}'
+        --order by node.attrs ->> 'year'
+        order by count(document.attrs->metafield_name #>> '{}') desc,
+                    document.attrs->metafield_name #>> '{}'
+        limit "limit"
+        ;
+$$ language sql stable parallel safe rows 50;
+
+
+create or replace function api.docset_facet_by_mask_materialized_plpgsql
+    ( docset api.docset
+    , mask_name text
+    , maskitem_name text
+    , "limit" integer
+    )
+    returns setof api.facet_value as $$
+    begin
+        return query
+
+            select document.attrs->metafield_name #>> '{}' as value,
+                   count(document.attrs->metafield_name #>> '{}')::integer as count 
+            from entity.document
+            join entity.metadatatype_mask_fields on entity.metadatatype_mask_fields.metadatatype_name = entity.document.schema
+            where entity.document.id = ANY (docset.id_list)
+            and metadatatype_mask_fields.mask_name = docset_facet_by_mask_materialized_plpgsql.mask_name
+            and metadatatype_mask_fields.maskitem_name = docset_facet_by_mask_materialized_plpgsql.maskitem_name
+            group by document.attrs->metafield_name #>> '{}'
+            --order by node.attrs ->> 'year'
+            order by count(document.attrs->metafield_name #>> '{}') desc,
+                     document.attrs->metafield_name #>> '{}'
+            limit "limit"
+            ;
     end;
 $$ language plpgsql stable parallel safe rows 50;
 
