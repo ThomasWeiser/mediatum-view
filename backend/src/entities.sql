@@ -286,6 +286,9 @@ create or replace view entity.document_mask_fields as
     join entity.metafield on entity.metafield.id = mediatum.nodemapping.cid;
     
 
+/* Currently not used.
+   Tests didn't show performance gains when using this materialized view.
+
 create materialized view entity.metadatatype_mask_fields as
     select
         metadatatype.name as metadatatype_name,
@@ -298,8 +301,9 @@ create materialized view entity.metadatatype_mask_fields as
     join mediatum.nodemapping on mediatum.nodemapping.nid = entity.maskitem.id
     join entity.metafield on entity.metafield.id = mediatum.nodemapping.cid;
 
-create /* unique */ index ix_metadatatype_mask_fields on entity.metadatatype_mask_fields
+create index ix_metadatatype_mask_fields on entity.metadatatype_mask_fields
     (metadatatype_name, mask_name, maskitem_name);
+*/    
    
 
 create or replace view entity.document_mask_value_object as
