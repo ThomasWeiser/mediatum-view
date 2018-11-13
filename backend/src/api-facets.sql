@@ -124,7 +124,6 @@ comment on function api.docset_subfolder_counts
 create or replace function api.docset_facet_by_key
     ( docset api.docset
     , key text
-    , "limit" integer
     )
     returns setof api.facet_value as $$
         select document.attrs ->> key, count(document.attrs ->> key)::integer
@@ -132,14 +131,12 @@ create or replace function api.docset_facet_by_key
         where document.id = ANY (docset.id_list)
         group by document.attrs ->> key
         order by count(document.attrs ->> key) desc, document.attrs ->> key
-        limit "limit"
         ;
 $$ language sql stable parallel safe rows 50;
 
 comment on function api.docset_facet_by_key
     ( docset api.docset
     , key text
-    , "limit" integer
     ) is
     'Gather the most frequent values of a facet within the docset. '
     'The facet in question is specified by a JSON attribute key.'
@@ -150,7 +147,6 @@ create or replace function api.docset_facet_by_mask
     ( docset api.docset
     , mask_name text
     , maskitem_name text
-    , "limit" integer
     )
     returns setof api.facet_value as $$
         select v.value, count(v.value)::integer
@@ -161,7 +157,6 @@ create or replace function api.docset_facet_by_mask
         group by v.value
         --order by node.attrs ->> 'year'
         order by count(v.value) desc, v.value
-        limit "limit"
         ;
 $$ language sql stable parallel safe rows 50;
 
@@ -169,7 +164,6 @@ comment on function api.docset_facet_by_mask
     ( docset api.docset
     , mask_name text
     , maskitem_name text
-    , "limit" integer
     ) is
     'Gather the most frequent values of a facet within the docset. '
     'The facet in question is specified by maskName and maskitemName.'
