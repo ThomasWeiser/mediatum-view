@@ -300,7 +300,7 @@ create or replace view entity.document_mask_value_object as
                 'width',
                 maskitem_width,
                 'value',
-                aux.get_node_attribute (document_id, metafield_name)
+                value
             )
         ) as values
     from entity.document_mask_fields
@@ -320,7 +320,7 @@ create or replace view entity.document_mask_value_list as
                 'width',
                 maskitem_width,
                 'value',
-                aux.get_node_attribute (document_id, metafield_name)
+                value
             )
         ) as values
     from (select * from entity.document_mask_fields order by maskitem_orderpos) as q
