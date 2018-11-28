@@ -1,3 +1,0 @@
-#!/bin/sh
-
-bin/elm-live -u -e bin/elm -d assets src/Main.elm -- --output=assets/app.js --debug # --optimize

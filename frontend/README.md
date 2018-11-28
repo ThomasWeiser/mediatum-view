@@ -3,8 +3,13 @@
 
 ## Prerequisites
 
-The prerequisites can all be installed as npm packages.
-There is a `package.json` solely for this purpose.
+The prerequisites can all be installed as npm packages into the project directory.
+There is a `package.json` for this purpose.
+
+```sh
+$ npm install
+```
+
 Alternatively, you may also choose to install the tools individually.
 
 - [Elm](http://elm-lang.org/) v0.19. See [here](https://guide.elm-lang.org/install.html) for platform-specific instructions.
@@ -13,17 +18,17 @@ Alternatively, you may also choose to install the tools individually.
 
 ## Building
 
-The commands to build the frontend app are in the script `bin/build`. Please review this file. Before running it make sure that the backend is already started. Then run the script:
+The commands to build the frontend app are available as npm scripts. They use the tools installed by `npm install`.
+Please review the scripts in `package.json`. Before running it make sure that the backend is already started. Then call the script:
 
 ```sh
-$ bin/build
+$ npm run build
 ```
 
 For serving the the app and live rebuilding start `elm-live` with this script:
 
 ```sh
-$ bin/start
+$ npm run start
 ```
 
-and open http://localhost:8000/ to run the app in your browser.
-
+and open the app at http://localhost:8000/ in your browser.

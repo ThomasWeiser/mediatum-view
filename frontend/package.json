@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "description": "Web app as a client for the GraphQL API of mediaTUM",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate": "rimraf gen && elm-graphql http://localhost:5000/graphql --base Graphql --output gen/",
+    "compile": "rimraf elm-stuff/build-artifacts && elm make --output=assets/app.js src/Main.elm",
+    "build": "npm run generate && npm run compile",
+    "start": "elm-live -u -e node_modules/.bin/elm -d assets src/Main.elm -- --output=assets/app.js --debug",
+    "format": "elm-format --yes src",
+    "clean": "rimraf gen elm-stuff assets/app.js"
   },
   "repository": {
     "type": "git",
@@ -29,6 +35,7 @@
     "@dillonkearns/elm-graphql": "^2.0.1",
     "elm": "^0.19.0-bugfix2",
     "elm-format": "^0.8.1",
-    "elm-live": "^3.1.0"
+    "elm-live": "^3.1.0",
+    "rimraf": "^2.6.2"
   }
 }
