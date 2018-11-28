@@ -8,7 +8,7 @@
     "dependencies": {
         "direct": {
             "Janiczek/cmd-extra": "1.0.0",
-            "dillonkearns/elm-graphql": "1.1.0",
+            "dillonkearns/elm-graphql": "1.3.0",
             "elm/browser": "1.0.0",
             "elm/core": "1.0.0",
             "elm/html": "1.0.0",
@@ -25,6 +25,7 @@
             "mgold/elm-nonempty-list": "4.0.0"
         },
         "indirect": {
+            "Skinney/murmur3": "2.0.8",
             "elm/random": "1.0.0",
             "elm/virtual-dom": "1.0.2",
             "lukewestby/elm-string-interpolate": "1.0.3"
