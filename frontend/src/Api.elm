@@ -72,7 +72,7 @@ makeQueryRequest :
     -> Cmd msg
 makeQueryRequest tagger selectionSet =
     selectionSet
-        |> Graphql.Http.queryRequest "http://localhost:5000/graphql"
+        |> Graphql.Http.queryRequest "/graphql"
         |> Graphql.Http.send
             (Result.mapError Graphql.Extra.stripError >> tagger)
 
@@ -83,7 +83,7 @@ makeMutationRequest :
     -> Cmd msg
 makeMutationRequest tagger selectionSet =
     selectionSet
-        |> Graphql.Http.mutationRequest "http://localhost:5000/graphql"
+        |> Graphql.Http.mutationRequest "/graphql"
         |> Graphql.Http.send
             (Result.mapError Graphql.Extra.stripError >> tagger)
 
