@@ -53,6 +53,10 @@ import Query exposing (Query)
 import Query.Attribute
 
 
+apiUrl : String
+apiUrl = "/graphql"
+
+
 pageSize : Int
 pageSize =
     10
@@ -72,7 +76,7 @@ makeQueryRequest :
     -> Cmd msg
 makeQueryRequest tagger selectionSet =
     selectionSet
-        |> Graphql.Http.queryRequest "/graphql"
+        |> Graphql.Http.queryRequest apiUrl
         |> Graphql.Http.send
             (Result.mapError Graphql.Extra.stripError >> tagger)
 
@@ -83,7 +87,7 @@ makeMutationRequest :
     -> Cmd msg
 makeMutationRequest tagger selectionSet =
     selectionSet
-        |> Graphql.Http.mutationRequest "/graphql"
+        |> Graphql.Http.mutationRequest apiUrl
         |> Graphql.Http.send
             (Result.mapError Graphql.Extra.stripError >> tagger)
 
