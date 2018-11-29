@@ -19,13 +19,17 @@ Alternatively, you may also choose to install the tools individually.
 ## Building
 
 The commands to build the frontend app are available as npm scripts. They use the tools installed by `npm install`.
-Please review the scripts in `package.json`. Before running it make sure that the backend is already started. Then call the script:
+
+Please review the scripts in `package.json`.
+They need to specify where the backend service is running, e.g. `localhost:5000`.
+
+Before starting the build make sure that the backend is already started. Then call:
 
 ```sh
 $ npm run build
 ```
 
-For serving the the app and live rebuilding start `elm-live` with this script:
+For serving the app, live rebuilding and proxying the backend start `elm-live` with this script:
 
 ```sh
 $ npm run start

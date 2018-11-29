@@ -64,10 +64,10 @@ $ bin/build
 
 ## Running PostGraphile
 
-See `bin/start` for the necessary parameters when starting PostGraphile. Please review and customize the configuration in that script, then run:
+See `bin/start` for the necessary parameters when starting PostGraphile. Please review and customize the configuration in that script (e.g. database connection and binding the service to a network interface), then run:
 
 ```sh
 $ bin/start
 ```
 
-If all goes well you will see two URLs: One for the GraphQL endpoint, and one for [Graph*i*QL](https://github.com/graphql/graphiql). Open the latter to get a handy in-browser tool to explore the resulting API.
+If all goes well you will see two URLs: One for the GraphQL endpoint, and one for [Graph*i*QL](https://github.com/graphql/graphiql). Open the latter to get a handy in-browser tool to explore the resulting API and its built-in documentation.
