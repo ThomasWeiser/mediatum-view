@@ -7,7 +7,15 @@ mkdir -p export
 # export DEBUG="*:sql" 
 # export DEBUG="graphile-build:warn"
 
+# Relevant configurations:
+# - Binding the service to be reachable at ...
+#     - localhost
+#     - 0.0.0.0 (all interfaces of the host)
+#     - some.host.name
+# - Connection to PostgreSQL, specifying username, host, port and database name
+
 postgraphile \
+    --host localhost \
     --connection postgres://me@localhost:5432/mediatum_tu_prod_1 \
     --schema api,debug \
     --cors  \
