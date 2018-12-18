@@ -17,6 +17,11 @@ body {
   color: #3070b3;
 }
 
+a {
+  color: #4889ce;
+  text-decoration: none;
+}
+
 .page-container {
   height: 100vh;
 
@@ -45,8 +50,11 @@ main {
 aside {
   flex: 4;
   overflow: auto;
-  border-right: 1px solid grey;
-  padding: 0.3em;
+  /* border-right: 1px solid grey; */
+}
+aside > div {
+  background-color: #f7f7f7;
+  padding: 0.6em;
 }
 article {
   flex: 8;
@@ -84,14 +92,16 @@ button, select, .filter-inputs {
   font-size: 1rem;
   border-radius: .4rem;
 
-  color: #212529;
+  color: #333333;
 
-  background-color: #dbe2e9;
-  border-color: #afc7df;
+  background-color: #f4f4f4;
+  border-color: #e6e6e6;
 }
 button.filter-button, .filter-inputs {
+  /*
   background-color: #e2e4d0;
   border-color: #b4b977;
+  */
   padding: 0.25rem .75rem;
 }
 

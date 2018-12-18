@@ -291,8 +291,10 @@ view model =
         , Html.header []
             [ Html.h2 []
                 [ Html.div []
-                    [ Html.span
-                        [ Html.Attributes.class "title" ]
+                    [ Html.a
+                        [ Html.Attributes.class "title"
+                        , Html.Attributes.href "/" 
+                        ]
                         [ Html.text "mediaTUM view" ]
                     , Html.span
                         [ Html.Attributes.class "subtitle"
