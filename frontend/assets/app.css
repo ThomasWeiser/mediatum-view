@@ -21,6 +21,9 @@ a {
   color: #4889ce;
   text-decoration: none;
 }
+a:hover {
+  text-decoration: underline;
+}
 
 .page-container {
   height: 100vh;
@@ -163,6 +166,9 @@ ul.folder-list ul.folder-list {
 .folder-head .folder-name {
   padding-left: 0.6em;
 }
+.folder-head:hover .folder-name {
+  text-decoration: underline;
+}
 
 .svg-icon-definitions symbol {
   stroke-width: 14%;
@@ -199,6 +205,10 @@ ul.folder-list ul.folder-list {
 }
 .breadcrumbs {
   font-size: 80%;
+  color: #737373
+}
+.breadcrumbs a {
+  color: inherit;
 }
 .article .details table {
   border-collapse: collapse;
