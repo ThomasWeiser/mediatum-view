@@ -13,10 +13,15 @@ mkdir -p export
 #     - 0.0.0.0 (all interfaces of the host)
 #     - some.host.name
 # - Connection to PostgreSQL, specifying username, host, port and database name
+# - For postgraphile's inspection mechanism to work we need to connect as a database super user.
+# - Actual queries are performed as database user $MEDIATUM_DATABASE_USER.
+
+DATABASE_SUPER_USER="postgres"
 
 postgraphile \
     --host localhost \
-    --connection postgres://me@localhost:5432/$MEDIATUM_DATABASE_NAME \
+    --connection postgres://$DATABASE_SUPER_USER@localhost:5432/$MEDIATUM_DATABASE_NAME \
+    --default-role $MEDIATUM_DATABASE_USER \
     --schema api,debug \
     --cors  \
     --export-schema-json export/schema-export.json \
