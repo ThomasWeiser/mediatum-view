@@ -27,12 +27,20 @@ Currently we are using version 10.5. A migration to version 11.x is in the pipel
 
 Minimum required version is 9.6.
 
+### Configuration Variables
+
+We use environment variables to configure the database name and the database user.
+
+```sh
+$ export MEDIATUM_DATABASE_NAME="mediatum"
+$ export MEDIATUM_DATABASE_USER="mediatum"
+```
+
 ### RUM
 
 RUM is an extension for PostgreSQL that adds a new indexing method, similar to GIN.
 
-To install and integrate RUM do something like the following. Here `mediatum` is the name of the database to be used.
-
+To install and integrate RUM do something like the following.
 
 ```sh
 $ git clone https://github.com/postgrespro/rum
@@ -44,7 +52,7 @@ $ sudo make USE_PGXS=1 install
 $ make USE_PGXS=1 installcheck
 $ dropdb contrib_regression
 
-$ psql -d mediatum -c "CREATE EXTENSION rum;"
+$ psql -d $MEDIATUM_DATABASE_NAME -c "CREATE EXTENSION rum;"
 ```
 
 ### PostGraphile
@@ -58,10 +66,10 @@ $ npm install -g postgraphile
 ## Installation
 
 The new code lives in dedicated schema as noted above. 
-In order to create those schemas you may have to grant the permission to do so to user `mediatum`:
+In order to create those schemas you may have to grant the permission to do so to the database user:
 
 ```sh
-$ psql -d mediatum -c "GRANT CREATE ON DATABASE mediatum TO mediatum;"
+$ psql -d $MEDIATUM_DATABASE_NAME -c "GRANT CREATE ON DATABASE $MEDIATUM_DATABASE_NAME TO $MEDIATUM_DATABASE_USER;"
 ```
 
 To submit the new code to a running mediaTUM database execute the SQL and PL/pgSQL code as listed in `bin/build-indexes` and `bin/build`. Please review these scripts, especially the the name of the database. Building the new RUM indexes takes some time depending on the quantity of full text to index.

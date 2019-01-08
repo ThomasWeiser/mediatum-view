@@ -1,5 +1,5 @@
 #!/bin/sh
 
-p="psql -d mediatum_tu_prod_1 -U mediatum -f"
+p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -f"
 
 $p src/indexes.sql

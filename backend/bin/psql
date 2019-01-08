@@ -1,0 +1,3 @@
+#!/bin/sh
+
+psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER $*

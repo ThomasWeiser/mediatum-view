@@ -16,7 +16,7 @@ mkdir -p export
 
 postgraphile \
     --host localhost \
-    --connection postgres://me@localhost:5432/mediatum_tu_prod_1 \
+    --connection postgres://me@localhost:5432/$MEDIATUM_DATABASE_NAME \
     --schema api,debug \
     --cors  \
     --export-schema-json export/schema-export.json \
