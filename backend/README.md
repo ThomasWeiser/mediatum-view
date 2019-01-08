@@ -57,6 +57,13 @@ $ npm install -g postgraphile
 
 ## Installation
 
+The new code lives in dedicated schema as noted above. 
+In order to create those schemas you may have to grant the permission to do so to user `mediatum`:
+
+```sh
+$ psql -d mediatum -c "GRANT CREATE ON DATABASE mediatum TO mediatum;"
+```
+
 To submit the new code to a running mediaTUM database execute the SQL and PL/pgSQL code as listed in `bin/build-indexes` and `bin/build`. Please review these scripts, especially the the name of the database. Building the new RUM indexes takes some time depending on the quantity of full text to index.
 
 ```sh
