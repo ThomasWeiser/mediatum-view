@@ -41,6 +41,7 @@ type Query
 type alias DetailsQuery =
     { folder : Folder
     , documentId : DocumentId
+    , filters : Filters
     }
 
 
@@ -103,10 +104,16 @@ setFolder : Folder -> Query -> Query
 setFolder folder query =
     case query of
         OnDetails subQuery ->
-            OnDetails { subQuery | folder = folder }
+            -- OnFolder { folder = folder, filters = Filters.none }
+            -- KL: changed from no Filters to:
+            OnFolder { folder = folder, filters = getFilters query
+                        |> Maybe.withDefault Filters.none
+                        }
+            -- KL: this was the bug:
+            -- OnDetails { subQuery | folder = folder }
 
         OnFolder subQuery ->
-            OnFolder { subQuery | folder = folder }
+            OnFolder { subQuery | folder = folder}
 
         OnFts subQuery ->
             OnFts { subQuery | folder = folder }
@@ -124,8 +131,9 @@ stopgapFolder maybeFolder query =
 getFilters : Query -> Maybe Filters
 getFilters query =
     case query of
-        OnDetails { folder } ->
-            Nothing
+        OnDetails { folder, filters } ->
+            -- KL: changed from: Nothing
+            Just filters
 
         OnFolder { filters } ->
             Just filters
