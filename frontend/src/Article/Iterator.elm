@@ -16,8 +16,8 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Maybe.Extra
-import Utils
 import Query.Filters
+import Utils
 
 
 type alias Context item =
@@ -54,7 +54,6 @@ init context documentId =
                 { detailsQuery =
                     { folder = context.folder
                     , documentId = documentId
-                    -- KL: added filter defaults
                     , filters = Query.Filters.none
                     }
                 }

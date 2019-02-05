@@ -104,16 +104,15 @@ setFolder : Folder -> Query -> Query
 setFolder folder query =
     case query of
         OnDetails subQuery ->
-            -- OnFolder { folder = folder, filters = Filters.none }
-            -- KL: changed from no Filters to:
-            OnFolder { folder = folder, filters = getFilters query
+            OnFolder
+                { folder = folder
+                , filters =
+                    getFilters query
                         |> Maybe.withDefault Filters.none
-                        }
-            -- KL: this was the bug:
-            -- OnDetails { subQuery | folder = folder }
+                }
 
         OnFolder subQuery ->
-            OnFolder { subQuery | folder = folder}
+            OnFolder { subQuery | folder = folder }
 
         OnFts subQuery ->
             OnFts { subQuery | folder = folder }
@@ -132,7 +131,6 @@ getFilters : Query -> Maybe Filters
 getFilters query =
     case query of
         OnDetails { folder, filters } ->
-            -- KL: changed from: Nothing
             Just filters
 
         OnFolder { filters } ->

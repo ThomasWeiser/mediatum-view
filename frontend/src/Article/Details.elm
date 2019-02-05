@@ -84,7 +84,6 @@ update msg model =
             , Cmd.none
             )
 
-        -- Edit Metadata
         ApiMutationResponse _ _ (Err err) ->
             ( { model | mutationState = MutationError err }
             , Cmd.none

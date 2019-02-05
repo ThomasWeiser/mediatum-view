@@ -54,7 +54,8 @@ import Query.Attribute
 
 
 apiUrl : String
-apiUrl = "/graphql"
+apiUrl =
+    "/graphql"
 
 
 pageSize : Int

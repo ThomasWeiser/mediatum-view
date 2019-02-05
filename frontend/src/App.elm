@@ -56,7 +56,7 @@ init : Route -> ( Model, Cmd Msg )
 init route =
     let
         ( treeModel, treeCmd ) =
-            Debug.log "Init" Tree.init
+            Tree.init
 
         controlsModel =
             Controls.init ()
@@ -146,7 +146,6 @@ updateWithoutReturn msg model =
             ( model, Cmd.none )
 
         GenericNodeQueryResponse (Ok genericNode) ->
-            
             case genericNode of
                 GenericNode.IsFolder lineage ->
                     let
@@ -159,9 +158,8 @@ updateWithoutReturn msg model =
                     startQuery
                         (Query.OnFolder
                             { folder = List.Nonempty.head lineage
-                            -- KL: changed because of filters
-                            -- , filters = Query.Filters.none
-                            , filters = Query.getFilters model.query
+                            , filters =
+                                Query.getFilters model.query
                                     |> Maybe.withDefault Query.Filters.none
                             }
                         )
@@ -176,7 +174,8 @@ updateWithoutReturn msg model =
                         (Query.OnDetails
                             { folder = Query.getFolder model.query
                             , documentId = document.id
-                            , filters = Query.getFilters model.query
+                            , filters =
+                                Query.getFilters model.query
                                     |> Maybe.withDefault Query.Filters.none
                             }
                         )
@@ -299,7 +298,7 @@ view model =
                 [ Html.div []
                     [ Html.a
                         [ Html.Attributes.class "title"
-                        , Html.Attributes.href "/" 
+                        , Html.Attributes.href "/"
                         ]
                         [ Html.text "mediaTUM view" ]
                     , Html.span

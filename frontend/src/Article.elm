@@ -19,9 +19,9 @@ import Html exposing (Html)
 import Html.Attributes
 import Query exposing (Query)
 import Query.Filter exposing (Filter)
+import Query.Filters
 import Tree
 import Utils
-import Query.Filters
 
 
 type alias Context =
@@ -156,6 +156,7 @@ update context msg model =
                             Query.OnDetails
                                 { folder = folderQuery.folder
                                 , documentId = documentId
+
                                 -- KL: keep filters from original query
                                 , filters = folderQuery.filters
                                 }
@@ -190,6 +191,7 @@ update context msg model =
                             Query.OnDetails
                                 { folder = ftsQuery.folder
                                 , documentId = documentId
+
                                 -- KL: keep filters from original query
                                 , filters = ftsQuery.filters
                                 }
