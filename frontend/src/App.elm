@@ -158,9 +158,7 @@ updateWithoutReturn msg model =
                     startQuery
                         (Query.OnFolder
                             { folder = List.Nonempty.head lineage
-                            , filters =
-                                Query.getFilters model.query
-                                    |> Maybe.withDefault Query.Filters.none
+                            , filters = Query.getFilters model.query
                             }
                         )
                         model1
@@ -174,9 +172,7 @@ updateWithoutReturn msg model =
                         (Query.OnDetails
                             { folder = Query.getFolder model.query
                             , documentId = document.id
-                            , filters =
-                                Query.getFilters model.query
-                                    |> Maybe.withDefault Query.Filters.none
+                            , filters = Query.getFilters model.query
                             }
                         )
                         model

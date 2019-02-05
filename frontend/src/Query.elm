@@ -106,9 +106,7 @@ setFolder folder query =
         OnDetails subQuery ->
             OnFolder
                 { folder = folder
-                , filters =
-                    getFilters query
-                        |> Maybe.withDefault Filters.none
+                , filters = getFilters query
                 }
 
         OnFolder subQuery ->
@@ -127,17 +125,17 @@ stopgapFolder maybeFolder query =
         query
 
 
-getFilters : Query -> Maybe Filters
+getFilters : Query -> Filters
 getFilters query =
     case query of
         OnDetails { folder, filters } ->
-            Just filters
+            filters
 
         OnFolder { filters } ->
-            Just filters
+            filters
 
         OnFts { filters } ->
-            Just filters
+            filters
 
 
 mapFilters : (Filters -> Filters) -> Query -> Query
