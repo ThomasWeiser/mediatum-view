@@ -3,9 +3,6 @@
 -- regarding folders (i.e. collections and directories).
 
 
-begin;
-
-
 create or replace function api.all_folders (name text, parent_ids int4[], is_root boolean, is_collection boolean, find text)
     returns setof api.folder as $$
     select * from entity.folder
@@ -73,6 +70,3 @@ $$ language plpgsql stable;
 
 comment on function api.folder_lineage (current_folder api.folder) is
     'Gets a list of folders representing the path from the folder up to the root of the hierarchy.';
-
-
-commit;

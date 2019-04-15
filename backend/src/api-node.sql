@@ -3,9 +3,6 @@
 -- for generic access to nodes (that may be folders or documents)
 
 
-begin;
-
-
 create or replace function api.generic_node_by_id (id int4)
     returns api.generic_node as $$
     select node.id
@@ -37,5 +34,3 @@ $$ language sql stable;
 
 comment on function api.generic_node_as_folder (node api.generic_node) is
     'Gets the folder possibly represented by the generic node';
-
-commit;

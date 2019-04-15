@@ -1,9 +1,6 @@
 
 -- Definitions of the types publicly exposed as GraphQL objects.
 
-
-begin;
-
 drop schema if exists api cascade;
 drop schema if exists debug cascade;
 
@@ -379,6 +376,3 @@ create type debug.mediatum_node as (
 	fulltext varchar,
 	subnode boolean
 );
-
-
-commit;
