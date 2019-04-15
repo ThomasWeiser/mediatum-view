@@ -1,9 +1,6 @@
 
 -- Some queries for helping to examine the db structure.
 
-
-begin;
-
 create schema if not exists examine;
 
 
@@ -18,6 +15,3 @@ create or replace view examine.diss_attrs as
     from node where schema = 'diss'
     group by jsonb_object_keys (attrs)
     order by count (node.id) desc;
-
-
-commit;

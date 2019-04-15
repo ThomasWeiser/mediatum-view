@@ -1,5 +1,3 @@
-begin;
-
 
 -- drop type if exists aux.ranked_id;
 create type aux.ranked_id as (
@@ -112,6 +110,3 @@ $$ language sql stable rows 100 parallel safe;
 
 comment on function api.folder_author_search (folder api.folder, text text) is
     'Reads and enables pagination through all documents within a folder, filtered by a keyword search though the documents'' author.';
-
-
-commit;

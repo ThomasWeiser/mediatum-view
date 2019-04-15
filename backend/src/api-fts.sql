@@ -2,9 +2,6 @@
 -- Publicly exposed GraphQL functions
 -- regarding full-text search.
 
-begin;
-
-
 create or replace function aux.fts_ordered
     (fts_query tsquery
     , domain text
@@ -213,6 +210,3 @@ $$ language sql stable rows 100 parallel safe;
 
 comment on function api.folder_author_search (folder api.folder, text text) is
     'Reads and enables pagination through all documents within a folder, filtered by a keyword search though the documents'' author.';
-
-
-commit;

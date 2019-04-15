@@ -2,9 +2,6 @@
 -- Publicly exposed GraphQL functions
 -- regarding facetted search.
 
-begin;
-
-
 create or replace function api.all_documents_docset
     ( folder_id int4
     , type text
@@ -264,5 +261,3 @@ comment on function api.all_documents_facet_by_mask
     'Note: When dealing with large sets of documents, this function is faster '
     'than composing the functions "all_documents_docset" and "docset_facet_by_mask".'
 ;
-
-commit;

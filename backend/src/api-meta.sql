@@ -3,9 +3,6 @@
 -- regarding meta objects.
 
 
-begin;
-
-
 /*
 TODO: Quick and dirty pattern matching ahead. Needs more elaboration:
   - Escape special characters (% and _ for ilike)
@@ -526,6 +523,3 @@ $$ language sql stable;
 
 comment on function api.mask_exportmapping(mask api.mask) is
     'Gets the export mapping of this mask. Returns null if there is no such mapping.';
-
-
-commit;

@@ -3,9 +3,6 @@
 -- from mediaTUM's generic node table.
 
 
-begin;
-
-
 drop schema if exists entity CASCADE;
 create schema entity;
 
@@ -346,6 +343,3 @@ create or replace view entity.document_mask_value_list as
         ) as values
     from (select * from entity.document_mask_fields order by maskitem_orderpos) as q
     group by document_id, mask_name;
-
-
-commit;

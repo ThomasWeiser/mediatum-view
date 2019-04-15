@@ -3,9 +3,6 @@
 -- regarding document objects.
 
 
-begin;
-
-
 create or replace function api.all_documents
     ( folder_id int4
     , type text
@@ -112,6 +109,3 @@ $$ language sql stable parallel safe;
 
 comment on function api.document_values_by_mask (document api.document, mask_name text) is
     'Gets the meta field values of this document as a JSON value, selected by a named mask.';
-
-
-commit;

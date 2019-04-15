@@ -3,9 +3,6 @@
 -- Useful when examining the structure of the node table.
 
 
-begin;
-
-
 create or replace function debug.all_nodes (
         type text,
         schema text,
@@ -225,6 +222,3 @@ create or replace function debug.mediatum_node_as_document (node debug.mediatum_
     select * from entity.document
     where entity.document.id = node.id
 $$ language sql stable;
-
-
-commit;

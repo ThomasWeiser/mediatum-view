@@ -1,9 +1,6 @@
 
 -- Some auxiliary functions, that live in their own schema.
 
-begin;
-
-
 create schema if not exists aux;
 
 
@@ -170,6 +167,3 @@ create or replace function aux.nodetype_is_container (nodetype1 varchar)
           and nodetype.is_container
         )
 $$ language sql stable;
-
-
-commit;

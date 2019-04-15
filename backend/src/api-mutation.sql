@@ -3,9 +3,6 @@
 -- demonstrating mutations
 
 
-begin;
-
-
 create or replace function api.update_document_attribute (id int4, key text, value text)
     returns api.document as $$
 
@@ -22,6 +19,3 @@ $$ language sql volatile;
 
 comment on function api.update_document_attribute (id int4, key text, value text) is
     'Updates an existing attribute of the document with the given id.';
-
-
-commit;
