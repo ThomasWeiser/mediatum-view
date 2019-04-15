@@ -30,5 +30,6 @@ postgraphile \
     --no-setof-functions-contain-nulls \
     --legacy-relations=omit \
     --no-ignore-rbac \
-
+    --enhance-graphiql \
+    
 #     --dynamic-json \
