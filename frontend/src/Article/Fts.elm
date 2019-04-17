@@ -10,8 +10,8 @@ module Article.Fts exposing
 import Api
 import Article.Iterator as Iterator
 import Document exposing (Document, DocumentId)
+import DocumentResult exposing (DocumentResult)
 import Folder exposing (Folder, FolderCounts)
-import FtsDocumentResult exposing (FtsDocumentResult)
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
@@ -35,21 +35,21 @@ type Return
 
 
 type alias Model =
-    { pageResult : PageResult FtsDocumentResult
+    { pageResult : PageResult DocumentResult
     , queryFolderCounts : Bool
     , iterator : Maybe Iterator.Model
     }
 
 
 type Msg
-    = ApiResponseFtsPage (Api.Response (Page FtsDocumentResult))
+    = ApiResponseFtsPage (Api.Response (Page DocumentResult))
     | ApiResponseFtsFolderCounts (Api.Response FolderCounts)
     | PickPosition Page.Position
     | SelectDocument DocumentId
     | IteratorMsg Iterator.Msg
 
 
-iteratorContext : Context -> Model -> Iterator.Context FtsDocumentResult
+iteratorContext : Context -> Model -> Iterator.Context DocumentResult
 iteratorContext context model =
     { folder = context.ftsQuery.folder
     , itemList = Maybe.Extra.unwrap [] Page.entries model.pageResult.page
@@ -175,7 +175,7 @@ view context model =
                     Just documentPage ->
                         viewResponse
                             PickPosition
-                            (viewPage (FtsDocumentResult.view SelectDocument))
+                            (viewPage (DocumentResult.view SelectDocument))
                             documentPage
                 , if model.pageResult.loading then
                     Icons.spinner

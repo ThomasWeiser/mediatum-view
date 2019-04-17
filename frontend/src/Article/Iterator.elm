@@ -11,7 +11,6 @@ module Article.Iterator exposing
 import Article.Details as Details
 import Document exposing (DocumentId)
 import Folder exposing (Folder)
-import FtsDocumentResult exposing (FtsDocumentResult)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events

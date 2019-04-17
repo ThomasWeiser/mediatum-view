@@ -3,21 +3,95 @@
 -- regarding document objects.
 
 
-create or replace function api.all_documents
+create or replace function aux.all_documents_limited
     ( folder_id int4
     , type text
     , name text
     , attribute_tests api.attribute_test[]
+    , "limit" integer
     )
-    returns setof api.document as $$
-    select document.*
+    returns setof api.document
+    as $$
+    select
+        (document.id, document.type, document.schema, document.name, document.orderpos, document.attrs)::api.document as document
     from entity.document
     join aux.node_lineage on document.id = node_lineage.descendant
     where folder_id = node_lineage.ancestor
-    and (all_documents.type is null or document.type = all_documents.type)
-    and (all_documents.name is null or document.name = all_documents.name)
-    and (attribute_tests is null or aux.jsonb_test_list (document.attrs, attribute_tests));
-$$ language sql stable rows 10000;
+    and (all_documents_limited.type is null or document.type = all_documents_limited.type)
+    and (all_documents_limited.name is null or document.name = all_documents_limited.name)
+    and (attribute_tests is null or aux.jsonb_test_list (document.attrs, attribute_tests))
+    order by document.id
+    limit "limit"
+    ;
+$$ language sql stable rows 100;
+
+
+create or replace function aux.all_documents_paginated
+    ( folder_id int4
+    , type text
+    , name text
+    , attribute_tests api.attribute_test[]
+    , "limit" integer
+    , "offset" integer
+    )
+    returns table
+        ( document api.document
+        , distance float4
+        , number integer
+        , has_next_page boolean
+        )
+    as $$
+        begin return query
+            select f
+                , 0.0::float4
+                , (row_number () over ())::integer as number
+                , (count(*) over ()) > "limit" + "offset"
+            from aux.all_documents_limited
+                ( folder_id
+                , type
+                , name
+                , attribute_tests
+                , "limit" + "offset" + 1
+                ) as f
+            limit "limit"
+            offset "offset";
+        end;
+$$ language plpgsql stable parallel safe rows 100;
+
+
+create or replace function api.all_documents_page
+    ( folder_id int4
+    , type text
+    , name text
+    , attribute_tests api.attribute_test[]
+    , "limit" integer
+    , "offset" integer
+    )
+    returns api.document_result_page as $$
+
+        with search_result as (
+                select *
+                from aux.all_documents_paginated
+                    ( folder_id
+                    , type, name
+                    , attribute_tests
+                    , "limit", "offset"
+                    )
+            )
+        select
+            "offset",
+            coalesce(
+                (select every(has_next_page) from search_result), false
+            ) as has_next_page,
+            array (
+            select row(number, distance, document)::api.document_result
+                from search_result
+            ) as content
+        ;
+$$ language sql stable parallel safe;
+
+
+
 
 /*
 Actually, we would like to declare that the first parameter is required.
@@ -44,7 +118,7 @@ $$ language sql stable strict rows 10000;
 */
 
 
-comment on function api.all_documents (folder_id int4, type text, name text, attribute_tests api.attribute_test[]) is
+comment on function api.all_documents_page (folder_id int4, type text, name text, attribute_tests api.attribute_test[], "limit" integer, "offset" integer) is
     'Reads and enables pagination through all documents in a folder, optionally filtered by type and name and a list of attribute tests';
 
 

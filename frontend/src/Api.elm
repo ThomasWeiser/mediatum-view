@@ -4,7 +4,7 @@ module Api exposing
     , makeMutationRequest
     , makeQueryRequest
     , queryDocumentDetails
-    , queryFolderDocuments
+    , queryFolderDocumentsPage
     , queryFtsFolderCounts
     , queryFtsPage
     , queryGenericNode
@@ -15,8 +15,8 @@ module Api exposing
 
 import Dict
 import Document exposing (Document, DocumentId)
+import DocumentResult exposing (DocumentResult)
 import Folder exposing (Folder, FolderCounts, FolderId)
-import FtsDocumentResult exposing (FtsDocumentResult)
 import GenericNode exposing (GenericNode)
 import Graphql.Extra
 import Graphql.Field
@@ -25,14 +25,14 @@ import Graphql.Mutation
 import Graphql.Object
 import Graphql.Object.Docset
 import Graphql.Object.Document
+import Graphql.Object.DocumentResult
+import Graphql.Object.DocumentResultPage
 import Graphql.Object.DocumentsConnection
 import Graphql.Object.DocumentsEdge
 import Graphql.Object.Folder
 import Graphql.Object.FolderCount
 import Graphql.Object.FolderCountsConnection
 import Graphql.Object.FoldersConnection
-import Graphql.Object.FtsDocumentResult
-import Graphql.Object.FtsDocumentResultPage
 import Graphql.Object.GenericNode
 import Graphql.Object.Metadatatype
 import Graphql.Object.PageInfo
@@ -204,16 +204,16 @@ folderLineage =
             )
 
 
-queryFolderDocuments :
-    Maybe (Pagination.Relay.Page.Page Document)
-    -> Pagination.Relay.Pagination.Position
+queryFolderDocumentsPage :
+    Maybe (Pagination.Offset.Page.Page DocumentResult)
+    -> Pagination.Offset.Page.Position
     -> Query.FolderQuery
-    -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-queryFolderDocuments referencePage paginationPosition folderQuery =
+    -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
+queryFolderDocumentsPage referencePage paginationPosition folderQuery =
     Graphql.Query.selection identity
         |> with
-            (Graphql.Query.allDocuments
-                ((\optionals ->
+            (Graphql.Query.allDocumentsPage
+                (\optionals ->
                     { optionals
                         | folderId = folderQuery.folder |> .id |> Folder.idToInt |> Present
                         , attributeTests =
@@ -221,25 +221,25 @@ queryFolderDocuments referencePage paginationPosition folderQuery =
                                 |> Query.filtersToAttributeTests
                                 |> Query.Attribute.testsAsGraphqlArgument
                                 |> Present
+                        , limit = Present pageSize
+                        , offset =
+                            Present <|
+                                Pagination.Offset.Page.positionToOffset
+                                    pageSize
+                                    referencePage
+                                    paginationPosition
                     }
-                 )
-                    >> Pagination.Relay.Pagination.paginationArguments
-                        pageSize
-                        referencePage
-                        paginationPosition
                 )
-                (Connection.connection
-                    graphqlDocumentObjects
-                    (documentNode "nodesmall")
-                )
+                (documentResultPage "nodesmall")
+                |> Graphql.Field.nonNullOrFail
             )
 
 
 queryFtsPage :
-    Maybe (Pagination.Offset.Page.Page FtsDocumentResult)
+    Maybe (Pagination.Offset.Page.Page DocumentResult)
     -> Pagination.Offset.Page.Position
     -> Query.FtsQuery
-    -> SelectionSet (Pagination.Offset.Page.Page FtsDocumentResult) Graphql.Operation.RootQuery
+    -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
 queryFtsPage referencePage paginationPosition ftsQuery =
     Graphql.Query.selection identity
         |> with
@@ -271,7 +271,7 @@ queryFtsPage referencePage paginationPosition ftsQuery =
                                                 paginationPosition
                                 }
                             )
-                            (ftsDocumentResultPage "nodesmall")
+                            (documentResultPage "nodesmall")
                             |> Graphql.Field.nonNullOrFail
                         )
                 )
@@ -426,40 +426,40 @@ updateDocumentAttribute documentId key value =
             )
 
 
-ftsDocumentResultPage :
+documentResultPage :
     String
-    -> SelectionSet (Pagination.Offset.Page.Page FtsDocumentResult) Graphql.Object.FtsDocumentResultPage
-ftsDocumentResultPage maskName =
-    Graphql.Object.FtsDocumentResultPage.selection Pagination.Offset.Page.Page
+    -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Object.DocumentResultPage
+documentResultPage maskName =
+    Graphql.Object.DocumentResultPage.selection Pagination.Offset.Page.Page
         |> with
-            (Graphql.Object.FtsDocumentResultPage.offset
+            (Graphql.Object.DocumentResultPage.offset
                 |> Graphql.Field.nonNullOrFail
             )
         |> with
-            (Graphql.Object.FtsDocumentResultPage.hasNextPage
+            (Graphql.Object.DocumentResultPage.hasNextPage
                 |> Graphql.Field.nonNullOrFail
             )
         |> with
-            (Graphql.Object.FtsDocumentResultPage.content
-                (ftsDocumentResult maskName)
+            (Graphql.Object.DocumentResultPage.content
+                (documentResult maskName)
                 |> Graphql.Field.nonNullOrFail
                 |> Graphql.Field.nonNullElementsOrFail
             )
 
 
-ftsDocumentResult : String -> SelectionSet FtsDocumentResult Graphql.Object.FtsDocumentResult
-ftsDocumentResult maskName =
-    Graphql.Object.FtsDocumentResult.selection FtsDocumentResult.init
+documentResult : String -> SelectionSet DocumentResult Graphql.Object.DocumentResult
+documentResult maskName =
+    Graphql.Object.DocumentResult.selection DocumentResult.init
         |> with
-            (Graphql.Object.FtsDocumentResult.number
+            (Graphql.Object.DocumentResult.number
                 |> Graphql.Field.nonNullOrFail
             )
         |> with
-            (Graphql.Object.FtsDocumentResult.distance
+            (Graphql.Object.DocumentResult.distance
                 |> Graphql.Field.nonNullOrFail
             )
         |> with
-            (Graphql.Object.FtsDocumentResult.document
+            (Graphql.Object.DocumentResult.document
                 (documentNode maskName)
                 |> Graphql.Field.nonNullOrFail
             )
