@@ -10,6 +10,7 @@ module Article.Directory exposing
 import Api
 import Article.Iterator as Iterator
 import Document exposing (Document, DocumentId)
+import DocumentResult exposing (DocumentResult)
 import Folder exposing (Folder)
 import Graphql.Extra
 import Html exposing (Html)
@@ -17,8 +18,7 @@ import Html.Attributes
 import Html.Events
 import Icons
 import Maybe.Extra
-import Pagination.Relay.Page as Page exposing (Page, PageResult)
-import Pagination.Relay.Pagination as Pagination
+import Pagination.Offset.Page as Page exposing (Page, PageResult)
 import Query
 import Utils
 
@@ -34,23 +34,23 @@ type Return
 
 
 type alias Model =
-    { pageResult : PageResult Document
+    { pageResult : PageResult DocumentResult
     , iterator : Maybe Iterator.Model
     }
 
 
 type Msg
-    = ApiResponse (Api.Response (Page Document))
-    | PickPosition Pagination.Position
+    = ApiResponse (Api.Response (Page DocumentResult))
+    | PickPosition Page.Position
     | SelectDocument DocumentId
     | IteratorMsg Iterator.Msg
 
 
-iteratorContext : Context -> Model -> Iterator.Context Document
+iteratorContext : Context -> Model -> Iterator.Context DocumentResult
 iteratorContext context model =
     { folder = context.folderQuery.folder
     , itemList = Maybe.Extra.unwrap [] Page.entries model.pageResult.page
-    , itemId = .id
+    , itemId = .document >> .id
     }
 
 
@@ -64,7 +64,7 @@ init context =
     in
     update
         context
-        (PickPosition Pagination.First)
+        (PickPosition Page.First)
         model
         |> Utils.tupleRemoveThird
 
@@ -127,14 +127,14 @@ update context msg model =
                     )
 
 
-sendSearchQuery : Context -> Pagination.Position -> Model -> ( Model, Cmd Msg )
+sendSearchQuery : Context -> Page.Position -> Model -> ( Model, Cmd Msg )
 sendSearchQuery context paginationPosition model =
     ( { model
         | pageResult = Page.loadingPageResult model.pageResult
       }
     , Api.makeQueryRequest
         ApiResponse
-        (Api.queryFolderDocuments
+        (Api.queryFolderDocumentsPage
             model.pageResult.page
             paginationPosition
             context.folderQuery
@@ -154,7 +154,7 @@ view context model =
                     Just documentPage ->
                         viewResponse
                             PickPosition
-                            (viewPage (Document.view SelectDocument Nothing))
+                            (viewPage (DocumentResult.view SelectDocument))
                             documentPage
                 , if model.pageResult.loading then
                     Icons.spinner
@@ -178,14 +178,13 @@ view context model =
 
 
 viewResponse :
-    (Pagination.Position -> Msg)
+    (Page.Position -> Msg)
     -> (Page itemModel -> Html Msg)
     -> Page itemModel
     -> Html Msg
 viewResponse paginationTargetTagger viewEntity page =
     Html.div []
-        [ viewNumberOfResults page
-        , viewEntity page
+        [ viewEntity page
         , viewPaginationButtons page paginationTargetTagger
         ]
 
@@ -198,18 +197,7 @@ viewPage viewItem page =
         ]
 
 
-viewNumberOfResults : Page itemModel -> Html msg
-viewNumberOfResults page =
-    Html.div []
-        [ Html.strong
-            []
-            [ Html.text "Number of Results: "
-            , Html.text <| String.fromInt page.totalCount
-            ]
-        ]
-
-
-viewPaginationButtons : Page itemModel -> (Pagination.Position -> Msg) -> Html Msg
+viewPaginationButtons : Page itemModel -> (Page.Position -> Msg) -> Html Msg
 viewPaginationButtons page targetTagger =
     let
         viewButton : String -> Msg -> Bool -> Html Msg
@@ -225,27 +213,15 @@ viewPaginationButtons page targetTagger =
         [ Html.Attributes.style "margin" "4px 0px 8px 0px"
         , Html.Attributes.class "button-group"
         ]
-        [ -- "Last" currently does not work with our GraphQL API
-          -- Only show "First" and "Next" for now.
-          -- May implement a form of infinite scrolling later.
-          viewButton "First"
-            (targetTagger Pagination.First)
-            page.pageInfo.hasPreviousPage
-
-        {-
-           , viewButton "Prev"
-               (targetTagger Pagination.Previous)
-               page.pageInfo.hasPreviousPage
-        -}
+        [ viewButton "First"
+            (targetTagger Page.First)
+            (not (Page.isFirstPage page))
+        , viewButton "Prev"
+            (targetTagger Page.Previous)
+            (not (Page.isFirstPage page))
         , viewButton "Next"
-            (targetTagger Pagination.Next)
-            page.pageInfo.hasNextPage
-
-        {-
-           , viewButton "Last"
-               (targetTagger Pagination.Last)
-               page.pageInfo.hasNextPage
-        -}
+            (targetTagger Page.Next)
+            page.hasNextPage
         ]
 
 

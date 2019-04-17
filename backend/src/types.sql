@@ -295,33 +295,33 @@ comment on column api.attribute_test.extra is
     'Second comparison value, used if operator may take two values, like "ilike" or "daterange"';
 
 
-create type api.fts_document_result as (
+create type api.document_result as (
     number integer,
     distance float4,
     document api.document
 );
 
-comment on type api.fts_document_result is
+comment on type api.document_result is
     'A single result from a full text search, containing a document';
-comment on column api.fts_document_result.number is
+comment on column api.document_result.number is
     'Sequence number of this result';
-comment on column api.fts_document_result.distance is
+comment on column api.document_result.distance is
     'A measure of the relevance of this result with respect to the query expression; lower values means higher relevance';
-comment on column api.fts_document_result.document is
+comment on column api.document_result.document is
     'The resulting document';
 
 
-create type api.fts_document_result_page as (
+create type api.document_result_page as (
     "offset" integer,
     has_next_page boolean,
-    content api.fts_document_result[]
+    content api.document_result[]
 );
 
-comment on type api.fts_document_result_page is
+comment on type api.document_result_page is
     'A result page from a full text search of documents';
-comment on column api.fts_document_result_page.has_next_page is
+comment on column api.document_result_page.has_next_page is
     'Indicates whether there are more results after the current page';
-comment on column api.fts_document_result_page.content is
+comment on column api.document_result_page.content is
     'A list of document results from a full text search';
 
 

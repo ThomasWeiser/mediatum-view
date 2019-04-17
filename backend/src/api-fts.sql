@@ -38,7 +38,8 @@ create or replace function aux.fts_document_folder_limited
     returns table
         ( document api.document
         , distance float4
-        ) as $$
+        )
+    as $$
     select
         (document.id, document.type, document.schema, document.name, document.orderpos, document.attrs)::api.document as document,
         fts.distance
@@ -97,7 +98,7 @@ create or replace function aux.fts_document_folder_paginated
                 , domain
                 , language
                 , attribute_tests
-                    , "limit" + "offset" + 1
+                , "limit" + "offset" + 1
                 ) as f
             limit "limit"
             offset "offset";
@@ -114,7 +115,7 @@ create or replace function api.folder_fts_page
     , "limit" integer default 10
     , "offset" integer default 0
     )
-    returns api.fts_document_result_page as $$
+    returns api.document_result_page as $$
 
         with search_result as (
                 select *
@@ -131,7 +132,7 @@ create or replace function api.folder_fts_page
                 (select every(has_next_page) from search_result), false
             ) as has_next_page,
             array (
-            select row(number, distance, document)::api.fts_document_result
+            select row(number, distance, document)::api.document_result
                 from search_result
             ) as content
         ;
@@ -148,8 +149,8 @@ create or replace function api.folder_fts_page_pl
     , "limit" integer default 10
     , "offset" integer default 0
     )
-    returns api.fts_document_result_page as $$
-    declare res api.fts_document_result_page;
+    returns api.document_result_page as $$
+    declare res api.document_result_page;
 
     begin
         select
@@ -159,8 +160,8 @@ create or replace function api.folder_fts_page_pl
                 , false
                 ) as has_next_page,
             coalesce
-                ( array_agg (row (number, distance, document)::api.fts_document_result)
-                , array[]::api.fts_document_result[]
+                ( array_agg (row (number, distance, document)::api.document_result)
+                , array[]::api.document_result[]
                 ) as content
         into res
         from

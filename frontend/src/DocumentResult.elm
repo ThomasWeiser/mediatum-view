@@ -1,5 +1,5 @@
-module FtsDocumentResult exposing
-    ( FtsDocumentResult
+module DocumentResult exposing
+    ( DocumentResult
     , init
     , view
     )
@@ -8,14 +8,14 @@ import Document exposing (Document, DocumentId)
 import Html exposing (Html)
 
 
-type alias FtsDocumentResult =
+type alias DocumentResult =
     { number : Int
     , distance : Float
     , document : Document
     }
 
 
-init : Int -> Float -> Document -> FtsDocumentResult
+init : Int -> Float -> Document -> DocumentResult
 init number distance document =
     { number = number
     , distance = distance
@@ -23,9 +23,9 @@ init number distance document =
     }
 
 
-view : (DocumentId -> msg) -> FtsDocumentResult -> Html msg
-view clickMsg ftsDocumentResult =
+view : (DocumentId -> msg) -> DocumentResult -> Html msg
+view clickMsg documentResult =
     Document.view
         clickMsg
-        (Just ftsDocumentResult.number)
-        ftsDocumentResult.document
+        (Just documentResult.number)
+        documentResult.document
