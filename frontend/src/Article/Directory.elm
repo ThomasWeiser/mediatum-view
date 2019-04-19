@@ -11,7 +11,7 @@ import Api
 import Article.Iterator as Iterator
 import Document exposing (Document, DocumentId)
 import DocumentResult exposing (DocumentResult)
-import Folder exposing (Folder)
+import Folder exposing (Folder, FolderCounts)
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
@@ -29,18 +29,21 @@ type alias Context =
 
 
 type Return
-    = NoReturn {- | FolderCounts FolderCounts -}
+    = NoReturn
     | ShowDocument DocumentId
+    | FolderCounts FolderCounts
 
 
 type alias Model =
     { pageResult : PageResult DocumentResult
     , iterator : Maybe Iterator.Model
+    , doQueryFolderCounts : Bool
     }
 
 
 type Msg
-    = ApiResponse (Api.Response (Page DocumentResult))
+    = ApiResponsePage (Api.Response (Page DocumentResult))
+    | ApiResponseFolderCounts (Api.Response FolderCounts)
     | PickPosition Page.Position
     | SelectDocument DocumentId
     | IteratorMsg Iterator.Msg
@@ -60,6 +63,7 @@ init context =
         model =
             { pageResult = Page.initialPageResult
             , iterator = Nothing
+            , doQueryFolderCounts = True
             }
     in
     update
@@ -72,16 +76,48 @@ init context =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
-        PickPosition position ->
-            sendSearchQuery context position model
-                |> Utils.tupleAddThird NoReturn
+        PickPosition paginationPosition ->
+            ( { model
+                | pageResult = Page.loadingPageResult model.pageResult
+              }
+            , Api.makeQueryRequest
+                ApiResponsePage
+                (Api.queryFolderDocumentsPage
+                    model.pageResult.page
+                    paginationPosition
+                    context.folderQuery
+                )
+            , NoReturn
+            )
 
-        ApiResponse result ->
+        ApiResponsePage result ->
             ( { model
                 | pageResult = Page.updatePageResultFromResult result model.pageResult
+                , doQueryFolderCounts = False
               }
+            , if model.doQueryFolderCounts then
+                Api.makeQueryRequest
+                    ApiResponseFolderCounts
+                    (Api.queryFolderFolderCounts
+                        context.folderQuery
+                    )
+
+              else
+                Cmd.none
+            , NoReturn
+            )
+
+        ApiResponseFolderCounts (Err error) ->
+            -- TODO
+            ( model
             , Cmd.none
             , NoReturn
+            )
+
+        ApiResponseFolderCounts (Ok folderCountMap) ->
+            ( model
+            , Cmd.none
+            , FolderCounts folderCountMap
             )
 
         SelectDocument id ->
@@ -125,21 +161,6 @@ update context msg model =
                         _ ->
                             NoReturn
                     )
-
-
-sendSearchQuery : Context -> Page.Position -> Model -> ( Model, Cmd Msg )
-sendSearchQuery context paginationPosition model =
-    ( { model
-        | pageResult = Page.loadingPageResult model.pageResult
-      }
-    , Api.makeQueryRequest
-        ApiResponse
-        (Api.queryFolderDocumentsPage
-            model.pageResult.page
-            paginationPosition
-            context.folderQuery
-        )
-    )
 
 
 view : Context -> Model -> Html Msg

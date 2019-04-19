@@ -148,6 +148,12 @@ update context msg model =
                     , NoReturn
                     )
 
+                Article.Directory.FolderCounts folderCounts ->
+                    ( model
+                    , Cmd.none
+                    , FolderCounts folderCounts
+                    )
+
                 Article.Directory.ShowDocument documentId ->
                     ( model
                     , Cmd.none
