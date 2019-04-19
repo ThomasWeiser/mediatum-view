@@ -291,7 +291,7 @@ queryFtsFolderCounts ftsQuery =
                         | id = ftsQuery.folder |> .id |> Folder.idToInt |> Present
                     }
                 )
-                (Graphql.Object.Folder.selection Dict.fromList
+                (Graphql.Object.Folder.selection identity
                     |> with
                         (Graphql.Object.Folder.ftsDocset
                             (\optionals ->
@@ -306,27 +306,33 @@ queryFtsFolderCounts ftsQuery =
                                             |> Present
                                 }
                             )
-                            (Graphql.Object.Docset.selection (::)
-                                |> with
-                                    (Graphql.Object.Docset.folderCount
-                                        folderCount
-                                        |> Graphql.Field.nonNullOrFail
-                                    )
-                                |> with
-                                    (Graphql.Object.Docset.subfolderCounts
-                                        identity
-                                        (Graphql.Object.FolderCountsConnection.selection identity
-                                            |> with
-                                                (Graphql.Object.FolderCountsConnection.nodes
-                                                    folderCount
-                                                )
-                                        )
-                                    )
-                            )
+                            folderAndSubfolderCounts
                             |> Graphql.Field.nonNullOrFail
                         )
                 )
                 |> Graphql.Field.nonNullOrFail
+            )
+
+
+folderAndSubfolderCounts : SelectionSet Folder.FolderCounts Graphql.Object.Docset
+folderAndSubfolderCounts =
+    Graphql.Object.Docset.selection
+        (\pair listOfPairs -> Dict.fromList (pair :: listOfPairs))
+        |> with
+            (Graphql.Object.Docset.folderCount
+                folderCount
+                |> Graphql.Field.nonNullOrFail
+            )
+        |> with
+            (Graphql.Object.Docset.subfolderCounts
+                identity
+                (Graphql.Object.FolderCountsConnection.selection
+                    identity
+                    |> with
+                        (Graphql.Object.FolderCountsConnection.nodes
+                            folderCount
+                        )
+                )
             )
 
 
