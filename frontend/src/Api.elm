@@ -5,6 +5,7 @@ module Api exposing
     , makeQueryRequest
     , queryDocumentDetails
     , queryFolderDocumentsPage
+    , queryFolderFolderCounts
     , queryFtsFolderCounts
     , queryFtsPage
     , queryGenericNode
@@ -231,6 +232,28 @@ queryFolderDocumentsPage referencePage paginationPosition folderQuery =
                     }
                 )
                 (documentResultPage "nodesmall")
+                |> Graphql.Field.nonNullOrFail
+            )
+
+
+queryFolderFolderCounts :
+    Query.FolderQuery
+    -> SelectionSet FolderCounts Graphql.Operation.RootQuery
+queryFolderFolderCounts folderQuery =
+    Graphql.Query.selection identity
+        |> with
+            (Graphql.Query.allDocumentsDocset
+                (\optionals ->
+                    { optionals
+                        | folderId = folderQuery.folder |> .id |> Folder.idToInt |> Present
+                        , attributeTests =
+                            folderQuery.filters
+                                |> Query.filtersToAttributeTests
+                                |> Query.Attribute.testsAsGraphqlArgument
+                                |> Present
+                    }
+                )
+                folderAndSubfolderCounts
                 |> Graphql.Field.nonNullOrFail
             )
 

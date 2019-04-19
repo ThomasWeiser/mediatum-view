@@ -36,8 +36,8 @@ type Return
 
 type alias Model =
     { pageResult : PageResult DocumentResult
-    , queryFolderCounts : Bool
     , iterator : Maybe Iterator.Model
+    , doQueryFolderCounts : Bool
     }
 
 
@@ -62,8 +62,8 @@ init context =
     let
         model =
             { pageResult = Page.initialPageResult
-            , queryFolderCounts = True
             , iterator = Nothing
+            , doQueryFolderCounts = True
             }
     in
     update
@@ -93,9 +93,9 @@ update context msg model =
         ApiResponseFtsPage result ->
             ( { model
                 | pageResult = Page.updatePageResultFromResult result model.pageResult
-                , queryFolderCounts = False
+                , doQueryFolderCounts = False
               }
-            , if model.queryFolderCounts then
+            , if model.doQueryFolderCounts then
                 Api.makeQueryRequest
                     ApiResponseFtsFolderCounts
                     (Api.queryFtsFolderCounts
