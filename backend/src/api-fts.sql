@@ -3,7 +3,7 @@
 -- regarding full-text search.
 
 create or replace function aux.fts_ordered
-    (fts_query tsquery
+    ( fts_query tsquery
     , domain text
     , language text
     )
@@ -27,7 +27,7 @@ $$ -- Using language plpgsql is more efficient here than sql.
    language plpgsql stable strict parallel safe rows 1000;
 
 
-create or replace function aux.fts_document_folder_limited
+create or replace function aux.fts_documents_limited
     ( folder_id int4
     , fts_query tsquery
     , domain text
@@ -71,7 +71,7 @@ $$ -- Language sql gives stable performance here.
     language sql stable parallel safe rows 100;
 
 
-create or replace function aux.fts_document_folder_paginated
+create or replace function aux.fts_documents_paginated
     ( folder_id int4
     , text text
     , domain text
@@ -92,7 +92,7 @@ create or replace function aux.fts_document_folder_paginated
                 , f.distance
                 , (row_number () over ())::integer as number
                 , (count(*) over ()) > "limit" + "offset"
-            from aux.fts_document_folder_limited
+            from aux.fts_documents_limited
                 ( folder_id
                 , plainto_tsquery (language::regconfig, text)
                 , domain
@@ -106,8 +106,8 @@ create or replace function aux.fts_document_folder_paginated
 $$ language plpgsql stable parallel safe rows 100;
 
 
-create or replace function api.folder_fts_page
-    ( folder api.folder
+create or replace function api.fts_documents_page
+    ( folder_id int4
     , text text
     , domain text
     , language text
@@ -119,8 +119,8 @@ create or replace function api.folder_fts_page
 
         with search_result as (
                 select *
-                from aux.fts_document_folder_paginated
-                    ( folder.id
+                from aux.fts_documents_paginated
+                    ( folder_id
                     , text, domain, language
                     , attribute_tests
                     , "limit", "offset"
@@ -140,8 +140,8 @@ $$ language sql stable parallel safe;
 
 -- The same function as plpgsql
 -- Performance behavior seems to be the same.
-create or replace function api.folder_fts_page_pl
-    (folder api.folder
+create or replace function api.fts_documents_page_pl
+    ( folder_id int4
     , text text
     , domain text
     , language text
@@ -165,8 +165,8 @@ create or replace function api.folder_fts_page_pl
                 ) as content
         into res
         from
-            aux.fts_document_folder_paginated
-                ( folder.id
+            aux.fts_documents_paginated
+                ( folder_id
                 , text, domain, language
                 , attribute_tests
                 , "limit", "offset"
@@ -176,19 +176,19 @@ create or replace function api.folder_fts_page_pl
     end;
 $$ language plpgsql stable parallel safe;
 
-/*
-comment on function api.folder_fts_page (folder api.folder, text text, domain text, language text, "limit" integer, "offset" integer) is
-    'Reads and enables pagination through all documents within a folder, filtered by a keyword search, and sorted by a search rank.'
+
+comment on function api.fts_documents_page (folder_id int4, text text, domain text, language text, attribute_tests api.attribute_test[], "limit" integer, "offset" integer) is
+    'Perform a full-text-search on the documents of a folder, sorted by a search rank, optionally filtered by type and name and a list of attribute tests.'
     ' Language may currently be "english" and "german".'
     ' Domain may currently be "fulltext" and "attrs".'
     ' For pagination you may specify a limit (defaults to 10) and an offset (defaults to 0).'
     ;
-*/
+
 
 ----------------------------------------------------
 
 
-create or replace function api.folder_author_search (folder api.folder, text text)
+create or replace function api.author_search (folder_id int4, text text)
     returns setof api.document as $$
     select
         node.id,
@@ -201,7 +201,7 @@ create or replace function api.folder_author_search (folder api.folder, text tex
          -- to_tsquery ('german', text || ':*') as tsq, -- works only for a single word (i.e. without spaces)
          -- plainto_tsquery ('german', text) as tsq, -- no prefix search
          mediatum.node
-    where aux.test_node_lineage (folder.id, node.id)
+    where aux.test_node_lineage (folder_id, node.id)
       and mediatum.to_tsvector_safe (
             'german'::regconfig,
             replace (node.attrs ->> 'author.surname', ';', ' ')
@@ -209,5 +209,5 @@ create or replace function api.folder_author_search (folder api.folder, text tex
           @@ tsq;
 $$ language sql stable rows 100 parallel safe;
 
-comment on function api.folder_author_search (folder api.folder, text text) is
+comment on function api.author_search (folder_id int4, text text) is
     'Reads and enables pagination through all documents within a folder, filtered by a keyword search though the documents'' author.';

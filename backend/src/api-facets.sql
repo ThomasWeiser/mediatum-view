@@ -27,7 +27,7 @@ create or replace function api.all_documents_docset
 $$ language plpgsql stable parallel safe;
 
 
-create or replace function aux.fts_folder_docset
+create or replace function aux.fts_documents_tsquery_docset
     ( folder_id int4
     , fts_query tsquery
     , domain text
@@ -62,8 +62,8 @@ create or replace function aux.fts_folder_docset
 $$ language plpgsql stable parallel safe;
 
 
-create or replace function api.folder_fts_docset
-    ( folder api.folder
+create or replace function api.fts_documents_docset
+    ( folder_id int4
     , text text
     , domain text
     , language text
@@ -72,8 +72,8 @@ create or replace function api.folder_fts_docset
     returns api.docset
     as $$ 
     begin  
-        return aux.fts_folder_docset
-          ( folder.id
+        return aux.fts_documents_tsquery_docset
+          ( folder_id
           , plainto_tsquery (language::regconfig, text)
           , domain
           , language
@@ -82,8 +82,8 @@ create or replace function api.folder_fts_docset
     end;
 $$ language plpgsql stable parallel safe;
 
-comment on function api.folder_fts_docset
-    ( folder api.folder
+comment on function api.fts_documents_docset
+    ( folder_id int4
     , text text
     , domain text
     , language text

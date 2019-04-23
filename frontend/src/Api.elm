@@ -266,38 +266,28 @@ queryFtsPage :
 queryFtsPage referencePage paginationPosition ftsQuery =
     Graphql.Query.selection identity
         |> with
-            (Graphql.Query.folderById
+            (Graphql.Query.ftsDocumentsPage
                 (\optionals ->
                     { optionals
-                        | id = ftsQuery.folder |> .id |> Folder.idToInt |> Present
+                        | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
+                        , text = Present ftsQuery.searchTerm
+                        , domain = Present (Query.ftsOptionsDomainToString ftsQuery.options)
+                        , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
+                        , attributeTests =
+                            ftsQuery.filters
+                                |> Query.filtersToAttributeTests
+                                |> Query.Attribute.testsAsGraphqlArgument
+                                |> Present
+                        , limit = Present pageSize
+                        , offset =
+                            Present <|
+                                Pagination.Offset.Page.positionToOffset
+                                    pageSize
+                                    referencePage
+                                    paginationPosition
                     }
                 )
-                (Graphql.Object.Folder.selection identity
-                    |> with
-                        (Graphql.Object.Folder.ftsPage
-                            (\optionals ->
-                                { optionals
-                                    | text = Present ftsQuery.searchTerm
-                                    , domain = Present (Query.ftsOptionsDomainToString ftsQuery.options)
-                                    , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
-                                    , attributeTests =
-                                        ftsQuery.filters
-                                            |> Query.filtersToAttributeTests
-                                            |> Query.Attribute.testsAsGraphqlArgument
-                                            |> Present
-                                    , limit = Present pageSize
-                                    , offset =
-                                        Present <|
-                                            Pagination.Offset.Page.positionToOffset
-                                                pageSize
-                                                referencePage
-                                                paginationPosition
-                                }
-                            )
-                            (documentResultPage "nodesmall")
-                            |> Graphql.Field.nonNullOrFail
-                        )
-                )
+                (documentResultPage "nodesmall")
                 |> Graphql.Field.nonNullOrFail
             )
 
@@ -308,31 +298,20 @@ queryFtsFolderCounts :
 queryFtsFolderCounts ftsQuery =
     Graphql.Query.selection identity
         |> with
-            (Graphql.Query.folderById
+            (Graphql.Query.ftsDocumentsDocset
                 (\optionals ->
                     { optionals
-                        | id = ftsQuery.folder |> .id |> Folder.idToInt |> Present
+                        | text = Present ftsQuery.searchTerm
+                        , domain = Present (Query.ftsOptionsDomainToString ftsQuery.options)
+                        , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
+                        , attributeTests =
+                            ftsQuery.filters
+                                |> Query.filtersToAttributeTests
+                                |> Query.Attribute.testsAsGraphqlArgument
+                                |> Present
                     }
                 )
-                (Graphql.Object.Folder.selection identity
-                    |> with
-                        (Graphql.Object.Folder.ftsDocset
-                            (\optionals ->
-                                { optionals
-                                    | text = Present ftsQuery.searchTerm
-                                    , domain = Present (Query.ftsOptionsDomainToString ftsQuery.options)
-                                    , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
-                                    , attributeTests =
-                                        ftsQuery.filters
-                                            |> Query.filtersToAttributeTests
-                                            |> Query.Attribute.testsAsGraphqlArgument
-                                            |> Present
-                                }
-                            )
-                            folderAndSubfolderCounts
-                            |> Graphql.Field.nonNullOrFail
-                        )
-                )
+                folderAndSubfolderCounts
                 |> Graphql.Field.nonNullOrFail
             )
 
@@ -384,32 +363,21 @@ folderCount =
    queryAuthorSearch referencePage paginationPosition folderId searchString =
        Graphql.Query.selection identity
            |> with
-               (Graphql.Query.folderById
-                   (\optionals ->
+               (Graphql.Query.authorSearch
+                   ((\optionals ->
                        { optionals
-                           | id = Present (Folder.idToInt folderId)
+                           | text = Present searchString
                        }
+                    )
+                       >> Pagination.Relay.Pagination.paginationArguments
+                           pageSize
+                           referencePage
+                           paginationPosition
                    )
-                   (Graphql.Object.Folder.selection identity
-                       |> with
-                           (Graphql.Object.Folder.authorSearch
-                               ((\optionals ->
-                                   { optionals
-                                       | text = Present searchString
-                                   }
-                                )
-                                   >> Pagination.Relay.Pagination.paginationArguments
-                                       pageSize
-                                       referencePage
-                                       paginationPosition
-                               )
-                               (Connection.connection
-                                   graphqlDocumentObjects
-                                   (documentNode "nodesmall")
-                               )
-                           )
+                   (Connection.connection
+                       graphqlDocumentObjects
+                       (documentNode "nodesmall")
                    )
-                   |> Graphql.Field.nonNullOrFail
                )
 -}
 
