@@ -7,10 +7,11 @@ module Graphql.Extra exposing
 import Graphql.Http
 import Graphql.Http.GraphqlError
 import Http
+import Json.Decode
 
 
 type StrippedError
-    = HttpError Http.Error
+    = HttpError Graphql.Http.HttpError
     | GraphqlError (List Graphql.Http.GraphqlError.GraphqlError)
 
 
@@ -31,34 +32,34 @@ errorToString error =
             httpErrorToString httpError
 
         GraphqlError graphqlError ->
-            graphqErrorToString graphqlError
+            graphqlErrorToString graphqlError
 
 
-httpErrorToString : Http.Error -> String
+httpErrorToString : Graphql.Http.HttpError -> String
 httpErrorToString error =
     case error of
-        Http.BadUrl url ->
+        Graphql.Http.BadUrl url ->
             "Bad Url: \"" ++ url ++ "\""
 
-        Http.Timeout ->
+        Graphql.Http.Timeout ->
             "Timeout"
 
-        Http.NetworkError ->
+        Graphql.Http.NetworkError ->
             "NetworkError"
 
-        Http.BadStatus response ->
+        Graphql.Http.BadStatus metadata payload ->
             "BadStatus: "
-                ++ String.fromInt response.status.code
+                ++ String.fromInt metadata.statusCode
                 ++ " ("
-                ++ response.status.message
+                ++ metadata.statusText
                 ++ ")"
 
-        Http.BadPayload explanation _ ->
-            "BadPayload: " ++ explanation
+        Graphql.Http.BadPayload jsonDecodeError ->
+            "BadPayload: " ++ Json.Decode.errorToString jsonDecodeError
 
 
-graphqErrorToString : List Graphql.Http.GraphqlError.GraphqlError -> String
-graphqErrorToString errorList =
+graphqlErrorToString : List Graphql.Http.GraphqlError.GraphqlError -> String
+graphqlErrorToString errorList =
     String.join
         ", "
         (List.map .message errorList)
