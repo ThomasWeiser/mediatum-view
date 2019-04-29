@@ -301,7 +301,8 @@ queryFtsFolderCounts ftsQuery =
             (Graphql.Query.ftsDocumentsDocset
                 (\optionals ->
                     { optionals
-                        | text = Present ftsQuery.searchTerm
+                        | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
+                        , text = Present ftsQuery.searchTerm
                         , domain = Present (Query.ftsOptionsDomainToString ftsQuery.options)
                         , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
                         , attributeTests =
