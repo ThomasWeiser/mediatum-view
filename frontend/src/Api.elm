@@ -1,19 +1,19 @@
 module Api exposing
-    ( Response, ApiError
-    , makeQueryRequest, makeMutationRequest
+    ( Response, Error
+    , sendQueryRequest, sendMutationRequest
     )
 
-{-| Definitions of all specific GraphQL requests needed for the application.
+{-| Definitions of all specific GraphQL requests needed in the application.
 
 
 # Types
 
-@docs Response, ApiError
+@docs Response, Error
 
 
 # Run GraphQL Requests
 
-@docs makeQueryRequest, makeMutationRequest
+@docs sendQueryRequest, sendMutationRequest
 
 -}
 
@@ -48,10 +48,6 @@ import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
-import Pagination.Offset.Page
-import Pagination.Relay.Connection as Connection
-import Pagination.Relay.Page
-import Pagination.Relay.Pagination
 import Query exposing (Query)
 import Query.Attribute
 
@@ -66,12 +62,12 @@ apiUrl =
 {-| A query specific Result type.
 -}
 type alias Response decodesTo =
-    Result ApiError decodesTo
+    Result Error decodesTo
 
 
 {-| Represents an error from running a GraphQL request.
 -}
-type alias ApiError =
+type alias Error =
     Graphql.Extra.StrippedError
 
 
@@ -79,7 +75,7 @@ type alias ApiError =
 
 Takes a tagger function for wrapping the result,
 which is either a query specific type representing the queried data
-or an ApiError.
+or an Error.
 
 The query itself is given as a `Graphql.SelectionSet.SelectionSet`
 , see [elm-graphql](https://package.elm-lang.org/packages/dillonkearns/elm-graphql/latest/Graphql-SelectionSet).
@@ -87,11 +83,11 @@ There are functions in this module to produce these selection sets for all
 relevant queries of the application.
 
 -}
-makeQueryRequest :
+sendQueryRequest :
     (Response decodesTo -> msg)
     -> SelectionSet decodesTo Graphql.Operation.RootQuery
     -> Cmd msg
-makeQueryRequest tagger selectionSet =
+sendQueryRequest tagger selectionSet =
     selectionSet
         |> Graphql.Http.queryRequest apiUrl
         |> Graphql.Http.send
@@ -103,11 +99,11 @@ makeQueryRequest tagger selectionSet =
 Like `makeQueryRequest` but for mutations.
 
 -}
-makeMutationRequest :
+sendMutationRequest :
     (Response decodesTo -> msg)
     -> SelectionSet decodesTo Graphql.Operation.RootMutation
     -> Cmd msg
-makeMutationRequest tagger selectionSet =
+sendMutationRequest tagger selectionSet =
     selectionSet
         |> Graphql.Http.mutationRequest apiUrl
         |> Graphql.Http.send

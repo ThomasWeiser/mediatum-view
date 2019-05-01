@@ -9,7 +9,8 @@ module Tree exposing
     , viewBreadcrumbs
     )
 
-import Api exposing (ApiError)
+import Api
+import Api.Queries
 import Dict exposing (Dict)
 import Dict.Extra
 import Folder exposing (Folder, FolderCounts, FolderId)
@@ -32,7 +33,7 @@ type alias Model =
     { folderCache : Dict FolderId FolderInTree
     , rootIds : List FolderId
     , loading : Int
-    , error : Maybe ApiError
+    , error : Maybe Api.Error
     , selection : List FolderId
     , showSubselection : Bool
     }
@@ -59,9 +60,9 @@ init =
       , selection = []
       , showSubselection = True
       }
-    , Api.makeQueryRequest
+    , Api.sendQueryRequest
         ApiResponseToplevelFolder
-        Api.queryToplevelFolder
+        Api.Queries.toplevelFolder
     )
 
 
@@ -282,9 +283,9 @@ loadSubfolders parentIds model =
 
     else
         ( { model | loading = model.loading + 1 }
-        , Api.makeQueryRequest
+        , Api.sendQueryRequest
             ApiResponseSubfolder
-            (Api.querySubfolder parentIdsWithUnknownChildren)
+            (Api.Queries.subfolder parentIdsWithUnknownChildren)
         )
 
 

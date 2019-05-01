@@ -1,11 +1,31 @@
-module Api.Queries exposing (queryToplevelFolder, querySubfolder, queryGenericNode, queryFolderDocumentsPage, queryFolderFolderCounts, queryFtsPage, queryFtsFolderCounts, queryDocumentDetails)
+module Api.Queries exposing
+    ( toplevelFolder, subfolder
+    , folderDocumentsPage, folderDocumentsFolderCounts, ftsPage, ftsFolderCounts
+    , documentDetails
+    , genericNode
+    )
 
-{-| Definitions of all specific GraphQL queries needed for the application.
+{-| Definitions of all specific GraphQL queries needed in the application.
 
 
-# GraphQL Query Definitions
+# Folder Queries
 
-@docs queryToplevelFolder, querySubfolder, queryGenericNode, queryFolderDocumentsPage, queryFolderFolderCounts, queryFtsPage, queryFtsFolderCounts, queryDocumentDetails
+@docs toplevelFolder, subfolder
+
+
+# Document Search and Facet Queries
+
+@docs folderDocumentsPage, folderDocumentsFolderCounts, ftsPage, ftsFolderCounts
+
+
+# Document Queries
+
+@docs documentDetails
+
+
+# Miscellaneous Queries
+
+@docs genericNode
 
 -}
 
@@ -64,26 +84,23 @@ _GraphQL notation:_
     query {
         allFolders(isRoot: true) {
             nodes {
-                ...folderData
-                subfolders {
-                    nodes {
-                        ...folderData
-                    }
-                }
+                ...folderAndSubfolders
             }
         }
     }
 
 -}
-queryToplevelFolder : SelectionSet (List ( Folder, List Folder )) Graphql.Operation.RootQuery
-queryToplevelFolder =
+toplevelFolder : SelectionSet (List ( Folder, List Folder )) Graphql.Operation.RootQuery
+toplevelFolder =
     Graphql.Query.allFolders
         (\optionals ->
             { optionals
                 | isRoot = Present True
             }
         )
-        (Graphql.Object.FoldersConnection.nodes Api.Fragments.folderNodeWithSubfolders)
+        (Graphql.Object.FoldersConnection.nodes
+            Api.Fragments.folderAndSubfolders
+        )
 
 
 {-| Get the sub-folders of a list of folders.
@@ -93,21 +110,21 @@ _GraphQL notation:_
     query {
         allFolders(parentIds: $listOfFolderIds) {
             nodes {
-                ...folderData
+                ...folder
             }
         }
     }
 
 -}
-querySubfolder : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
-querySubfolder folderIds =
+subfolder : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
+subfolder folderIds =
     Graphql.Query.allFolders
         (\optionals ->
             { optionals
                 | parentIds = List.map (Folder.idToInt >> Just) folderIds |> Present
             }
         )
-        (Graphql.Object.FoldersConnection.nodes Api.Fragments.folderNode)
+        (Graphql.Object.FoldersConnection.nodes Api.Fragments.folder)
 
 
 {-| Get a folder or a document with a given mediaTUM id.
@@ -120,14 +137,14 @@ _GraphQL notation:_
                 ...folderLineage
             }
             asDocument {
-                ...documentNode
+                ...documentByMask
             }
         }
     }
 
 -}
-queryGenericNode : Int -> SelectionSet GenericNode Graphql.Operation.RootQuery
-queryGenericNode nodeId =
+genericNode : Int -> SelectionSet GenericNode Graphql.Operation.RootQuery
+genericNode nodeId =
     let
         constructor : Maybe (Nonempty Folder) -> Maybe Document -> GenericNode
         constructor maybeLineage maybeDocument =
@@ -154,7 +171,7 @@ queryGenericNode nodeId =
                 )
             |> SelectionSet.with
                 (Graphql.Object.GenericNode.asDocument
-                    (Api.Fragments.documentNode "nodebig")
+                    (Api.Fragments.documentByMask "nodebig")
                 )
         )
         |> SelectionSet.nonNullOrFail
@@ -177,12 +194,12 @@ _GraphQL notation:_
     }
 
 -}
-queryFolderDocumentsPage :
+folderDocumentsPage :
     Maybe (Pagination.Offset.Page.Page DocumentResult)
     -> Pagination.Offset.Page.Position
     -> Query.FolderQuery
     -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
-queryFolderDocumentsPage referencePage paginationPosition folderQuery =
+folderDocumentsPage referencePage paginationPosition folderQuery =
     Graphql.Query.allDocumentsPage
         (\optionals ->
             { optionals
@@ -220,10 +237,10 @@ _GraphQL notation:_
     }
 
 -}
-queryFolderFolderCounts :
+folderDocumentsFolderCounts :
     Query.FolderQuery
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-queryFolderFolderCounts folderQuery =
+folderDocumentsFolderCounts folderQuery =
     Graphql.Query.allDocumentsDocset
         (\optionals ->
             { optionals
@@ -259,12 +276,12 @@ _GraphQL notation:_
     }
 
 -}
-queryFtsPage :
+ftsPage :
     Maybe (Pagination.Offset.Page.Page DocumentResult)
     -> Pagination.Offset.Page.Position
     -> Query.FtsQuery
     -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
-queryFtsPage referencePage paginationPosition ftsQuery =
+ftsPage referencePage paginationPosition ftsQuery =
     Graphql.Query.ftsDocumentsPage
         (\optionals ->
             { optionals
@@ -309,10 +326,10 @@ _GraphQL notation:_
     }
 
 -}
-queryFtsFolderCounts :
+ftsFolderCounts :
     Query.FtsQuery
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-queryFtsFolderCounts ftsQuery =
+ftsFolderCounts ftsQuery =
     Graphql.Query.ftsDocumentsDocset
         (\optionals ->
             { optionals
@@ -348,20 +365,20 @@ _GraphQL notation:_
         ) {
             edges {
                 node {
-                    ...documentNode
+                    ...documentByMask
                 }
             }
         }
     }
 
 -}
-queryAuthorSearch :
+authorSearch :
     Maybe (Pagination.Relay.Page.Page Document)
     -> Pagination.Relay.Pagination.Position
     -> FolderId
     -> String
     -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-queryAuthorSearch referencePage paginationPosition folderId searchString =
+authorSearch referencePage paginationPosition folderId searchString =
     Graphql.Query.authorSearch
         ((\optionals ->
             { optionals
@@ -375,7 +392,7 @@ queryAuthorSearch referencePage paginationPosition folderId searchString =
         )
         (Connection.connection
             Api.Fragments.graphqlDocumentObjects
-            (Api.Fragments.documentNode "nodesmall")
+            (Api.Fragments.documentByMask "nodesmall")
         )
 
 
@@ -386,19 +403,19 @@ _GraphQL notation:_
 
     query {
         documentById(id: $idOfTheDocument) {
-            ...documentNode
+            ...documentByMask
         }
     }
 
 -}
-queryDocumentDetails :
+documentDetails :
     DocumentId
     -> SelectionSet (Maybe Document) Graphql.Operation.RootQuery
-queryDocumentDetails documentId =
+documentDetails documentId =
     Graphql.Query.documentById
         (\optionals ->
             { optionals
                 | id = Present (Document.idToInt documentId)
             }
         )
-        (Api.Fragments.documentNode "nodebig")
+        (Api.Fragments.documentByMask "nodebig")

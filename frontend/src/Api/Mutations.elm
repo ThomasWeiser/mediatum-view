@@ -1,6 +1,6 @@
 module Api.Mutations exposing (updateDocumentAttribute)
 
-{-| Definitions of all specific GraphQL mutation requests needed for the application.
+{-| Definitions of all specific GraphQL mutation requests needed in the application.
 
 
 # GraphQL Mutation Definitions
@@ -62,7 +62,7 @@ _GraphQL notation:_
                 value: $desiredValueOfTheAttribute
             }
         ) {
-            ...documentNode
+            ...documentByMask
         }
     }
 
@@ -85,7 +85,7 @@ updateDocumentAttribute documentId key value =
             (SelectionSet.succeed identity
                 |> SelectionSet.with
                     (Graphql.Object.UpdateDocumentAttributePayload.document
-                        (Api.Fragments.documentNode "nodebig")
+                        (Api.Fragments.documentByMask "nodebig")
                     )
             )
         )

@@ -1,11 +1,31 @@
-module Api.Fragments exposing (folderNode, folderNodeWithSubfolders, folderLineage, folderAndSubfolderCounts, folderCount, documentResultPage, documentResult, documentNode, graphqlDocumentObjects)
+module Api.Fragments exposing
+    ( folder, folderAndSubfolders, folderLineage
+    , folderAndSubfolderCounts, folderCount
+    , documentResultPage, documentResult, documentByMask
+    , graphqlDocumentObjects
+    )
 
-{-| Definitions of all specific GraphQL requests needed for the application.
+{-| Definitions of GraphQL query fragments used in the root queries.
 
 
-# GraphQL Sub-Query Definitions
+# Fragments on Folder
 
-@docs folderNode, folderNodeWithSubfolders, folderLineage, folderAndSubfolderCounts, folderCount, documentResultPage, documentResult, documentNode, graphqlDocumentObjects
+@docs folder, folderAndSubfolders, folderLineage
+
+
+# Fragments for Facet Queries
+
+@docs folderAndSubfolderCounts, folderCount
+
+
+# Fragments for Document Results
+
+@docs documentResultPage, documentResult, documentByMask
+
+
+# Relay Connection Utility
+
+@docs graphqlDocumentObjects
 
 -}
 
@@ -52,7 +72,7 @@ import Query.Attribute
 
 _GraphQL notation:_
 
-    fragment folderData on Folder {
+    fragment folder on Folder {
         id
         parentId
         name
@@ -61,8 +81,8 @@ _GraphQL notation:_
     }
 
 -}
-folderNode : SelectionSet Folder Graphql.Object.Folder
-folderNode =
+folder : SelectionSet Folder Graphql.Object.Folder
+folder =
     SelectionSet.succeed Folder.init
         |> SelectionSet.with (Graphql.Object.Folder.id |> SelectionSet.nonNullOrFail)
         |> SelectionSet.with Graphql.Object.Folder.parentId
@@ -75,24 +95,24 @@ folderNode =
 
 _GraphQL notation:_
 
-    fragment folderNodeWithSubfolders on Folder {
-        ...folderNode
+    fragment folderAndSubfolders on Folder {
+        ...folder
         subfolders {
             nodes {
-                ...folderNode
+                ...folder
             }
         }
     }
 
 -}
-folderNodeWithSubfolders : SelectionSet ( Folder, List Folder ) Graphql.Object.Folder
-folderNodeWithSubfolders =
+folderAndSubfolders : SelectionSet ( Folder, List Folder ) Graphql.Object.Folder
+folderAndSubfolders =
     SelectionSet.succeed Tuple.pair
-        |> SelectionSet.with folderNode
+        |> SelectionSet.with folder
         |> SelectionSet.with
             (Graphql.Object.Folder.subfolders identity
                 (SelectionSet.succeed identity
-                    |> SelectionSet.with (Graphql.Object.FoldersConnection.nodes folderNode)
+                    |> SelectionSet.with (Graphql.Object.FoldersConnection.nodes folder)
                 )
             )
 
@@ -104,7 +124,7 @@ _GraphQL notation:_
 
     fragment folderLineage on Folder {
         lineage {
-            ...folderData
+            ...folder
         }
     }
 
@@ -112,7 +132,7 @@ _GraphQL notation:_
 folderLineage : SelectionSet (Nonempty Folder) Graphql.Object.Folder
 folderLineage =
     Graphql.Object.Folder.lineage
-        folderNode
+        folder
         |> SelectionSet.nonNullOrFail
         |> SelectionSet.nonNullElementsOrFail
         |> SelectionSet.mapOrFail
@@ -162,7 +182,7 @@ folderAndSubfolderCounts =
 
 _GraphQL notation:_
 
-    fragment folderCount on FolderCount {
+    fragment folderCount on FolderCount Facet Queries
         count
         folderId
     }
@@ -230,7 +250,7 @@ _GraphQL notation:_
     fragment documentResult on DocumentResult {
         number
         distance
-        ...documentNode
+        ...documentByMask
     }
 
 -}
@@ -247,7 +267,7 @@ documentResult maskName =
             )
         |> SelectionSet.with
             (Graphql.Object.DocumentResult.document
-                (documentNode maskName)
+                (documentByMask maskName)
                 |> SelectionSet.nonNullOrFail
             )
 
@@ -257,7 +277,7 @@ together with the document's attributes selected by a named mediaTUM mask.
 
 _GraphQL notation:_
 
-    fragment documentNode on Document {
+    fragment documentByMask on Document {
         id
         metadatatype {
             longname
@@ -267,8 +287,8 @@ _GraphQL notation:_
     }
 
 -}
-documentNode : String -> SelectionSet Document Graphql.Object.Document
-documentNode maskName =
+documentByMask : String -> SelectionSet Document Graphql.Object.Document
+documentByMask maskName =
     SelectionSet.succeed Document.init
         |> SelectionSet.with
             (Graphql.Object.Document.id
