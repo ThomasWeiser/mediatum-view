@@ -30,13 +30,9 @@ module Api.Fragments exposing
 -}
 
 import Dict
-import Document exposing (Document, DocumentId)
+import Document exposing (Document)
 import DocumentResult exposing (DocumentResult)
-import Folder exposing (Folder, FolderCounts, FolderId)
-import GenericNode exposing (GenericNode)
-import Graphql.Extra
-import Graphql.Http
-import Graphql.Mutation
+import Folder exposing (Folder, FolderId)
 import Graphql.Object
 import Graphql.Object.Docset
 import Graphql.Object.Document
@@ -48,24 +44,15 @@ import Graphql.Object.Folder
 import Graphql.Object.FolderCount
 import Graphql.Object.FolderCountsConnection
 import Graphql.Object.FoldersConnection
-import Graphql.Object.GenericNode
 import Graphql.Object.Metadatatype
 import Graphql.Object.PageInfo
-import Graphql.Object.UpdateDocumentAttributePayload
-import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
-import Graphql.Query
 import Graphql.Scalar
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
 import List.Nonempty exposing (Nonempty)
-import Maybe.Extra
 import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
-import Pagination.Relay.Page
-import Pagination.Relay.Pagination
-import Query exposing (Query)
-import Query.Attribute
 
 
 {-| Selection set on a Folder to get basic properties of the folder.

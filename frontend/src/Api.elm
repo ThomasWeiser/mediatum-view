@@ -17,39 +17,10 @@ module Api exposing
 
 -}
 
-import Dict
-import Document exposing (Document, DocumentId)
-import DocumentResult exposing (DocumentResult)
-import Folder exposing (Folder, FolderCounts, FolderId)
-import GenericNode exposing (GenericNode)
 import Graphql.Extra
 import Graphql.Http
-import Graphql.Mutation
-import Graphql.Object
-import Graphql.Object.Docset
-import Graphql.Object.Document
-import Graphql.Object.DocumentResult
-import Graphql.Object.DocumentResultPage
-import Graphql.Object.DocumentsConnection
-import Graphql.Object.DocumentsEdge
-import Graphql.Object.Folder
-import Graphql.Object.FolderCount
-import Graphql.Object.FolderCountsConnection
-import Graphql.Object.FoldersConnection
-import Graphql.Object.GenericNode
-import Graphql.Object.Metadatatype
-import Graphql.Object.PageInfo
-import Graphql.Object.UpdateDocumentAttributePayload
 import Graphql.Operation
-import Graphql.OptionalArgument exposing (OptionalArgument(..))
-import Graphql.Query
-import Graphql.Scalar
-import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
-import Json.Decode exposing (Decoder)
-import List.Nonempty exposing (Nonempty)
-import Maybe.Extra
-import Query exposing (Query)
-import Query.Attribute
+import Graphql.SelectionSet exposing (SelectionSet)
 
 
 {-| Endpoint for backend's GraphQL service.
