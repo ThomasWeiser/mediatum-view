@@ -104,8 +104,10 @@ folderAndSubfolders =
             )
 
 
-{-| Selection set on a folder to get the lineage of that folder,
-i.e. a non-emtpy list of folders representing the path from the given folder up to a root folder of the hierarchy.
+{-| Selection set on a folder to get the lineage of that folder.
+
+The lineage is the non-emtpy list of folders representing the path
+from the given folder up to a root folder of the hierarchy.
 
 _GraphQL notation:_
 

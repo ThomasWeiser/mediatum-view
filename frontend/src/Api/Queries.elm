@@ -7,6 +7,15 @@ module Api.Queries exposing
 
 {-| Definitions of all specific GraphQL queries needed in the application.
 
+Please note:
+For documenting the individual query functions we show the equivalent GraphQL notation.
+
+Many of these functions will refer to other SelectionSet-returning functions
+for nested subqueries.
+We will use the GraphQL fragment notation for denoting this embedding.
+In reality it's just function calling.
+The `elm-graphql` package won't use the fragment notation.
+
 
 # Folder Queries
 
@@ -29,8 +38,8 @@ module Api.Queries exposing
 
 -}
 
-import Config
 import Api.Fragments
+import Config
 import Document exposing (Document, DocumentId)
 import DocumentResult exposing (DocumentResult)
 import Folder exposing (Folder, FolderCounts, FolderId)
@@ -150,7 +159,8 @@ genericNode nodeId =
         |> SelectionSet.nonNullOrFail
 
 
-{-| Get all documents of a folder with offet-based pagination
+{-| Get all documents of a folder with offet-based pagination.
+
 A list of filters may be used to restrict the documents to be returned.
 
 _GraphQL notation:_
@@ -196,6 +206,7 @@ folderDocumentsPage referencePage paginationPosition folderQuery =
 
 
 {-| Get the counts of documents within a folder and its sub-folders.
+
 A list of filters may be used to restrict the documents to be counted.
 
 _GraphQL notation:_
@@ -230,6 +241,7 @@ folderDocumentsFolderCounts folderQuery =
 
 
 {-| Get documents using a full-text search with offet-based pagination.
+
 A list of filters may be used to restrict the documents to be found.
 
 _GraphQL notation:_
@@ -281,7 +293,9 @@ ftsPage referencePage paginationPosition ftsQuery =
 
 
 {-| Get the counts of documents found by a full-text search.
+
 The counts are computed for the given folder and each of its sub-folders.
+
 A list of filters may be used to restrict the documents to be counted.
 
 _GraphQL notation:_
@@ -324,6 +338,7 @@ ftsFolderCounts ftsQuery =
 {-| Get a page of documents found by searching on an author's name.
 
 The result is paginated according to the Relay specification.
+
 Up to now this query function is only a preliminary draft.
 
 _GraphQL notation:_

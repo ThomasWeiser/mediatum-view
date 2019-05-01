@@ -20,6 +20,7 @@ import Maybe.Extra
 
 
 {-| Set an attribute of a document selected by a mediaTUM id.
+
 Returns the new document details based on the mediaTUM mask "nodebig".
 
 _GraphQL notation:_

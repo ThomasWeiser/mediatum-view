@@ -3,7 +3,11 @@ module Api exposing
     , sendQueryRequest, sendMutationRequest
     )
 
-{-| Definitions of all specific GraphQL requests needed in the application.
+{-| This module and its sub-modules are responsible
+for communicating to the GraphQL API of mediaTUM's backend.
+
+The available queries and mutations are located in the modules
+`Api.Queries` and `Api.Mutations`.
 
 
 # Types
@@ -42,10 +46,21 @@ Takes a tagger function for wrapping the result,
 which is either a query specific type representing the queried data
 or an Error.
 
-The query itself is given as a `Graphql.SelectionSet.SelectionSet`
-, see [elm-graphql](https://package.elm-lang.org/packages/dillonkearns/elm-graphql/latest/Graphql-SelectionSet).
+The query itself is given as a `Graphql.SelectionSet.SelectionSet`,
+see [elm-graphql](https://package.elm-lang.org/packages/dillonkearns/elm-graphql/latest/Graphql-SelectionSet).
 There are functions in this module to produce these selection sets for all
 relevant queries of the application.
+
+    type Msg
+        = ApiResponseToplevelFolder
+            (Api.Response (List ( Folder, List Folder )))
+        | ...
+
+    initCmd : Cmd Msg
+    initCmd =
+        makeQueryRequest
+            ApiResponseToplevelFolder
+            Api.Queries.toplevelFolder
 
 -}
 sendQueryRequest :
