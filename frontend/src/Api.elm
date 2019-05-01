@@ -20,7 +20,6 @@ import DocumentResult exposing (DocumentResult)
 import Folder exposing (Folder, FolderCounts, FolderId)
 import GenericNode exposing (GenericNode)
 import Graphql.Extra
-import Graphql.Field
 import Graphql.Http
 import Graphql.Mutation
 import Graphql.Object
@@ -42,7 +41,7 @@ import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.Query
 import Graphql.Scalar
-import Graphql.SelectionSet exposing (SelectionSet, with)
+import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
@@ -96,34 +95,24 @@ makeMutationRequest tagger selectionSet =
 
 queryToplevelFolder : SelectionSet (List ( Folder, List Folder )) Graphql.Operation.RootQuery
 queryToplevelFolder =
-    Graphql.Query.selection identity
-        |> with
-            (Graphql.Query.allFolders
-                (\optionals ->
-                    { optionals
-                        | isRoot = Present True
-                    }
-                )
-                (Graphql.Object.FoldersConnection.selection identity
-                    |> with (Graphql.Object.FoldersConnection.nodes folderNodeWithSubfolders)
-                )
-            )
+    Graphql.Query.allFolders
+        (\optionals ->
+            { optionals
+                | isRoot = Present True
+            }
+        )
+        (Graphql.Object.FoldersConnection.nodes folderNodeWithSubfolders)
 
 
 querySubfolder : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
 querySubfolder folderIds =
-    Graphql.Query.selection identity
-        |> with
-            (Graphql.Query.allFolders
-                (\optionals ->
-                    { optionals
-                        | parentIds = Present <| List.map (Folder.idToInt >> Just) folderIds
-                    }
-                )
-                (Graphql.Object.FoldersConnection.selection identity
-                    |> with (Graphql.Object.FoldersConnection.nodes folderNode)
-                )
-            )
+    Graphql.Query.allFolders
+        (\optionals ->
+            { optionals
+                | parentIds = List.map (Folder.idToInt >> Just) folderIds |> Present
+            }
+        )
+        (Graphql.Object.FoldersConnection.nodes folderNode)
 
 
 queryGenericNode : Int -> SelectionSet GenericNode Graphql.Operation.RootQuery
@@ -141,67 +130,50 @@ queryGenericNode nodeId =
                 ( Nothing, Nothing ) ->
                     GenericNode.IsNeither
     in
-    Graphql.Query.selection identity
-        |> with
-            (Graphql.Query.genericNodeById
-                (\optionals ->
-                    { optionals
-                        | id = Present nodeId
-                    }
-                )
-                (Graphql.Object.GenericNode.selection constructor
-                    |> with (Graphql.Object.GenericNode.asFolder folderLineage)
-                    |> with (Graphql.Object.GenericNode.asDocument (documentNode "nodebig"))
-                )
-                |> Graphql.Field.nonNullOrFail
-            )
+    Graphql.Query.genericNodeById
+        (\optionals ->
+            { optionals
+                | id = Present nodeId
+            }
+        )
+        (SelectionSet.succeed constructor
+            |> SelectionSet.with (Graphql.Object.GenericNode.asFolder folderLineage)
+            |> SelectionSet.with (Graphql.Object.GenericNode.asDocument (documentNode "nodebig"))
+        )
+        |> SelectionSet.nonNullOrFail
 
 
 folderNode : SelectionSet Folder Graphql.Object.Folder
 folderNode =
-    Graphql.Object.Folder.selection Folder.init
-        |> with (Graphql.Object.Folder.id |> Graphql.Field.nonNullOrFail)
-        |> with Graphql.Object.Folder.parentId
-        |> with (Graphql.Object.Folder.name |> Graphql.Field.nonNullOrFail)
-        |> with (Graphql.Object.Folder.isCollection |> Graphql.Field.nonNullOrFail)
-        |> with (Graphql.Object.Folder.numSubfolder |> Graphql.Field.nonNullOrFail)
+    SelectionSet.succeed Folder.init
+        |> SelectionSet.with (Graphql.Object.Folder.id |> SelectionSet.nonNullOrFail)
+        |> SelectionSet.with Graphql.Object.Folder.parentId
+        |> SelectionSet.with (Graphql.Object.Folder.name |> SelectionSet.nonNullOrFail)
+        |> SelectionSet.with (Graphql.Object.Folder.isCollection |> SelectionSet.nonNullOrFail)
+        |> SelectionSet.with (Graphql.Object.Folder.numSubfolder |> SelectionSet.nonNullOrFail)
 
 
 folderNodeWithSubfolders : SelectionSet ( Folder, List Folder ) Graphql.Object.Folder
 folderNodeWithSubfolders =
-    let
-        constructor : Int -> Maybe Int -> String -> Bool -> Int -> List Folder -> ( Folder, List Folder )
-        constructor idAsInt maybeParentIdAsInt name isCollection numSubfolder subfolder =
-            ( Folder.init idAsInt maybeParentIdAsInt name isCollection numSubfolder
-            , subfolder
-            )
-    in
-    Graphql.Object.Folder.selection constructor
-        |> with (Graphql.Object.Folder.id |> Graphql.Field.nonNullOrFail)
-        |> with Graphql.Object.Folder.parentId
-        |> with (Graphql.Object.Folder.name |> Graphql.Field.nonNullOrFail)
-        |> with (Graphql.Object.Folder.isCollection |> Graphql.Field.nonNullOrFail)
-        |> with (Graphql.Object.Folder.numSubfolder |> Graphql.Field.nonNullOrFail)
-        |> with
+    SelectionSet.succeed Tuple.pair
+        |> SelectionSet.with folderNode
+        |> SelectionSet.with
             (Graphql.Object.Folder.subfolders identity
-                (Graphql.Object.FoldersConnection.selection identity
-                    |> with (Graphql.Object.FoldersConnection.nodes folderNode)
+                (SelectionSet.succeed identity
+                    |> SelectionSet.with (Graphql.Object.FoldersConnection.nodes folderNode)
                 )
             )
 
 
 folderLineage : SelectionSet (Nonempty Folder) Graphql.Object.Folder
 folderLineage =
-    Graphql.Object.Folder.selection identity
-        |> with
-            (Graphql.Object.Folder.lineage
-                folderNode
-                |> Graphql.Field.nonNullOrFail
-                |> Graphql.Field.nonNullElementsOrFail
-                |> Graphql.Field.mapOrFail
-                    (List.Nonempty.fromList
-                        >> Result.fromMaybe "Lineage needs at least one folder"
-                    )
+    Graphql.Object.Folder.lineage
+        folderNode
+        |> SelectionSet.nonNullOrFail
+        |> SelectionSet.nonNullElementsOrFail
+        |> SelectionSet.mapOrFail
+            (List.Nonempty.fromList
+                >> Result.fromMaybe "Lineage needs at least one folder"
             )
 
 
@@ -211,51 +183,45 @@ queryFolderDocumentsPage :
     -> Query.FolderQuery
     -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
 queryFolderDocumentsPage referencePage paginationPosition folderQuery =
-    Graphql.Query.selection identity
-        |> with
-            (Graphql.Query.allDocumentsPage
-                (\optionals ->
-                    { optionals
-                        | folderId = folderQuery.folder |> .id |> Folder.idToInt |> Present
-                        , attributeTests =
-                            folderQuery.filters
-                                |> Query.filtersToAttributeTests
-                                |> Query.Attribute.testsAsGraphqlArgument
-                                |> Present
-                        , limit = Present pageSize
-                        , offset =
-                            Present <|
-                                Pagination.Offset.Page.positionToOffset
-                                    pageSize
-                                    referencePage
-                                    paginationPosition
-                    }
-                )
-                (documentResultPage "nodesmall")
-                |> Graphql.Field.nonNullOrFail
-            )
+    Graphql.Query.allDocumentsPage
+        (\optionals ->
+            { optionals
+                | folderId = folderQuery.folder |> .id |> Folder.idToInt |> Present
+                , attributeTests =
+                    folderQuery.filters
+                        |> Query.filtersToAttributeTests
+                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Present
+                , limit = Present pageSize
+                , offset =
+                    Pagination.Offset.Page.positionToOffset
+                        pageSize
+                        referencePage
+                        paginationPosition
+                        |> Present
+            }
+        )
+        (documentResultPage "nodesmall")
+        |> SelectionSet.nonNullOrFail
 
 
 queryFolderFolderCounts :
     Query.FolderQuery
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
 queryFolderFolderCounts folderQuery =
-    Graphql.Query.selection identity
-        |> with
-            (Graphql.Query.allDocumentsDocset
-                (\optionals ->
-                    { optionals
-                        | folderId = folderQuery.folder |> .id |> Folder.idToInt |> Present
-                        , attributeTests =
-                            folderQuery.filters
-                                |> Query.filtersToAttributeTests
-                                |> Query.Attribute.testsAsGraphqlArgument
-                                |> Present
-                    }
-                )
-                folderAndSubfolderCounts
-                |> Graphql.Field.nonNullOrFail
-            )
+    Graphql.Query.allDocumentsDocset
+        (\optionals ->
+            { optionals
+                | folderId = folderQuery.folder |> .id |> Folder.idToInt |> Present
+                , attributeTests =
+                    folderQuery.filters
+                        |> Query.filtersToAttributeTests
+                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Present
+            }
+        )
+        folderAndSubfolderCounts
+        |> SelectionSet.nonNullOrFail
 
 
 queryFtsPage :
@@ -264,74 +230,67 @@ queryFtsPage :
     -> Query.FtsQuery
     -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
 queryFtsPage referencePage paginationPosition ftsQuery =
-    Graphql.Query.selection identity
-        |> with
-            (Graphql.Query.ftsDocumentsPage
-                (\optionals ->
-                    { optionals
-                        | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
-                        , text = Present ftsQuery.searchTerm
-                        , domain = Present (Query.ftsOptionsDomainToString ftsQuery.options)
-                        , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
-                        , attributeTests =
-                            ftsQuery.filters
-                                |> Query.filtersToAttributeTests
-                                |> Query.Attribute.testsAsGraphqlArgument
-                                |> Present
-                        , limit = Present pageSize
-                        , offset =
-                            Present <|
-                                Pagination.Offset.Page.positionToOffset
-                                    pageSize
-                                    referencePage
-                                    paginationPosition
-                    }
-                )
-                (documentResultPage "nodesmall")
-                |> Graphql.Field.nonNullOrFail
-            )
+    Graphql.Query.ftsDocumentsPage
+        (\optionals ->
+            { optionals
+                | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
+                , text = Present ftsQuery.searchTerm
+                , domain = Present (Query.ftsOptionsDomainToString ftsQuery.options)
+                , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
+                , attributeTests =
+                    ftsQuery.filters
+                        |> Query.filtersToAttributeTests
+                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Present
+                , limit = Present pageSize
+                , offset =
+                    Pagination.Offset.Page.positionToOffset
+                        pageSize
+                        referencePage
+                        paginationPosition
+                        |> Present
+            }
+        )
+        (documentResultPage "nodesmall")
+        |> SelectionSet.nonNullOrFail
 
 
 queryFtsFolderCounts :
     Query.FtsQuery
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
 queryFtsFolderCounts ftsQuery =
-    Graphql.Query.selection identity
-        |> with
-            (Graphql.Query.ftsDocumentsDocset
-                (\optionals ->
-                    { optionals
-                        | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
-                        , text = Present ftsQuery.searchTerm
-                        , domain = Present (Query.ftsOptionsDomainToString ftsQuery.options)
-                        , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
-                        , attributeTests =
-                            ftsQuery.filters
-                                |> Query.filtersToAttributeTests
-                                |> Query.Attribute.testsAsGraphqlArgument
-                                |> Present
-                    }
-                )
-                folderAndSubfolderCounts
-                |> Graphql.Field.nonNullOrFail
-            )
+    Graphql.Query.ftsDocumentsDocset
+        (\optionals ->
+            { optionals
+                | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
+                , text = Present ftsQuery.searchTerm
+                , domain = Present (Query.ftsOptionsDomainToString ftsQuery.options)
+                , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
+                , attributeTests =
+                    ftsQuery.filters
+                        |> Query.filtersToAttributeTests
+                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Present
+            }
+        )
+        folderAndSubfolderCounts
+        |> SelectionSet.nonNullOrFail
 
 
 folderAndSubfolderCounts : SelectionSet Folder.FolderCounts Graphql.Object.Docset
 folderAndSubfolderCounts =
-    Graphql.Object.Docset.selection
+    SelectionSet.succeed
         (\pair listOfPairs -> Dict.fromList (pair :: listOfPairs))
-        |> with
+        |> SelectionSet.with
             (Graphql.Object.Docset.folderCount
                 folderCount
-                |> Graphql.Field.nonNullOrFail
+                |> SelectionSet.nonNullOrFail
             )
-        |> with
+        |> SelectionSet.with
             (Graphql.Object.Docset.subfolderCounts
                 identity
-                (Graphql.Object.FolderCountsConnection.selection
-                    identity
-                    |> with
+                (SelectionSet.succeed identity
+                    |> SelectionSet.with
                         (Graphql.Object.FolderCountsConnection.nodes
                             folderCount
                         )
@@ -341,62 +300,53 @@ folderAndSubfolderCounts =
 
 folderCount : SelectionSet ( FolderId, Int ) Graphql.Object.FolderCount
 folderCount =
-    Graphql.Object.FolderCount.selection (\a b -> ( a, b ))
-        |> with
+    SelectionSet.succeed Tuple.pair
+        |> SelectionSet.with
             (Graphql.Object.FolderCount.folderId
-                |> Graphql.Field.nonNullOrFail
-                |> Graphql.Field.map Folder.idFromInt
+                |> SelectionSet.nonNullOrFail
+                |> SelectionSet.map Folder.idFromInt
             )
-        |> with
+        |> SelectionSet.with
             (Graphql.Object.FolderCount.count
-                |> Graphql.Field.nonNullOrFail
+                |> SelectionSet.nonNullOrFail
             )
 
 
-
-{-
-   queryAuthorSearch :
-       Maybe (Pagination.Relay.Page.Page Document)
-       -> Pagination.Relay.Pagination.Position
-       -> FolderId
-       -> String
-       -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-   queryAuthorSearch referencePage paginationPosition folderId searchString =
-       Graphql.Query.selection identity
-           |> with
-               (Graphql.Query.authorSearch
-                   ((\optionals ->
-                       { optionals
-                           | text = Present searchString
-                       }
-                    )
-                       >> Pagination.Relay.Pagination.paginationArguments
-                           pageSize
-                           referencePage
-                           paginationPosition
-                   )
-                   (Connection.connection
-                       graphqlDocumentObjects
-                       (documentNode "nodesmall")
-                   )
-               )
--}
+queryAuthorSearch :
+    Maybe (Pagination.Relay.Page.Page Document)
+    -> Pagination.Relay.Pagination.Position
+    -> FolderId
+    -> String
+    -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
+queryAuthorSearch referencePage paginationPosition folderId searchString =
+    Graphql.Query.authorSearch
+        ((\optionals ->
+            { optionals
+                | text = Present searchString
+            }
+         )
+            >> Pagination.Relay.Pagination.paginationArguments
+                pageSize
+                referencePage
+                paginationPosition
+        )
+        (Connection.connection
+            graphqlDocumentObjects
+            (documentNode "nodesmall")
+        )
 
 
 queryDocumentDetails :
     DocumentId
     -> SelectionSet (Maybe Document) Graphql.Operation.RootQuery
 queryDocumentDetails documentId =
-    Graphql.Query.selection identity
-        |> with
-            (Graphql.Query.documentById
-                (\optionals ->
-                    { optionals
-                        | id = Present (Document.idToInt documentId)
-                    }
-                )
-                (documentNode "nodebig")
-            )
+    Graphql.Query.documentById
+        (\optionals ->
+            { optionals
+                | id = Present (Document.idToInt documentId)
+            }
+        )
+        (documentNode "nodebig")
 
 
 updateDocumentAttribute :
@@ -405,93 +355,92 @@ updateDocumentAttribute :
     -> String
     -> SelectionSet (Maybe Document) Graphql.Operation.RootMutation
 updateDocumentAttribute documentId key value =
-    Graphql.Mutation.selection Maybe.Extra.join
-        |> with
-            (Graphql.Mutation.updateDocumentAttribute
-                { input =
-                    { clientMutationId = Absent
-                    , id = Present (Document.idToInt documentId)
-                    , key = Present key
-                    , value = Present value
-                    }
+    SelectionSet.map Maybe.Extra.join
+        (Graphql.Mutation.updateDocumentAttribute
+            { input =
+                { clientMutationId = Absent
+                , id = Present (Document.idToInt documentId)
+                , key = Present key
+                , value = Present value
                 }
-                (Graphql.Object.UpdateDocumentAttributePayload.selection identity
-                    |> with
-                        (Graphql.Object.UpdateDocumentAttributePayload.document
-                            (documentNode "nodebig")
-                        )
-                )
+            }
+            (SelectionSet.succeed identity
+                |> SelectionSet.with
+                    (Graphql.Object.UpdateDocumentAttributePayload.document
+                        (documentNode "nodebig")
+                    )
             )
+        )
 
 
 documentResultPage :
     String
     -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Object.DocumentResultPage
 documentResultPage maskName =
-    Graphql.Object.DocumentResultPage.selection Pagination.Offset.Page.Page
-        |> with
+    SelectionSet.succeed Pagination.Offset.Page.Page
+        |> SelectionSet.with
             (Graphql.Object.DocumentResultPage.offset
-                |> Graphql.Field.nonNullOrFail
+                |> SelectionSet.nonNullOrFail
             )
-        |> with
+        |> SelectionSet.with
             (Graphql.Object.DocumentResultPage.hasNextPage
-                |> Graphql.Field.nonNullOrFail
+                |> SelectionSet.nonNullOrFail
             )
-        |> with
+        |> SelectionSet.with
             (Graphql.Object.DocumentResultPage.content
                 (documentResult maskName)
-                |> Graphql.Field.nonNullOrFail
-                |> Graphql.Field.nonNullElementsOrFail
+                |> SelectionSet.nonNullOrFail
+                |> SelectionSet.nonNullElementsOrFail
             )
 
 
 documentResult : String -> SelectionSet DocumentResult Graphql.Object.DocumentResult
 documentResult maskName =
-    Graphql.Object.DocumentResult.selection DocumentResult.init
-        |> with
+    SelectionSet.succeed DocumentResult.init
+        |> SelectionSet.with
             (Graphql.Object.DocumentResult.number
-                |> Graphql.Field.nonNullOrFail
+                |> SelectionSet.nonNullOrFail
             )
-        |> with
+        |> SelectionSet.with
             (Graphql.Object.DocumentResult.distance
-                |> Graphql.Field.nonNullOrFail
+                |> SelectionSet.nonNullOrFail
             )
-        |> with
+        |> SelectionSet.with
             (Graphql.Object.DocumentResult.document
                 (documentNode maskName)
-                |> Graphql.Field.nonNullOrFail
+                |> SelectionSet.nonNullOrFail
             )
 
 
 documentNode : String -> SelectionSet Document Graphql.Object.Document
 documentNode maskName =
-    Graphql.Object.Document.selection Document.init
-        |> with
+    SelectionSet.succeed Document.init
+        |> SelectionSet.with
             (Graphql.Object.Document.id
-                |> Graphql.Field.nonNullOrFail
+                |> SelectionSet.nonNullOrFail
             )
-        |> with
+        |> SelectionSet.with
             (Graphql.Object.Document.metadatatype
-                (Graphql.Object.Metadatatype.selection identity
-                    |> with
+                (SelectionSet.succeed identity
+                    |> SelectionSet.with
                         (Graphql.Object.Metadatatype.longname
-                            |> Graphql.Field.nonNullOrFail
+                            |> SelectionSet.nonNullOrFail
                         )
                 )
-                |> Graphql.Field.nonNullOrFail
+                |> SelectionSet.nonNullOrFail
             )
-        |> with
+        |> SelectionSet.with
             (Graphql.Object.Document.name
-                |> Graphql.Field.nonNullOrFail
+                |> SelectionSet.nonNullOrFail
             )
-        |> with
+        |> SelectionSet.with
             (Graphql.Object.Document.valuesByMask
                 (\optionals ->
                     { optionals
                         | maskName = Present maskName
                     }
                 )
-                |> Graphql.Field.map mapJsonToAttributes
+                |> SelectionSet.map mapJsonToAttributes
             )
 
 
@@ -521,14 +470,11 @@ decoderAttributeList =
 
 graphqlDocumentObjects : Connection.GraphqlObjects {} Graphql.Object.DocumentsConnection Graphql.Object.DocumentsEdge Graphql.Object.Document Graphql.Object.PageInfo Graphql.Scalar.Cursor Document
 graphqlDocumentObjects =
-    { connectionSelection = Graphql.Object.DocumentsConnection.selection
-    , totalCount = Graphql.Object.DocumentsConnection.totalCount
+    { totalCount = Graphql.Object.DocumentsConnection.totalCount
     , pageInfo = Graphql.Object.DocumentsConnection.pageInfo
     , edges = Graphql.Object.DocumentsConnection.edges
-    , edgeSelection = Graphql.Object.DocumentsEdge.selection
     , cursor = Graphql.Object.DocumentsEdge.cursor
     , node = Graphql.Object.DocumentsEdge.node
-    , pageInfoSelection = Graphql.Object.PageInfo.selection
     , hasNextPage = Graphql.Object.PageInfo.hasNextPage
     , hasPreviousPage = Graphql.Object.PageInfo.hasPreviousPage
     }
