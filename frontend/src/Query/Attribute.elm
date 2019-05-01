@@ -4,9 +4,9 @@ module Query.Attribute exposing
     , testsAsGraphqlArgument
     )
 
-import Graphql.Enum.AttributeTestOperator as Operator
-import Graphql.InputObject exposing (AttributeTestInput)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
+import Mediatum.Enum.AttributeTestOperator as Operator
+import Mediatum.InputObject exposing (AttributeTestInput)
 
 
 type alias Test =

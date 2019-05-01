@@ -8,12 +8,12 @@ module Pagination.Relay.Page exposing
     )
 
 import Api
-import Graphql.Scalar
+import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection exposing (Connection)
 
 
 type alias Page itemModel =
-    Connection Graphql.Scalar.Cursor itemModel
+    Connection Mediatum.Scalar.Cursor itemModel
 
 
 entries : Page itemModel -> List itemModel

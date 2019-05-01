@@ -33,24 +33,24 @@ import Dict
 import Document exposing (Document)
 import DocumentResult exposing (DocumentResult)
 import Folder exposing (Folder, FolderId)
-import Graphql.Object
-import Graphql.Object.Docset
-import Graphql.Object.Document
-import Graphql.Object.DocumentResult
-import Graphql.Object.DocumentResultPage
-import Graphql.Object.DocumentsConnection
-import Graphql.Object.DocumentsEdge
-import Graphql.Object.Folder
-import Graphql.Object.FolderCount
-import Graphql.Object.FolderCountsConnection
-import Graphql.Object.FoldersConnection
-import Graphql.Object.Metadatatype
-import Graphql.Object.PageInfo
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
-import Graphql.Scalar
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
 import List.Nonempty exposing (Nonempty)
+import Mediatum.Object
+import Mediatum.Object.Docset
+import Mediatum.Object.Document
+import Mediatum.Object.DocumentResult
+import Mediatum.Object.DocumentResultPage
+import Mediatum.Object.DocumentsConnection
+import Mediatum.Object.DocumentsEdge
+import Mediatum.Object.Folder
+import Mediatum.Object.FolderCount
+import Mediatum.Object.FolderCountsConnection
+import Mediatum.Object.FoldersConnection
+import Mediatum.Object.Metadatatype
+import Mediatum.Object.PageInfo
+import Mediatum.Scalar
 import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
 
@@ -68,14 +68,14 @@ _GraphQL notation:_
     }
 
 -}
-folder : SelectionSet Folder Graphql.Object.Folder
+folder : SelectionSet Folder Mediatum.Object.Folder
 folder =
     SelectionSet.succeed Folder.init
-        |> SelectionSet.with (Graphql.Object.Folder.id |> SelectionSet.nonNullOrFail)
-        |> SelectionSet.with Graphql.Object.Folder.parentId
-        |> SelectionSet.with (Graphql.Object.Folder.name |> SelectionSet.nonNullOrFail)
-        |> SelectionSet.with (Graphql.Object.Folder.isCollection |> SelectionSet.nonNullOrFail)
-        |> SelectionSet.with (Graphql.Object.Folder.numSubfolder |> SelectionSet.nonNullOrFail)
+        |> SelectionSet.with (Mediatum.Object.Folder.id |> SelectionSet.nonNullOrFail)
+        |> SelectionSet.with Mediatum.Object.Folder.parentId
+        |> SelectionSet.with (Mediatum.Object.Folder.name |> SelectionSet.nonNullOrFail)
+        |> SelectionSet.with (Mediatum.Object.Folder.isCollection |> SelectionSet.nonNullOrFail)
+        |> SelectionSet.with (Mediatum.Object.Folder.numSubfolder |> SelectionSet.nonNullOrFail)
 
 
 {-| Selection set on a folder to get the basic properties of that folder and of its sub-folders.
@@ -92,14 +92,14 @@ _GraphQL notation:_
     }
 
 -}
-folderAndSubfolders : SelectionSet ( Folder, List Folder ) Graphql.Object.Folder
+folderAndSubfolders : SelectionSet ( Folder, List Folder ) Mediatum.Object.Folder
 folderAndSubfolders =
     SelectionSet.succeed Tuple.pair
         |> SelectionSet.with folder
         |> SelectionSet.with
-            (Graphql.Object.Folder.subfolders identity
+            (Mediatum.Object.Folder.subfolders identity
                 (SelectionSet.succeed identity
-                    |> SelectionSet.with (Graphql.Object.FoldersConnection.nodes folder)
+                    |> SelectionSet.with (Mediatum.Object.FoldersConnection.nodes folder)
                 )
             )
 
@@ -118,9 +118,9 @@ _GraphQL notation:_
     }
 
 -}
-folderLineage : SelectionSet (Nonempty Folder) Graphql.Object.Folder
+folderLineage : SelectionSet (Nonempty Folder) Mediatum.Object.Folder
 folderLineage =
-    Graphql.Object.Folder.lineage
+    Mediatum.Object.Folder.lineage
         folder
         |> SelectionSet.nonNullOrFail
         |> SelectionSet.nonNullElementsOrFail
@@ -146,21 +146,21 @@ _GraphQL notation:_
     }
 
 -}
-folderAndSubfolderCounts : SelectionSet Folder.FolderCounts Graphql.Object.Docset
+folderAndSubfolderCounts : SelectionSet Folder.FolderCounts Mediatum.Object.Docset
 folderAndSubfolderCounts =
     SelectionSet.succeed
         (\pair listOfPairs -> Dict.fromList (pair :: listOfPairs))
         |> SelectionSet.with
-            (Graphql.Object.Docset.folderCount
+            (Mediatum.Object.Docset.folderCount
                 folderCount
                 |> SelectionSet.nonNullOrFail
             )
         |> SelectionSet.with
-            (Graphql.Object.Docset.subfolderCounts
+            (Mediatum.Object.Docset.subfolderCounts
                 identity
                 (SelectionSet.succeed identity
                     |> SelectionSet.with
-                        (Graphql.Object.FolderCountsConnection.nodes
+                        (Mediatum.Object.FolderCountsConnection.nodes
                             folderCount
                         )
                 )
@@ -177,16 +177,16 @@ _GraphQL notation:_
     }
 
 -}
-folderCount : SelectionSet ( FolderId, Int ) Graphql.Object.FolderCount
+folderCount : SelectionSet ( FolderId, Int ) Mediatum.Object.FolderCount
 folderCount =
     SelectionSet.succeed Tuple.pair
         |> SelectionSet.with
-            (Graphql.Object.FolderCount.folderId
+            (Mediatum.Object.FolderCount.folderId
                 |> SelectionSet.nonNullOrFail
                 |> SelectionSet.map Folder.idFromInt
             )
         |> SelectionSet.with
-            (Graphql.Object.FolderCount.count
+            (Mediatum.Object.FolderCount.count
                 |> SelectionSet.nonNullOrFail
             )
 
@@ -210,19 +210,19 @@ _GraphQL notation:_
 -}
 documentResultPage :
     String
-    -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Object.DocumentResultPage
+    -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Mediatum.Object.DocumentResultPage
 documentResultPage maskName =
     SelectionSet.succeed Pagination.Offset.Page.Page
         |> SelectionSet.with
-            (Graphql.Object.DocumentResultPage.offset
+            (Mediatum.Object.DocumentResultPage.offset
                 |> SelectionSet.nonNullOrFail
             )
         |> SelectionSet.with
-            (Graphql.Object.DocumentResultPage.hasNextPage
+            (Mediatum.Object.DocumentResultPage.hasNextPage
                 |> SelectionSet.nonNullOrFail
             )
         |> SelectionSet.with
-            (Graphql.Object.DocumentResultPage.content
+            (Mediatum.Object.DocumentResultPage.content
                 (documentResult maskName)
                 |> SelectionSet.nonNullOrFail
                 |> SelectionSet.nonNullElementsOrFail
@@ -243,19 +243,19 @@ _GraphQL notation:_
     }
 
 -}
-documentResult : String -> SelectionSet DocumentResult Graphql.Object.DocumentResult
+documentResult : String -> SelectionSet DocumentResult Mediatum.Object.DocumentResult
 documentResult maskName =
     SelectionSet.succeed DocumentResult.init
         |> SelectionSet.with
-            (Graphql.Object.DocumentResult.number
+            (Mediatum.Object.DocumentResult.number
                 |> SelectionSet.nonNullOrFail
             )
         |> SelectionSet.with
-            (Graphql.Object.DocumentResult.distance
+            (Mediatum.Object.DocumentResult.distance
                 |> SelectionSet.nonNullOrFail
             )
         |> SelectionSet.with
-            (Graphql.Object.DocumentResult.document
+            (Mediatum.Object.DocumentResult.document
                 (documentByMask maskName)
                 |> SelectionSet.nonNullOrFail
             )
@@ -276,29 +276,29 @@ _GraphQL notation:_
     }
 
 -}
-documentByMask : String -> SelectionSet Document Graphql.Object.Document
+documentByMask : String -> SelectionSet Document Mediatum.Object.Document
 documentByMask maskName =
     SelectionSet.succeed Document.init
         |> SelectionSet.with
-            (Graphql.Object.Document.id
+            (Mediatum.Object.Document.id
                 |> SelectionSet.nonNullOrFail
             )
         |> SelectionSet.with
-            (Graphql.Object.Document.metadatatype
+            (Mediatum.Object.Document.metadatatype
                 (SelectionSet.succeed identity
                     |> SelectionSet.with
-                        (Graphql.Object.Metadatatype.longname
+                        (Mediatum.Object.Metadatatype.longname
                             |> SelectionSet.nonNullOrFail
                         )
                 )
                 |> SelectionSet.nonNullOrFail
             )
         |> SelectionSet.with
-            (Graphql.Object.Document.name
+            (Mediatum.Object.Document.name
                 |> SelectionSet.nonNullOrFail
             )
         |> SelectionSet.with
-            (Graphql.Object.Document.valuesByMask
+            (Mediatum.Object.Document.valuesByMask
                 (\optionals ->
                     { optionals
                         | maskName = Present maskName
@@ -310,13 +310,13 @@ documentByMask maskName =
 
 {-| Decode a JSON string returned from a query that denotes the mata-values of a document.
 -}
-mapJsonToAttributes : Maybe Graphql.Scalar.Json -> List Document.Attribute
+mapJsonToAttributes : Maybe Mediatum.Scalar.Json -> List Document.Attribute
 mapJsonToAttributes maybeJson =
     case maybeJson of
         Nothing ->
             []
 
-        Just (Graphql.Scalar.Json str) ->
+        Just (Mediatum.Scalar.Json str) ->
             Result.withDefault [] <|
                 Json.Decode.decodeString decoderAttributeList str
 
@@ -341,13 +341,13 @@ It contains all the selection set functions needed for building
 queries according to the Relay pagination specification.
 
 -}
-graphqlDocumentObjects : Connection.GraphqlObjects {} Graphql.Object.DocumentsConnection Graphql.Object.DocumentsEdge Graphql.Object.Document Graphql.Object.PageInfo Graphql.Scalar.Cursor Document
+graphqlDocumentObjects : Connection.GraphqlObjects {} Mediatum.Object.DocumentsConnection Mediatum.Object.DocumentsEdge Mediatum.Object.Document Mediatum.Object.PageInfo Mediatum.Scalar.Cursor Document
 graphqlDocumentObjects =
-    { totalCount = Graphql.Object.DocumentsConnection.totalCount
-    , pageInfo = Graphql.Object.DocumentsConnection.pageInfo
-    , edges = Graphql.Object.DocumentsConnection.edges
-    , cursor = Graphql.Object.DocumentsEdge.cursor
-    , node = Graphql.Object.DocumentsEdge.node
-    , hasNextPage = Graphql.Object.PageInfo.hasNextPage
-    , hasPreviousPage = Graphql.Object.PageInfo.hasPreviousPage
+    { totalCount = Mediatum.Object.DocumentsConnection.totalCount
+    , pageInfo = Mediatum.Object.DocumentsConnection.pageInfo
+    , edges = Mediatum.Object.DocumentsConnection.edges
+    , cursor = Mediatum.Object.DocumentsEdge.cursor
+    , node = Mediatum.Object.DocumentsEdge.node
+    , hasNextPage = Mediatum.Object.PageInfo.hasNextPage
+    , hasPreviousPage = Mediatum.Object.PageInfo.hasPreviousPage
     }

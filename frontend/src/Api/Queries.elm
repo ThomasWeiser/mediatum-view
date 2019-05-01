@@ -44,13 +44,13 @@ import Document exposing (Document, DocumentId)
 import DocumentResult exposing (DocumentResult)
 import Folder exposing (Folder, FolderCounts, FolderId)
 import GenericNode exposing (GenericNode)
-import Graphql.Object.FoldersConnection
-import Graphql.Object.GenericNode
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
-import Graphql.Query
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import List.Nonempty exposing (Nonempty)
+import Mediatum.Object.FoldersConnection
+import Mediatum.Object.GenericNode
+import Mediatum.Query
 import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
@@ -74,13 +74,13 @@ _GraphQL notation:_
 -}
 toplevelFolder : SelectionSet (List ( Folder, List Folder )) Graphql.Operation.RootQuery
 toplevelFolder =
-    Graphql.Query.allFolders
+    Mediatum.Query.allFolders
         (\optionals ->
             { optionals
                 | isRoot = Present True
             }
         )
-        (Graphql.Object.FoldersConnection.nodes
+        (Mediatum.Object.FoldersConnection.nodes
             Api.Fragments.folderAndSubfolders
         )
 
@@ -100,13 +100,13 @@ _GraphQL notation:_
 -}
 subfolder : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
 subfolder folderIds =
-    Graphql.Query.allFolders
+    Mediatum.Query.allFolders
         (\optionals ->
             { optionals
                 | parentIds = List.map (Folder.idToInt >> Just) folderIds |> Present
             }
         )
-        (Graphql.Object.FoldersConnection.nodes Api.Fragments.folder)
+        (Mediatum.Object.FoldersConnection.nodes Api.Fragments.folder)
 
 
 {-| Get a folder or a document with a given mediaTUM id.
@@ -140,7 +140,7 @@ genericNode nodeId =
                 ( Nothing, Nothing ) ->
                     GenericNode.IsNeither
     in
-    Graphql.Query.genericNodeById
+    Mediatum.Query.genericNodeById
         (\optionals ->
             { optionals
                 | id = Present nodeId
@@ -148,11 +148,11 @@ genericNode nodeId =
         )
         (SelectionSet.succeed constructor
             |> SelectionSet.with
-                (Graphql.Object.GenericNode.asFolder
+                (Mediatum.Object.GenericNode.asFolder
                     Api.Fragments.folderLineage
                 )
             |> SelectionSet.with
-                (Graphql.Object.GenericNode.asDocument
+                (Mediatum.Object.GenericNode.asDocument
                     (Api.Fragments.documentByMask "nodebig")
                 )
         )
@@ -183,7 +183,7 @@ folderDocumentsPage :
     -> Query.FolderQuery
     -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
 folderDocumentsPage referencePage paginationPosition folderQuery =
-    Graphql.Query.allDocumentsPage
+    Mediatum.Query.allDocumentsPage
         (\optionals ->
             { optionals
                 | folderId = folderQuery.folder |> .id |> Folder.idToInt |> Present
@@ -225,7 +225,7 @@ folderDocumentsFolderCounts :
     Query.FolderQuery
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
 folderDocumentsFolderCounts folderQuery =
-    Graphql.Query.allDocumentsDocset
+    Mediatum.Query.allDocumentsDocset
         (\optionals ->
             { optionals
                 | folderId = folderQuery.folder |> .id |> Folder.idToInt |> Present
@@ -267,7 +267,7 @@ ftsPage :
     -> Query.FtsQuery
     -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
 ftsPage referencePage paginationPosition ftsQuery =
-    Graphql.Query.ftsDocumentsPage
+    Mediatum.Query.ftsDocumentsPage
         (\optionals ->
             { optionals
                 | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
@@ -317,7 +317,7 @@ ftsFolderCounts :
     Query.FtsQuery
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
 ftsFolderCounts ftsQuery =
-    Graphql.Query.ftsDocumentsDocset
+    Mediatum.Query.ftsDocumentsDocset
         (\optionals ->
             { optionals
                 | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
@@ -367,7 +367,7 @@ authorSearch :
     -> String
     -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
 authorSearch referencePage paginationPosition _ searchString =
-    Graphql.Query.authorSearch
+    Mediatum.Query.authorSearch
         ((\optionals ->
             { optionals
                 | text = Present searchString
@@ -400,7 +400,7 @@ documentDetails :
     DocumentId
     -> SelectionSet (Maybe Document) Graphql.Operation.RootQuery
 documentDetails documentId =
-    Graphql.Query.documentById
+    Mediatum.Query.documentById
         (\optionals ->
             { optionals
                 | id = Present (Document.idToInt documentId)

@@ -11,12 +11,12 @@ module Api.Mutations exposing (updateDocumentAttribute)
 
 import Api.Fragments
 import Document exposing (Document, DocumentId)
-import Graphql.Mutation
-import Graphql.Object.UpdateDocumentAttributePayload
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Maybe.Extra
+import Mediatum.Mutation
+import Mediatum.Object.UpdateDocumentAttributePayload
 
 
 {-| Set an attribute of a document selected by a mediaTUM id.
@@ -45,7 +45,7 @@ updateDocumentAttribute :
     -> SelectionSet (Maybe Document) Graphql.Operation.RootMutation
 updateDocumentAttribute documentId key value =
     SelectionSet.map Maybe.Extra.join
-        (Graphql.Mutation.updateDocumentAttribute
+        (Mediatum.Mutation.updateDocumentAttribute
             { input =
                 { clientMutationId = Absent
                 , id = Present (Document.idToInt documentId)
@@ -55,7 +55,7 @@ updateDocumentAttribute documentId key value =
             }
             (SelectionSet.succeed identity
                 |> SelectionSet.with
-                    (Graphql.Object.UpdateDocumentAttributePayload.document
+                    (Mediatum.Object.UpdateDocumentAttributePayload.document
                         (Api.Fragments.documentByMask "nodebig")
                     )
             )
