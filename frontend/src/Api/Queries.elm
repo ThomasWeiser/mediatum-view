@@ -29,6 +29,7 @@ module Api.Queries exposing
 
 -}
 
+import Config
 import Api.Fragments
 import Document exposing (Document, DocumentId)
 import DocumentResult exposing (DocumentResult)
@@ -47,14 +48,6 @@ import Pagination.Relay.Page
 import Pagination.Relay.Pagination
 import Query
 import Query.Attribute
-
-
-{-| Number of results per page used for pagination.
-Currently hard-coded.
--}
-pageSize : Int
-pageSize =
-    10
 
 
 {-| Get the root folders and their sub-folders.
@@ -189,10 +182,10 @@ folderDocumentsPage referencePage paginationPosition folderQuery =
                         |> Query.filtersToAttributeTests
                         |> Query.Attribute.testsAsGraphqlArgument
                         |> Present
-                , limit = Present pageSize
+                , limit = Present Config.pageSize
                 , offset =
                     Pagination.Offset.Page.positionToOffset
-                        pageSize
+                        Config.pageSize
                         referencePage
                         paginationPosition
                         |> Present
@@ -274,10 +267,10 @@ ftsPage referencePage paginationPosition ftsQuery =
                         |> Query.filtersToAttributeTests
                         |> Query.Attribute.testsAsGraphqlArgument
                         |> Present
-                , limit = Present pageSize
+                , limit = Present Config.pageSize
                 , offset =
                     Pagination.Offset.Page.positionToOffset
-                        pageSize
+                        Config.pageSize
                         referencePage
                         paginationPosition
                         |> Present
@@ -366,7 +359,7 @@ authorSearch referencePage paginationPosition _ searchString =
             }
          )
             >> Pagination.Relay.Pagination.paginationArguments
-                pageSize
+                Config.pageSize
                 referencePage
                 paginationPosition
         )

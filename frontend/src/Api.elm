@@ -17,17 +17,11 @@ module Api exposing
 
 -}
 
+import Config
 import Graphql.Extra
 import Graphql.Http
 import Graphql.Operation
 import Graphql.SelectionSet exposing (SelectionSet)
-
-
-{-| Endpoint for backend's GraphQL service.
--}
-apiUrl : String
-apiUrl =
-    "/graphql"
 
 
 {-| A query specific Result type.
@@ -60,7 +54,7 @@ sendQueryRequest :
     -> Cmd msg
 sendQueryRequest tagger selectionSet =
     selectionSet
-        |> Graphql.Http.queryRequest apiUrl
+        |> Graphql.Http.queryRequest Config.apiUrl
         |> Graphql.Http.send
             (Result.mapError Graphql.Extra.stripError >> tagger)
 
@@ -76,6 +70,6 @@ sendMutationRequest :
     -> Cmd msg
 sendMutationRequest tagger selectionSet =
     selectionSet
-        |> Graphql.Http.mutationRequest apiUrl
+        |> Graphql.Http.mutationRequest Config.apiUrl
         |> Graphql.Http.send
             (Result.mapError Graphql.Extra.stripError >> tagger)
