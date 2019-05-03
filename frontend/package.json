@@ -4,7 +4,7 @@
   "description": "Web app as a client for the GraphQL API of mediaTUM",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "generate": "rimraf gen && elm-graphql http://localhost:5000/graphql --base Graphql --output gen/",
+    "generate": "rimraf gen && elm-graphql http://localhost:5000/graphql --base Mediatum --output gen/",
     "compile": "rimraf elm-stuff/build-artifacts && elm make --output=assets/app.js src/Main.elm",
     "build": "npm run generate && npm run compile",
     "start": "elm-live -u -e node_modules/.bin/elm -d assets src/Main.elm -x /graphql -y http://localhost:5000 -- --output=assets/app.js --debug",

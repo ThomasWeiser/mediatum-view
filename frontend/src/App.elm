@@ -9,6 +9,7 @@ module App exposing
     )
 
 import Api
+import Api.Queries
 import Article
 import Cmd.Extra
 import Controls
@@ -132,9 +133,9 @@ updateWithoutReturn msg model =
 
         QueryGenericNode nodeId ->
             ( model
-            , Api.makeQueryRequest
+            , Api.sendQueryRequest
                 GenericNodeQueryResponse
-                (Api.queryGenericNode nodeId)
+                (Api.Queries.genericNode nodeId)
             )
 
         GenericNodeQueryResponse (Err err) ->
@@ -302,7 +303,7 @@ view model =
                         , Html.Attributes.title "You may click here to start an example query."
                         , Html.Events.onClick (ControlsMsg Controls.submitExampleQuery)
                         ]
-                        [ Html.text "WIP 2018-10-29" ]
+                        [ Html.text "WIP 2019-04-30" ]
                     , Html.img
                         [ Html.Attributes.alt "TUM Logo"
                         , Html.Attributes.src "logo_tum.png"

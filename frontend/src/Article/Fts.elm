@@ -8,6 +8,7 @@ module Article.Fts exposing
     )
 
 import Api
+import Api.Queries
 import Article.Iterator as Iterator
 import Document exposing (Document, DocumentId)
 import DocumentResult exposing (DocumentResult)
@@ -80,9 +81,9 @@ update context msg model =
             ( { model
                 | pageResult = Page.loadingPageResult model.pageResult
               }
-            , Api.makeQueryRequest
+            , Api.sendQueryRequest
                 ApiResponseFtsPage
-                (Api.queryFtsPage
+                (Api.Queries.ftsPage
                     model.pageResult.page
                     paginationPosition
                     context.ftsQuery
@@ -96,9 +97,9 @@ update context msg model =
                 , doQueryFolderCounts = False
               }
             , if model.doQueryFolderCounts then
-                Api.makeQueryRequest
+                Api.sendQueryRequest
                     ApiResponseFtsFolderCounts
-                    (Api.queryFtsFolderCounts
+                    (Api.Queries.ftsFolderCounts
                         context.ftsQuery
                     )
 
@@ -247,7 +248,7 @@ viewPaginationButtons page targetTagger =
         ]
 
 
-viewError : Graphql.Extra.StrippedError -> Html msg
+viewError : Api.Error -> Html msg
 viewError error =
     Html.div
         [ Html.Attributes.class "error" ]

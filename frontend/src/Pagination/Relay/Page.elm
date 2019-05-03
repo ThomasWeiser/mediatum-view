@@ -7,13 +7,13 @@ module Pagination.Relay.Page exposing
     , updatePageResultFromResult
     )
 
-import Graphql.Extra
-import Graphql.Scalar
+import Api
+import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection exposing (Connection)
 
 
 type alias Page itemModel =
-    Connection Graphql.Scalar.Cursor itemModel
+    Connection Mediatum.Scalar.Cursor itemModel
 
 
 entries : Page itemModel -> List itemModel
@@ -23,7 +23,7 @@ entries page =
 
 type alias PageResult itemModel =
     { loading : Bool
-    , error : Maybe Graphql.Extra.StrippedError
+    , error : Maybe Api.Error
     , page : Maybe (Page itemModel)
     }
 
@@ -37,7 +37,7 @@ initialPageResult =
 
 
 updatePageResultFromResult :
-    Result Graphql.Extra.StrippedError (Page itemModel)
+    Result Api.Error (Page itemModel)
     -> PageResult itemModel
     -> PageResult itemModel
 updatePageResultFromResult result pageResult =

@@ -10,7 +10,7 @@ module Pagination.Offset.Page exposing
     , updatePageResultFromResult
     )
 
-import Graphql.Extra
+import Api
 
 
 type alias Page itemModel =
@@ -38,7 +38,7 @@ isFirstPage page =
 
 type alias PageResult itemModel =
     { loading : Bool
-    , error : Maybe Graphql.Extra.StrippedError
+    , error : Maybe Api.Error
     , page : Maybe (Page itemModel)
     }
 
@@ -52,7 +52,7 @@ initialPageResult =
 
 
 updatePageResultFromResult :
-    Result Graphql.Extra.StrippedError (Page itemModel)
+    Result Api.Error (Page itemModel)
     -> PageResult itemModel
     -> PageResult itemModel
 updatePageResultFromResult result pageResult =

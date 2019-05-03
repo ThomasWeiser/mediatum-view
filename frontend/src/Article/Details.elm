@@ -8,6 +8,8 @@ module Article.Details exposing
     )
 
 import Api
+import Api.Mutations
+import Api.Queries
 import Document exposing (Attribute, Document, DocumentId)
 import Graphql.Extra
 import Html exposing (Html)
@@ -36,14 +38,14 @@ type RemoteDocument
     = Loading
     | Success Document
     | NotFound DocumentId
-    | QueryError Graphql.Extra.StrippedError
+    | QueryError Api.Error
 
 
 type MutationState
     = Init
     | Pending
     | CannotUpdateKey String
-    | MutationError Graphql.Extra.StrippedError
+    | MutationError Api.Error
 
 
 type Msg
@@ -61,9 +63,9 @@ init context =
       , editAttributeValue = ""
       , mutationState = Init
       }
-    , Api.makeQueryRequest
+    , Api.sendQueryRequest
         (ApiQueryResponse context.detailsQuery.documentId)
-        (Api.queryDocumentDetails context.detailsQuery.documentId)
+        (Api.Queries.documentDetails context.detailsQuery.documentId)
     )
 
 
@@ -116,9 +118,9 @@ update msg model =
 
         SubmitMutation documentId ->
             ( { model | mutationState = Pending }
-            , Api.makeMutationRequest
+            , Api.sendMutationRequest
                 (ApiMutationResponse documentId model.editAttributeKey)
-                (Api.updateDocumentAttribute
+                (Api.Mutations.updateDocumentAttribute
                     documentId
                     model.editAttributeKey
                     model.editAttributeValue
@@ -209,7 +211,7 @@ viewAttribute attribute =
             Html.text ""
 
 
-viewGraphqlError : Graphql.Extra.StrippedError -> Html msg
+viewGraphqlError : Api.Error -> Html msg
 viewGraphqlError error =
     viewError (Graphql.Extra.errorToString error)
 
