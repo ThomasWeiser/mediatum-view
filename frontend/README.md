@@ -10,7 +10,7 @@ There is a `package.json` for this purpose.
 $ npm install
 ```
 
-Alternatively, you may also choose to install the tools individually.
+Alternatively, you may choose to install the tools individually.
 
 - [Elm](http://elm-lang.org/) v0.19. See [here](https://guide.elm-lang.org/install.html) for platform-specific instructions.
 - [elm-graphql](https://github.com/dillonkearns/elm-graphql) to autogenerate GraphQL queries in Elm.
@@ -35,4 +35,4 @@ For serving the app, live rebuilding and proxying the backend start `elm-live` w
 $ npm run start
 ```
 
-and open the app at http://localhost:8000/ in your browser.
+Then open the app at http://localhost:8000/ in your browser.

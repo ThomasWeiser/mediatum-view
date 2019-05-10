@@ -15,7 +15,7 @@ The new code lives in these PostgreSQL schemas:
 | `debug`   | Additional GraphQL functions conveying between the original node table and the exported GraphQL schema. |
 | `examine` | For experimental SQL code used to examine the original database structure. |
 
-On top of that we use [PostGraphile](https://www.graphile.org/postgraphile/) (formerly known as PostGraphQL), to expose the functions from PostgreSQL schema `api` (and optionaly from schema `debug`) as a GraphQL service.
+On top of that we use [PostGraphile](https://www.graphile.org/postgraphile/) (formerly known as PostGraphQL), to expose the functions from PostgreSQL schema `api` (and optionally from schema `debug`) as a GraphQL service.
 
 ## Prerequisites
 
@@ -23,9 +23,9 @@ On top of that we use [PostGraphile](https://www.graphile.org/postgraphile/) (fo
 
 In general, we use an up-to-date version of PostgreSQL. 
 
-Currently we are using version 10.5. A migration to version 11.x is in the pipeline.
+Currently we are using version 11.2.
 
-Minimum required version is 9.6.
+Minimum required version is 10.
 
 ### Configuration Variables
 
@@ -39,6 +39,7 @@ $ export MEDIATUM_DATABASE_USER="mediatum"
 ### RUM
 
 RUM is an extension for PostgreSQL that adds a new indexing method, similar to GIN.
+We use it for efficient ranked full-text search.
 
 To install and integrate RUM do something like the following.
 
@@ -65,14 +66,14 @@ $ npm install -g postgraphile
 
 ## Installation
 
-The new code lives in dedicated schema as noted above. 
+The new code lives in dedicated schemas as noted above. 
 In order to create those schemas you may have to grant the permission to do so to the database user:
 
 ```sh
 $ psql -d $MEDIATUM_DATABASE_NAME -c "GRANT CREATE ON DATABASE $MEDIATUM_DATABASE_NAME TO $MEDIATUM_DATABASE_USER;"
 ```
 
-To submit the new code to a running mediaTUM database execute the SQL and PL/pgSQL code as listed in `bin/build-indexes` and `bin/build`. Please review these scripts, especially the the name of the database. Building the new RUM indexes takes some time depending on the quantity of full text to index.
+To submit the new code to a running mediaTUM database execute the SQL and PL/pgSQL code as listed in `bin/build-indexes` and `bin/build`. Please review these scripts before using them. Building the new RUM indexes takes some time depending on the quantity of full-text to index.
 
 ```sh
 $ bin/build-indexes
@@ -87,4 +88,4 @@ See `bin/start` for the necessary parameters when starting PostGraphile. Please 
 $ bin/start
 ```
 
-If all goes well you will see two URLs: One for the GraphQL endpoint, and one for [Graph*i*QL](https://github.com/graphql/graphiql). Open the latter to get a handy in-browser tool to explore the resulting API and its built-in documentation.
+If all goes well you will see two URLs: One for the GraphQL endpoint, and one for [Graph*i*QL](https://github.com/graphql/graphiql). You may want to open the latter for a handy in-browser tool to explore the resulting API and its built-in documentation.
