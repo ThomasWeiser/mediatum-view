@@ -3,12 +3,10 @@ module Query exposing
     , FolderQuery
     , FtsOptions
     , FtsQuery
-    , FtsSearchDomain(..)
     , FtsSearchLanguage(..)
     , Query(..)
     , emptyQuery
     , filtersToAttributeTests
-    , ftsOptionsDomainToString
     , ftsOptionsFromLabel
     , ftsOptionsLanguageToString
     , ftsOptionsToLabel
@@ -60,14 +58,8 @@ type alias FtsQuery =
 
 
 type alias FtsOptions =
-    { domain : FtsSearchDomain
-    , language : FtsSearchLanguage
+    { language : FtsSearchLanguage
     }
-
-
-type FtsSearchDomain
-    = SearchAttributes
-    | SearchFulltext
 
 
 type FtsSearchLanguage
@@ -210,16 +202,6 @@ filtersToAttributeTests filters =
         |> List.map Filter.toAttributeTest
 
 
-ftsOptionsDomainToString : FtsOptions -> String
-ftsOptionsDomainToString options =
-    case options.domain of
-        SearchAttributes ->
-            "attrs"
-
-        SearchFulltext ->
-            "fulltext"
-
-
 ftsOptionsLanguageToString : FtsOptions -> String
 ftsOptionsLanguageToString options =
     case options.language of
@@ -232,34 +214,22 @@ ftsOptionsLanguageToString options =
 
 ftsOptionsToLabel : FtsOptions -> String
 ftsOptionsToLabel options =
-    case ( options.domain, options.language ) of
-        ( SearchAttributes, English ) ->
-            "All Attributes, using English dictionary"
+    case options.language of
+        English ->
+            "Using English dictionary"
 
-        ( SearchAttributes, German ) ->
-            "All Attributes, using German dictionary"
-
-        ( SearchFulltext, English ) ->
-            "Fulltext, using English dictionary"
-
-        ( SearchFulltext, German ) ->
-            "Fulltext, using German dictionary"
+        German ->
+            "Using German dictionary"
 
 
 ftsOptionsFromLabel : String -> Maybe FtsOptions
 ftsOptionsFromLabel label =
     case label of
-        "All Attributes, using English dictionary" ->
-            Just <| FtsOptions SearchAttributes English
+        "Using English dictionary" ->
+            Just <| FtsOptions English
 
-        "All Attributes, using German dictionary" ->
-            Just <| FtsOptions SearchAttributes German
-
-        "Fulltext, using English dictionary" ->
-            Just <| FtsOptions SearchFulltext English
-
-        "Fulltext, using German dictionary" ->
-            Just <| FtsOptions SearchFulltext German
+        "Using German dictionary" ->
+            Just <| FtsOptions German
 
         _ ->
             Nothing
