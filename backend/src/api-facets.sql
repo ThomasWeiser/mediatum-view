@@ -41,7 +41,13 @@ create or replace function aux.fts_documents_tsquery_docset
              , row(folder_id, count (fts.id))::api.folder_count
              , array_agg (fts.id)
         into res
-        from ( select fts.nid as id
+        from ( select 
+
+                    -- Eleminate duplicates
+                    -- Only necessary as long as a single document may occur more than once in the index.
+                    distinct
+                
+                    fts.nid as id
                from mediatum.fts
                where set_tsvec_searchtype_weight(fts.tsvec, fts.searchtype) @@ fts_query
                and fts.config = language
