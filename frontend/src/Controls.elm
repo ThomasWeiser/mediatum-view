@@ -59,7 +59,7 @@ submitExampleQuery =
 
 init : () -> Model
 init _ =
-    { searchOptions = Query.FtsOptions Query.SearchFulltext Query.English
+    { searchOptions = Query.FtsOptions Query.English
     , searchTerm = ""
     , filterEditors = Dict.empty
     }
@@ -242,10 +242,8 @@ viewSearch context model =
                                 (Query.ftsOptionsToLabel ftsOptions)
                             ]
                     )
-                    [ Query.FtsOptions Query.SearchAttributes Query.English
-                    , Query.FtsOptions Query.SearchAttributes Query.German
-                    , Query.FtsOptions Query.SearchFulltext Query.English
-                    , Query.FtsOptions Query.SearchFulltext Query.German
+                    [ Query.FtsOptions Query.English
+                    , Query.FtsOptions Query.German
                     ]
                 )
             , Html.input

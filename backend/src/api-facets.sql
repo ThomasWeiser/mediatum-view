@@ -30,7 +30,6 @@ $$ language plpgsql stable parallel safe;
 create or replace function aux.fts_documents_tsquery_docset
     ( folder_id int4
     , fts_query tsquery
-    , domain text
     , language text
     , attribute_tests api.attribute_test[]
     )
@@ -42,10 +41,15 @@ create or replace function aux.fts_documents_tsquery_docset
              , row(folder_id, count (fts.id))::api.folder_count
              , array_agg (fts.id)
         into res
-        from ( select fts.nid as id
+        from ( select 
+
+                    -- Eleminate duplicates
+                    -- Only necessary as long as a single document may occur more than once in the index.
+                    distinct
+                
+                    fts.nid as id
                from mediatum.fts
-               where fts.tsvec @@ fts_query
-               and fts.searchtype = domain
+               where set_tsvec_searchtype_weight(fts.tsvec, fts.searchtype) @@ fts_query
                and fts.config = language
              ) as fts
         join entity.document on document.id = fts.id
@@ -65,7 +69,6 @@ $$ language plpgsql stable parallel safe;
 create or replace function api.fts_documents_docset
     ( folder_id int4
     , text text
-    , domain text
     , language text
     , attribute_tests api.attribute_test[]
     )
@@ -75,7 +78,6 @@ create or replace function api.fts_documents_docset
         return aux.fts_documents_tsquery_docset
           ( folder_id
           , plainto_tsquery (language::regconfig, text)
-          , domain
           , language
           , attribute_tests
           );
@@ -85,7 +87,6 @@ $$ language plpgsql stable parallel safe;
 comment on function api.fts_documents_docset
     ( folder_id int4
     , text text
-    , domain text
     , language text
     , attribute_tests api.attribute_test[]
     ) is
