@@ -1,0 +1,5 @@
+# snowball_bilingual extension
+comment = 'snowball_bilingual - add-on dictionary template using the combined results of two snowball stemmers'
+default_version = '1.0'
+module_pathname = '$libdir/snowball_bilingual'
+relocatable = true
