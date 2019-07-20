@@ -42,8 +42,14 @@ create or replace function aux.fts_documents_tsquery_docset
         into res
         from ( select 
 
-                    -- Eleminate duplicates
-                    -- Only necessary as long as a single document may occur more than once in the index.
+                    -- Eleminating duplicates: Since we use the ufts table,
+                    -- which has at most one row per document, there cannot be any duplicates here.
+                    -- But, removing the "distinct" modifier here slows down the query by a factor of 3.
+                    -- The reason is currently unknown.
+                    -- I also tried to extract this sub-query as a function (using either sql or plpgsql),
+                    -- but could not get stable performance results with this approach.
+                    -- We should investigate the issue later. EXPLAIN is our friend here.
+                    -- For now we keep using a sub-query and using "distinct" in the sub-query.
                     distinct
                 
                     ufts.nid as id
