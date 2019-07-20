@@ -35,8 +35,7 @@ type Return
 
 
 type alias Model =
-    { searchOptions : Query.FtsOptions
-    , searchTerm : String
+    { searchTerm : String
     , filterEditors : Dict String FilterEditor.Model
     }
 
@@ -44,7 +43,6 @@ type alias Model =
 type Msg
     = NoOp
     | SetSearchTerm String
-    | SetSearchOptions Query.FtsOptions
     | EditFilter Filter
     | RemoveFilter Filter
     | Submit
@@ -59,8 +57,7 @@ submitExampleQuery =
 
 init : () -> Model
 init _ =
-    { searchOptions = Query.FtsOptions Query.English
-    , searchTerm = ""
+    { searchTerm = ""
     , filterEditors = Dict.empty
     }
 
@@ -73,12 +70,6 @@ update context msg model =
 
         SetSearchTerm str ->
             ( { model | searchTerm = str }
-            , Cmd.none
-            , NoReturn
-            )
-
-        SetSearchOptions searchOptions ->
-            ( { model | searchOptions = searchOptions }
             , Cmd.none
             , NoReturn
             )
@@ -121,7 +112,6 @@ update context msg model =
                         Query.OnFts
                             { folder = Query.getFolder context.query
                             , filters = Query.getFilters context.query
-                            , options = model.searchOptions
                             , searchTerm = model.searchTerm
                             }
             in
@@ -142,7 +132,6 @@ update context msg model =
                             Filters.none
                                 |> Filters.insert (Filter.YearWithin "2000" "2010")
                                 |> Filters.insert (Filter.TitleFts "with")
-                        , options = model.searchOptions
                         , searchTerm = searchTerm
                         }
             in
@@ -224,29 +213,7 @@ viewSearch context model =
     Html.form
         [ Html.Events.onSubmit Submit ]
         [ Html.div [ Html.Attributes.class "search-bar" ]
-            [ Html.select
-                [ Html.Events.onInput
-                    (Query.ftsOptionsFromLabel
-                        >> Maybe.Extra.unwrap NoOp SetSearchOptions
-                    )
-                ]
-                (List.map
-                    (\ftsOptions ->
-                        Html.option
-                            [ Html.Attributes.value
-                                (Query.ftsOptionsToLabel ftsOptions)
-                            , Html.Attributes.selected
-                                (model.searchOptions == ftsOptions)
-                            ]
-                            [ Html.text
-                                (Query.ftsOptionsToLabel ftsOptions)
-                            ]
-                    )
-                    [ Query.FtsOptions Query.English
-                    , Query.FtsOptions Query.German
-                    ]
-                )
-            , Html.input
+            [ Html.input
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
                 , Html.Attributes.placeholder "Search ..."

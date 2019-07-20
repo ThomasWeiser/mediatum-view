@@ -30,7 +30,6 @@ $$ language plpgsql stable parallel safe;
 create or replace function aux.fts_documents_tsquery_docset
     ( folder_id int4
     , fts_query tsquery
-    , language text
     , attribute_tests api.attribute_test[]
     )
     returns api.docset
@@ -47,10 +46,9 @@ create or replace function aux.fts_documents_tsquery_docset
                     -- Only necessary as long as a single document may occur more than once in the index.
                     distinct
                 
-                    fts.nid as id
-               from mediatum.fts
-               where set_tsvec_searchtype_weight(fts.tsvec, fts.searchtype) @@ fts_query
-               and fts.config = language
+                    ufts.nid as id
+               from preprocess.ufts
+               where ufts.tsvec @@ fts_query
              ) as fts
         join entity.document on document.id = fts.id
         where exists ( select 1
@@ -69,7 +67,6 @@ $$ language plpgsql stable parallel safe;
 create or replace function api.fts_documents_docset
     ( folder_id int4
     , text text
-    , language text
     , attribute_tests api.attribute_test[]
     )
     returns api.docset
@@ -77,8 +74,7 @@ create or replace function api.fts_documents_docset
     begin  
         return aux.fts_documents_tsquery_docset
           ( folder_id
-          , plainto_tsquery (language::regconfig, text)
-          , language
+          , plainto_tsquery ('english_german'::regconfig, text)
           , attribute_tests
           );
     end;
@@ -87,7 +83,6 @@ $$ language plpgsql stable parallel safe;
 comment on function api.fts_documents_docset
     ( folder_id int4
     , text text
-    , language text
     , attribute_tests api.attribute_test[]
     ) is
     'Perform a full-text search to provide a list of document ids, '
