@@ -56,6 +56,31 @@ $ dropdb contrib_regression
 $ psql -d $MEDIATUM_DATABASE_NAME -c "CREATE EXTENSION rum;"
 ```
 
+### Bilingual Dictionary
+
+In order to make full text search working with English and German texts
+we use a custom made dictionary for configuring FTS in PostgreSQL.
+This dictionary (`english_german`) is similar to the
+[builtin Snowball stemmers](https://www.postgresql.org/docs/current/textsearch-dictionaries.html#TEXTSEARCH-SNOWBALL-DICTIONARY),
+but uses both language settings for stemming and produces lexeme variants if the stems differ.
+
+The dictionary is realized as a PostgreSQL extension `snowball_bilingual`.
+It's source code is included in this repository.
+
+To build and install it do something like the following.
+
+```sh
+$ cd backend/pg-extensions/snowball_bilingual
+$ make
+
+$ sudo make install
+
+$ make installcheck
+$ dropdb contrib_regression
+
+$ psql -d $MEDIATUM_DATABASE_NAME -c "CREATE EXTENSION snowball_bilingual;"
+```
+
 ### PostGraphile
 
 [PostGraphile](https://www.graphile.org/postgraphile/) is a `Node.js` application. Install with:
