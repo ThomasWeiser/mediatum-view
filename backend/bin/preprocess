@@ -2,4 +2,4 @@
 
 p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -f"
 
-$p src/sql/indexes.sql
+$p src/sql/preprocess.sql
