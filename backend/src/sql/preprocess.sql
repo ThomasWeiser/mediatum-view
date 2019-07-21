@@ -62,12 +62,19 @@ create or replace view preprocess.ufts_as_view as
     from mediatum.node;
 
 
+-- Suppress notices about "Word is too long to be indexed. Words longer than 2047 characters are ignored."
+-- We don't mind that such long lexemes don't get indexed.
+set session client_min_messages to warning;
+
 insert into preprocess.ufts (nid, "year", tsvec)
   select * 
   from preprocess.ufts_as_view
   where "year" is not null or tsvec is not null
-  -- limit 2000 -- For testing the code just process a tiny fraction of the data
+  -- limit 2000 -- For testing the code one may just process a small fraction of the data
 ;
+
+-- Reset message level to default
+set session client_min_messages to notice;
 
 create index if not exists ufts_rum_tsvector_ops
     on preprocess.ufts
