@@ -272,6 +272,11 @@ comment on column api.document.attrs is
     '@omit';
 
 
+create type api.fts_order_by as enum (
+    'ranking', 'date'
+);
+
+
 create type api.attribute_test_operator as enum (
     'equality', 'ilike', 'simplefts', 'daterange'
 );
