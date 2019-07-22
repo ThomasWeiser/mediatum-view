@@ -36,6 +36,7 @@ type Return
 
 type alias Model =
     { searchTerm : String
+    , orderBy : Query.FtsOrderBy
     , filterEditors : Dict String FilterEditor.Model
     }
 
@@ -58,6 +59,7 @@ submitExampleQuery =
 init : () -> Model
 init _ =
     { searchTerm = ""
+    , orderBy = Query.Ranking
     , filterEditors = Dict.empty
     }
 
@@ -113,6 +115,7 @@ update context msg model =
                             { folder = Query.getFolder context.query
                             , filters = Query.getFilters context.query
                             , searchTerm = model.searchTerm
+                            , orderBy = model.orderBy
                             }
             in
             ( model
@@ -133,6 +136,7 @@ update context msg model =
                                 |> Filters.insert (Filter.YearWithin "2000" "2010")
                                 |> Filters.insert (Filter.TitleFts "with")
                         , searchTerm = searchTerm
+                        , orderBy = model.orderBy
                         }
             in
             ( { model | searchTerm = searchTerm }
