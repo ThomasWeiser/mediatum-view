@@ -1,0 +1,167 @@
+CREATE EXTENSION snowball_bilingual;
+SELECT * FROM ts_debug('english_german','Welt Welten world worlds');
+   alias   |   description   | token  |     dictionaries      |     dictionary      |    lexemes    
+-----------+-----------------+--------+-----------------------+---------------------+---------------
+ asciiword | Word, all ASCII | Welt   | {english_german_stem} | english_german_stem | {welt}
+ blank     | Space symbols   |        | {}                    |                     | 
+ asciiword | Word, all ASCII | Welten | {english_german_stem} | english_german_stem | {welten,welt}
+ blank     | Space symbols   |        | {}                    |                     | 
+ asciiword | Word, all ASCII | world  | {english_german_stem} | english_german_stem | {world}
+ blank     | Space symbols   |        | {}                    |                     | 
+ asciiword | Word, all ASCII | worlds | {english_german_stem} | english_german_stem | {world}
+(7 rows)
+
+SELECT to_tsvector('english_german', 'Welt Welten world worlds');
+            to_tsvector            
+-----------------------------------
+ 'welt':1,2 'welten':2 'world':3,4
+(1 row)
+
+SELECT to_tsquery('english_german', 'Welten');
+    to_tsquery     
+-------------------
+ 'welten' | 'welt'
+(1 row)
+
+CREATE TABLE table1(name varchar);
+INSERT INTO table1 VALUES
+	('I''m sorry'),
+	('Ich bitte um Entschuldigung'),
+	('PostgreSQL the world''s most advanced open source databases'),
+	('PostgreSQL das fortschrittlichste Open-Source-Datenbanksystem der Welt'),
+	('i me my myself the'),
+	('als also am an der die das');
+SELECT d.* FROM table1 AS t, LATERAL ts_debug('english_german', t.name) AS d;
+      alias      |           description           |            token            |     dictionaries      |     dictionary      |                         lexemes                         
+-----------------+---------------------------------+-----------------------------+-----------------------+---------------------+---------------------------------------------------------
+ asciiword       | Word, all ASCII                 | I                           | {english_german_stem} | english_german_stem | {i}
+ blank           | Space symbols                   | '                           | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | m                           | {english_german_stem} | english_german_stem | {m}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | sorry                       | {english_german_stem} | english_german_stem | {sorri,sorry}
+ asciiword       | Word, all ASCII                 | Ich                         | {english_german_stem} | english_german_stem | {ich}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | bitte                       | {english_german_stem} | english_german_stem | {bitt}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | um                          | {english_german_stem} | english_german_stem | {um}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | Entschuldigung              | {english_german_stem} | english_german_stem | {entschuldigung,entschuld}
+ asciiword       | Word, all ASCII                 | PostgreSQL                  | {english_german_stem} | english_german_stem | {postgresql}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | the                         | {english_german_stem} | english_german_stem | {the}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | world                       | {english_german_stem} | english_german_stem | {world}
+ blank           | Space symbols                   | '                           | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | s                           | {english_german_stem} | english_german_stem | {s}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | most                        | {english_german_stem} | english_german_stem | {most}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | advanced                    | {english_german_stem} | english_german_stem | {advanc,advanced}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | open                        | {english_german_stem} | english_german_stem | {open}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | source                      | {english_german_stem} | english_german_stem | {sourc}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | databases                   | {english_german_stem} | english_german_stem | {databas}
+ asciiword       | Word, all ASCII                 | PostgreSQL                  | {english_german_stem} | english_german_stem | {postgresql}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | das                         | {english_german_stem} | english_german_stem | {das}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | fortschrittlichste          | {english_german_stem} | english_german_stem | {fortschrittlichst,fortschritt}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciihword      | Hyphenated word, all ASCII      | Open-Source-Datenbanksystem | {english_german_stem} | english_german_stem | {open-source-datenbanksystem,open-source-datenbanksyst}
+ hword_asciipart | Hyphenated word part, all ASCII | Open                        | {english_german_stem} | english_german_stem | {open}
+ blank           | Space symbols                   | -                           | {}                    |                     | 
+ hword_asciipart | Hyphenated word part, all ASCII | Source                      | {english_german_stem} | english_german_stem | {sourc}
+ blank           | Space symbols                   | -                           | {}                    |                     | 
+ hword_asciipart | Hyphenated word part, all ASCII | Datenbanksystem             | {english_german_stem} | english_german_stem | {datenbanksystem,datenbanksyst}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | der                         | {english_german_stem} | english_german_stem | {der}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | Welt                        | {english_german_stem} | english_german_stem | {welt}
+ asciiword       | Word, all ASCII                 | i                           | {english_german_stem} | english_german_stem | {i}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | me                          | {english_german_stem} | english_german_stem | {me}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | my                          | {english_german_stem} | english_german_stem | {my}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | myself                      | {english_german_stem} | english_german_stem | {myself}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | the                         | {english_german_stem} | english_german_stem | {the}
+ asciiword       | Word, all ASCII                 | als                         | {english_german_stem} | english_german_stem | {al}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | also                        | {english_german_stem} | english_german_stem | {also}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | am                          | {english_german_stem} | english_german_stem | {}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | an                          | {english_german_stem} | english_german_stem | {}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | der                         | {english_german_stem} | english_german_stem | {der}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | die                         | {english_german_stem} | english_german_stem | {die}
+ blank           | Space symbols                   |                             | {}                    |                     | 
+ asciiword       | Word, all ASCII                 | das                         | {english_german_stem} | english_german_stem | {das}
+(67 rows)
+
+CREATE INDEX name_idx ON table1 USING GIN (to_tsvector('english_german', "name"));
+SELECT * FROM table1 WHERE to_tsvector('english_german', name)
+	@@ to_tsquery('english_german', 'sorry');
+   name    
+-----------
+ I'm sorry
+(1 row)
+
+SELECT * FROM table1 WHERE to_tsvector('english_german', name)
+	@@ to_tsquery('english_german', 'entschuldigen');
+            name             
+-----------------------------
+ Ich bitte um Entschuldigung
+(1 row)
+
+SELECT * FROM table1 WHERE to_tsvector('english_german', name)
+	@@ to_tsquery('english_german', 'sources');
+                                  name                                  
+------------------------------------------------------------------------
+ PostgreSQL the world's most advanced open source databases
+ PostgreSQL das fortschrittlichste Open-Source-Datenbanksystem der Welt
+(2 rows)
+
+SELECT * FROM table1 WHERE to_tsvector('english_german', name)
+	@@ to_tsquery('english_german', 'Welten');
+                                  name                                  
+------------------------------------------------------------------------
+ PostgreSQL das fortschrittlichste Open-Source-Datenbanksystem der Welt
+(1 row)
+
+DROP INDEX name_idx;
+CREATE INDEX name_idx ON table1 USING GIST (to_tsvector('english_german', "name"));
+SELECT * FROM table1 WHERE to_tsvector('english_german', name)
+	@@ to_tsquery('english_german', 'sorry');
+   name    
+-----------
+ I'm sorry
+(1 row)
+
+SELECT * FROM table1 WHERE to_tsvector('english_german', name)
+	@@ to_tsquery('english_german', 'entschuldigen');
+            name             
+-----------------------------
+ Ich bitte um Entschuldigung
+(1 row)
+
+SELECT * FROM table1 WHERE to_tsvector('english_german', name)
+	@@ to_tsquery('english_german', 'sources');
+                                  name                                  
+------------------------------------------------------------------------
+ PostgreSQL the world's most advanced open source databases
+ PostgreSQL das fortschrittlichste Open-Source-Datenbanksystem der Welt
+(2 rows)
+
+SELECT * FROM table1 WHERE to_tsvector('english_german', name)
+	@@ to_tsquery('english_german', 'Welten');
+                                  name                                  
+------------------------------------------------------------------------
+ PostgreSQL das fortschrittlichste Open-Source-Datenbanksystem der Welt
+(1 row)
+
+DROP INDEX name_idx;

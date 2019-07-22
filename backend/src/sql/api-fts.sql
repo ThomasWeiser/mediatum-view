@@ -4,7 +4,6 @@
 
 create or replace function aux.fts_ordered
     ( fts_query tsquery
-    , language text
     )
     returns table
         ( id int4
@@ -13,13 +12,12 @@ create or replace function aux.fts_ordered
         ) as $$
     begin
         return query
-        select fts.nid as id
-             , set_tsvec_searchtype_weight(fts.tsvec, fts.searchtype) <=> fts_query as distance
+        select ufts.nid as id
+             , ufts.tsvec <=> fts_query as distance
              , (count(*) over ())::integer
-        from mediatum.fts
-        where set_tsvec_searchtype_weight(fts.tsvec, fts.searchtype) @@ fts_query
-          and fts.config = language
-        order by set_tsvec_searchtype_weight(fts.tsvec, fts.searchtype) <=> fts_query;
+        from preprocess.ufts
+        where ufts.tsvec @@ fts_query
+        order by ufts.tsvec <=> fts_query;
     end;
 $$ -- Using language plpgsql is more efficient here than sql.
    language plpgsql stable strict parallel safe rows 1000;
@@ -28,7 +26,6 @@ $$ -- Using language plpgsql is more efficient here than sql.
 create or replace function aux.fts_documents_limited
     ( folder_id int4
     , fts_query tsquery
-    , language text
     , attribute_tests api.attribute_test[]
     , "limit" integer
     )
@@ -40,13 +37,12 @@ create or replace function aux.fts_documents_limited
     select
         (document.id, document.type, document.schema, document.name, document.orderpos, document.attrs)::api.document as document,
         fts.distance
-    from (select fts.nid as id
-               , set_tsvec_searchtype_weight(fts.tsvec, fts.searchtype) <=> fts_query as distance
+    from (select ufts.nid as id
+               , ufts.tsvec <=> fts_query as distance
                , (count(*) over ())::integer
-           from mediatum.fts
-           where set_tsvec_searchtype_weight(fts.tsvec, fts.searchtype) @@ fts_query
-           and fts.config = language
-           order by set_tsvec_searchtype_weight(fts.tsvec, fts.searchtype) <=> fts_query
+           from preprocess.ufts
+           where ufts.tsvec @@ fts_query
+           order by ufts.tsvec <=> fts_query
          ) as fts
     join entity.document on document.id = fts.id
 
@@ -72,7 +68,6 @@ $$ -- Language sql gives stable performance here.
 create or replace function aux.fts_documents_distinct
     ( folder_id int4
     , fts_query tsquery
-    , language text
     , attribute_tests api.attribute_test[]
     , "limit" integer
     )
@@ -86,7 +81,6 @@ create or replace function aux.fts_documents_distinct
             from aux.fts_documents_limited
                 ( folder_id
                 , fts_query
-                , language
                 , attribute_tests
                 , "limit" * 2
                 ) as f
@@ -99,7 +93,6 @@ create or replace function aux.fts_documents_distinct
 create or replace function aux.fts_documents_paginated
     ( folder_id int4
     , text text
-    , language text
     , attribute_tests api.attribute_test[]
     , "limit" integer
     , "offset" integer
@@ -118,8 +111,7 @@ create or replace function aux.fts_documents_paginated
                 , (count(*) over ()) > "limit" + "offset"
             from aux.fts_documents_distinct
                 ( folder_id
-                , plainto_tsquery (language::regconfig, text)
-                , language
+                , plainto_tsquery ('english_german'::regconfig, text)
                 , attribute_tests
                 , "limit" + "offset" + 1
                 ) as f
@@ -132,7 +124,6 @@ $$ language plpgsql stable parallel safe rows 100;
 create or replace function api.fts_documents_page
     ( folder_id int4
     , text text
-    , language text
     , attribute_tests api.attribute_test[]
     , "limit" integer default 10
     , "offset" integer default 0
@@ -143,7 +134,7 @@ create or replace function api.fts_documents_page
                 select *
                 from aux.fts_documents_paginated
                     ( folder_id
-                    , text, language
+                    , text
                     , attribute_tests
                     , "limit", "offset"
                     )
@@ -165,7 +156,6 @@ $$ language sql stable parallel safe;
 create or replace function api.fts_documents_page_pl
     ( folder_id int4
     , text text
-    , language text
     , attribute_tests api.attribute_test[]
     , "limit" integer default 10
     , "offset" integer default 0
@@ -188,7 +178,7 @@ create or replace function api.fts_documents_page_pl
         from
             aux.fts_documents_paginated
                 ( folder_id
-                , text, language
+                , text
                 , attribute_tests
                 , "limit", "offset"
                 )
@@ -198,9 +188,8 @@ create or replace function api.fts_documents_page_pl
 $$ language plpgsql stable parallel safe;
 
 
-comment on function api.fts_documents_page (folder_id int4, text text, language text, attribute_tests api.attribute_test[], "limit" integer, "offset" integer) is
+comment on function api.fts_documents_page (folder_id int4, text text, attribute_tests api.attribute_test[], "limit" integer, "offset" integer) is
     'Perform a full-text-search on the documents of a folder, sorted by a search rank, optionally filtered by type and name and a list of attribute tests.'
-    ' Language may currently be "english" and "german".'
     ' For pagination you may specify a limit (defaults to 10) and an offset (defaults to 0).'
     ;
 

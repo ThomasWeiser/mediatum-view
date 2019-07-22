@@ -303,7 +303,7 @@ view model =
                         , Html.Attributes.title "You may click here to start an example query."
                         , Html.Events.onClick (ControlsMsg Controls.submitExampleQuery)
                         ]
-                        [ Html.text "WIP 2019-04-30" ]
+                        [ Html.text "WIP" ]
                     , Html.img
                         [ Html.Attributes.alt "TUM Logo"
                         , Html.Attributes.src "logo_tum.png"

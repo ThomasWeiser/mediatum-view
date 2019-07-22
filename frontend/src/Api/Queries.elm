@@ -250,7 +250,6 @@ _GraphQL notation:_
         ftsDocumentsPage(
             folderId: $folderId
             text: $searchTerm
-            language: $english_or_german
             attributeTests: $listOfAttributeTestsForFiltering
             limit: $limitNumberUsedForPagination
             offset: $offsetNumberUsedForPagination
@@ -271,7 +270,6 @@ ftsPage referencePage paginationPosition ftsQuery =
             { optionals
                 | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
                 , text = Present ftsQuery.searchTerm
-                , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
                 , attributeTests =
                     ftsQuery.filters
                         |> Query.filtersToAttributeTests
@@ -302,7 +300,6 @@ _GraphQL notation:_
         ftsDocumentsDocset(
             folderId: $folderId
             text: $searchTerm
-            language: $english_or_german
             attributeTests: $listOfAttributeTestsForFiltering
         ) {
             ...folderAndSubfolderCounts
@@ -319,7 +316,6 @@ ftsFolderCounts ftsQuery =
             { optionals
                 | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
                 , text = Present ftsQuery.searchTerm
-                , language = Present (Query.ftsOptionsLanguageToString ftsQuery.options)
                 , attributeTests =
                     ftsQuery.filters
                         |> Query.filtersToAttributeTests

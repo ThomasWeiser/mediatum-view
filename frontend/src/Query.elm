@@ -1,15 +1,10 @@
 module Query exposing
     ( DetailsQuery
     , FolderQuery
-    , FtsOptions
     , FtsQuery
-    , FtsSearchLanguage(..)
     , Query(..)
     , emptyQuery
     , filtersToAttributeTests
-    , ftsOptionsFromLabel
-    , ftsOptionsLanguageToString
-    , ftsOptionsToLabel
     , getFilters
     , getFolder
     , mapFilters
@@ -52,19 +47,8 @@ type alias FolderQuery =
 type alias FtsQuery =
     { folder : Folder
     , filters : Filters
-    , options : FtsOptions
     , searchTerm : String
     }
-
-
-type alias FtsOptions =
-    { language : FtsSearchLanguage
-    }
-
-
-type FtsSearchLanguage
-    = English
-    | German
 
 
 type Msg
@@ -185,11 +169,9 @@ view query =
                         [ Html.span [] [ Html.text "All Documents" ] ]
                     ]
 
-            OnFts { options, searchTerm } ->
+            OnFts { searchTerm } ->
                 [ Html.div []
-                    [ Html.span [] [ Html.text "Search " ]
-                    , Html.span [] [ Html.text (ftsOptionsToLabel options) ]
-                    , Html.span [] [ Html.text ": \"" ]
+                    [ Html.span [] [ Html.text "Search: \"" ]
                     , Html.span [] [ Html.text searchTerm ]
                     , Html.span [] [ Html.text "\"" ]
                     ]
@@ -200,36 +182,3 @@ filtersToAttributeTests : Filters -> List Query.Attribute.Test
 filtersToAttributeTests filters =
     Filters.toList filters
         |> List.map Filter.toAttributeTest
-
-
-ftsOptionsLanguageToString : FtsOptions -> String
-ftsOptionsLanguageToString options =
-    case options.language of
-        English ->
-            "english"
-
-        German ->
-            "german"
-
-
-ftsOptionsToLabel : FtsOptions -> String
-ftsOptionsToLabel options =
-    case options.language of
-        English ->
-            "Using English dictionary"
-
-        German ->
-            "Using German dictionary"
-
-
-ftsOptionsFromLabel : String -> Maybe FtsOptions
-ftsOptionsFromLabel label =
-    case label of
-        "Using English dictionary" ->
-            Just <| FtsOptions English
-
-        "Using German dictionary" ->
-            Just <| FtsOptions German
-
-        _ ->
-            Nothing
