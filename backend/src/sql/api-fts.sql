@@ -8,12 +8,14 @@ create or replace function aux.fts_ordered
     returns table
         ( id int4
         , distance float4
+        , year int4
         , count integer
         ) as $$
     begin
         return query
         select ufts.nid as id
              , ufts.tsvec <=> fts_query as distance
+             , ufts.year as year
              , (count(*) over ())::integer
         from preprocess.ufts
         where ufts.tsvec @@ fts_query
@@ -32,13 +34,16 @@ create or replace function aux.fts_documents_limited
     returns table
         ( document api.document
         , distance float4
+        , year int4
         )
     as $$
     select
         (document.id, document.type, document.schema, document.name, document.orderpos, document.attrs)::api.document as document,
-        fts.distance
+        fts.distance,
+        year
     from (select ufts.nid as id
                , ufts.tsvec <=> fts_query as distance
+               , ufts.year as year
                , (count(*) over ())::integer
            from preprocess.ufts
            where ufts.tsvec @@ fts_query
@@ -73,6 +78,7 @@ create or replace function aux.fts_documents_paginated
     returns table
         ( document api.document
         , distance float4
+        , year int4
         , number integer
         , has_next_page boolean
         )
@@ -80,6 +86,7 @@ create or replace function aux.fts_documents_paginated
         begin return query
             select f.document
                 , f.distance
+                , f.year
                 , (row_number () over ())::integer as number
                 , (count(*) over ()) > "limit" + "offset"
             from aux.fts_documents_limited
@@ -118,7 +125,7 @@ create or replace function api.fts_documents_page
                 (select every(has_next_page) from search_result), false
             ) as has_next_page,
             array (
-            select row(number, distance, document)::api.document_result
+            select row(number, distance, year, document)::api.document_result
                 from search_result
             ) as content
         ;
@@ -144,7 +151,7 @@ create or replace function api.fts_documents_page_pl
                 , false
                 ) as has_next_page,
             coalesce
-                ( array_agg (row (number, distance, document)::api.document_result)
+                ( array_agg (row (number, distance, year, document)::api.document_result)
                 , array[]::api.document_result[]
                 ) as content
         into res

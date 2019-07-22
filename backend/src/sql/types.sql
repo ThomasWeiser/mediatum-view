@@ -298,6 +298,7 @@ comment on column api.attribute_test.extra is
 create type api.document_result as (
     number integer,
     distance float4,
+    year int4,
     document api.document
 );
 
@@ -307,6 +308,8 @@ comment on column api.document_result.number is
     'Sequence number of this result';
 comment on column api.document_result.distance is
     'A measure of the relevance of this result with respect to the query expression; lower values means higher relevance';
+comment on column api.document_result.year is
+    'Year of publication, used for chronological sorting';
 comment on column api.document_result.document is
     'The resulting document';
 
