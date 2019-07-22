@@ -63,33 +63,6 @@ $$ -- Language sql gives stable performance here.
     language sql stable parallel safe rows 100;
 
 
--- Eleminate duplicates
--- Only necessary as long as a single document may occur more than once in the index.
-create or replace function aux.fts_documents_distinct
-    ( folder_id int4
-    , fts_query tsquery
-    , attribute_tests api.attribute_test[]
-    , "limit" integer
-    )
-    returns table
-        ( document api.document
-        , distance float4
-        )
-    as $$
-	    select f.document
-	         , min (f.distance)
-            from aux.fts_documents_limited
-                ( folder_id
-                , fts_query
-                , attribute_tests
-                , "limit" * 2
-                ) as f
-            group by document
-            limit "limit";
-	$$
-    language sql stable parallel safe rows 100;
-
-
 create or replace function aux.fts_documents_paginated
     ( folder_id int4
     , text text
@@ -109,7 +82,7 @@ create or replace function aux.fts_documents_paginated
                 , f.distance
                 , (row_number () over ())::integer as number
                 , (count(*) over ()) > "limit" + "offset"
-            from aux.fts_documents_distinct
+            from aux.fts_documents_limited
                 ( folder_id
                 , plainto_tsquery ('english_german'::regconfig, text)
                 , attribute_tests
