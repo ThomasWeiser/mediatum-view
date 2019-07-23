@@ -223,7 +223,7 @@ viewSearch : Context -> Model -> Html Msg
 viewSearch context model =
     Html.form
         [ Html.Events.onSubmit Submit ]
-        [ Html.div [ Html.Attributes.class "search-bar" ]
+        [ Html.div [ Html.Attributes.class "search-bar input-group" ]
             [ Html.input
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
@@ -232,21 +232,18 @@ viewSearch context model =
                 , Utils.onChange SetSearchTerm
                 ]
                 []
-            , Html.span
-                [ Html.Attributes.class "button-group" ]
-                [ Html.button
-                    [ Html.Attributes.type_ "submit"
-                    , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByRank ) ]
-                    , Html.Events.onClick (SetSorting Query.ByRank)
-                    ]
-                    [ Icons.search, Html.text " By Rank" ]
-                , Html.button
-                    [ Html.Attributes.type_ "submit"
-                    , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByDate ) ]
-                    , Html.Events.onClick (SetSorting Query.ByDate)
-                    ]
-                    [ Icons.search, Html.text " By Date" ]
+            , Html.button
+                [ Html.Attributes.type_ "submit"
+                , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByRank ) ]
+                , Html.Events.onClick (SetSorting Query.ByRank)
                 ]
+                [ Icons.search, Html.text " By Rank" ]
+            , Html.button
+                [ Html.Attributes.type_ "submit"
+                , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByDate ) ]
+                , Html.Events.onClick (SetSorting Query.ByDate)
+                ]
+                [ Icons.search, Html.text " By Date" ]
             ]
         ]
 
@@ -258,7 +255,7 @@ viewFilters context model =
             List.map
                 (\{ name, initFilter } ->
                     Html.span
-                        [ Html.Attributes.class "button-group" ]
+                        [ Html.Attributes.class "input-group" ]
                         [ Html.button
                             [ Html.Attributes.type_ "button"
                             , Html.Events.onClick <| EditFilter initFilter
@@ -300,7 +297,7 @@ viewExistingFilters model filters =
 viewExistingFilter : Bool -> Filter -> Html Msg
 viewExistingFilter beingEdited filter =
     Html.span
-        [ Html.Attributes.class "button-group"
+        [ Html.Attributes.class "input-group"
         , Html.Attributes.classList [ ( "being-edited", beingEdited ) ]
         ]
         [ Html.button

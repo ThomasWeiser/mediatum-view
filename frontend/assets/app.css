@@ -70,6 +70,7 @@ article {
 .search-input {
   flex: 1;
   font-size: 105%;
+  border: 1px solid #ccc;
 }
 
 .filters-bar {
@@ -111,17 +112,17 @@ button.filter-button, .filter-inputs {
   padding: 0.25rem .75rem;
 }
 
-.button-group {
+.input-group {
   margin-right: 1rem;
 }
-.button-group button, .button-group .filter-inputs {
+.input-group > * {
   border-radius: 0;
 }
-.button-group button:first-child, .button-group .filter-inputs:first-child {
+.input-group > *:first-child {
   border-top-left-radius: .4rem;
   border-bottom-left-radius: .4rem;
 }
-.button-group button:last-child, .button-group .filter-inputs:last-child {
+.input-group > *:last-child {
   border-top-right-radius: .4rem;
   border-bottom-right-radius: .4rem;
 }
