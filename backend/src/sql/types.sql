@@ -272,8 +272,8 @@ comment on column api.document.attrs is
     '@omit';
 
 
-create type api.fts_order_by as enum (
-    'ranking', 'date'
+create type api.fts_sorting as enum (
+    'by_rank', 'by_date'
 );
 
 

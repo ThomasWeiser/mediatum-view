@@ -29,7 +29,7 @@ create or replace function aux.fts_documents_limited
     ( folder_id int4
     , fts_query tsquery
     , attribute_tests api.attribute_test[]
-    , order_by api.fts_order_by
+    , sorting api.fts_sorting
     , "limit" integer
     )
     returns table
@@ -49,8 +49,8 @@ create or replace function aux.fts_documents_limited
            from preprocess.ufts
            where ufts.tsvec @@ fts_query
            order by
-                case when order_by = 'ranking' then ufts.tsvec <=> fts_query end,
-                case when order_by = 'date' then ufts.year <=| 2147483647 end
+                case when sorting = 'by_rank' then ufts.tsvec <=> fts_query end,
+                case when sorting = 'by_date' then ufts.year <=| 2147483647 end
          ) as fts
     join entity.document on document.id = fts.id
 
@@ -75,7 +75,7 @@ create or replace function aux.fts_documents_paginated
     ( folder_id int4
     , text text
     , attribute_tests api.attribute_test[]
-    , order_by api.fts_order_by
+    , sorting api.fts_sorting
     , "limit" integer
     , "offset" integer
     )
@@ -97,7 +97,7 @@ create or replace function aux.fts_documents_paginated
                 ( folder_id
                 , plainto_tsquery ('english_german'::regconfig, text)
                 , attribute_tests
-                , order_by
+                , sorting
                 , "limit" + "offset" + 1
                 ) as f
             limit "limit"
@@ -110,7 +110,7 @@ create or replace function api.fts_documents_page
     ( folder_id int4
     , text text
     , attribute_tests api.attribute_test[]
-    , order_by api.fts_order_by default 'ranking'
+    , sorting api.fts_sorting default 'by_rank'
     , "limit" integer default 10
     , "offset" integer default 0
     )
@@ -122,7 +122,7 @@ create or replace function api.fts_documents_page
                     ( folder_id
                     , text
                     , attribute_tests
-                    , order_by
+                    , sorting
                     , "limit", "offset"
                     )
             )
@@ -144,7 +144,7 @@ create or replace function api.fts_documents_page_pl
     ( folder_id int4
     , text text
     , attribute_tests api.attribute_test[]
-    , order_by api.fts_order_by default 'ranking'
+    , sorting api.fts_sorting default 'by_rank'
     , "limit" integer default 10
     , "offset" integer default 0
     )
@@ -168,7 +168,7 @@ create or replace function api.fts_documents_page_pl
                 ( folder_id
                 , text
                 , attribute_tests
-                , order_by
+                , sorting
                 , "limit", "offset"
                 )
         ;
@@ -177,7 +177,7 @@ create or replace function api.fts_documents_page_pl
 $$ language plpgsql stable parallel safe;
 
 
-comment on function api.fts_documents_page (folder_id int4, text text, attribute_tests api.attribute_test[], order_by api.fts_order_by, "limit" integer, "offset" integer) is
+comment on function api.fts_documents_page (folder_id int4, text text, attribute_tests api.attribute_test[], sorting api.fts_sorting, "limit" integer, "offset" integer) is
     'Perform a full-text-search on the documents of a folder, sorted by a search rank, optionally filtered by type and name and a list of attribute tests.'
     ' The results are either ordered by "ranking" (default) or by "date".'
     ' For pagination you may specify a limit (defaults to 10) and an offset (defaults to 0).'

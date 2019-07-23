@@ -48,7 +48,7 @@ import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import List.Nonempty exposing (Nonempty)
-import Mediatum.Enum.FtsOrderBy
+import Mediatum.Enum.FtsSorting
 import Mediatum.Object.FoldersConnection
 import Mediatum.Object.GenericNode
 import Mediatum.Query
@@ -272,14 +272,14 @@ ftsPage referencePage paginationPosition ftsQuery =
             { optionals
                 | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
                 , text = Present ftsQuery.searchTerm
-                , orderBy =
+                , sorting =
                     Present
-                        (case ftsQuery.orderBy of
-                            Query.Ranking ->
-                                Mediatum.Enum.FtsOrderBy.Ranking
+                        (case ftsQuery.sorting of
+                            Query.ByRank ->
+                                Mediatum.Enum.FtsSorting.ByRank
 
-                            Query.Date ->
-                                Mediatum.Enum.FtsOrderBy.Date
+                            Query.ByDate ->
+                                Mediatum.Enum.FtsSorting.ByDate
                         )
                 , attributeTests =
                     ftsQuery.filters
