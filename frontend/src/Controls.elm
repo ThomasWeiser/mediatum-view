@@ -44,6 +44,7 @@ type alias Model =
 type Msg
     = NoOp
     | SetSearchTerm String
+    | SetSorting Query.FtsSorting
     | EditFilter Filter
     | RemoveFilter Filter
     | Submit
@@ -72,6 +73,12 @@ update context msg model =
 
         SetSearchTerm str ->
             ( { model | searchTerm = str }
+            , Cmd.none
+            , NoReturn
+            )
+
+        SetSorting sorting ->
+            ( { model | sorting = sorting }
             , Cmd.none
             , NoReturn
             )
@@ -204,6 +211,7 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.div []
         [ viewSearch context model
+        , viewSorting model
         , if Query.showFilters context.query then
             viewFilters context model
 
@@ -229,6 +237,25 @@ viewSearch context model =
                 [ Html.Attributes.type_ "submit" ]
                 [ Icons.search ]
             ]
+        ]
+
+
+viewSorting : Model -> Html Msg
+viewSorting model =
+    Html.span
+        [ Html.Attributes.class "button-group" ]
+        [ Html.button
+            [ Html.Attributes.type_ "button"
+            , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByRank ) ]
+            , Html.Events.onClick (SetSorting Query.ByRank)
+            ]
+            [ Html.text "By Rank" ]
+        , Html.button
+            [ Html.Attributes.type_ "button"
+            , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByDate ) ]
+            , Html.Events.onClick (SetSorting Query.ByDate)
+            ]
+            [ Html.text "By Date" ]
         ]
 
 
