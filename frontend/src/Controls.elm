@@ -211,7 +211,6 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.div []
         [ viewSearch context model
-        , viewSorting model
         , if Query.showFilters context.query then
             viewFilters context model
 
@@ -233,29 +232,22 @@ viewSearch context model =
                 , Utils.onChange SetSearchTerm
                 ]
                 []
-            , Html.button
-                [ Html.Attributes.type_ "submit" ]
-                [ Icons.search ]
+            , Html.span
+                [ Html.Attributes.class "button-group" ]
+                [ Html.button
+                    [ Html.Attributes.type_ "submit"
+                    , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByRank ) ]
+                    , Html.Events.onClick (SetSorting Query.ByRank)
+                    ]
+                    [ Icons.search, Html.text " By Rank" ]
+                , Html.button
+                    [ Html.Attributes.type_ "submit"
+                    , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByDate ) ]
+                    , Html.Events.onClick (SetSorting Query.ByDate)
+                    ]
+                    [ Icons.search, Html.text " By Date" ]
+                ]
             ]
-        ]
-
-
-viewSorting : Model -> Html Msg
-viewSorting model =
-    Html.span
-        [ Html.Attributes.class "button-group" ]
-        [ Html.button
-            [ Html.Attributes.type_ "button"
-            , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByRank ) ]
-            , Html.Events.onClick (SetSorting Query.ByRank)
-            ]
-            [ Html.text "By Rank" ]
-        , Html.button
-            [ Html.Attributes.type_ "button"
-            , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByDate ) ]
-            , Html.Events.onClick (SetSorting Query.ByDate)
-            ]
-            [ Html.text "By Date" ]
         ]
 
 
