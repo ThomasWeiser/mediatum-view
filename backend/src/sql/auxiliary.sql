@@ -46,7 +46,15 @@ $$ language plpgsql stable;
 create or replace function aux.custom_to_tsquery (query text)
     returns tsquery as $$
     begin
-        return plainto_tsquery ('english_german'::regconfig, query);
+        -- Check the availability of the function "websearch_to_tsquery",
+        -- which has been introduced in PostgreSQL 11.
+        -- If running an older version of PostgreSQL we fall back to "plainto_tsquery".
+        if exists(select from pg_proc where proname = 'websearch_to_tsquery')
+        then
+            return websearch_to_tsquery ('english_german'::regconfig, query);
+        else
+            return plainto_tsquery ('english_german'::regconfig, query);
+        end if;
     end;
 $$ language plpgsql immutable;
 
