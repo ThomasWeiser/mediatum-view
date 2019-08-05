@@ -24,7 +24,7 @@ On top of that we use [PostGraphile](https://www.graphile.org/postgraphile/) (fo
 
 In general, we use an up-to-date version of PostgreSQL. 
 
-Currently we are using version 11.2.
+Currently we are using version 11.4.
 
 Minimum required version is 10.
 
@@ -39,7 +39,7 @@ $ export MEDIATUM_DATABASE_USER="mediatum"
 
 ### RUM
 
-RUM is an extension for PostgreSQL that adds a new indexing method, similar to GIN.
+[RUM](https://github.com/postgrespro/rum) is an extension for PostgreSQL that adds a new indexing method, similar to GIN.
 We use it for efficient ranked full-text search.
 
 To install and integrate RUM do something like the following.
