@@ -5,11 +5,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate": "rimraf gen && elm-graphql http://localhost:5000/graphql --base Mediatum --output gen/",
-    "compile": "rimraf elm-stuff/build-artifacts && elm make --output=assets/app.js src/elm/Main.elm",
+    "compile": "rimraf elm-stuff/build-artifacts && ncp src/assets dist && elm make --output=dist/app.js src/elm/Main.elm",
     "build": "npm run generate && npm run compile",
-    "start": "elm-live -u -e node_modules/.bin/elm -d assets src/elm/Main.elm -x /graphql -y http://localhost:5000 -- --output=assets/app.js --debug",
+    "start": "ncp src/assets dist && elm-live -u -e node_modules/.bin/elm -d dist src/elm/Main.elm -x /graphql -y http://localhost:5000 -- --output=dist/app.js --debug",
     "format": "elm-format --yes src/elm",
-    "clean": "rimraf gen elm-stuff assets/app.js"
+    "clean": "rimraf gen elm-stuff"
   },
   "repository": {
     "type": "git",
@@ -35,7 +35,8 @@
     "@dillonkearns/elm-graphql": "^3.6.2",
     "elm-format": "^0.8.1",
     "elm-live": "^3.4.1",
-    "rimraf": "^2.6.3"
+    "rimraf": "^2.6.3",
+    "ncp": "^2.0.0"
   },
   "dependencies": {
     "elm": "^0.19.0-no-deps"
