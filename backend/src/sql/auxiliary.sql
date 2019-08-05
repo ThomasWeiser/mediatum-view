@@ -43,6 +43,22 @@ create or replace function aux.node_children (parent_node_id int4)
 $$ language plpgsql stable;
 
 
+create or replace function aux.custom_to_tsquery (query text)
+    returns tsquery as $$
+    begin
+        -- Check the availability of the function "websearch_to_tsquery",
+        -- which has been introduced in PostgreSQL 11.
+        -- If running an older version of PostgreSQL we fall back to "plainto_tsquery".
+        if exists(select from pg_proc where proname = 'websearch_to_tsquery')
+        then
+            return websearch_to_tsquery ('english_german'::regconfig, query);
+        else
+            return plainto_tsquery ('english_german'::regconfig, query);
+        end if;
+    end;
+$$ language plpgsql immutable;
+
+
 create or replace function aux.jsonb_filter (obj jsonb, keys text[])
     returns jsonb as $$
     declare result jsonb := '{}'::jsonb;
@@ -87,7 +103,7 @@ create or replace function aux.jsonb_test_list (obj jsonb, tests api.attribute_t
                         return false;
                     end if;
                 when 'simplefts' then
-                    if not to_tsvector('simple', key_value) @@ plainto_tsquery('simple', test.value) then
+                    if not to_tsvector('english_german', key_value) @@ aux.custom_to_tsquery(test.value) then
                         return false;
                     end if;
                 when 'daterange' then
