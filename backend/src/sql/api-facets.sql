@@ -80,7 +80,7 @@ create or replace function api.fts_documents_docset
     begin  
         return aux.fts_documents_tsquery_docset
           ( folder_id
-          , plainto_tsquery ('english_german'::regconfig, text)
+          , aux.custom_to_tsquery (text)
           , attribute_tests
           );
     end;

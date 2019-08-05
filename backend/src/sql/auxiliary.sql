@@ -43,6 +43,14 @@ create or replace function aux.node_children (parent_node_id int4)
 $$ language plpgsql stable;
 
 
+create or replace function aux.custom_to_tsquery (query text)
+    returns tsquery as $$
+    begin
+        return plainto_tsquery ('english_german'::regconfig, query);
+    end;
+$$ language plpgsql immutable;
+
+
 create or replace function aux.jsonb_filter (obj jsonb, keys text[])
     returns jsonb as $$
     declare result jsonb := '{}'::jsonb;
@@ -87,7 +95,7 @@ create or replace function aux.jsonb_test_list (obj jsonb, tests api.attribute_t
                         return false;
                     end if;
                 when 'simplefts' then
-                    if not to_tsvector('simple', key_value) @@ plainto_tsquery('simple', test.value) then
+                    if not to_tsvector('english_german', key_value) @@ aux.custom_to_tsquery(test.value) then
                         return false;
                     end if;
                 when 'daterange' then

@@ -95,7 +95,7 @@ create or replace function aux.fts_documents_paginated
                 , (count(*) over ()) > "limit" + "offset"
             from aux.fts_documents_limited
                 ( folder_id
-                , plainto_tsquery ('english_german'::regconfig, text)
+                , aux.custom_to_tsquery (text)
                 , attribute_tests
                 , sorting
                 , "limit" + "offset" + 1
@@ -196,9 +196,7 @@ create or replace function api.author_search (folder_id int4, text text)
         node.name,
         node.orderpos,
         node.attrs
-    from to_tsquery ('german', text) as tsq, -- needs a wellformed tsquery string
-         -- to_tsquery ('german', text || ':*') as tsq, -- works only for a single word (i.e. without spaces)
-         -- plainto_tsquery ('german', text) as tsq, -- no prefix search
+    from aux.custom_to_tsquery (text) as tsq,
          mediatum.node
     where aux.test_node_lineage (folder_id, node.id)
       and mediatum.to_tsvector_safe (
