@@ -6,12 +6,18 @@ html {
   box-sizing: inherit;
 }
 body {
-  margin: 0 auto;
-  max-width: 80em;
+  margin: 0 1em;
   font-family: "Roboto", "Helvetica", "Arial", sans-serif;
   line-height: 1.5;
   padding: 0;
   color: #333;
+}
+.page-container {
+  height: 100vh;
+  margin: 0 auto;
+  max-width: 80em;
+  display: flex;
+  flex-direction: column;
 }
 .color {
   color: #3070b3;
@@ -25,12 +31,6 @@ a:hover {
   text-decoration: underline;
 }
 
-.page-container {
-  height: 100vh;
-
-  display: flex;
-  flex-direction: column;
-}
 header {
   flex: 0;
   border-bottom: 1px solid gray;
