@@ -39,7 +39,7 @@ $ export MEDIATUM_DATABASE_USER="mediatum"
 
 ### RUM
 
-RUM is an extension for PostgreSQL that adds a new indexing method, similar to GIN.
+[RUM](https://github.com/postgrespro/rum) is an extension for PostgreSQL that adds a new indexing method, similar to GIN.
 We use it for efficient ranked full-text search.
 
 To install and integrate RUM do something like the following.
