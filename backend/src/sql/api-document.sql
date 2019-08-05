@@ -37,6 +37,7 @@ create or replace function aux.all_documents_paginated
     returns table
         ( document api.document
         , distance float4
+        , year int4
         , number integer
         , has_next_page boolean
         )
@@ -44,6 +45,7 @@ create or replace function aux.all_documents_paginated
         begin return query
             select f
                 , 0.0::float4
+                , preprocess.year_from_attrs (f.attrs)
                 , (row_number () over ())::integer as number
                 , (count(*) over ()) > "limit" + "offset"
             from aux.all_documents_limited
@@ -84,7 +86,7 @@ create or replace function api.all_documents_page
                 (select every(has_next_page) from search_result), false
             ) as has_next_page,
             array (
-            select row(number, distance, document)::api.document_result
+            select row(number, distance, year, document)::api.document_result
                 from search_result
             ) as content
         ;

@@ -128,7 +128,7 @@ view context model =
     Html.div
         [ Html.Attributes.class "iterator" ]
         [ Html.div
-            [ Html.Attributes.class "button-group" ]
+            [ Html.Attributes.class "input-group" ]
             [ Html.button
                 [ Html.Attributes.type_ "button"
                 , Html.Events.onClick Show

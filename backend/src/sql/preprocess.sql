@@ -76,9 +76,10 @@ insert into preprocess.ufts (nid, "year", tsvec)
 -- Reset message level to default
 set session client_min_messages to notice;
 
-create index if not exists ufts_rum_tsvector_ops
+create index if not exists ufts_rum_tsvector_addon_ops
     on preprocess.ufts
- using rum (tsvec rum_tsvector_ops);
+ using rum (tsvec rum_tsvector_addon_ops, year)
+  with (attach ='year', to = 'tsvec');
 
 
 ------------------------------------------------------------------

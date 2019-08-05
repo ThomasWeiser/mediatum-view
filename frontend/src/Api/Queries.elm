@@ -48,6 +48,7 @@ import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import List.Nonempty exposing (Nonempty)
+import Mediatum.Enum.FtsSorting
 import Mediatum.Object.FoldersConnection
 import Mediatum.Object.GenericNode
 import Mediatum.Query
@@ -250,6 +251,7 @@ _GraphQL notation:_
         ftsDocumentsPage(
             folderId: $folderId
             text: $searchTerm
+            orderBy: $RANKING_or_DATE
             attributeTests: $listOfAttributeTestsForFiltering
             limit: $limitNumberUsedForPagination
             offset: $offsetNumberUsedForPagination
@@ -270,6 +272,15 @@ ftsPage referencePage paginationPosition ftsQuery =
             { optionals
                 | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
                 , text = Present ftsQuery.searchTerm
+                , sorting =
+                    Present
+                        (case ftsQuery.sorting of
+                            Query.ByRank ->
+                                Mediatum.Enum.FtsSorting.ByRank
+
+                            Query.ByDate ->
+                                Mediatum.Enum.FtsSorting.ByDate
+                        )
                 , attributeTests =
                     ftsQuery.filters
                         |> Query.filtersToAttributeTests

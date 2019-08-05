@@ -8,12 +8,14 @@ create or replace function aux.fts_ordered
     returns table
         ( id int4
         , distance float4
+        , year int4
         , count integer
         ) as $$
     begin
         return query
         select ufts.nid as id
              , ufts.tsvec <=> fts_query as distance
+             , ufts.year as year
              , (count(*) over ())::integer
         from preprocess.ufts
         where ufts.tsvec @@ fts_query
@@ -27,22 +29,28 @@ create or replace function aux.fts_documents_limited
     ( folder_id int4
     , fts_query tsquery
     , attribute_tests api.attribute_test[]
+    , sorting api.fts_sorting
     , "limit" integer
     )
     returns table
         ( document api.document
         , distance float4
+        , year int4
         )
     as $$
     select
         (document.id, document.type, document.schema, document.name, document.orderpos, document.attrs)::api.document as document,
-        fts.distance
+        fts.distance,
+        year
     from (select ufts.nid as id
                , ufts.tsvec <=> fts_query as distance
+               , ufts.year as year
                , (count(*) over ())::integer
            from preprocess.ufts
            where ufts.tsvec @@ fts_query
-           order by ufts.tsvec <=> fts_query
+           order by
+                case when sorting = 'by_rank' then ufts.tsvec <=> fts_query end,
+                case when sorting = 'by_date' then ufts.year <=| 2147483647 end
          ) as fts
     join entity.document on document.id = fts.id
 
@@ -63,43 +71,18 @@ $$ -- Language sql gives stable performance here.
     language sql stable parallel safe rows 100;
 
 
--- Eleminate duplicates
--- Only necessary as long as a single document may occur more than once in the index.
-create or replace function aux.fts_documents_distinct
-    ( folder_id int4
-    , fts_query tsquery
-    , attribute_tests api.attribute_test[]
-    , "limit" integer
-    )
-    returns table
-        ( document api.document
-        , distance float4
-        )
-    as $$
-	    select f.document
-	         , min (f.distance)
-            from aux.fts_documents_limited
-                ( folder_id
-                , fts_query
-                , attribute_tests
-                , "limit" * 2
-                ) as f
-            group by document
-            limit "limit";
-	$$
-    language sql stable parallel safe rows 100;
-
-
 create or replace function aux.fts_documents_paginated
     ( folder_id int4
     , text text
     , attribute_tests api.attribute_test[]
+    , sorting api.fts_sorting
     , "limit" integer
     , "offset" integer
     )
     returns table
         ( document api.document
         , distance float4
+        , year int4
         , number integer
         , has_next_page boolean
         )
@@ -107,12 +90,14 @@ create or replace function aux.fts_documents_paginated
         begin return query
             select f.document
                 , f.distance
+                , f.year
                 , (row_number () over ())::integer as number
                 , (count(*) over ()) > "limit" + "offset"
-            from aux.fts_documents_distinct
+            from aux.fts_documents_limited
                 ( folder_id
                 , plainto_tsquery ('english_german'::regconfig, text)
                 , attribute_tests
+                , sorting
                 , "limit" + "offset" + 1
                 ) as f
             limit "limit"
@@ -125,6 +110,7 @@ create or replace function api.fts_documents_page
     ( folder_id int4
     , text text
     , attribute_tests api.attribute_test[]
+    , sorting api.fts_sorting default 'by_rank'
     , "limit" integer default 10
     , "offset" integer default 0
     )
@@ -136,6 +122,7 @@ create or replace function api.fts_documents_page
                     ( folder_id
                     , text
                     , attribute_tests
+                    , sorting
                     , "limit", "offset"
                     )
             )
@@ -145,7 +132,7 @@ create or replace function api.fts_documents_page
                 (select every(has_next_page) from search_result), false
             ) as has_next_page,
             array (
-            select row(number, distance, document)::api.document_result
+            select row(number, distance, year, document)::api.document_result
                 from search_result
             ) as content
         ;
@@ -157,6 +144,7 @@ create or replace function api.fts_documents_page_pl
     ( folder_id int4
     , text text
     , attribute_tests api.attribute_test[]
+    , sorting api.fts_sorting default 'by_rank'
     , "limit" integer default 10
     , "offset" integer default 0
     )
@@ -171,7 +159,7 @@ create or replace function api.fts_documents_page_pl
                 , false
                 ) as has_next_page,
             coalesce
-                ( array_agg (row (number, distance, document)::api.document_result)
+                ( array_agg (row (number, distance, year, document)::api.document_result)
                 , array[]::api.document_result[]
                 ) as content
         into res
@@ -180,6 +168,7 @@ create or replace function api.fts_documents_page_pl
                 ( folder_id
                 , text
                 , attribute_tests
+                , sorting
                 , "limit", "offset"
                 )
         ;
@@ -188,8 +177,9 @@ create or replace function api.fts_documents_page_pl
 $$ language plpgsql stable parallel safe;
 
 
-comment on function api.fts_documents_page (folder_id int4, text text, attribute_tests api.attribute_test[], "limit" integer, "offset" integer) is
+comment on function api.fts_documents_page (folder_id int4, text text, attribute_tests api.attribute_test[], sorting api.fts_sorting, "limit" integer, "offset" integer) is
     'Perform a full-text-search on the documents of a folder, sorted by a search rank, optionally filtered by type and name and a list of attribute tests.'
+    ' Sorting of the results is either "by_rank" (default) or "by_date".'
     ' For pagination you may specify a limit (defaults to 10) and an offset (defaults to 0).'
     ;
 

@@ -6,12 +6,18 @@ html {
   box-sizing: inherit;
 }
 body {
-  margin: 0 auto;
-  max-width: 80em;
+  margin: 0 1em;
   font-family: "Roboto", "Helvetica", "Arial", sans-serif;
   line-height: 1.5;
   padding: 0;
   color: #333;
+}
+.page-container {
+  height: 100vh;
+  margin: 0 auto;
+  max-width: 80em;
+  display: flex;
+  flex-direction: column;
 }
 .color {
   color: #3070b3;
@@ -25,12 +31,6 @@ a:hover {
   text-decoration: underline;
 }
 
-.page-container {
-  height: 100vh;
-
-  display: flex;
-  flex-direction: column;
-}
 header {
   flex: 0;
   border-bottom: 1px solid gray;
@@ -70,6 +70,7 @@ article {
 .search-input {
   flex: 1;
   font-size: 105%;
+  border: 1px solid #ccc;
 }
 
 .filters-bar {
@@ -100,6 +101,9 @@ button, select, .filter-inputs {
   background-color: #f4f4f4;
   border-color: #e6e6e6;
 }
+button.selected {
+  border: 2px solid #999
+}
 button.filter-button, .filter-inputs {
   /*
   background-color: #e2e4d0;
@@ -108,17 +112,17 @@ button.filter-button, .filter-inputs {
   padding: 0.25rem .75rem;
 }
 
-.button-group {
+.input-group {
   margin-right: 1rem;
 }
-.button-group button, .button-group .filter-inputs {
+.input-group > * {
   border-radius: 0;
 }
-.button-group button:first-child, .button-group .filter-inputs:first-child {
+.input-group > *:first-child {
   border-top-left-radius: .4rem;
   border-bottom-left-radius: .4rem;
 }
-.button-group button:last-child, .button-group .filter-inputs:last-child {
+.input-group > *:last-child {
   border-top-right-radius: .4rem;
   border-bottom-right-radius: .4rem;
 }

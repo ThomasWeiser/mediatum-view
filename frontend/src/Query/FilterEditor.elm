@@ -107,7 +107,7 @@ view : Model -> Html Msg
 view model =
     Html.form
         [ Html.Events.onSubmit Submit
-        , Html.Attributes.class "filter-form button-group"
+        , Html.Attributes.class "filter-form input-group"
         ]
         [ Filter.viewEdit
             model.focusId

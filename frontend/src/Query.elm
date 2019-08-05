@@ -2,6 +2,7 @@ module Query exposing
     ( DetailsQuery
     , FolderQuery
     , FtsQuery
+    , FtsSorting(..)
     , Query(..)
     , emptyQuery
     , filtersToAttributeTests
@@ -48,7 +49,13 @@ type alias FtsQuery =
     { folder : Folder
     , filters : Filters
     , searchTerm : String
+    , sorting : FtsSorting
     }
+
+
+type FtsSorting
+    = ByRank
+    | ByDate
 
 
 type Msg

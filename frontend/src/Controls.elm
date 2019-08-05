@@ -36,6 +36,7 @@ type Return
 
 type alias Model =
     { searchTerm : String
+    , sorting : Query.FtsSorting
     , filterEditors : Dict String FilterEditor.Model
     }
 
@@ -43,6 +44,7 @@ type alias Model =
 type Msg
     = NoOp
     | SetSearchTerm String
+    | SetSorting Query.FtsSorting
     | EditFilter Filter
     | RemoveFilter Filter
     | Submit
@@ -58,6 +60,7 @@ submitExampleQuery =
 init : () -> Model
 init _ =
     { searchTerm = ""
+    , sorting = Query.ByRank
     , filterEditors = Dict.empty
     }
 
@@ -70,6 +73,12 @@ update context msg model =
 
         SetSearchTerm str ->
             ( { model | searchTerm = str }
+            , Cmd.none
+            , NoReturn
+            )
+
+        SetSorting sorting ->
+            ( { model | sorting = sorting }
             , Cmd.none
             , NoReturn
             )
@@ -113,6 +122,7 @@ update context msg model =
                             { folder = Query.getFolder context.query
                             , filters = Query.getFilters context.query
                             , searchTerm = model.searchTerm
+                            , sorting = model.sorting
                             }
             in
             ( model
@@ -133,6 +143,7 @@ update context msg model =
                                 |> Filters.insert (Filter.YearWithin "2000" "2010")
                                 |> Filters.insert (Filter.TitleFts "with")
                         , searchTerm = searchTerm
+                        , sorting = model.sorting
                         }
             in
             ( { model | searchTerm = searchTerm }
@@ -212,7 +223,7 @@ viewSearch : Context -> Model -> Html Msg
 viewSearch context model =
     Html.form
         [ Html.Events.onSubmit Submit ]
-        [ Html.div [ Html.Attributes.class "search-bar" ]
+        [ Html.div [ Html.Attributes.class "search-bar input-group" ]
             [ Html.input
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
@@ -222,8 +233,17 @@ viewSearch context model =
                 ]
                 []
             , Html.button
-                [ Html.Attributes.type_ "submit" ]
-                [ Icons.search ]
+                [ Html.Attributes.type_ "submit"
+                , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByRank ) ]
+                , Html.Events.onClick (SetSorting Query.ByRank)
+                ]
+                [ Icons.search, Html.text " By Rank" ]
+            , Html.button
+                [ Html.Attributes.type_ "submit"
+                , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByDate ) ]
+                , Html.Events.onClick (SetSorting Query.ByDate)
+                ]
+                [ Icons.search, Html.text " By Date" ]
             ]
         ]
 
@@ -235,7 +255,7 @@ viewFilters context model =
             List.map
                 (\{ name, initFilter } ->
                     Html.span
-                        [ Html.Attributes.class "button-group" ]
+                        [ Html.Attributes.class "input-group" ]
                         [ Html.button
                             [ Html.Attributes.type_ "button"
                             , Html.Events.onClick <| EditFilter initFilter
@@ -277,7 +297,7 @@ viewExistingFilters model filters =
 viewExistingFilter : Bool -> Filter -> Html Msg
 viewExistingFilter beingEdited filter =
     Html.span
-        [ Html.Attributes.class "button-group"
+        [ Html.Attributes.class "input-group"
         , Html.Attributes.classList [ ( "being-edited", beingEdited ) ]
         ]
         [ Html.button
