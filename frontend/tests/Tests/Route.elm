@@ -37,24 +37,26 @@ suite =
                             }
                         )
             ]
-        , describe "URL parsing"
-            [ testString "https://example.com/" <|
+        , describe "URL parsing and building"
+            [ testString "https://example.com/abc" <|
+                Url.fromString
+                    >> Maybe.andThen Route.parseUrl
+                    >> nothing
+            , testString "https://example.com/" <|
                 Url.fromString
                     >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal Route.NoId
                         , .parameters >> .ftsTerm >> nothing
+                        , Route.toString >> Expect.equal "/"
                         ]
-            , testString "https://example.com/abc" <|
-                Url.fromString
-                    >> Maybe.andThen Route.parseUrl
-                    >> nothing
             , testString "https://example.com/123" <|
                 Url.fromString
                     >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId 123)
                         , .parameters >> .ftsTerm >> nothing
+                        , Route.toString >> Expect.equal "/123"
                         ]
             , testString "https://example.com/123/" <|
                 Url.fromString
@@ -62,6 +64,7 @@ suite =
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId 123)
                         , .parameters >> .ftsTerm >> nothing
+                        , Route.toString >> Expect.equal "/123"
                         ]
             , testString "https://example.com/?fts-term=foo" <|
                 Url.fromString
@@ -69,6 +72,7 @@ suite =
                     >> justAndThenAll
                         [ .path >> Expect.equal Route.NoId
                         , .parameters >> .ftsTerm >> Expect.equal (Just "foo")
+                        , Route.toString >> Expect.equal "/?fts-term=foo"
                         ]
             , testString "https://example.com/789/?fts%2Dterm=foo%20bar" <|
                 Url.fromString
@@ -76,6 +80,7 @@ suite =
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId 789)
                         , .parameters >> .ftsTerm >> Expect.equal (Just "foo bar")
+                        , Route.toString >> Expect.equal "/789?fts-term=foo%20bar"
                         ]
 
             {- I guess percent-coding should work within the path, but it doesn't
@@ -94,6 +99,7 @@ suite =
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.TwoIds 123 456)
                         , .parameters >> .ftsTerm >> Expect.equal (Just "foo")
+                        , Route.toString >> Expect.equal "/123/456?fts-term=foo"
                         ]
             ]
         ]

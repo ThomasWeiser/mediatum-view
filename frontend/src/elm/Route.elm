@@ -58,23 +58,22 @@ parseUrl url =
 
 
 toString : Route -> String
-toString page =
-    "TODO"
+toString route =
+    Builder.absolute
+        (case route.path of
+            NoId ->
+                []
 
+            OneId id ->
+                [ String.fromInt id ]
 
+            TwoIds id1 id2 ->
+                [ String.fromInt id1, String.fromInt id2 ]
+        )
+        (case route.parameters.ftsTerm of
+            Nothing ->
+                []
 
-{-
-   let
-       pieces =
-           case page of
-               Home ->
-                   []
-
-               NodeId id ->
-                   [ String.fromInt id ]
-
-               Invalid _ ->
-                   []
-   in
-   Builder.absolute pieces []
--}
+            Just value ->
+                [ Builder.string "fts-term" value ]
+        )
