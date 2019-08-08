@@ -40,35 +40,39 @@ suite =
         , describe "URL parsing"
             [ testString "https://example.com/" <|
                 Url.fromString
-                    >> Maybe.map Route.parseUrl
+                    >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal Route.NoId
                         , .parameters >> .ftsTerm >> Expect.equal Nothing
                         ]
+            , testString "https://example.com/abc" <|
+                Url.fromString
+                    >> Maybe.andThen Route.parseUrl
+                    >> nothing
             , testString "https://example.com/123" <|
                 Url.fromString
-                    >> Maybe.map Route.parseUrl
+                    >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId 123)
                         , .parameters >> .ftsTerm >> Expect.equal Nothing
                         ]
             , testString "https://example.com/123/" <|
                 Url.fromString
-                    >> Maybe.map Route.parseUrl
+                    >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId 123)
                         , .parameters >> .ftsTerm >> Expect.equal Nothing
                         ]
             , testString "https://example.com/?fts-term=foo" <|
                 Url.fromString
-                    >> Maybe.map Route.parseUrl
+                    >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal Route.NoId
                         , .parameters >> .ftsTerm >> Expect.equal (Just "foo")
                         ]
             , testString "https://example.com/123/456?fts-term=foo" <|
                 Url.fromString
-                    >> Maybe.map Route.parseUrl
+                    >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.TwoIds 123 456)
                         , .parameters >> .ftsTerm >> Expect.equal (Just "foo")

@@ -15,8 +15,7 @@ type alias Route =
 
 
 type RoutePath
-    = Invalid String
-    | NoId
+    = NoId
     | OneId Int
     | TwoIds Int Int
 
@@ -53,16 +52,9 @@ parserParameters =
         (QueryParser.string "fts-term")
 
 
-parseUrl : Url -> Route
+parseUrl : Url -> Maybe Route
 parseUrl url =
     Parser.parse parser url
-        |> Maybe.Extra.unpack
-            (\_ ->
-                { path = Invalid ("Invalid URL path: " ++ url.path)
-                , parameters = emptyParameters
-                }
-            )
-            identity
 
 
 toString : Route -> String
