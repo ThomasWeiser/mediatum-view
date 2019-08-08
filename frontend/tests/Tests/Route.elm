@@ -2,7 +2,7 @@ module Tests.Route exposing (suite)
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
-import Route exposing (Route, RouteParameters, RoutePath(..))
+import Route exposing (Route, RouteFtsSorting(..), RouteParameters, RoutePath(..))
 import Test exposing (..)
 import TestUtils exposing (..)
 import Url exposing (Url)
@@ -108,6 +108,7 @@ suite =
                 (\route ->
                     route
                         |> Route.toString
+                        -- |> Debug.log "toString"
                         |> String.append "https://example.com"
                         |> Url.fromString
                         |> Maybe.andThen Route.parseUrl
@@ -126,6 +127,8 @@ fuzzerRoute =
             , ( 30, Fuzz.map2 Route.TwoIds (Fuzz.intRange 0 999999) (Fuzz.intRange 0 999999) )
             ]
         )
-        (Fuzz.map RouteParameters
+        (Fuzz.map3 RouteParameters
             (Fuzz.maybe Fuzz.string)
+            (Fuzz.maybe (Fuzz.oneOf [ Fuzz.constant ByRank, Fuzz.constant ByDate ]))
+            (Fuzz.maybe (Fuzz.tuple ( Fuzz.intRange 0 2999, Fuzz.intRange 0 2999 )))
         )
