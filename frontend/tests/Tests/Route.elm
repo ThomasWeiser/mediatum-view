@@ -4,6 +4,7 @@ import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Route
 import Test exposing (..)
+import TestUtils exposing (..)
 import Url exposing (Url)
 
 
@@ -74,43 +75,3 @@ suite =
                         ]
             ]
         ]
-
-
-testString : String -> (String -> Expectation) -> Test
-testString string thunk =
-    test string (\() -> thunk string)
-
-
-justAndThen : (subject -> Expectation) -> Maybe subject -> Expectation
-justAndThen thunk maybeSubject =
-    case maybeSubject of
-        Nothing ->
-            Expect.fail "Nothing\n╷\n│ expect (Just ...)"
-
-        Just value ->
-            thunk value
-
-
-justAndThenAll : List (subject -> Expectation) -> Maybe subject -> Expectation
-justAndThenAll thunks maybeSubject =
-    case maybeSubject of
-        Nothing ->
-            Expect.fail "Nothing\n╷\n│ expect (Just ...)"
-
-        Just value ->
-            Expect.all thunks value
-
-
-just : Maybe subject -> Expectation
-just maybeSubject =
-    case maybeSubject of
-        Nothing ->
-            Expect.fail "Nothing\n╷\n│ expect (Just _)"
-
-        Just value ->
-            Expect.pass
-
-
-nothing : Maybe subject -> Expectation
-nothing maybeSubject =
-    Expect.equal Nothing maybeSubject
