@@ -43,7 +43,7 @@ suite =
                     >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal Route.NoId
-                        , .parameters >> .ftsTerm >> Expect.equal Nothing
+                        , .parameters >> .ftsTerm >> nothing
                         ]
             , testString "https://example.com/abc" <|
                 Url.fromString
@@ -54,14 +54,14 @@ suite =
                     >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId 123)
-                        , .parameters >> .ftsTerm >> Expect.equal Nothing
+                        , .parameters >> .ftsTerm >> nothing
                         ]
             , testString "https://example.com/123/" <|
                 Url.fromString
                     >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId 123)
-                        , .parameters >> .ftsTerm >> Expect.equal Nothing
+                        , .parameters >> .ftsTerm >> nothing
                         ]
             , testString "https://example.com/?fts-term=foo" <|
                 Url.fromString
@@ -70,6 +70,24 @@ suite =
                         [ .path >> Expect.equal Route.NoId
                         , .parameters >> .ftsTerm >> Expect.equal (Just "foo")
                         ]
+            , testString "https://example.com/789/?fts%2Dterm=foo%20bar" <|
+                Url.fromString
+                    >> Maybe.andThen Route.parseUrl
+                    >> justAndThenAll
+                        [ .path >> Expect.equal (Route.OneId 789)
+                        , .parameters >> .ftsTerm >> Expect.equal (Just "foo bar")
+                        ]
+
+            {- I guess percent-coding should work within the path, but it doesn't
+               Bug: https://github.com/elm/url/issues/16
+                  , testString "https://example.com/a78%39" <|
+                      Url.fromString
+                          >> Maybe.andThen Route.parseUrl
+                          >> justAndThenAll
+                              [ .path >> Expect.equal (Route.OneId 789)
+                              , .parameters >> .ftsTerm >> nothing
+                              ]
+            -}
             , testString "https://example.com/123/456?fts-term=foo" <|
                 Url.fromString
                     >> Maybe.andThen Route.parseUrl
