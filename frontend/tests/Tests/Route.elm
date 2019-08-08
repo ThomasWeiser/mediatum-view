@@ -11,83 +11,74 @@ suite : Test
 suite =
     describe "URL segmentation and parsing"
         [ describe "URL segmentation"
-            [ test "https://example.com:443" <|
-                \() ->
-                    "https://example.com:443"
-                        |> Url.fromString
-                        |> Expect.equal
-                            (Just
-                                { protocol = Url.Https
-                                , host = "example.com"
-                                , port_ = Just 443
-                                , path = "/"
-                                , query = Nothing
-                                , fragment = Nothing
-                                }
-                            )
-            , test "http://example.com/core/List?q=top%20hat#map" <|
-                \() ->
-                    "http://example.com/core/List?q=top%20hat#map"
-                        |> Url.fromString
-                        |> Expect.equal
-                            (Just
-                                { protocol = Url.Http
-                                , host = "example.com"
-                                , port_ = Nothing
-                                , path = "/core/List"
-                                , query = Just "q=top%20hat"
-                                , fragment = Just "map"
-                                }
-                            )
+            [ testString "https://example.com:443" <|
+                Url.fromString
+                    >> Expect.equal
+                        (Just
+                            { protocol = Url.Https
+                            , host = "example.com"
+                            , port_ = Just 443
+                            , path = "/"
+                            , query = Nothing
+                            , fragment = Nothing
+                            }
+                        )
+            , testString "http://example.com/core/List?q=top%20hat#map" <|
+                Url.fromString
+                    >> Expect.equal
+                        (Just
+                            { protocol = Url.Http
+                            , host = "example.com"
+                            , port_ = Nothing
+                            , path = "/core/List"
+                            , query = Just "q=top%20hat"
+                            , fragment = Just "map"
+                            }
+                        )
             ]
         , describe "URL parsing"
-            [ test "https://example.com/" <|
-                \() ->
-                    "https://example.com/"
-                        |> Url.fromString
-                        |> Maybe.map Route.parseUrl
-                        |> justAndThenAll
-                            [ .path >> Expect.equal Route.NoId
-                            , .parameters >> .ftsTerm >> Expect.equal Nothing
-                            ]
-            , test "https://example.com/123" <|
-                \() ->
-                    "https://example.com/123"
-                        |> Url.fromString
-                        |> Maybe.map Route.parseUrl
-                        |> justAndThenAll
-                            [ .path >> Expect.equal (Route.OneId 123)
-                            , .parameters >> .ftsTerm >> Expect.equal Nothing
-                            ]
-            , test "https://example.com/123/" <|
-                \() ->
-                    "https://example.com/123/"
-                        |> Url.fromString
-                        |> Maybe.map Route.parseUrl
-                        |> justAndThenAll
-                            [ .path >> Expect.equal (Route.OneId 123)
-                            , .parameters >> .ftsTerm >> Expect.equal Nothing
-                            ]
-            , test "https://example.com/?fts-term=foo" <|
-                \() ->
-                    "https://example.com/?fts-term=foo"
-                        |> Url.fromString
-                        |> Maybe.map Route.parseUrl
-                        |> justAndThenAll
-                            [ .path >> Expect.equal Route.NoId
-                            , .parameters >> .ftsTerm >> Expect.equal (Just "foo")
-                            ]
-            , test "https://example.com/123/456?fts-term=foo" <|
-                \() ->
-                    "https://example.com/123/456?fts-term=foo"
-                        |> Url.fromString
-                        |> Maybe.map Route.parseUrl
-                        |> justAndThenAll
-                            [ .path >> Expect.equal (Route.TwoIds 123 456)
-                            , .parameters >> .ftsTerm >> Expect.equal (Just "foo")
-                            ]
+            [ testString "https://example.com/" <|
+                Url.fromString
+                    >> Maybe.map Route.parseUrl
+                    >> justAndThenAll
+                        [ .path >> Expect.equal Route.NoId
+                        , .parameters >> .ftsTerm >> Expect.equal Nothing
+                        ]
+            , testString "https://example.com/123" <|
+                Url.fromString
+                    >> Maybe.map Route.parseUrl
+                    >> justAndThenAll
+                        [ .path >> Expect.equal (Route.OneId 123)
+                        , .parameters >> .ftsTerm >> Expect.equal Nothing
+                        ]
+            , testString "https://example.com/123/" <|
+                Url.fromString
+                    >> Maybe.map Route.parseUrl
+                    >> justAndThenAll
+                        [ .path >> Expect.equal (Route.OneId 123)
+                        , .parameters >> .ftsTerm >> Expect.equal Nothing
+                        ]
+            , testString "https://example.com/?fts-term=foo" <|
+                Url.fromString
+                    >> Maybe.map Route.parseUrl
+                    >> justAndThenAll
+                        [ .path >> Expect.equal Route.NoId
+                        , .parameters >> .ftsTerm >> Expect.equal (Just "foo")
+                        ]
+            , testString "https://example.com/123/456?fts-term=foo" <|
+                Url.fromString
+                    >> Maybe.map Route.parseUrl
+                    >> justAndThenAll
+                        [ .path >> Expect.equal (Route.TwoIds 123 456)
+                        , .parameters >> .ftsTerm >> Expect.equal (Just "foo")
+                        ]
             ]
         ]
+
+
+testString : String -> (String -> Expectation) -> Test
+testString string thunk =
+    test string (\() -> thunk string)
 
 
 justAndThen : (subject -> Expectation) -> Maybe subject -> Expectation
