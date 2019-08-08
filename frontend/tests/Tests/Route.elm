@@ -2,7 +2,7 @@ module Tests.Route exposing (suite)
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
-import Route
+import Route exposing (Route, RouteParameters, RoutePath(..))
 import Test exposing (..)
 import TestUtils exposing (..)
 import Url exposing (Url)
@@ -102,4 +102,30 @@ suite =
                         , Route.toString >> Expect.equal "/123/456?fts-term=foo"
                         ]
             ]
+        , describe "fuzzing routes"
+            [ fuzz fuzzerRoute
+                "building and parsing again results in same route"
+                (\route ->
+                    route
+                        |> Route.toString
+                        |> String.append "https://example.com"
+                        |> Url.fromString
+                        |> Maybe.andThen Route.parseUrl
+                        |> justAndThen (Expect.equal route)
+                )
+            ]
         ]
+
+
+fuzzerRoute : Fuzzer Route
+fuzzerRoute =
+    Fuzz.map2 Route
+        (Fuzz.frequency
+            [ ( 10, Fuzz.constant Route.NoId )
+            , ( 20, Fuzz.map Route.OneId (Fuzz.intRange 0 999999) )
+            , ( 30, Fuzz.map2 Route.TwoIds (Fuzz.intRange 0 999999) (Fuzz.intRange 0 999999) )
+            ]
+        )
+        (Fuzz.map RouteParameters
+            (Fuzz.maybe Fuzz.string)
+        )
