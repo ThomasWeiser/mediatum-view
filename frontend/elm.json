@@ -22,6 +22,7 @@
             "elm-community/dict-extra": "2.4.0",
             "elm-community/list-extra": "8.2.2",
             "elm-community/maybe-extra": "5.0.0",
+            "elm-community/string-extra": "4.0.1",
             "mgold/elm-nonempty-list": "4.0.2"
         },
         "indirect": {

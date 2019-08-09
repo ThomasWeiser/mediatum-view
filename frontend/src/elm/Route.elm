@@ -2,8 +2,10 @@ module Route exposing (Route, RouteFtsSorting(..), RouteParameters, RoutePath(..
 
 import Browser.Navigation
 import Dict
+import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
+import String.Extra
 import Url exposing (Url)
 import Url.Builder as Builder
 import Url.Parser as Parser exposing ((</>), (<?>), Parser)
@@ -26,6 +28,7 @@ type alias RouteParameters =
     { ftsTerm : Maybe String
     , ftsSorting : Maybe RouteFtsSorting
     , filterByYear : Maybe ( Int, Int )
+    , filterByTitle : Maybe (Nonempty String)
     }
 
 
@@ -39,6 +42,7 @@ emptyParameters =
     { ftsTerm = Nothing
     , ftsSorting = Nothing
     , filterByYear = Nothing
+    , filterByTitle = Nothing
     }
 
 
@@ -54,8 +58,11 @@ parser =
 
 parserParameters : QueryParser.Parser RouteParameters
 parserParameters =
-    QueryParser.map3 RouteParameters
-        (QueryParser.string "fts-term")
+    QueryParser.map4 RouteParameters
+        (QueryParser.string "fts-term"
+            |> QueryParser.map
+                (Maybe.andThen cleanSearchTerm)
+        )
         (QueryParser.enum "fts-sorting"
             (Dict.fromList [ ( "by-rank", ByRank ), ( "by-date", ByDate ) ])
         )
@@ -66,6 +73,12 @@ parserParameters =
                         >> Result.toMaybe
                     )
                 )
+        )
+        (QueryParser.custom "filter-by-title"
+            (List.map cleanSearchTerm
+                >> Maybe.Extra.values
+                >> List.Nonempty.fromList
+            )
         )
 
 
@@ -119,4 +132,19 @@ toString route =
                 )
                 route.parameters.filterByYear
             ]
+            ++ Maybe.Extra.unwrap
+                []
+                (\byTitleList ->
+                    byTitleList
+                        |> List.Nonempty.toList
+                        |> List.map (Builder.string "filter-by-title")
+                )
+                route.parameters.filterByTitle
         )
+
+
+cleanSearchTerm : String -> Maybe String
+cleanSearchTerm =
+    -- Trim the whitespace of both sides of the string
+    -- and compress repeated whitespace internally to a single whitespace char.
+    String.Extra.clean >> String.Extra.nonBlank
