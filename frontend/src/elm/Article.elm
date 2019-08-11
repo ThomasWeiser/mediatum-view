@@ -13,12 +13,11 @@ import Article.Details
 import Article.Directory
 import Article.Empty
 import Article.Fts
-import Document exposing (DocumentId)
-import Folder exposing (Folder, FolderCounts)
+import Data.Types exposing (DocumentId, Filter, FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Query exposing (Query)
-import Query.Filter exposing (Filter)
+import Query.Filter
 import Query.Filters
 import Tree
 import Utils

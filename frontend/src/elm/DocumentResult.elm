@@ -1,10 +1,10 @@
 module DocumentResult exposing
-    ( DocumentResult
-    , init
+    ( init
     , view
     )
 
-import Document exposing (Document, DocumentId)
+import Data.Types exposing (Document, DocumentId, DocumentResult)
+import Document
 import Html exposing (Html)
 
 

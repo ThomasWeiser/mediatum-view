@@ -1,6 +1,5 @@
 module Query.Filter exposing
-    ( Filter(..)
-    , FilterType
+    ( FilterType
     , filterTypes
     , handle
     , isEmpty
@@ -10,16 +9,12 @@ module Query.Filter exposing
     , viewEdit
     )
 
+import Data.Types exposing (Filter(..))
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Query.Attribute
 import Utils
-
-
-type Filter
-    = YearWithin String String
-    | TitleFts String
 
 
 type alias FilterType =

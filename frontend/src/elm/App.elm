@@ -13,8 +13,8 @@ import Api.Queries
 import Article
 import Cmd.Extra
 import Controls
+import Data.Types exposing (FolderCounts)
 import Dict
-import Folder exposing (FolderCounts)
 import GenericNode exposing (GenericNode)
 import Html exposing (Html)
 import Html.Attributes

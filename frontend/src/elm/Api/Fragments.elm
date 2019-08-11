@@ -29,10 +29,11 @@ module Api.Fragments exposing
 
 -}
 
+import Data.Types exposing (..)
 import Dict
-import Document exposing (Document)
-import DocumentResult exposing (DocumentResult)
-import Folder exposing (Folder, FolderId)
+import Document
+import DocumentResult
+import Folder
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
@@ -146,7 +147,7 @@ _GraphQL notation:_
     }
 
 -}
-folderAndSubfolderCounts : SelectionSet Folder.FolderCounts Mediatum.Object.Docset
+folderAndSubfolderCounts : SelectionSet FolderCounts Mediatum.Object.Docset
 folderAndSubfolderCounts =
     SelectionSet.succeed
         (\pair listOfPairs -> Dict.fromList (pair :: listOfPairs))
@@ -310,7 +311,7 @@ documentByMask maskName =
 
 {-| Decode a JSON string returned from a query that denotes the mata-values of a document.
 -}
-mapJsonToAttributes : Maybe Mediatum.Scalar.Json -> List Document.Attribute
+mapJsonToAttributes : Maybe Mediatum.Scalar.Json -> List Attribute
 mapJsonToAttributes maybeJson =
     case maybeJson of
         Nothing ->
@@ -321,12 +322,12 @@ mapJsonToAttributes maybeJson =
                 Json.Decode.decodeString decoderAttributeList str
 
 
-decoderAttributeList : Decoder (List Document.Attribute)
+decoderAttributeList : Decoder (List Attribute)
 decoderAttributeList =
     Json.Decode.oneOf
         [ Json.Decode.null []
         , Json.Decode.list <|
-            Json.Decode.map4 Document.Attribute
+            Json.Decode.map4 Attribute
                 (Json.Decode.field "field" Json.Decode.string)
                 (Json.Decode.field "name" Json.Decode.string)
                 (Json.Decode.field "width" Json.Decode.int)

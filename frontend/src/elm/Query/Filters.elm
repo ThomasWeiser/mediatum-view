@@ -1,17 +1,13 @@
 module Query.Filters exposing
-    ( Filters
-    , insert
+    ( insert
     , none
     , remove
     , toList
     )
 
+import Data.Types exposing (Filter, Filters)
 import Dict exposing (Dict)
-import Query.Filter as Filter exposing (Filter)
-
-
-type alias Filters =
-    Dict String Filter
+import Query.Filter as Filter
 
 
 none : Filters

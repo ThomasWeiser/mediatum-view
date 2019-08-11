@@ -1,7 +1,6 @@
 module GenericNode exposing (GenericNode(..))
 
-import Document exposing (Document)
-import Folder exposing (Folder)
+import Data.Types exposing (Document, Folder)
 import List.Nonempty exposing (Nonempty)
 
 

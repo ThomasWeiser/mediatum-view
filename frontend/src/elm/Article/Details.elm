@@ -10,7 +10,8 @@ module Article.Details exposing
 import Api
 import Api.Mutations
 import Api.Queries
-import Document exposing (Attribute, Document, DocumentId)
+import Data.Types exposing (Attribute, Document, DocumentId)
+import Document
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes

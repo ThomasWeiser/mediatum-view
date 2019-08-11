@@ -1,35 +1,18 @@
 module Document exposing
-    ( Attribute
-    , Document
-    , DocumentId
-    , attributeValue
+    ( attributeValue
     , idToInt
     , idToString
     , init
     , view
     )
 
+import Data.Types exposing (Attribute, Document, DocumentId)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import List.Extra
 import Regex
 import Route
-
-
-
-{- Actually, the type should be defined like this:
-
-       type DocumentId = DocumentId Int
-
-   But in Elm 0.19 union types are not comparable and therefore not usable as keys of a dict.
-   Only ints, floats, chars, strings, lists, and tuples are comparable.
-   So, as a workaround we use a tuple with some contrived structure to make it somewhat unique.
--}
-
-
-type alias DocumentId =
-    ( Float, Int )
 
 
 idFromInt : Int -> DocumentId
@@ -45,22 +28,6 @@ idToInt ( _, i ) =
 idToString : DocumentId -> String
 idToString ( _, i ) =
     String.fromInt i
-
-
-type alias Document =
-    { id : DocumentId
-    , name : String
-    , metadatatypeName : String
-    , attributes : List Attribute
-    }
-
-
-type alias Attribute =
-    { field : String
-    , name : String
-    , width : Int
-    , value : Maybe String
-    }
 
 
 init : Int -> String -> String -> List Attribute -> Document

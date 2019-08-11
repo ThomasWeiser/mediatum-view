@@ -11,9 +11,10 @@ module Tree exposing
 
 import Api
 import Api.Queries
+import Data.Types exposing (Folder, FolderCounts, FolderId)
 import Dict exposing (Dict)
 import Dict.Extra
-import Folder exposing (Folder, FolderCounts, FolderId)
+import Folder
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events

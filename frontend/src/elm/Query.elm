@@ -16,13 +16,14 @@ module Query exposing
     , view
     )
 
-import Document exposing (DocumentId)
-import Folder exposing (Folder, FolderCounts)
+import Data.Types exposing (DocumentId, Filter, Filters, Folder, FolderCounts)
+import Document
+import Folder
 import Html exposing (Html)
 import List.Extra
 import Query.Attribute
-import Query.Filter as Filter exposing (Filter)
-import Query.Filters as Filters exposing (Filters)
+import Query.Filter as Filter
+import Query.Filters as Filters
 import Route exposing (Route)
 
 

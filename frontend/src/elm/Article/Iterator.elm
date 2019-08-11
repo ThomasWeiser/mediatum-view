@@ -9,8 +9,7 @@ module Article.Iterator exposing
     )
 
 import Article.Details as Details
-import Document exposing (DocumentId)
-import Folder exposing (Folder)
+import Data.Types exposing (DocumentId, Folder)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events

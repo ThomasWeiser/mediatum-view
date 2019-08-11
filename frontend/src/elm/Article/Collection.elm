@@ -7,7 +7,8 @@ module Article.Collection exposing
     , view
     )
 
-import Folder exposing (Folder)
+import Data.Types exposing (Folder)
+import Folder
 import Html exposing (Html)
 import Query
 

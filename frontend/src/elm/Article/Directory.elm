@@ -10,9 +10,8 @@ module Article.Directory exposing
 import Api
 import Api.Queries
 import Article.Iterator as Iterator
-import Document exposing (Document, DocumentId)
-import DocumentResult exposing (DocumentResult)
-import Folder exposing (Folder, FolderCounts)
+import Data.Types exposing (DocumentId, DocumentResult, FolderCounts)
+import DocumentResult
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes

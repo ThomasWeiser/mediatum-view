@@ -1,8 +1,5 @@
 module Folder exposing
-    ( Folder
-    , FolderCounts
-    , FolderId
-    , dummy
+    ( dummy
     , hasSubfolder
     , idFromInt
     , idToInt
@@ -11,6 +8,7 @@ module Folder exposing
     , view
     )
 
+import Data.Types exposing (Folder, FolderCounts, FolderId)
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes
@@ -30,23 +28,6 @@ import Icons
    Only ints, floats, chars, strings, lists, and tuples are comparable.
    So, as a workaround we use a tuple with some contrived structure to make it somewhat unique.
 -}
-
-
-type alias FolderId =
-    ( Int, Float )
-
-
-type alias Folder =
-    { id : FolderId
-    , parent : Maybe FolderId
-    , name : String
-    , isCollection : Bool
-    , numSubfolder : Int
-    }
-
-
-type alias FolderCounts =
-    Dict FolderId Int
 
 
 dummy : Folder

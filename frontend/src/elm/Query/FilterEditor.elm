@@ -8,10 +8,11 @@ module Query.FilterEditor exposing
     )
 
 import Browser.Dom
+import Data.Types exposing (Filter(..), Filters)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Query.Filter as Filter exposing (Filter)
+import Query.Filter as Filter
 import Task
 import Time
 import Utils
@@ -89,8 +90,8 @@ update msg model =
                 | focusId = focusId
                 , filter =
                     case model.filter of
-                        Filter.YearWithin "" "" ->
-                            Filter.YearWithin
+                        YearWithin "" "" ->
+                            YearWithin
                                 (String.fromInt (year - 9))
                                 (String.fromInt year)
 

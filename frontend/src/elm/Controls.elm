@@ -9,6 +9,7 @@ module Controls exposing
     , view
     )
 
+import Data.Types exposing (Filter(..), Filters)
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes
@@ -17,9 +18,9 @@ import Icons
 import List.Extra
 import Maybe.Extra
 import Query exposing (Query)
-import Query.Filter as Filter exposing (Filter)
+import Query.Filter as Filter
 import Query.FilterEditor as FilterEditor
-import Query.Filters as Filters exposing (Filters)
+import Query.Filters as Filters
 import Tree
 import Utils
 
@@ -140,8 +141,8 @@ update context msg model =
                         { folder = Query.getFolder context.query
                         , filters =
                             Filters.none
-                                |> Filters.insert (Filter.YearWithin "2000" "2010")
-                                |> Filters.insert (Filter.TitleFts "with")
+                                |> Filters.insert (YearWithin "2000" "2010")
+                                |> Filters.insert (TitleFts "with")
                         , searchTerm = searchTerm
                         , sorting = model.sorting
                         }
