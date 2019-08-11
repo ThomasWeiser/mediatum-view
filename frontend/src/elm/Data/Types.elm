@@ -1,4 +1,4 @@
-module Data.Types exposing (Attribute, Document, DocumentId, DocumentResult, DocumentsPage, Filter(..), Filters, Folder, FolderCounts, FolderId, FolderType(..), FtsSorting(..), NodeType(..), SearchMethod(..), Selection, Window, WindowPage)
+module Data.Types exposing (Document, DocumentAttribute, DocumentId, DocumentResult, DocumentsPage, Filter(..), Filters, Folder, FolderCounts, FolderId, FolderType(..), FtsSorting(..), NodeType(..), SearchMethod(..), Selection, Window, WindowPage)
 
 import Dict exposing (Dict)
 
@@ -32,14 +32,14 @@ type alias Folder =
 
 
 type NodeType
-    = IsFolder FolderType
-    | IsDocument
-    | IsNeither
+    = NodeIsFolder FolderType
+    | NodeIsDocument
+    | NodeIsNeither
 
 
 type FolderType
-    = IsCollection
-    | IsDirectory
+    = FolderIsCollection
+    | FolderIsDirectory
 
 
 type alias Selection =
@@ -55,8 +55,8 @@ type SearchMethod
 
 
 type FtsSorting
-    = ByRank
-    | ByDate
+    = FtsByRank
+    | FtsByDate
 
 
 type alias Filters =
@@ -64,8 +64,8 @@ type alias Filters =
 
 
 type Filter
-    = YearWithin String String
-    | TitleFts String
+    = FilterYearWithin String String
+    | FilterTitleFts String
 
 
 type alias FolderCounts =
@@ -100,11 +100,11 @@ type alias Document =
     { id : DocumentId
     , name : String
     , metadatatypeName : String
-    , attributes : List Attribute
+    , attributes : List DocumentAttribute
     }
 
 
-type alias Attribute =
+type alias DocumentAttribute =
     { field : String
     , name : String
     , width : Int

@@ -311,7 +311,7 @@ documentByMask maskName =
 
 {-| Decode a JSON string returned from a query that denotes the mata-values of a document.
 -}
-mapJsonToAttributes : Maybe Mediatum.Scalar.Json -> List Attribute
+mapJsonToAttributes : Maybe Mediatum.Scalar.Json -> List DocumentAttribute
 mapJsonToAttributes maybeJson =
     case maybeJson of
         Nothing ->
@@ -322,12 +322,12 @@ mapJsonToAttributes maybeJson =
                 Json.Decode.decodeString decoderAttributeList str
 
 
-decoderAttributeList : Decoder (List Attribute)
+decoderAttributeList : Decoder (List DocumentAttribute)
 decoderAttributeList =
     Json.Decode.oneOf
         [ Json.Decode.null []
         , Json.Decode.list <|
-            Json.Decode.map4 Attribute
+            Json.Decode.map4 DocumentAttribute
                 (Json.Decode.field "field" Json.Decode.string)
                 (Json.Decode.field "name" Json.Decode.string)
                 (Json.Decode.field "width" Json.Decode.int)

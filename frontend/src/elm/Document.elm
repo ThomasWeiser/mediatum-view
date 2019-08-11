@@ -6,7 +6,7 @@ module Document exposing
     , view
     )
 
-import Data.Types exposing (Attribute, Document, DocumentId)
+import Data.Types exposing (Document, DocumentAttribute, DocumentId)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -30,7 +30,7 @@ idToString ( _, i ) =
     String.fromInt i
 
 
-init : Int -> String -> String -> List Attribute -> Document
+init : Int -> String -> String -> List DocumentAttribute -> Document
 init idAsInt metadatatypeName name attributes =
     { id = idFromInt idAsInt
     , name = name
@@ -84,7 +84,7 @@ maxAttributeStringLength =
     80
 
 
-viewAttribute : Attribute -> Html msg
+viewAttribute : DocumentAttribute -> Html msg
 viewAttribute attribute =
     let
         isField regexString =

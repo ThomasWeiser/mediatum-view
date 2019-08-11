@@ -10,7 +10,7 @@ module Article.Details exposing
 import Api
 import Api.Mutations
 import Api.Queries
-import Data.Types exposing (Attribute, Document, DocumentId)
+import Data.Types exposing (Document, DocumentAttribute, DocumentId)
 import Document
 import Graphql.Extra
 import Html exposing (Html)
@@ -199,7 +199,7 @@ viewDocument model document =
         ]
 
 
-viewAttribute : Attribute -> Html msg
+viewAttribute : DocumentAttribute -> Html msg
 viewAttribute attribute =
     case attribute.value of
         Just value ->

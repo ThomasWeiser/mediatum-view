@@ -90,8 +90,8 @@ update msg model =
                 | focusId = focusId
                 , filter =
                     case model.filter of
-                        YearWithin "" "" ->
-                            YearWithin
+                        FilterYearWithin "" "" ->
+                            FilterYearWithin
                                 (String.fromInt (year - 9))
                                 (String.fromInt year)
 

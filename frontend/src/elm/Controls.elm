@@ -141,8 +141,8 @@ update context msg model =
                         { folder = Query.getFolder context.query
                         , filters =
                             Filters.none
-                                |> Filters.insert (YearWithin "2000" "2010")
-                                |> Filters.insert (TitleFts "with")
+                                |> Filters.insert (FilterYearWithin "2000" "2010")
+                                |> Filters.insert (FilterTitleFts "with")
                         , searchTerm = searchTerm
                         , sorting = model.sorting
                         }
