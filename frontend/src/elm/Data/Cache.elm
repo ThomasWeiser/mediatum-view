@@ -1,4 +1,13 @@
-module Data.Cache exposing (ApiData, Model, Need(..), Needs)
+module Data.Cache exposing
+    ( ApiData
+    , Model
+    , Msg(..)
+    , Need(..)
+    , Needs
+    , initialModel
+    , requestNeeds
+    , update
+    )
 
 import Api
 import Api.Queries
@@ -34,6 +43,18 @@ type alias Needs =
 type Need
     = NeedRootFolderIds
     | NeedSubfolders (List FolderId)
+
+
+initialModel : Model
+initialModel =
+    { rootFolderIds = NotAsked
+    , folders = Dict.empty
+    , subfolderIds = Dict.empty
+    , nodeTypes = Dict.empty
+    , folderCounts = Dict.empty
+    , docListPages = Dict.empty
+    , documents = Dict.empty
+    }
 
 
 

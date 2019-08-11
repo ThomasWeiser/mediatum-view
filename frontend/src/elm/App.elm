@@ -13,6 +13,7 @@ import Api.Queries
 import Article
 import Cmd.Extra
 import Controls
+import Data.Cache as Cache
 import Data.Types exposing (FolderCounts)
 import Dict
 import GenericNode exposing (GenericNode)
@@ -36,6 +37,7 @@ type Return
 
 type alias Model =
     { route : Route
+    , cache : Cache.Model
     , query : Query
     , tree : Tree.Model
     , controls : Controls.Model
@@ -48,6 +50,7 @@ type Msg
     = NoOp
     | QueryGenericNode Int
     | GenericNodeQueryResponse (Api.Response GenericNode)
+    | CacheMsg Cache.Msg
     | TreeMsg Tree.Msg
     | ControlsMsg Controls.Msg
     | ArticleMsg Article.Msg
@@ -67,6 +70,7 @@ init route =
 
         model1 =
             { route = Route.Invalid "to be initialized"
+            , cache = Cache.initialModel
             , query = Query.emptyQuery
             , tree = treeModel
             , controls = controlsModel
@@ -112,11 +116,25 @@ changeRouteTo route model =
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     let
+        needs : Cache.Needs
+        needs =
+            [ Cache.NeedRootFolderIds ]
+
+        ( cacheModel, cacheCmd ) =
+            Cache.requestNeeds needs model.cache
+
         ( model1, cmd1 ) =
-            updateWithoutReturn msg model
+            ( { model | cache = cacheModel }
+            , Cmd.map CacheMsg cacheCmd
+            )
+
+        ( model2, cmd2 ) =
+            updateWithoutReturn
+                msg
+                model1
     in
-    ( model1
-    , cmd1
+    ( model2
+    , Cmd.batch [ cmd1, cmd2 ]
     , if model1.route /= model.route then
         ReflectRoute model1.route
 
@@ -181,6 +199,15 @@ updateWithoutReturn msg model =
                 GenericNode.IsNeither ->
                     -- TODO
                     ( model, Cmd.none )
+
+        CacheMsg subMsg ->
+            let
+                ( subModel, subCmd ) =
+                    Cache.update subMsg model.cache
+            in
+            ( { model | cache = subModel }
+            , Cmd.map CacheMsg subCmd
+            )
 
         TreeMsg subMsg ->
             let
