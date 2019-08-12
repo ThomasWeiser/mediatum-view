@@ -25,6 +25,7 @@ import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 import Query exposing (Query)
 import Query.Filters
+import RemoteData
 import Route exposing (Route)
 import Tree
 import Utils
@@ -49,6 +50,7 @@ type alias Model =
 type Msg
     = NoOp
     | QueryGenericNode Int
+    | GotRootFolders
     | GenericNodeQueryResponse (Api.Response GenericNode)
     | CacheMsg Cache.Msg
     | TreeMsg Tree.Msg
@@ -201,13 +203,68 @@ updateWithoutReturn msg model =
                     -- TODO
                     ( model, Cmd.none )
 
+        GotRootFolders ->
+            let
+                firstRootFolderId =
+                    model.cache.rootFolderIds
+                        |> RemoteData.withDefault []
+                        |> List.head
+
+                model1 =
+                    case firstRootFolderId of
+                        Nothing ->
+                            model
+
+                        Just id ->
+                            { model | tree = Tree.showFolder id model.tree }
+            in
+            case
+                ( model1.route
+                , firstRootFolderId
+                    |> Maybe.andThen
+                        (Cache.dictGetApiData model1.cache.folders
+                            >> RemoteData.toMaybe
+                        )
+                )
+            of
+                ( Route.Home, Just rootFolderToBeQueried ) ->
+                    startQuery
+                        (Query.setFolder
+                            rootFolderToBeQueried
+                            model1.query
+                        )
+                        model1
+
+                ( _, maybeRootFolder ) ->
+                    ( { model1
+                        | query =
+                            Query.stopgapFolder
+                                maybeRootFolder
+                                model1.query
+                      }
+                    , Cmd.none
+                    )
+
         CacheMsg subMsg ->
             let
-                ( subModel, subCmd ) =
+                ( subModel, subCmd, subReturn ) =
                     Cache.update subMsg model.cache
+
+                ( model1, cmd1 ) =
+                    ( { model | cache = subModel }
+                    , Cmd.map CacheMsg subCmd
+                    )
+
+                ( model2, cmd2 ) =
+                    case subReturn of
+                        Cache.NoReturn ->
+                            ( model1, cmd1 )
+
+                        Cache.GotRootFolders ->
+                            updateWithoutReturn GotRootFolders model1
             in
-            ( { model | cache = subModel }
-            , Cmd.map CacheMsg subCmd
+            ( model2
+            , Cmd.batch [ cmd1, cmd2 ]
             )
 
         TreeMsg subMsg ->
@@ -222,27 +279,6 @@ updateWithoutReturn msg model =
                     { model | tree = subModel }
             in
             case subReturn of
-                {-
-                   Tree.GotRootFolders rootFolders ->
-                       case ( model.route, List.head rootFolders ) of
-                           ( Route.Home, Just rootFolderToBeQueried ) ->
-                               startQuery
-                                   (Query.setFolder
-                                       rootFolderToBeQueried
-                                       model1.query
-                                   )
-                                   model1
-
-                           _ ->
-                               ( { model1
-                                   | query =
-                                       Query.stopgapFolder
-                                           (List.head rootFolders)
-                                           model1.query
-                                 }
-                               , Cmd.none
-                               )
-                -}
                 Tree.UserSelection selectedFolder ->
                     startQuery
                         (Query.setFolder

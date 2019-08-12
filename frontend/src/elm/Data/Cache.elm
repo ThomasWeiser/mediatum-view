@@ -3,6 +3,7 @@ module Data.Cache exposing
     , Model
     , Msg(..)
     , Needs(..)
+    , Return(..)
     , dictGetApiData
     , initialModel
     , requestNeeds
@@ -21,6 +22,11 @@ import RemoteData exposing (RemoteData(..))
 
 type alias ApiData a =
     RemoteData Api.Error a
+
+
+type Return
+    = NoReturn
+    | GotRootFolders
 
 
 type alias Model =
@@ -123,7 +129,7 @@ requestNeeds needs model =
                 )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     case msg of
         ApiResponseToplevelFolder (Ok listOfRootFoldersWithSubfolders) ->
@@ -141,6 +147,7 @@ update msg model =
                 |> insertAsFolders allNewFolders
                 |> insertAsSubfolderIds allNewFolders
             , Cmd.none
+            , GotRootFolders
             )
 
         ApiResponseToplevelFolder (Err error) ->
@@ -148,6 +155,7 @@ update msg model =
                 | rootFolderIds = Failure error
               }
             , Cmd.none
+            , NoReturn
             )
 
         ApiResponseSubfolder _ (Ok listOfSubfolders) ->
@@ -155,6 +163,7 @@ update msg model =
                 |> insertAsFolders listOfSubfolders
                 |> insertAsSubfolderIds listOfSubfolders
             , Cmd.none
+            , NoReturn
             )
 
         ApiResponseSubfolder parentIds (Err error) ->
@@ -168,6 +177,7 @@ update msg model =
                         parentIds
               }
             , Cmd.none
+            , NoReturn
             )
 
 
