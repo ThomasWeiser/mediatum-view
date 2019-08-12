@@ -59,9 +59,6 @@ type Msg
 init : Route -> ( Model, Cmd Msg )
 init route =
     let
-        ( articleModel, articleCmd ) =
-            Article.initEmpty ()
-
         model1 =
             { route = Route.Invalid "to be initialized"
             , cache = Cache.initialModel
@@ -69,17 +66,24 @@ init route =
             , tree = Tree.initialModel
             , controls = Controls.init ()
             , folderCounts = Dict.empty
-            , article = articleModel
+            , article = Article.initialModelEmpty
             }
 
+        ( cacheModel, cacheCmd ) =
+            Cache.requestNeeds
+                (needs model1)
+                model1.cache
+
         ( model2, cmd2 ) =
+            ( { model1 | cache = cacheModel }
+            , Cmd.map CacheMsg cacheCmd
+            )
+
+        ( model3, cmd3 ) =
             changeRouteTo route model1
     in
-    ( model2
-    , Cmd.batch
-        [ Cmd.map ArticleMsg articleCmd
-        , cmd2
-        ]
+    ( model3
+    , Cmd.batch [ cmd2, cmd3 ]
     )
 
 
@@ -106,16 +110,21 @@ changeRouteTo route model =
             ( model1, Cmd.none )
 
 
+needs : Model -> Cache.Needs
+needs model =
+    ([ Cache.NeedRootFolderIds ]
+        ++ Tree.needs model.tree
+    )
+        |> Debug.log "App needs"
+
+
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     let
-        needs : Cache.Needs
-        needs =
-            [ Cache.NeedRootFolderIds ]
-                ++ Tree.needs model.tree
-
         ( cacheModel, cacheCmd ) =
-            Cache.requestNeeds needs model.cache
+            Cache.requestNeeds
+                (needs model)
+                model.cache
 
         ( model1, cmd1 ) =
             ( { model | cache = cacheModel }

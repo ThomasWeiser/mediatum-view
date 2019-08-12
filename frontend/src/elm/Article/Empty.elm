@@ -1,7 +1,7 @@
 module Article.Empty exposing
     ( Model
     , Msg
-    , init
+    , initialModel
     , update
     , view
     )
@@ -17,9 +17,9 @@ type Msg
     = NoOp
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( (), Cmd.none )
+initialModel : Model
+initialModel =
+    ()
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

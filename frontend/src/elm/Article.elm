@@ -2,8 +2,8 @@ module Article exposing
     ( Model
     , Msg
     , Return(..)
-    , initEmpty
     , initWithQuery
+    , initialModelEmpty
     , update
     , view
     )
@@ -57,15 +57,9 @@ type Msg
     | DetailsMsg Article.Details.Msg
 
 
-initEmpty : () -> ( Model, Cmd Msg )
-initEmpty _ =
-    let
-        ( subModel, subCmd ) =
-            Article.Empty.init ()
-    in
-    ( { content = EmptyModel subModel }
-    , Cmd.map EmptyMsg subCmd
-    )
+initialModelEmpty : Model
+initialModelEmpty =
+    { content = EmptyModel Article.Empty.initialModel }
 
 
 initWithQuery : Query -> ( Model, Cmd Msg )
