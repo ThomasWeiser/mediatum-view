@@ -2,8 +2,7 @@ module Data.Cache exposing
     ( ApiData
     , Model
     , Msg(..)
-    , Need(..)
-    , Needs
+    , Needs(..)
     , dictGetApiData
     , initialModel
     , requestNeeds
@@ -35,15 +34,10 @@ type alias Model =
     }
 
 
-type alias Needs =
-    -- Poss. use a different aggregation abstraction,
-    -- like a recursive Need type or a Set
-    List Need
-
-
-type Need
+type Needs
     = NeedRootFolderIds
     | NeedSubfolders (List FolderId)
+    | NeedListOfNeeds (List Needs)
 
 
 initialModel : Model
@@ -78,16 +72,14 @@ type Msg
 
 requestNeeds : Needs -> Model -> ( Model, Cmd Msg )
 requestNeeds needs model =
-    List.Extra.mapAccuml
-        (Basics.Extra.flip requestNeed)
-        model
-        needs
-        |> Tuple.mapSecond Cmd.batch
+    case needs of
+        NeedListOfNeeds listOfNeeds ->
+            listOfNeeds
+                |> List.Extra.mapAccuml
+                    (Basics.Extra.flip requestNeeds)
+                    model
+                |> Tuple.mapSecond Cmd.batch
 
-
-requestNeed : Need -> Model -> ( Model, Cmd Msg )
-requestNeed need model =
-    case need of
         NeedRootFolderIds ->
             case model.rootFolderIds of
                 NotAsked ->

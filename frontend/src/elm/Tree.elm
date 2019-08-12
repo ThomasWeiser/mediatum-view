@@ -56,9 +56,8 @@ initialModel =
 
 needs : Context -> Model -> Cache.Needs
 needs context model =
-    [ Cache.NeedSubfolders
+    Cache.NeedSubfolders
         (getPathAsFarAsCached context.cache model.selection)
-    ]
 
 
 update : Context -> Msg -> Model -> ( Model, Return )

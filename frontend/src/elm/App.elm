@@ -112,9 +112,10 @@ changeRouteTo route model =
 
 needs : Model -> Cache.Needs
 needs model =
-    ([ Cache.NeedRootFolderIds ]
-        ++ Tree.needs { cache = model.cache } model.tree
-    )
+    Cache.NeedListOfNeeds
+        [ Cache.NeedRootFolderIds
+        , Tree.needs { cache = model.cache } model.tree
+        ]
         |> Debug.log "App needs"
 
 
