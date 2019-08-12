@@ -4,6 +4,7 @@ module Data.Cache exposing
     , Msg(..)
     , Need(..)
     , Needs
+    , dictGetApiData
     , initialModel
     , requestNeeds
     , update
@@ -62,6 +63,12 @@ initialModel =
 -- TODO: | NeedFolderCounts Selection
 -- TODO: | NeedDocListPage Selection Window
 -- TODO: | NeedDocument DocumentId
+
+
+dictGetApiData : Dict comparable (ApiData value) -> comparable -> ApiData value
+dictGetApiData dict key =
+    Dict.get key dict
+        |> Maybe.withDefault RemoteData.NotAsked
 
 
 type Msg

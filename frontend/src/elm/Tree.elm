@@ -4,7 +4,7 @@ module Tree exposing
     , Return(..)
     , initialModel
     , needs
-    , selectFolder
+    , showFolder
     , update
     , view
     , viewBreadcrumbs
@@ -54,18 +54,6 @@ initialModel =
     }
 
 
-selectedFolder : Context -> Model -> Maybe Folder
-selectedFolder context model =
-    -- TODO: Poss. return Maybe (FolderId)
-    model.selection
-        |> Maybe.andThen
-            (\selectedFolderId ->
-                Dict.get selectedFolderId context.cache.folders
-                    |> Maybe.withDefault RemoteData.NotAsked
-                    |> RemoteData.toMaybe
-            )
-
-
 needs : Context -> Model -> Cache.Needs
 needs context model =
     [ Cache.NeedSubfolders
@@ -77,26 +65,26 @@ update : Context -> Msg -> Model -> ( Model, Return )
 update context msg model =
     case msg of
         Select id ->
-            model
-                |> selectFolder id
-                |> (\model1 ->
-                        ( model1
-                        , if model.selection /= Just id then
-                            Maybe.Extra.unwrap
-                                NoReturn
-                                UserSelection
-                                (selectedFolder context model1)
+            ( { model
+                | selection = Just id
+                , showSubselection =
+                    not (model.selection == Just id) || not model.showSubselection
+              }
+            , if model.selection /= Just id then
+                Cache.dictGetApiData context.cache.folders id
+                    |> RemoteData.toMaybe
+                    |> Maybe.Extra.unwrap
+                        NoReturn
+                        UserSelection
 
-                          else
-                            NoReturn
-                        )
-                   )
+              else
+                NoReturn
+            )
 
 
 getParentId : Cache.Model -> FolderId -> ApiData (Maybe FolderId)
 getParentId cache id =
-    Dict.get id cache.folders
-        |> Maybe.withDefault RemoteData.NotAsked
+    Cache.dictGetApiData cache.folders id
         |> RemoteData.map .parent
 
 
@@ -131,8 +119,7 @@ isOnPath cache requestedId =
     Maybe.Extra.unwrap
         False
         (\pathId ->
-            requestedId
-                == pathId
+            (requestedId == pathId)
                 || isOnPath cache
                     requestedId
                     (getParentId cache pathId
@@ -142,22 +129,14 @@ isOnPath cache requestedId =
         )
 
 
-
--- TODO: Differentiate between
---   - selecting a folder after clicking on it
---   - selecting a folder from outside (e.g. when routibg to a generic node id)
-
-
-selectFolder : FolderId -> Model -> Model
-selectFolder id model =
-    let
-        alreadySelected =
-            model.selection == Just id
-    in
+showFolder : FolderId -> Model -> Model
+showFolder id model =
     { model
         | selection = Just id
         , showSubselection =
-            not alreadySelected || not model.showSubselection
+            -- TODO: Maybe always show subSelection.
+            -- Currently we keep the state if the folder is already selected.
+            not (model.selection == Just id) || model.showSubselection
     }
 
 
@@ -187,6 +166,7 @@ viewListOfFolders context model folderCounts folderIds =
 
 viewListOfFoldersLoading : Html Msg
 viewListOfFoldersLoading =
+    -- TODO: Currenty unused. Need a more general solution for showing RemoteData.Loading states.
     Html.ul [ Html.Attributes.class "folder-list" ]
         [ Html.li [] [ Html.text "..." ]
         ]
@@ -202,13 +182,7 @@ viewFolder context model folderCounts id =
             (not isSelectedFolder || model.showSubselection)
                 && isOnPath context.cache id model.selection
     in
-    case Dict.get id context.cache.folders |> Maybe.withDefault RemoteData.NotAsked of
-        {-
-           Nothing ->
-               -- Cache miss. Should never happen,
-               -- because only cached folders are getting linked.
-               Html.div [] [ Html.text "..." ]
-        -}
+    case Cache.dictGetApiData context.cache.folders id of
         RemoteData.Success folder ->
             Html.div []
                 [ Html.div
@@ -220,7 +194,7 @@ viewFolder context model folderCounts id =
                         expanded
                     ]
                 , if expanded then
-                    case Dict.get id context.cache.subfolderIds |> Maybe.withDefault RemoteData.NotAsked of
+                    case Cache.dictGetApiData context.cache.subfolderIds id of
                         RemoteData.Success subfolderIds ->
                             viewListOfFolders context model folderCounts subfolderIds
 
@@ -237,33 +211,29 @@ viewFolder context model folderCounts id =
 
 viewBreadcrumbs : Context -> Model -> FolderId -> Html msg
 viewBreadcrumbs context model id =
-    Html.span []
-        (getPath context.cache id
-            |> RemoteData.unwrap
-                [ Html.text "..." ]
-                (\path ->
-                    path
-                        |> List.reverse
-                        |> List.map
-                            (\id1 ->
-                                Html.span []
-                                    [ Dict.get id1 context.cache.folders
-                                        |> Maybe.withDefault RemoteData.NotAsked
-                                        |> RemoteData.unwrap
-                                            (Html.text "...")
-                                            (\folder ->
-                                                Html.a
-                                                    [ folder.id
-                                                        |> Folder.idToInt
-                                                        |> Route.NodeId
-                                                        |> Route.toString
-                                                        |> Html.Attributes.href
-                                                    ]
-                                                    [ Html.text folder.name ]
-                                            )
-                                    ]
-                            )
-                        |> List.intersperse
-                            (Html.span [] [ Html.text " > " ])
-                )
-        )
+    getPath context.cache id
+        |> RemoteData.unwrap
+            [ Html.text "..." ]
+            (List.reverse
+                >> List.map
+                    (\idPathSegment ->
+                        Html.span []
+                            [ Cache.dictGetApiData context.cache.folders idPathSegment
+                                |> RemoteData.unwrap
+                                    (Html.text "...")
+                                    (\folder ->
+                                        Html.a
+                                            [ folder.id
+                                                |> Folder.idToInt
+                                                |> Route.NodeId
+                                                |> Route.toString
+                                                |> Html.Attributes.href
+                                            ]
+                                            [ Html.text folder.name ]
+                                    )
+                            ]
+                    )
+                >> List.intersperse
+                    (Html.span [] [ Html.text " > " ])
+            )
+        |> Html.span []

@@ -178,7 +178,7 @@ updateWithoutReturn msg model =
                         )
                         { model
                             | tree =
-                                Tree.selectFolder
+                                Tree.showFolder
                                     (List.Nonempty.head lineage |> .id)
                                     model.tree
                         }
