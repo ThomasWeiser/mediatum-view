@@ -60,33 +60,16 @@ type Msg
 
 init : Route -> ( Model, Cmd Msg )
 init route =
-    let
-        model1 =
-            { route = Route.Invalid "to be initialized"
-            , cache = Cache.initialModel
-            , query = Query.emptyQuery
-            , tree = Tree.initialModel
-            , controls = Controls.init ()
-            , folderCounts = Dict.empty
-            , article = Article.initialModelEmpty
-            }
-
-        ( cacheModel, cacheCmd ) =
-            Cache.requestNeeds
-                (needs model1)
-                model1.cache
-
-        ( model2, cmd2 ) =
-            ( { model1 | cache = cacheModel }
-            , Cmd.map CacheMsg cacheCmd
-            )
-
-        ( model3, cmd3 ) =
-            changeRouteTo route model2
-    in
-    ( model3
-    , Cmd.batch [ cmd2, cmd3 ]
-    )
+    { route = Route.Invalid "to be initialized"
+    , cache = Cache.initialModel
+    , query = Query.emptyQuery
+    , tree = Tree.initialModel
+    , controls = Controls.init ()
+    , folderCounts = Dict.empty
+    , article = Article.initialModelEmpty
+    }
+        |> requestNeeds
+        |> Cmd.Extra.andThen (changeRouteTo route)
 
 
 changeRouteTo : Route -> Model -> ( Model, Cmd Msg )
@@ -121,27 +104,29 @@ needs model =
         |> Debug.log "App needs"
 
 
+requestNeeds : Model -> ( Model, Cmd Msg )
+requestNeeds model =
+    let
+        ( cacheModel, cacheCmd ) =
+            Cache.requestNeeds
+                (needs model)
+                model.cache
+    in
+    ( { model | cache = cacheModel }
+    , Cmd.map CacheMsg cacheCmd
+    )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     let
-        ( model1, cmd1 ) =
-            updateWithoutReturn
-                msg
-                model
-
-        ( cacheModel, cacheCmd ) =
-            Cache.requestNeeds
-                (needs model1)
-                model1.cache
-
-        ( model2, cmd2 ) =
-            ( { model1 | cache = cacheModel }
-            , Cmd.map CacheMsg cacheCmd
-            )
+        ( model1, cmd ) =
+            updateWithoutReturn msg model
+                |> Cmd.Extra.andThen requestNeeds
     in
-    ( model2
-    , Cmd.batch [ cmd1, cmd2 ]
-    , if model2.route /= model.route then
+    ( model1
+    , cmd
+    , if model1.route /= model.route then
         ReflectRoute model1.route
 
       else
@@ -258,7 +243,7 @@ updateWithoutReturn msg model =
                 ( model2, cmd2 ) =
                     case subReturn of
                         Cache.NoReturn ->
-                            ( model1, cmd1 )
+                            ( model1, Cmd.none )
 
                         Cache.GotRootFolders ->
                             updateWithoutReturn GotRootFolders model1
