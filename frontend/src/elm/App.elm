@@ -59,12 +59,6 @@ type Msg
 init : Route -> ( Model, Cmd Msg )
 init route =
     let
-        ( treeModel, treeCmd ) =
-            Tree.init
-
-        controlsModel =
-            Controls.init ()
-
         ( articleModel, articleCmd ) =
             Article.initEmpty ()
 
@@ -72,8 +66,8 @@ init route =
             { route = Route.Invalid "to be initialized"
             , cache = Cache.initialModel
             , query = Query.emptyQuery
-            , tree = treeModel
-            , controls = controlsModel
+            , tree = Tree.initialModel
+            , controls = Controls.init ()
             , folderCounts = Dict.empty
             , article = articleModel
             }
@@ -83,8 +77,7 @@ init route =
     in
     ( model2
     , Cmd.batch
-        [ Cmd.map TreeMsg treeCmd
-        , Cmd.map ArticleMsg articleCmd
+        [ Cmd.map ArticleMsg articleCmd
         , cmd2
         ]
     )
@@ -119,6 +112,7 @@ update msg model =
         needs : Cache.Needs
         needs =
             [ Cache.NeedRootFolderIds ]
+                ++ Tree.needs model.tree
 
         ( cacheModel, cacheCmd ) =
             Cache.requestNeeds needs model.cache
@@ -167,21 +161,19 @@ updateWithoutReturn msg model =
         GenericNodeQueryResponse (Ok genericNode) ->
             case genericNode of
                 GenericNode.IsFolder lineage ->
-                    let
-                        ( treeModel, treeCmd ) =
-                            Tree.openLineage lineage model.tree
-
-                        model1 =
-                            { model | tree = treeModel }
-                    in
                     startQuery
                         (Query.OnFolder
                             { folder = List.Nonempty.head lineage
                             , filters = Query.getFilters model.query
                             }
                         )
-                        model1
-                        |> Cmd.Extra.addCmd (Cmd.map TreeMsg treeCmd)
+                        { model
+                            | tree =
+                                Tree.selectFolder
+                                    { cache = model.cache }
+                                    (List.Nonempty.head lineage |> .id)
+                                    model.tree
+                        }
 
                 GenericNode.IsDocument document ->
                     -- Currently we fetch the document once again here,
@@ -211,33 +203,37 @@ updateWithoutReturn msg model =
 
         TreeMsg subMsg ->
             let
-                ( subModel, subCmd, subReturn ) =
-                    Tree.update subMsg model.tree
+                ( subModel, subReturn ) =
+                    Tree.update
+                        { cache = model.cache }
+                        subMsg
+                        model.tree
 
                 model1 =
                     { model | tree = subModel }
             in
-            (case subReturn of
-                Tree.GotRootFolders rootFolders ->
-                    case ( model.route, List.head rootFolders ) of
-                        ( Route.Home, Just rootFolderToBeQueried ) ->
-                            startQuery
-                                (Query.setFolder
-                                    rootFolderToBeQueried
-                                    model1.query
-                                )
-                                model1
+            case subReturn of
+                {-
+                   Tree.GotRootFolders rootFolders ->
+                       case ( model.route, List.head rootFolders ) of
+                           ( Route.Home, Just rootFolderToBeQueried ) ->
+                               startQuery
+                                   (Query.setFolder
+                                       rootFolderToBeQueried
+                                       model1.query
+                                   )
+                                   model1
 
-                        _ ->
-                            ( { model1
-                                | query =
-                                    Query.stopgapFolder
-                                        (List.head rootFolders)
-                                        model1.query
-                              }
-                            , Cmd.none
-                            )
-
+                           _ ->
+                               ( { model1
+                                   | query =
+                                       Query.stopgapFolder
+                                           (List.head rootFolders)
+                                           model1.query
+                                 }
+                               , Cmd.none
+                               )
+                -}
                 Tree.UserSelection selectedFolder ->
                     startQuery
                         (Query.setFolder
@@ -248,8 +244,6 @@ updateWithoutReturn msg model =
 
                 Tree.NoReturn ->
                     ( model1, Cmd.none )
-            )
-                |> Cmd.Extra.addCmd (Cmd.map TreeMsg subCmd)
 
         ControlsMsg subMsg ->
             let
@@ -275,7 +269,9 @@ updateWithoutReturn msg model =
             let
                 ( subModel, subCmd, subReturn ) =
                     Article.update
-                        { query = model.query }
+                        { cache = model.cache
+                        , query = model.query
+                        }
                         subMsg
                         model.article
 
@@ -344,12 +340,18 @@ view model =
             ]
         , Html.main_ []
             [ Html.aside []
-                [ Html.map TreeMsg <| Tree.view model.tree model.folderCounts
+                [ Html.map TreeMsg <|
+                    Tree.view
+                        { cache = model.cache }
+                        model.tree
+                        model.folderCounts
                 ]
             , Html.map ArticleMsg <|
                 Article.view
                     model.tree
-                    { query = model.query }
+                    { cache = model.cache
+                    , query = model.query
+                    }
                     model.article
             ]
         ]

@@ -13,6 +13,7 @@ import Article.Details
 import Article.Directory
 import Article.Empty
 import Article.Fts
+import Data.Cache as Cache exposing (ApiData)
 import Data.Types exposing (DocumentId, Filter, FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
@@ -24,7 +25,8 @@ import Utils
 
 
 type alias Context =
-    { query : Query
+    { cache : Cache.Model
+    , query : Query
     }
 
 
@@ -224,7 +226,9 @@ view tree context model =
         [ Html.Attributes.class "article" ]
         [ Html.div
             [ Html.Attributes.class "breadcrumbs" ]
-            [ Tree.viewBreadcrumbs tree
+            [ Tree.viewBreadcrumbs
+                { cache = context.cache }
+                tree
                 (Query.getFolder context.query |> .id)
             ]
         , Query.view context.query
