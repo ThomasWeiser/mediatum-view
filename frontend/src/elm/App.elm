@@ -80,7 +80,7 @@ init route =
             )
 
         ( model3, cmd3 ) =
-            changeRouteTo route model1
+            changeRouteTo route model2
     in
     ( model3
     , Cmd.batch [ cmd2, cmd3 ]
@@ -113,7 +113,7 @@ changeRouteTo route model =
 needs : Model -> Cache.Needs
 needs model =
     ([ Cache.NeedRootFolderIds ]
-        ++ Tree.needs model.tree
+        ++ Tree.needs { cache = model.cache } model.tree
     )
         |> Debug.log "App needs"
 
@@ -121,24 +121,24 @@ needs model =
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     let
-        ( cacheModel, cacheCmd ) =
-            Cache.requestNeeds
-                (needs model)
-                model.cache
-
         ( model1, cmd1 ) =
-            ( { model | cache = cacheModel }
-            , Cmd.map CacheMsg cacheCmd
-            )
-
-        ( model2, cmd2 ) =
             updateWithoutReturn
                 msg
-                model1
+                model
+
+        ( cacheModel, cacheCmd ) =
+            Cache.requestNeeds
+                (needs model1)
+                model1.cache
+
+        ( model2, cmd2 ) =
+            ( { model1 | cache = cacheModel }
+            , Cmd.map CacheMsg cacheCmd
+            )
     in
     ( model2
     , Cmd.batch [ cmd1, cmd2 ]
-    , if model1.route /= model.route then
+    , if model2.route /= model.route then
         ReflectRoute model1.route
 
       else
@@ -179,7 +179,6 @@ updateWithoutReturn msg model =
                         { model
                             | tree =
                                 Tree.selectFolder
-                                    { cache = model.cache }
                                     (List.Nonempty.head lineage |> .id)
                                     model.tree
                         }

@@ -38,7 +38,7 @@ type Return
 
 
 type alias Model =
-    { selection : List FolderId
+    { selection : Maybe FolderId
     , showSubselection : Bool
     }
 
@@ -49,7 +49,7 @@ type Msg
 
 initialModel : Model
 initialModel =
-    { selection = []
+    { selection = Nothing
     , showSubselection = True
     }
 
@@ -57,19 +57,20 @@ initialModel =
 selectedFolder : Context -> Model -> Maybe Folder
 selectedFolder context model =
     -- TODO: Poss. return Maybe (FolderId)
-    List.head model.selection
+    model.selection
         |> Maybe.andThen
-            (\headId ->
-                Dict.get headId context.cache.folders
+            (\selectedFolderId ->
+                Dict.get selectedFolderId context.cache.folders
                     |> Maybe.withDefault RemoteData.NotAsked
                     |> RemoteData.toMaybe
             )
 
 
-needs : Model -> Cache.Needs
-needs model =
-    -- TODO: Poss. need subfolders of selection head only if showSubselection is true.
-    [ Cache.NeedSubfolders model.selection ]
+needs : Context -> Model -> Cache.Needs
+needs context model =
+    [ Cache.NeedSubfolders
+        (getPathAsFarAsCached context.cache model.selection)
+    ]
 
 
 update : Context -> Msg -> Model -> ( Model, Return )
@@ -77,10 +78,10 @@ update context msg model =
     case msg of
         Select id ->
             model
-                |> selectFolder context id
+                |> selectFolder id
                 |> (\model1 ->
                         ( model1
-                        , if List.head model.selection /= Just id then
+                        , if model.selection /= Just id then
                             Maybe.Extra.unwrap
                                 NoReturn
                                 UserSelection
@@ -105,32 +106,58 @@ getPath cache id =
         |> RemoteData.andThen
             (Maybe.Extra.unwrap
                 (RemoteData.Success [ id ])
-                -- TODO poss. simplify dot free and/or RemoteData.map
-                (\parentId ->
-                    getPath cache parentId
-                        |> RemoteData.andThen
-                            (\parentIds ->
-                                RemoteData.Success (id :: parentIds)
-                            )
+                (getPath cache
+                    >> RemoteData.map ((::) id)
                 )
             )
 
 
-selectFolder : Context -> FolderId -> Model -> Model
-selectFolder context id model =
+getPathAsFarAsCached : Cache.Model -> Maybe FolderId -> List FolderId
+getPathAsFarAsCached cache =
+    Maybe.Extra.unwrap
+        []
+        (\id ->
+            id
+                :: (getParentId cache id
+                        |> RemoteData.toMaybe
+                        |> Maybe.Extra.join
+                        |> getPathAsFarAsCached cache
+                   )
+        )
+
+
+isOnPath : Cache.Model -> FolderId -> Maybe FolderId -> Bool
+isOnPath cache requestedId =
+    Maybe.Extra.unwrap
+        False
+        (\pathId ->
+            requestedId
+                == pathId
+                || isOnPath cache
+                    requestedId
+                    (getParentId cache pathId
+                        |> RemoteData.toMaybe
+                        |> Maybe.Extra.join
+                    )
+        )
+
+
+
+-- TODO: Differentiate between
+--   - selecting a folder after clicking on it
+--   - selecting a folder from outside (e.g. when routibg to a generic node id)
+
+
+selectFolder : FolderId -> Model -> Model
+selectFolder id model =
     let
         alreadySelected =
-            List.head model.selection == Just id
+            model.selection == Just id
     in
     { model
-        | selection =
-            getPath context.cache id
-                -- TODO: This look odd.
-                -- If the path data isn't already cache (possible?) then the selection
-                -- won't get corrected when the cache is filled.
-                -- We probably should only keep the selection head in the model.
-                |> RemoteData.withDefault []
-        , showSubselection = not alreadySelected || not model.showSubselection
+        | selection = Just id
+        , showSubselection =
+            not alreadySelected || not model.showSubselection
     }
 
 
@@ -169,11 +196,11 @@ viewFolder : Context -> Model -> FolderCounts -> FolderId -> Html Msg
 viewFolder context model folderCounts id =
     let
         isSelectedFolder =
-            List.head model.selection == Just id
+            model.selection == Just id
 
         expanded =
-            List.member id model.selection
-                && (not isSelectedFolder || model.showSubselection)
+            (not isSelectedFolder || model.showSubselection)
+                && isOnPath context.cache id model.selection
     in
     case Dict.get id context.cache.folders |> Maybe.withDefault RemoteData.NotAsked of
         {-
