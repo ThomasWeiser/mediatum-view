@@ -1,10 +1,34 @@
-module Data.Types exposing (Document, DocumentAttribute, DocumentId, DocumentResult, DocumentsPage, Filter(..), Filters, Folder, FolderCounts, FolderId, FolderType(..), FtsSorting(..), NodeType(..), SearchMethod(..), Selection, Window, WindowPage)
+module Data.Types exposing
+    ( Document
+    , DocumentAttribute
+    , DocumentId
+    , DocumentResult
+    , DocumentsPage
+    , Filter(..)
+    , Filters
+    , Folder
+    , FolderCounts
+    , FolderId
+    , FolderType(..)
+    , FtsSorting(..)
+    , NodeType(..)
+    , SearchMethod(..)
+    , Selection
+    , Window
+    , WindowPage
+    , folderIdToInt
+    )
 
 import Dict exposing (Dict)
 
 
 type alias FolderId =
     ( Int, Float )
+
+
+folderIdToInt : FolderId -> Int
+folderIdToInt ( i, _ ) =
+    i
 
 
 

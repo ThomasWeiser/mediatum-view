@@ -58,6 +58,7 @@ init idAsInt maybeParentIdAsInt name isCollection numSubfolder =
 
 idToInt : FolderId -> Int
 idToInt ( i, _ ) =
+    -- TODO: Replaced with Data.Types.folderIdToInt
     i
 
 

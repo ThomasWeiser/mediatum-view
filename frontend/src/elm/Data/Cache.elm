@@ -16,7 +16,9 @@ import Basics.Extra
 import Data.Types exposing (..)
 import Dict exposing (Dict)
 import Dict.Extra
+import GenericNode exposing (GenericNode)
 import List.Extra
+import List.Nonempty exposing (Nonempty)
 import RemoteData exposing (RemoteData(..))
 
 
@@ -41,9 +43,16 @@ type alias Model =
 
 
 type Needs
-    = NeedRootFolderIds
+    = NeedListOfNeeds (List Needs)
+    | NeedRootFolderIds
     | NeedSubfolders (List FolderId)
-    | NeedListOfNeeds (List Needs)
+    | NeedGenericNode Int
+
+
+
+-- TODO: | NeedFolderCounts Selection
+-- TODO: | NeedDocListPage Selection Window
+-- TODO: | NeedDocument DocumentId
 
 
 initialModel : Model
@@ -58,13 +67,6 @@ initialModel =
     }
 
 
-
--- TODO: | NeedNodeType Int
--- TODO: | NeedFolderCounts Selection
--- TODO: | NeedDocListPage Selection Window
--- TODO: | NeedDocument DocumentId
-
-
 dictGetApiData : Dict comparable (ApiData value) -> comparable -> ApiData value
 dictGetApiData dict key =
     Dict.get key dict
@@ -74,6 +76,7 @@ dictGetApiData dict key =
 type Msg
     = ApiResponseToplevelFolder (Api.Response (List ( Folder, List Folder )))
     | ApiResponseSubfolder (List FolderId) (Api.Response (List Folder))
+    | ApiResponseGenericNode Int (Api.Response GenericNode)
 
 
 requestNeeds : Needs -> Model -> ( Model, Cmd Msg )
@@ -128,6 +131,21 @@ requestNeeds needs model =
                     (Api.Queries.subfolder parentIdsWithUnknownChildren)
                 )
 
+        NeedGenericNode nodeNumber ->
+            case dictGetApiData model.nodeTypes nodeNumber of
+                NotAsked ->
+                    ( { model
+                        | nodeTypes =
+                            Dict.insert nodeNumber Loading model.nodeTypes
+                      }
+                    , Api.sendQueryRequest
+                        (ApiResponseGenericNode nodeNumber)
+                        (Api.Queries.genericNode nodeNumber)
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
@@ -146,6 +164,7 @@ update msg model =
               }
                 |> insertAsFolders allNewFolders
                 |> insertAsSubfolderIds allNewFolders
+                |> insertFoldersAsNodeTypes allNewFolders
             , Cmd.none
             , GotRootFolders
             )
@@ -162,6 +181,7 @@ update msg model =
             ( model
                 |> insertAsFolders listOfSubfolders
                 |> insertAsSubfolderIds listOfSubfolders
+                |> insertFoldersAsNodeTypes listOfSubfolders
             , Cmd.none
             , NoReturn
             )
@@ -175,6 +195,37 @@ update msg model =
                         )
                         model.subfolderIds
                         parentIds
+              }
+            , Cmd.none
+            , NoReturn
+            )
+
+        ApiResponseGenericNode nodeNumber (Ok genericNode) ->
+            ( model
+                |> insertNodeType nodeNumber (GenericNode.toNodeType genericNode)
+                |> (case genericNode of
+                        GenericNode.IsFolder lineage ->
+                            let
+                                folders =
+                                    List.Nonempty.toList lineage
+                            in
+                            insertAsFolders folders
+                                >> insertAsSubfolderIds folders
+
+                        GenericNode.IsDocument document ->
+                            insertDocument document
+
+                        GenericNode.IsNeither ->
+                            identity
+                   )
+            , Cmd.none
+            , NoReturn
+            )
+
+        ApiResponseGenericNode nodeNumber (Err error) ->
+            ( { model
+                | nodeTypes =
+                    Dict.insert nodeNumber (Failure error) model.nodeTypes
               }
             , Cmd.none
             , NoReturn
@@ -211,4 +262,37 @@ insertAsSubfolderIds allSubfoldersOfSomeNewParents model =
                             )
                     )
                     model.subfolderIds
+    }
+
+
+insertFoldersAsNodeTypes : List Folder -> Model -> Model
+insertFoldersAsNodeTypes listOfNewFolders model =
+    List.foldl
+        (\folder ->
+            insertNodeType
+                (folderIdToInt folder.id)
+                (if folder.isCollection then
+                    NodeIsFolder FolderIsCollection
+
+                 else
+                    NodeIsFolder FolderIsDirectory
+                )
+        )
+        model
+        listOfNewFolders
+
+
+insertNodeType : Int -> NodeType -> Model -> Model
+insertNodeType nodeNumber nodeType model =
+    { model
+        | nodeTypes =
+            Dict.insert nodeNumber (Success nodeType) model.nodeTypes
+    }
+
+
+insertDocument : Document -> Model -> Model
+insertDocument document model =
+    { model
+        | documents =
+            Dict.insert document.id (Success document) model.documents
     }
