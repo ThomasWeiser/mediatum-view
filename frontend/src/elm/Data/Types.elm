@@ -106,7 +106,7 @@ type alias Window =
 
 
 type alias DocumentsPage =
-    WindowPage Document
+    WindowPage DocumentResult
 
 
 type alias WindowPage itemModel =

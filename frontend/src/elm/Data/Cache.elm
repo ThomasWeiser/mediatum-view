@@ -41,7 +41,7 @@ type alias Model =
     , subfolderIds : Sort.Dict.Dict FolderId (ApiData (List FolderId))
     , nodeTypes : Sort.Dict.Dict Int (ApiData NodeType)
     , folderCounts : Sort.Dict.Dict Selection (ApiData (Dict.Dict FolderId Int))
-    , docListPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
+    , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
     , documents : Sort.Dict.Dict DocumentId (ApiData (Maybe Document))
     }
 
@@ -53,7 +53,7 @@ type Needs
     | NeedSubfolders (List FolderId)
     | NeedGenericNode Int
     | NeedDocument DocumentId
-    | NeedDocListPage Selection Window
+    | NeedDocumentsPage Selection Window
 
 
 
@@ -67,7 +67,7 @@ initialModel =
     , subfolderIds = Sort.Dict.empty (sorter orderingFolderId)
     , nodeTypes = Sort.Dict.empty Sort.increasing
     , folderCounts = Sort.Dict.empty (sorter orderingSelection)
-    , docListPages = Sort.Dict.empty (sorter orderingSelectionWindow)
+    , documentsPages = Sort.Dict.empty (sorter orderingSelectionWindow)
     , documents = Sort.Dict.empty (sorter orderingDocumentId)
     }
 
@@ -83,6 +83,7 @@ type Msg
     | ApiResponseSubfolder (List FolderId) (Api.Response (List Folder))
     | ApiResponseGenericNode Int (Api.Response GenericNode)
     | ApiResponseDocument DocumentId (Api.Response (Maybe Document))
+    | ApiResponseDocumentsPage ( Selection, Window ) (Api.Response DocumentsPage)
 
 
 requestNeeds : Needs -> Model -> ( Model, Cmd Msg )
@@ -169,15 +170,30 @@ requestNeeds needs model =
                 _ ->
                     ( model, Cmd.none )
 
-        NeedDocListPage selection window ->
-            case get model.docListPages ( selection, window ) of
+        NeedDocumentsPage selection window ->
+            case get model.documentsPages ( selection, window ) of
                 NotAsked ->
                     ( { model
-                        | docListPages =
-                            Sort.Dict.insert ( selection, window ) Loading model.docListPages
+                        | documentsPages =
+                            Sort.Dict.insert ( selection, window ) Loading model.documentsPages
                       }
-                    , -- TODO ...
-                      Cmd.none
+                    , Api.sendQueryRequest
+                        (ApiResponseDocumentsPage ( selection, window ))
+                        (case selection.searchMethod of
+                            SelectByFolderListing ->
+                                Api.Queries.folderDocumentsPage
+                                    window
+                                    selection.scope
+                                    selection.filters
+
+                            SelectByFullTextSearch searchTerm ftsSorting ->
+                                Api.Queries.ftsPage
+                                    window
+                                    selection.scope
+                                    searchTerm
+                                    ftsSorting
+                                    selection.filters
+                        )
                     )
 
                 _ ->
@@ -300,6 +316,24 @@ update msg model =
             ( { model
                 | documents =
                     Sort.Dict.insert documentId (Failure error) model.documents
+              }
+            , Cmd.none
+            , NoReturn
+            )
+
+        ApiResponseDocumentsPage selectionAndWindow (Ok documentsPage) ->
+            ( { model
+                | documentsPages =
+                    Sort.Dict.insert selectionAndWindow (Success documentsPage) model.documentsPages
+              }
+            , Cmd.none
+            , NoReturn
+            )
+
+        ApiResponseDocumentsPage selectionAndWindow (Err error) ->
+            ( { model
+                | documentsPages =
+                    Sort.Dict.insert selectionAndWindow (Failure error) model.documentsPages
               }
             , Cmd.none
             , NoReturn

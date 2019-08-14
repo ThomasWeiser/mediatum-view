@@ -85,7 +85,7 @@ update context msg model =
               }
             , Api.sendQueryRequest
                 ApiResponseFtsPage
-                (Api.Queries.ftsPage
+                (Api.Queries.ftsPage_ByQuery
                     model.pageResult.page
                     paginationPosition
                     context.ftsQuery
@@ -101,7 +101,7 @@ update context msg model =
             , if model.doQueryFolderCounts then
                 Api.sendQueryRequest
                     ApiResponseFtsFolderCounts
-                    (Api.Queries.ftsFolderCounts
+                    (Api.Queries.ftsFolderCounts_ByQuery
                         context.ftsQuery
                     )
 

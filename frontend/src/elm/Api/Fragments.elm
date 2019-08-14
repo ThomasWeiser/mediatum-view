@@ -1,7 +1,7 @@
 module Api.Fragments exposing
     ( folder, folderAndSubfolders, folderLineage
     , folderAndSubfolderCounts, folderCount
-    , documentResultPage, documentResult, documentByMask
+    , documentResultPage, documentsPage, documentResult, documentByMask
     , graphqlDocumentObjects
     )
 
@@ -20,7 +20,7 @@ module Api.Fragments exposing
 
 # Fragments for Document Results
 
-@docs documentResultPage, documentResult, documentByMask
+@docs documentResultPage, documentsPage, documentResult, documentByMask
 
 
 # Relay Connection Utility
@@ -208,12 +208,52 @@ _GraphQL notation:_
         }
     }
 
+TODO: Remove if no longer needed. Will be replaced by documentsPage.
+
 -}
 documentResultPage :
     String
     -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Mediatum.Object.DocumentResultPage
 documentResultPage maskName =
     SelectionSet.succeed Pagination.Offset.Page.Page
+        |> SelectionSet.with
+            (Mediatum.Object.DocumentResultPage.offset
+                |> SelectionSet.nonNullOrFail
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.DocumentResultPage.hasNextPage
+                |> SelectionSet.nonNullOrFail
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.DocumentResultPage.content
+                (documentResult maskName)
+                |> SelectionSet.nonNullOrFail
+                |> SelectionSet.nonNullElementsOrFail
+            )
+
+
+{-| Selection set on a DocumentResultPage to get a page of a paginated list of documents.
+
+The page contains a list of document results as well as some pagination-specific data.
+
+The nested documents are rendered according to a named mediaTUM mask.
+
+_GraphQL notation:_
+
+    fragment documentResultPage on DocumentResultPage {
+        offset
+        hasNextPage
+        content {
+            ...documentResult
+        }
+    }
+
+-}
+documentsPage :
+    String
+    -> SelectionSet DocumentsPage Mediatum.Object.DocumentResultPage
+documentsPage maskName =
+    SelectionSet.succeed WindowPage
         |> SelectionSet.with
             (Mediatum.Object.DocumentResultPage.offset
                 |> SelectionSet.nonNullOrFail

@@ -3,6 +3,7 @@ module Api.Queries exposing
     , folderDocumentsPage, folderDocumentsFolderCounts, ftsPage, ftsFolderCounts
     , documentDetails
     , genericNode, authorSearch
+    , folderDocumentsFolderCounts_ByQuery, folderDocumentsPage_ByQuery, ftsFolderCounts_ByQuery, ftsPage_ByQuery
     )
 
 {-| Definitions of all specific GraphQL queries needed in the application.
@@ -178,12 +179,12 @@ _GraphQL notation:_
     }
 
 -}
-folderDocumentsPage :
+folderDocumentsPage_ByQuery :
     Maybe (Pagination.Offset.Page.Page DocumentResult)
     -> Pagination.Offset.Page.Position
     -> Query.FolderQuery
     -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
-folderDocumentsPage referencePage paginationPosition folderQuery =
+folderDocumentsPage_ByQuery referencePage paginationPosition folderQuery =
     Mediatum.Query.allDocumentsPage
         (\optionals ->
             { optionals
@@ -206,6 +207,29 @@ folderDocumentsPage referencePage paginationPosition folderQuery =
         |> SelectionSet.nonNullOrFail
 
 
+folderDocumentsPage :
+    Window
+    -> FolderId
+    -> Filters
+    -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
+folderDocumentsPage window folderId filters =
+    Mediatum.Query.allDocumentsPage
+        (\optionals ->
+            { optionals
+                | folderId = Present (Folder.idToInt folderId)
+                , attributeTests =
+                    filters
+                        |> Query.filtersToAttributeTests
+                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Present
+                , limit = Present window.limit
+                , offset = Present window.offset
+            }
+        )
+        (Api.Fragments.documentResultPage "nodesmall")
+        |> SelectionSet.nonNullOrFail
+
+
 {-| Get the counts of documents within a folder and its sub-folders.
 
 A list of filters may be used to restrict the documents to be counted.
@@ -222,16 +246,36 @@ _GraphQL notation:_
     }
 
 -}
-folderDocumentsFolderCounts :
+folderDocumentsFolderCounts_ByQuery :
     Query.FolderQuery
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-folderDocumentsFolderCounts folderQuery =
+folderDocumentsFolderCounts_ByQuery folderQuery =
     Mediatum.Query.allDocumentsDocset
         (\optionals ->
             { optionals
                 | folderId = folderQuery.folder |> .id |> Folder.idToInt |> Present
                 , attributeTests =
                     folderQuery.filters
+                        |> Query.filtersToAttributeTests
+                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Present
+            }
+        )
+        Api.Fragments.folderAndSubfolderCounts
+        |> SelectionSet.nonNullOrFail
+
+
+folderDocumentsFolderCounts :
+    FolderId
+    -> Filters
+    -> SelectionSet FolderCounts Graphql.Operation.RootQuery
+folderDocumentsFolderCounts folderId filters =
+    Mediatum.Query.allDocumentsDocset
+        (\optionals ->
+            { optionals
+                | folderId = Present (Folder.idToInt folderId)
+                , attributeTests =
+                    filters
                         |> Query.filtersToAttributeTests
                         |> Query.Attribute.testsAsGraphqlArgument
                         |> Present
@@ -261,12 +305,12 @@ _GraphQL notation:_
     }
 
 -}
-ftsPage :
+ftsPage_ByQuery :
     Maybe (Pagination.Offset.Page.Page DocumentResult)
     -> Pagination.Offset.Page.Position
     -> Query.FtsQuery
     -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
-ftsPage referencePage paginationPosition ftsQuery =
+ftsPage_ByQuery referencePage paginationPosition ftsQuery =
     Mediatum.Query.ftsDocumentsPage
         (\optionals ->
             { optionals
@@ -299,6 +343,41 @@ ftsPage referencePage paginationPosition ftsQuery =
         |> SelectionSet.nonNullOrFail
 
 
+ftsPage :
+    Window
+    -> FolderId
+    -> String
+    -> FtsSorting
+    -> Filters
+    -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
+ftsPage window folderId searchTerm ftsSorting filters =
+    Mediatum.Query.ftsDocumentsPage
+        (\optionals ->
+            { optionals
+                | folderId = Present (Folder.idToInt folderId)
+                , text = Present searchTerm
+                , sorting =
+                    Present
+                        (case ftsSorting of
+                            FtsByRank ->
+                                Mediatum.Enum.FtsSorting.ByRank
+
+                            FtsByDate ->
+                                Mediatum.Enum.FtsSorting.ByDate
+                        )
+                , attributeTests =
+                    filters
+                        |> Query.filtersToAttributeTests
+                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Present
+                , limit = Present window.limit
+                , offset = Present window.offset
+            }
+        )
+        (Api.Fragments.documentResultPage "nodesmall")
+        |> SelectionSet.nonNullOrFail
+
+
 {-| Get the counts of documents found by a full-text search.
 
 The counts are computed for the given folder and each of its sub-folders.
@@ -318,10 +397,10 @@ _GraphQL notation:_
     }
 
 -}
-ftsFolderCounts :
+ftsFolderCounts_ByQuery :
     Query.FtsQuery
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-ftsFolderCounts ftsQuery =
+ftsFolderCounts_ByQuery ftsQuery =
     Mediatum.Query.ftsDocumentsDocset
         (\optionals ->
             { optionals
@@ -329,6 +408,29 @@ ftsFolderCounts ftsQuery =
                 , text = Present ftsQuery.searchTerm
                 , attributeTests =
                     ftsQuery.filters
+                        |> Query.filtersToAttributeTests
+                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Present
+            }
+        )
+        Api.Fragments.folderAndSubfolderCounts
+        |> SelectionSet.nonNullOrFail
+
+
+ftsFolderCounts :
+    FolderId
+    -> String
+    -> FtsSorting
+    -> Filters
+    -> SelectionSet FolderCounts Graphql.Operation.RootQuery
+ftsFolderCounts folderId searchTerm ftsSorting filters =
+    Mediatum.Query.ftsDocumentsDocset
+        (\optionals ->
+            { optionals
+                | folderId = Present (Folder.idToInt folderId)
+                , text = Present searchTerm
+                , attributeTests =
+                    filters
                         |> Query.filtersToAttributeTests
                         |> Query.Attribute.testsAsGraphqlArgument
                         |> Present
