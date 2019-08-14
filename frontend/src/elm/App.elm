@@ -44,6 +44,9 @@ type alias Model =
     , controls : Controls.Model
     , folderCounts : FolderCounts
     , article : Article.Model
+
+    -- TODO: We store the Needs here only for debugging
+    , needs : Cache.Needs
     }
 
 
@@ -67,6 +70,7 @@ init route =
     , controls = Controls.init ()
     , folderCounts = Dict.empty
     , article = Article.initialModelEmpty
+    , needs = Cache.NeedNothing
     }
         |> requestNeeds
         |> Cmd.Extra.andThen (changeRouteTo route)
@@ -99,6 +103,12 @@ needs : Model -> Cache.Needs
 needs model =
     Cache.NeedListOfNeeds
         [ Cache.NeedRootFolderIds
+        , case model.route of
+            Route.NodeId nodeId ->
+                Cache.NeedGenericNode nodeId
+
+            _ ->
+                Cache.NeedNothing
         , Tree.needs { cache = model.cache } model.tree
         ]
         |> Debug.log "App needs"
@@ -107,12 +117,18 @@ needs model =
 requestNeeds : Model -> ( Model, Cmd Msg )
 requestNeeds model =
     let
+        currentNeeds =
+            needs model
+
         ( cacheModel, cacheCmd ) =
             Cache.requestNeeds
-                (needs model)
+                currentNeeds
                 model.cache
     in
-    ( { model | cache = cacheModel }
+    ( { model
+        | needs = currentNeeds
+        , cache = cacheModel
+      }
     , Cmd.map CacheMsg cacheCmd
     )
 

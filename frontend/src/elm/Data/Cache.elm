@@ -43,7 +43,8 @@ type alias Model =
 
 
 type Needs
-    = NeedListOfNeeds (List Needs)
+    = NeedNothing
+    | NeedListOfNeeds (List Needs)
     | NeedRootFolderIds
     | NeedSubfolders (List FolderId)
     | NeedGenericNode Int
@@ -82,6 +83,9 @@ type Msg
 requestNeeds : Needs -> Model -> ( Model, Cmd Msg )
 requestNeeds needs model =
     case needs of
+        NeedNothing ->
+            ( model, Cmd.none )
+
         NeedListOfNeeds listOfNeeds ->
             listOfNeeds
                 |> List.Extra.mapAccuml
@@ -201,26 +205,36 @@ update msg model =
             )
 
         ApiResponseGenericNode nodeNumber (Ok genericNode) ->
-            ( model
-                |> insertNodeType nodeNumber (GenericNode.toNodeType genericNode)
-                |> (case genericNode of
-                        GenericNode.IsFolder lineage ->
-                            let
-                                folders =
-                                    List.Nonempty.toList lineage
-                            in
-                            insertAsFolders folders
-                                >> insertAsSubfolderIds folders
+            let
+                model1 =
+                    model
+                        |> insertNodeType nodeNumber (GenericNode.toNodeType genericNode)
+            in
+            case genericNode of
+                GenericNode.IsFolder lineage ->
+                    let
+                        folders =
+                            List.Nonempty.toList lineage
 
-                        GenericNode.IsDocument document ->
-                            insertDocument document
+                        ( model2, cmd ) =
+                            model1
+                                |> insertAsFolders folders
+                                |> requestNeeds
+                                    (NeedSubfolders (List.map .id folders))
+                    in
+                    ( model2
+                    , cmd
+                    , NoReturn
+                    )
 
-                        GenericNode.IsNeither ->
-                            identity
-                   )
-            , Cmd.none
-            , NoReturn
-            )
+                GenericNode.IsDocument document ->
+                    ( model1 |> insertDocument document
+                    , Cmd.none
+                    , NoReturn
+                    )
+
+                GenericNode.IsNeither ->
+                    ( model1, Cmd.none, NoReturn )
 
         ApiResponseGenericNode nodeNumber (Err error) ->
             ( { model
