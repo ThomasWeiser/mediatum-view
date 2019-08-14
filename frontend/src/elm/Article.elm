@@ -15,7 +15,15 @@ import Article.Directory
 import Article.Empty
 import Article.Fts
 import Data.Cache as Cache exposing (ApiData)
-import Data.Types exposing (Document, DocumentId, Filter, FolderCounts)
+import Data.Types
+    exposing
+        ( Document
+        , DocumentId
+        , Filter
+        , FolderCounts
+        , FtsSorting(..)
+        , SearchMethod(..)
+        )
 import Html exposing (Html)
 import Html.Attributes
 import Query exposing (Query)
@@ -120,9 +128,51 @@ needs query =
         Query.OnDetails detailsQuery ->
             Cache.NeedDocument detailsQuery.documentId
 
-        -- TODO: We currently don't observe the needs of an Iterator
-        _ ->
-            Cache.NeedNothing
+        Query.OnFolder folderQuery ->
+            -- TODO: We currently don't observe the needs of an Iterator
+            let
+                selection =
+                    { scope = folderQuery.folder.id
+                    , searchMethod = SelectByFolderListing
+                    , filters = folderQuery.filters
+                    }
+            in
+            Cache.NeedListOfNeeds
+                [ Cache.NeedDocumentsPage
+                    selection
+                    -- TODO: Currently we don't have the paging location here
+                    { offset = 0, limit = 10 }
+                , -- TODO: Currently we request the folderCounts in parallel. It should be sequentially after getting the page results
+                  Cache.NeedFolderCounts
+                    selection
+                ]
+
+        Query.OnFts ftsQuery ->
+            let
+                selection =
+                    { scope = ftsQuery.folder.id
+                    , searchMethod =
+                        SelectByFullTextSearch
+                            ftsQuery.searchTerm
+                            (case ftsQuery.sorting of
+                                Query.ByRank ->
+                                    FtsByRank
+
+                                Query.ByDate ->
+                                    FtsByDate
+                            )
+                    , filters = ftsQuery.filters
+                    }
+            in
+            Cache.NeedListOfNeeds
+                [ Cache.NeedDocumentsPage
+                    selection
+                    -- TODO: Currently we don't have the paging location here
+                    { offset = 0, limit = 10 }
+                , -- TODO: Currently we request the folderCounts in parallel. It should be sequentially after getting the page results
+                  Cache.NeedFolderCounts
+                    selection
+                ]
 
 
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )

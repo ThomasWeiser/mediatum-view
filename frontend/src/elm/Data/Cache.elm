@@ -40,9 +40,9 @@ type alias Model =
     , folders : Sort.Dict.Dict FolderId (ApiData Folder)
     , subfolderIds : Sort.Dict.Dict FolderId (ApiData (List FolderId))
     , nodeTypes : Sort.Dict.Dict Int (ApiData NodeType)
-    , folderCounts : Sort.Dict.Dict Selection (ApiData (Dict.Dict FolderId Int))
-    , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
     , documents : Sort.Dict.Dict DocumentId (ApiData (Maybe Document))
+    , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
+    , folderCounts : Sort.Dict.Dict Selection (ApiData (Dict.Dict FolderId Int))
     }
 
 
@@ -54,10 +54,7 @@ type Needs
     | NeedGenericNode Int
     | NeedDocument DocumentId
     | NeedDocumentsPage Selection Window
-
-
-
--- TODO: | NeedFolderCounts Selection
+    | NeedFolderCounts Selection
 
 
 initialModel : Model
@@ -66,9 +63,9 @@ initialModel =
     , folders = Sort.Dict.empty (sorter orderingFolderId)
     , subfolderIds = Sort.Dict.empty (sorter orderingFolderId)
     , nodeTypes = Sort.Dict.empty Sort.increasing
-    , folderCounts = Sort.Dict.empty (sorter orderingSelection)
-    , documentsPages = Sort.Dict.empty (sorter orderingSelectionWindow)
     , documents = Sort.Dict.empty (sorter orderingDocumentId)
+    , documentsPages = Sort.Dict.empty (sorter orderingSelectionWindow)
+    , folderCounts = Sort.Dict.empty (sorter orderingSelection)
     }
 
 
@@ -84,6 +81,7 @@ type Msg
     | ApiResponseGenericNode Int (Api.Response GenericNode)
     | ApiResponseDocument DocumentId (Api.Response (Maybe Document))
     | ApiResponseDocumentsPage ( Selection, Window ) (Api.Response DocumentsPage)
+    | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
 
 
 requestNeeds : Needs -> Model -> ( Model, Cmd Msg )
@@ -189,6 +187,33 @@ requestNeeds needs model =
                             SelectByFullTextSearch searchTerm ftsSorting ->
                                 Api.Queries.ftsPage
                                     window
+                                    selection.scope
+                                    searchTerm
+                                    ftsSorting
+                                    selection.filters
+                        )
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        NeedFolderCounts selection ->
+            case get model.folderCounts selection of
+                NotAsked ->
+                    ( { model
+                        | folderCounts =
+                            Sort.Dict.insert selection Loading model.folderCounts
+                      }
+                    , Api.sendQueryRequest
+                        (ApiResponseFolderCounts selection)
+                        (case selection.searchMethod of
+                            SelectByFolderListing ->
+                                Api.Queries.folderDocumentsFolderCounts
+                                    selection.scope
+                                    selection.filters
+
+                            SelectByFullTextSearch searchTerm ftsSorting ->
+                                Api.Queries.ftsFolderCounts
                                     selection.scope
                                     searchTerm
                                     ftsSorting
@@ -334,6 +359,24 @@ update msg model =
             ( { model
                 | documentsPages =
                     Sort.Dict.insert selectionAndWindow (Failure error) model.documentsPages
+              }
+            , Cmd.none
+            , NoReturn
+            )
+
+        ApiResponseFolderCounts selection (Ok folderCounts) ->
+            ( { model
+                | folderCounts =
+                    Sort.Dict.insert selection (Success folderCounts) model.folderCounts
+              }
+            , Cmd.none
+            , NoReturn
+            )
+
+        ApiResponseFolderCounts selection (Err error) ->
+            ( { model
+                | folderCounts =
+                    Sort.Dict.insert selection (Failure error) model.folderCounts
               }
             , Cmd.none
             , NoReturn
