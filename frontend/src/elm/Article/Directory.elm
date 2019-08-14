@@ -10,6 +10,7 @@ module Article.Directory exposing
 import Api
 import Api.Queries
 import Article.Iterator as Iterator
+import Data.Cache as Cache exposing (ApiData)
 import Data.Types exposing (DocumentId, DocumentResult, FolderCounts)
 import DocumentResult
 import Graphql.Extra
@@ -24,7 +25,8 @@ import Utils
 
 
 type alias Context =
-    { folderQuery : Query.FolderQuery
+    { cache : Cache.Model
+    , folderQuery : Query.FolderQuery
     }
 
 
@@ -51,7 +53,8 @@ type Msg
 
 iteratorContext : Context -> Model -> Iterator.Context DocumentResult
 iteratorContext context model =
-    { folder = context.folderQuery.folder
+    { cache = context.cache
+    , folder = context.folderQuery.folder
     , itemList = Maybe.Extra.unwrap [] Page.entries model.pageResult.page
     , itemId = .document >> .id
     }
@@ -121,14 +124,15 @@ update context msg model =
             )
 
         SelectDocument id ->
-            let
-                ( subModel, subCmd ) =
-                    Iterator.init
-                        (iteratorContext context model)
-                        id
-            in
-            ( { model | iterator = Just subModel }
-            , subCmd |> Cmd.map IteratorMsg
+            ( { model
+                | iterator =
+                    Just
+                        (Iterator.initialModel
+                            (iteratorContext context model)
+                            id
+                        )
+              }
+            , Cmd.none
             , NoReturn
             )
 

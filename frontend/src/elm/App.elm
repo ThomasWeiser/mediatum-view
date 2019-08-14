@@ -110,6 +110,7 @@ needs model =
             _ ->
                 Cache.NeedNothing
         , Tree.needs { cache = model.cache } model.tree
+        , Article.needs model.query
         ]
         |> Debug.log "App needs"
 
@@ -326,7 +327,9 @@ updateWithoutReturn msg model =
             in
             (case subReturn of
                 Article.NoReturn ->
-                    ( model1, Cmd.none )
+                    ( model1
+                    , Cmd.none
+                    )
 
                 Article.FolderCounts folderCounts1 ->
                     ( { model1 | folderCounts = folderCounts1 }
@@ -335,6 +338,13 @@ updateWithoutReturn msg model =
 
                 Article.MapQuery queryMapping ->
                     startQuery (queryMapping model1.query) model1
+
+                Article.UpdateCacheWithModifiedDocument document ->
+                    ( { model
+                        | cache = Cache.updateWithModifiedDocument document model.cache
+                      }
+                    , Cmd.none
+                    )
             )
                 |> Cmd.Extra.addCmd (Cmd.map ArticleMsg subCmd)
 
@@ -343,7 +353,10 @@ startQuery : Query -> Model -> ( Model, Cmd Msg )
 startQuery query model =
     let
         ( articleModel, articleCmd ) =
-            Article.initWithQuery query
+            Article.initWithQuery
+                { cache = model.cache
+                , query = query
+                }
     in
     ( { model
         | route = Query.toRoute query

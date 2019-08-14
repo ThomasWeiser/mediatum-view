@@ -8,6 +8,7 @@ module Data.Cache exposing
     , initialModel
     , requestNeeds
     , update
+    , updateWithModifiedDocument
     )
 
 import Api
@@ -38,7 +39,7 @@ type alias Model =
     , nodeTypes : Dict Int (ApiData NodeType)
     , folderCounts : Dict Selection (ApiData (Dict FolderId Int))
     , docListPages : Dict Selection (Dict Window (ApiData DocumentsPage))
-    , documents : Dict DocumentId (ApiData Document)
+    , documents : Dict DocumentId (ApiData (Maybe Document))
     }
 
 
@@ -48,12 +49,12 @@ type Needs
     | NeedRootFolderIds
     | NeedSubfolders (List FolderId)
     | NeedGenericNode Int
+    | NeedDocument DocumentId
 
 
 
 -- TODO: | NeedFolderCounts Selection
 -- TODO: | NeedDocListPage Selection Window
--- TODO: | NeedDocument DocumentId
 
 
 initialModel : Model
@@ -78,6 +79,7 @@ type Msg
     = ApiResponseToplevelFolder (Api.Response (List ( Folder, List Folder )))
     | ApiResponseSubfolder (List FolderId) (Api.Response (List Folder))
     | ApiResponseGenericNode Int (Api.Response GenericNode)
+    | ApiResponseDocument DocumentId (Api.Response (Maybe Document))
 
 
 requestNeeds : Needs -> Model -> ( Model, Cmd Msg )
@@ -149,6 +151,29 @@ requestNeeds needs model =
 
                 _ ->
                     ( model, Cmd.none )
+
+        NeedDocument documentId ->
+            case dictGetApiData model.documents documentId of
+                NotAsked ->
+                    ( { model
+                        | documents =
+                            Dict.insert documentId Loading model.documents
+                      }
+                    , Api.sendQueryRequest
+                        (ApiResponseDocument documentId)
+                        (Api.Queries.documentDetails documentId)
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+
+updateWithModifiedDocument : Document -> Model -> Model
+updateWithModifiedDocument document model =
+    { model
+        | documents =
+            Dict.insert document.id (Success (Just document)) model.documents
+    }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
@@ -228,7 +253,8 @@ update msg model =
                     )
 
                 GenericNode.IsDocument document ->
-                    ( model1 |> insertDocument document
+                    ( model1
+                        |> updateWithModifiedDocument document
                     , Cmd.none
                     , NoReturn
                     )
@@ -240,6 +266,24 @@ update msg model =
             ( { model
                 | nodeTypes =
                     Dict.insert nodeNumber (Failure error) model.nodeTypes
+              }
+            , Cmd.none
+            , NoReturn
+            )
+
+        ApiResponseDocument documentId (Ok maybeDocument) ->
+            ( { model
+                | documents =
+                    Dict.insert documentId (Success maybeDocument) model.documents
+              }
+            , Cmd.none
+            , NoReturn
+            )
+
+        ApiResponseDocument documentId (Err error) ->
+            ( { model
+                | documents =
+                    Dict.insert documentId (Failure error) model.documents
               }
             , Cmd.none
             , NoReturn
@@ -301,12 +345,4 @@ insertNodeType nodeNumber nodeType model =
     { model
         | nodeTypes =
             Dict.insert nodeNumber (Success nodeType) model.nodeTypes
-    }
-
-
-insertDocument : Document -> Model -> Model
-insertDocument document model =
-    { model
-        | documents =
-            Dict.insert document.id (Success document) model.documents
     }

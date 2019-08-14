@@ -4,6 +4,7 @@ module Article exposing
     , Return(..)
     , initWithQuery
     , initialModelEmpty
+    , needs
     , update
     , view
     )
@@ -14,7 +15,7 @@ import Article.Directory
 import Article.Empty
 import Article.Fts
 import Data.Cache as Cache exposing (ApiData)
-import Data.Types exposing (DocumentId, Filter, FolderCounts)
+import Data.Types exposing (Document, DocumentId, Filter, FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Query exposing (Query)
@@ -34,6 +35,7 @@ type Return
     = NoReturn
     | FolderCounts FolderCounts
     | MapQuery (Query -> Query)
+    | UpdateCacheWithModifiedDocument Document
 
 
 type alias Model =
@@ -46,7 +48,7 @@ type Content
     | CollectionModel Article.Collection.Model
     | DirectoryModel Article.Directory.Model
     | FtsModel Article.Fts.Model
-    | DetailsModel Article.Details.Model
+    | DetailsModel Query.DetailsQuery Article.Details.Model
 
 
 type Msg
@@ -62,17 +64,19 @@ initialModelEmpty =
     { content = EmptyModel Article.Empty.initialModel }
 
 
-initWithQuery : Query -> ( Model, Cmd Msg )
-initWithQuery query =
-    case query of
+initWithQuery : Context -> ( Model, Cmd Msg )
+initWithQuery context =
+    case context.query of
         Query.OnDetails detailsQuery ->
             let
-                ( subModel, subCmd ) =
-                    Article.Details.init <|
-                        { detailsQuery = detailsQuery }
+                subModel =
+                    Article.Details.initialModel
+                        { cache = context.cache
+                        , detailsQuery = detailsQuery
+                        }
             in
-            ( { content = DetailsModel subModel }
-            , Cmd.map DetailsMsg subCmd
+            ( { content = DetailsModel detailsQuery subModel }
+            , Cmd.none
             )
 
         Query.OnFolder folderQuery ->
@@ -89,7 +93,9 @@ initWithQuery query =
                 let
                     ( subModel, subCmd ) =
                         Article.Directory.init
-                            { folderQuery = folderQuery }
+                            { cache = context.cache
+                            , folderQuery = folderQuery
+                            }
                 in
                 ( { content = DirectoryModel subModel }
                 , Cmd.map DirectoryMsg subCmd
@@ -98,11 +104,25 @@ initWithQuery query =
         Query.OnFts ftsQuery ->
             let
                 ( subModel, subCmd ) =
-                    Article.Fts.init { ftsQuery = ftsQuery }
+                    Article.Fts.init
+                        { cache = context.cache
+                        , ftsQuery = ftsQuery
+                        }
             in
             ( { content = FtsModel subModel }
             , Cmd.map FtsMsg subCmd
             )
+
+
+needs : Query -> Cache.Needs
+needs query =
+    case query of
+        Query.OnDetails detailsQuery ->
+            Cache.NeedDocument detailsQuery.documentId
+
+        -- TODO: We currently don't observe the needs of an Iterator
+        _ ->
+            Cache.NeedNothing
 
 
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
@@ -132,7 +152,9 @@ update context msg model =
             let
                 ( subModel1, subCmd, documentSelection ) =
                     Article.Directory.update
-                        { folderQuery = folderQuery }
+                        { cache = context.cache
+                        , folderQuery = folderQuery
+                        }
                         subMsg
                         subModel
             in
@@ -167,7 +189,9 @@ update context msg model =
             let
                 ( subModel1, subCmd, subReturn ) =
                     Article.Fts.update
-                        { ftsQuery = ftsQuery }
+                        { cache = context.cache
+                        , ftsQuery = ftsQuery
+                        }
                         subMsg
                         subModel
             in
@@ -198,14 +222,24 @@ update context msg model =
                                 }
                     )
 
-        ( DetailsMsg subMsg, DetailsModel subModel, _ ) ->
+        ( DetailsMsg subMsg, DetailsModel detailsQuery subModel, _ ) ->
             let
-                ( subModel1, subCmd ) =
-                    Article.Details.update subMsg subModel
+                ( subModel1, subCmd, subReturn ) =
+                    Article.Details.update
+                        { cache = context.cache
+                        , detailsQuery = detailsQuery
+                        }
+                        subMsg
+                        subModel
             in
-            ( { model | content = DetailsModel subModel1 }
+            ( { model | content = DetailsModel detailsQuery subModel1 }
             , Cmd.map DetailsMsg subCmd
-            , NoReturn
+            , case subReturn of
+                Article.Details.NoReturn ->
+                    NoReturn
+
+                Article.Details.UpdateCacheWithModifiedDocument document ->
+                    UpdateCacheWithModifiedDocument document
             )
 
         _ ->
@@ -246,18 +280,26 @@ viewContent context model =
 
         ( DirectoryModel subModel, Query.OnFolder folderQuery ) ->
             Article.Directory.view
-                { folderQuery = folderQuery }
+                { cache = context.cache
+                , folderQuery = folderQuery
+                }
                 subModel
                 |> Html.map DirectoryMsg
 
         ( FtsModel subModel, Query.OnFts ftsQuery ) ->
             Article.Fts.view
-                { ftsQuery = ftsQuery }
+                { cache = context.cache
+                , ftsQuery = ftsQuery
+                }
                 subModel
                 |> Html.map FtsMsg
 
-        ( DetailsModel subModel, _ ) ->
-            Article.Details.view subModel
+        ( DetailsModel detailsQuery subModel, _ ) ->
+            Article.Details.view
+                { cache = context.cache
+                , detailsQuery = detailsQuery
+                }
+                subModel
                 |> Html.map DetailsMsg
 
         _ ->

@@ -3,13 +3,14 @@ module Article.Iterator exposing
     , Model
     , Msg
     , Return(..)
-    , init
+    , initialModel
     , update
     , view
     )
 
 import Article.Details as Details
-import Data.Types exposing (DocumentId, Folder)
+import Data.Cache as Cache exposing (ApiData)
+import Data.Types exposing (Document, DocumentId, Folder)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -19,7 +20,8 @@ import Utils
 
 
 type alias Context item =
-    { folder : Folder
+    { cache : Cache.Model
+    , folder : Folder
     , itemList : List item
     , itemId : item -> DocumentId
     }
@@ -29,6 +31,7 @@ type Return
     = NoReturn
     | ShowDocument DocumentId
     | CloseIterator
+    | UpdateCacheWithModifiedDocument Document
 
 
 type alias Model =
@@ -44,23 +47,22 @@ type Msg
     | Select DocumentId
 
 
-init : Context item -> DocumentId -> ( Model, Cmd Msg )
-init context documentId =
+initialModel : Context item -> DocumentId -> Model
+initialModel context documentId =
     let
-        ( subModel, subCmd ) =
-            Details.init
-                { detailsQuery =
+        subModel =
+            Details.initialModel
+                { cache = context.cache
+                , detailsQuery =
                     { folder = context.folder
                     , documentId = documentId
                     , filters = Query.Filters.none
                     }
                 }
     in
-    ( { currentId = documentId
-      , details = subModel
-      }
-    , Cmd.map DetailsMsg subCmd
-    )
+    { currentId = documentId
+    , details = subModel
+    }
 
 
 update : Context item -> Msg -> Model -> ( Model, Cmd Msg, Return )
@@ -68,12 +70,26 @@ update context msg model =
     case msg of
         DetailsMsg subMsg ->
             let
-                ( subModel, subCmd ) =
-                    Details.update subMsg model.details
+                ( subModel, subCmd, subReturn ) =
+                    Details.update
+                        { cache = context.cache
+                        , detailsQuery =
+                            { folder = context.folder
+                            , documentId = model.currentId
+                            , filters = Query.Filters.none
+                            }
+                        }
+                        subMsg
+                        model.details
             in
             ( { model | details = subModel }
             , Cmd.map DetailsMsg subCmd
-            , NoReturn
+            , case subReturn of
+                Details.NoReturn ->
+                    NoReturn
+
+                Details.UpdateCacheWithModifiedDocument document ->
+                    UpdateCacheWithModifiedDocument document
             )
 
         Close ->
@@ -83,8 +99,10 @@ update context msg model =
             ( model, Cmd.none, ShowDocument model.currentId )
 
         Select documentId ->
-            init context documentId
-                |> Utils.tupleAddThird NoReturn
+            ( initialModel context documentId
+            , Cmd.none
+            , NoReturn
+            )
 
 
 view : Context item -> Model -> Html Msg
@@ -148,6 +166,14 @@ view context model =
                 (selectButtonAttrs next)
                 [ Html.text "Next" ]
             ]
-        , Details.view model.details
+        , Details.view
+            { cache = context.cache
+            , detailsQuery =
+                { folder = context.folder
+                , documentId = model.currentId
+                , filters = Query.Filters.none
+                }
+            }
+            model.details
             |> Html.map DetailsMsg
         ]
