@@ -70,7 +70,7 @@ update context msg model =
                     not (model.selection == Just id) || not model.showSubselection
               }
             , if model.selection /= Just id then
-                Cache.dictGetApiData context.cache.folders id
+                Cache.get context.cache.folders id
                     |> RemoteData.toMaybe
                     |> Maybe.Extra.unwrap
                         NoReturn
@@ -83,7 +83,7 @@ update context msg model =
 
 getParentId : Cache.Model -> FolderId -> ApiData (Maybe FolderId)
 getParentId cache id =
-    Cache.dictGetApiData cache.folders id
+    Cache.get cache.folders id
         |> RemoteData.map .parent
 
 
@@ -181,7 +181,7 @@ viewFolder context model folderCounts id =
             (not isSelectedFolder || model.showSubselection)
                 && isOnPath context.cache id model.selection
     in
-    case Cache.dictGetApiData context.cache.folders id of
+    case Cache.get context.cache.folders id of
         RemoteData.Success folder ->
             Html.div []
                 [ Html.div
@@ -193,7 +193,7 @@ viewFolder context model folderCounts id =
                         expanded
                     ]
                 , if expanded then
-                    case Cache.dictGetApiData context.cache.subfolderIds id of
+                    case Cache.get context.cache.subfolderIds id of
                         RemoteData.Success subfolderIds ->
                             viewListOfFolders context model folderCounts subfolderIds
 
@@ -217,7 +217,7 @@ viewBreadcrumbs context model id =
                 >> List.map
                     (\idPathSegment ->
                         Html.span []
-                            [ Cache.dictGetApiData context.cache.folders idPathSegment
+                            [ Cache.get context.cache.folders idPathSegment
                                 |> RemoteData.unwrap
                                     (Html.text "...")
                                     (\folder ->

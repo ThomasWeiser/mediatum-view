@@ -4,7 +4,7 @@ module Data.Cache exposing
     , Msg(..)
     , Needs(..)
     , Return(..)
-    , dictGetApiData
+    , get
     , initialModel
     , requestNeeds
     , update
@@ -14,13 +14,16 @@ module Data.Cache exposing
 import Api
 import Api.Queries
 import Basics.Extra
+import Data.Ordering exposing (..)
 import Data.Types exposing (..)
-import Dict exposing (Dict)
+import Dict
 import Dict.Extra
 import GenericNode exposing (GenericNode)
 import List.Extra
 import List.Nonempty exposing (Nonempty)
 import RemoteData exposing (RemoteData(..))
+import Sort
+import Sort.Dict
 
 
 type alias ApiData a =
@@ -34,12 +37,12 @@ type Return
 
 type alias Model =
     { rootFolderIds : ApiData (List FolderId)
-    , folders : Dict FolderId (ApiData Folder)
-    , subfolderIds : Dict FolderId (ApiData (List FolderId))
-    , nodeTypes : Dict Int (ApiData NodeType)
-    , folderCounts : Dict Selection (ApiData (Dict FolderId Int))
-    , docListPages : Dict Selection (Dict Window (ApiData DocumentsPage))
-    , documents : Dict DocumentId (ApiData (Maybe Document))
+    , folders : Sort.Dict.Dict FolderId (ApiData Folder)
+    , subfolderIds : Sort.Dict.Dict FolderId (ApiData (List FolderId))
+    , nodeTypes : Sort.Dict.Dict Int (ApiData NodeType)
+    , folderCounts : Sort.Dict.Dict Selection (ApiData (Dict.Dict FolderId Int))
+    , docListPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
+    , documents : Sort.Dict.Dict DocumentId (ApiData (Maybe Document))
     }
 
 
@@ -50,29 +53,29 @@ type Needs
     | NeedSubfolders (List FolderId)
     | NeedGenericNode Int
     | NeedDocument DocumentId
+    | NeedDocListPage Selection Window
 
 
 
 -- TODO: | NeedFolderCounts Selection
--- TODO: | NeedDocListPage Selection Window
 
 
 initialModel : Model
 initialModel =
     { rootFolderIds = NotAsked
-    , folders = Dict.empty
-    , subfolderIds = Dict.empty
-    , nodeTypes = Dict.empty
-    , folderCounts = Dict.empty
-    , docListPages = Dict.empty
-    , documents = Dict.empty
+    , folders = Sort.Dict.empty (sorter orderingFolderId)
+    , subfolderIds = Sort.Dict.empty (sorter orderingFolderId)
+    , nodeTypes = Sort.Dict.empty Sort.increasing
+    , folderCounts = Sort.Dict.empty (sorter orderingSelection)
+    , docListPages = Sort.Dict.empty (sorter orderingSelectionWindow)
+    , documents = Sort.Dict.empty (sorter orderingDocumentId)
     }
 
 
-dictGetApiData : Dict comparable (ApiData value) -> comparable -> ApiData value
-dictGetApiData dict key =
-    Dict.get key dict
-        |> Maybe.withDefault RemoteData.NotAsked
+get : Sort.Dict.Dict k (ApiData v) -> k -> ApiData v
+get dict key =
+    Sort.Dict.get key dict
+        |> Maybe.withDefault NotAsked
 
 
 type Msg
@@ -114,8 +117,7 @@ requestNeeds needs model =
                 parentIdsWithUnknownChildren =
                     List.filter
                         (\parentId ->
-                            (Dict.get parentId model.subfolderIds |> Maybe.withDefault NotAsked)
-                                == NotAsked
+                            get model.subfolderIds parentId == NotAsked
                         )
                         parentIds
             in
@@ -127,7 +129,7 @@ requestNeeds needs model =
                     | subfolderIds =
                         List.foldl
                             (\parentId subfolderIds ->
-                                Dict.insert parentId Loading subfolderIds
+                                Sort.Dict.insert parentId Loading subfolderIds
                             )
                             model.subfolderIds
                             parentIdsWithUnknownChildren
@@ -138,11 +140,11 @@ requestNeeds needs model =
                 )
 
         NeedGenericNode nodeNumber ->
-            case dictGetApiData model.nodeTypes nodeNumber of
+            case get model.nodeTypes nodeNumber of
                 NotAsked ->
                     ( { model
                         | nodeTypes =
-                            Dict.insert nodeNumber Loading model.nodeTypes
+                            Sort.Dict.insert nodeNumber Loading model.nodeTypes
                       }
                     , Api.sendQueryRequest
                         (ApiResponseGenericNode nodeNumber)
@@ -153,15 +155,29 @@ requestNeeds needs model =
                     ( model, Cmd.none )
 
         NeedDocument documentId ->
-            case dictGetApiData model.documents documentId of
+            case get model.documents documentId of
                 NotAsked ->
                     ( { model
                         | documents =
-                            Dict.insert documentId Loading model.documents
+                            Sort.Dict.insert documentId Loading model.documents
                       }
                     , Api.sendQueryRequest
                         (ApiResponseDocument documentId)
                         (Api.Queries.documentDetails documentId)
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        NeedDocListPage selection window ->
+            case get model.docListPages ( selection, window ) of
+                NotAsked ->
+                    ( { model
+                        | docListPages =
+                            Sort.Dict.insert ( selection, window ) Loading model.docListPages
+                      }
+                    , -- TODO ...
+                      Cmd.none
                     )
 
                 _ ->
@@ -172,7 +188,7 @@ updateWithModifiedDocument : Document -> Model -> Model
 updateWithModifiedDocument document model =
     { model
         | documents =
-            Dict.insert document.id (Success (Just document)) model.documents
+            Sort.Dict.insert document.id (Success (Just document)) model.documents
     }
 
 
@@ -220,7 +236,7 @@ update msg model =
                 | subfolderIds =
                     List.foldl
                         (\parentId subfolderIds ->
-                            Dict.insert parentId (Failure error) subfolderIds
+                            Sort.Dict.insert parentId (Failure error) subfolderIds
                         )
                         model.subfolderIds
                         parentIds
@@ -265,7 +281,7 @@ update msg model =
         ApiResponseGenericNode nodeNumber (Err error) ->
             ( { model
                 | nodeTypes =
-                    Dict.insert nodeNumber (Failure error) model.nodeTypes
+                    Sort.Dict.insert nodeNumber (Failure error) model.nodeTypes
               }
             , Cmd.none
             , NoReturn
@@ -274,7 +290,7 @@ update msg model =
         ApiResponseDocument documentId (Ok maybeDocument) ->
             ( { model
                 | documents =
-                    Dict.insert documentId (Success maybeDocument) model.documents
+                    Sort.Dict.insert documentId (Success maybeDocument) model.documents
               }
             , Cmd.none
             , NoReturn
@@ -283,7 +299,7 @@ update msg model =
         ApiResponseDocument documentId (Err error) ->
             ( { model
                 | documents =
-                    Dict.insert documentId (Failure error) model.documents
+                    Sort.Dict.insert documentId (Failure error) model.documents
               }
             , Cmd.none
             , NoReturn
@@ -296,7 +312,7 @@ insertAsFolders listOfNewFolders model =
         | folders =
             List.foldl
                 (\folder ->
-                    Dict.insert folder.id (Success folder)
+                    Sort.Dict.insert folder.id (Success folder)
                 )
                 model.folders
                 listOfNewFolders
@@ -313,7 +329,7 @@ insertAsSubfolderIds allSubfoldersOfSomeNewParents model =
                 |> Dict.toList
                 |> List.foldl
                     (\( parentId, subfolders ) ->
-                        Dict.insert
+                        Sort.Dict.insert
                             parentId
                             (Success
                                 (List.map .id subfolders)
@@ -344,5 +360,5 @@ insertNodeType : Int -> NodeType -> Model -> Model
 insertNodeType nodeNumber nodeType model =
     { model
         | nodeTypes =
-            Dict.insert nodeNumber (Success nodeType) model.nodeTypes
+            Sort.Dict.insert nodeNumber (Success nodeType) model.nodeTypes
     }

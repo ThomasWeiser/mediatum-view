@@ -39,6 +39,9 @@ folderIdToInt ( i, _ ) =
    But in Elm 0.19 union types are not comparable and therefore not usable as keys of a dict.
    Only ints, floats, chars, strings, lists, and tuples are comparable.
    So, as a workaround we use a tuple with some contrived structure to make it somewhat unique.
+
+   TODO: Can now be done if we consequently use Sort.Dict
+   TODO: GenericId
 -}
 
 

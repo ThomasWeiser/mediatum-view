@@ -224,7 +224,7 @@ updateWithoutReturn msg model =
                 ( model1.route
                 , firstRootFolderId
                     |> Maybe.andThen
-                        (Cache.dictGetApiData model1.cache.folders
+                        (Cache.get model1.cache.folders
                             >> RemoteData.toMaybe
                         )
                 )

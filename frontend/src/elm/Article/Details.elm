@@ -118,7 +118,7 @@ update context msg model =
 initEditAttributeValue : Context -> Model -> Model
 initEditAttributeValue context model =
     case
-        Cache.dictGetApiData
+        Cache.get
             context.cache.documents
             context.detailsQuery.documentId
     of
@@ -152,7 +152,7 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.div [ Html.Attributes.class "details" ]
         [ case
-            Cache.dictGetApiData
+            Cache.get
                 context.cache.documents
                 context.detailsQuery.documentId
           of

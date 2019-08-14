@@ -23,7 +23,9 @@
             "elm-community/list-extra": "8.2.2",
             "elm-community/maybe-extra": "5.0.0",
             "krisajenkins/remotedata": "6.0.1",
-            "mgold/elm-nonempty-list": "4.0.2"
+            "matthewsj/elm-ordering": "2.0.0",
+            "mgold/elm-nonempty-list": "4.0.2",
+            "rtfeldman/elm-sorter-experiment": "2.1.1"
         },
         "indirect": {
             "Skinney/murmur3": "2.0.8",

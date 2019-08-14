@@ -1,5 +1,6 @@
 module Utils exposing
     ( findAdjacent
+    , lexicalOrder
     , noBreakSpace
     , onChange
     , tupleAddThird
@@ -69,3 +70,31 @@ onChange : (String -> msg) -> Html.Attribute msg
 onChange tagger =
     Html.Events.on "change"
         (Json.Decode.map tagger Html.Events.targetValue)
+
+
+
+-- TODO: Suggest for elm-community/list-extra, and posssibly also for matthewsj/elm-ordering
+
+
+lexicalOrder : (a -> a -> Order) -> List a -> List a -> Order
+lexicalOrder compareElements listL listR =
+    case ( listL, listR ) of
+        ( [], [] ) ->
+            EQ
+
+        ( [], _ :: _ ) ->
+            LT
+
+        ( _ :: _, [] ) ->
+            GT
+
+        ( headL :: tailL, headR :: tailR ) ->
+            case compareElements headL headR of
+                LT ->
+                    LT
+
+                GT ->
+                    GT
+
+                EQ ->
+                    lexicalOrder compareElements tailL tailR
