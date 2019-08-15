@@ -1,7 +1,5 @@
 module Document exposing
     ( attributeValue
-    , idToInt
-    , idToString
     , init
     , view
     )
@@ -15,24 +13,9 @@ import Regex
 import Route
 
 
-idFromInt : Int -> DocumentId
-idFromInt idAsInt =
-    ( 0.0, idAsInt )
-
-
-idToInt : DocumentId -> Int
-idToInt ( _, i ) =
-    i
-
-
-idToString : DocumentId -> String
-idToString ( _, i ) =
-    String.fromInt i
-
-
-init : Int -> String -> String -> List DocumentAttribute -> Document
-init idAsInt metadatatypeName name attributes =
-    { id = idFromInt idAsInt
+init : DocumentId -> String -> String -> List DocumentAttribute -> Document
+init id metadatatypeName name attributes =
+    { id = id
     , name = name
     , metadatatypeName = metadatatypeName
     , attributes = attributes
@@ -61,7 +44,8 @@ view clickMsg maybeNumber document =
             , Html.a
                 [ Html.Attributes.class "metadatatype"
                 , document.id
-                    |> idToInt
+                    |> Data.Types.documentIdToInt
+                    |> Data.Types.nodeIdFromInt
                     |> Route.NodeId
                     |> Route.toString
                     |> Html.Attributes.href

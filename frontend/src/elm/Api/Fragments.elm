@@ -72,11 +72,27 @@ _GraphQL notation:_
 folder : SelectionSet Folder Mediatum.Object.Folder
 folder =
     SelectionSet.succeed Folder.init
-        |> SelectionSet.with (Mediatum.Object.Folder.id |> SelectionSet.nonNullOrFail)
-        |> SelectionSet.with Mediatum.Object.Folder.parentId
-        |> SelectionSet.with (Mediatum.Object.Folder.name |> SelectionSet.nonNullOrFail)
-        |> SelectionSet.with (Mediatum.Object.Folder.isCollection |> SelectionSet.nonNullOrFail)
-        |> SelectionSet.with (Mediatum.Object.Folder.numSubfolder |> SelectionSet.nonNullOrFail)
+        |> SelectionSet.with
+            (Mediatum.Object.Folder.id
+                |> SelectionSet.nonNullOrFail
+                |> SelectionSet.map folderIdFromInt
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.Folder.parentId
+                |> SelectionSet.map (Maybe.map folderIdFromInt)
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.Folder.name
+                |> SelectionSet.nonNullOrFail
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.Folder.isCollection
+                |> SelectionSet.nonNullOrFail
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.Folder.numSubfolder
+                |> SelectionSet.nonNullOrFail
+            )
 
 
 {-| Selection set on a folder to get the basic properties of that folder and of its sub-folders.
@@ -184,7 +200,7 @@ folderCount =
         |> SelectionSet.with
             (Mediatum.Object.FolderCount.folderId
                 |> SelectionSet.nonNullOrFail
-                |> SelectionSet.map Folder.idFromInt
+                |> SelectionSet.map folderIdFromInt
             )
         |> SelectionSet.with
             (Mediatum.Object.FolderCount.count
@@ -323,6 +339,7 @@ documentByMask maskName =
         |> SelectionSet.with
             (Mediatum.Object.Document.id
                 |> SelectionSet.nonNullOrFail
+                |> SelectionSet.map documentIdFromInt
             )
         |> SelectionSet.with
             (Mediatum.Object.Document.metadatatype

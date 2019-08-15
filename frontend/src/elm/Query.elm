@@ -152,13 +152,22 @@ toRoute : Query -> Route
 toRoute query =
     case query of
         OnDetails { documentId } ->
-            Route.NodeId <| Document.idToInt documentId
+            documentId
+                |> Data.Types.documentIdToInt
+                |> Data.Types.nodeIdFromInt
+                |> Route.NodeId
 
         OnFolder { folder } ->
-            Route.NodeId <| Folder.idToInt folder.id
+            folder.id
+                |> Data.Types.folderIdToInt
+                |> Data.Types.nodeIdFromInt
+                |> Route.NodeId
 
         OnFts { folder } ->
-            Route.NodeId <| Folder.idToInt folder.id
+            folder.id
+                |> Data.Types.folderIdToInt
+                |> Data.Types.nodeIdFromInt
+                |> Route.NodeId
 
 
 view : Query -> Html Never

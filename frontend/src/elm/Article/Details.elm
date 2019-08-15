@@ -169,7 +169,11 @@ view context model =
             RemoteData.Success Nothing ->
                 Html.span []
                     [ Html.text "Document with id "
-                    , Html.text (Document.idToString context.detailsQuery.documentId)
+                    , Html.text
+                        (context.detailsQuery.documentId
+                            |> Data.Types.documentIdToInt
+                            |> String.fromInt
+                        )
                     , Html.text " not available"
                     ]
 

@@ -4,6 +4,7 @@ module Tests.Data.Types exposing
     , fuzzerFilters
     , fuzzerFolderId
     , fuzzerFtsSorting
+    , fuzzerNodeId
     , fuzzerSearchMethod
     , fuzzerSelection
     , fuzzerSelectionWindow
@@ -26,8 +27,6 @@ fuzzerId =
         [ Fuzz.intRange 0 2
         , Fuzz.intRange 0 5
         , Fuzz.intRange 0 10
-
-        -- , Fuzz.intRange 0 100
         , Fuzz.intRange 0 999999
         ]
 
@@ -35,6 +34,11 @@ fuzzerId =
 fuzzerFolderId : Fuzzer FolderId
 fuzzerFolderId =
     Fuzz.map folderIdFromInt fuzzerId
+
+
+fuzzerNodeId : Fuzzer NodeId
+fuzzerNodeId =
+    Fuzz.map nodeIdFromInt fuzzerId
 
 
 fuzzerDocumentId : Fuzzer DocumentId

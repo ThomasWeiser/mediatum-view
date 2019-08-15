@@ -49,7 +49,7 @@ updateDocumentAttribute documentId key value =
         (Mediatum.Mutation.updateDocumentAttribute
             { input =
                 { clientMutationId = Absent
-                , id = Present (Document.idToInt documentId)
+                , id = Present (documentIdToInt documentId)
                 , key = Present key
                 , value = Present value
                 }

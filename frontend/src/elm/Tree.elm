@@ -223,7 +223,8 @@ viewBreadcrumbs context model id =
                                     (\folder ->
                                         Html.a
                                             [ folder.id
-                                                |> Folder.idToInt
+                                                |> Data.Types.folderIdToInt
+                                                |> Data.Types.nodeIdFromInt
                                                 |> Route.NodeId
                                                 |> Route.toString
                                                 |> Html.Attributes.href

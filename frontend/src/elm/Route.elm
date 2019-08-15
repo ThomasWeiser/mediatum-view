@@ -1,6 +1,7 @@
 module Route exposing (Route(..), parseUrl, toString)
 
 import Browser.Navigation
+import Data.Types exposing (NodeId)
 import Maybe.Extra
 import Url exposing (Url)
 import Url.Builder as Builder
@@ -9,7 +10,7 @@ import Url.Parser as Parser exposing ((</>), Parser)
 
 type Route
     = Home
-    | NodeId Int
+    | NodeId NodeId
     | Invalid String
 
 
@@ -17,7 +18,7 @@ parser : Parser (Route -> a) a
 parser =
     Parser.oneOf
         [ Parser.map Home Parser.top
-        , Parser.map NodeId Parser.int
+        , Parser.map (NodeId << Data.Types.nodeIdFromInt) Parser.int
         ]
 
 
@@ -40,7 +41,7 @@ toString page =
                     []
 
                 NodeId id ->
-                    [ String.fromInt id ]
+                    [ String.fromInt <| Data.Types.nodeIdToInt id ]
 
                 Invalid _ ->
                     []

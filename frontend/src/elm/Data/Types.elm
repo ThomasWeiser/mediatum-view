@@ -11,6 +11,7 @@ module Data.Types exposing
     , FolderId
     , FolderType(..)
     , FtsSorting(..)
+    , NodeId
     , NodeType(..)
     , SearchMethod(..)
     , Selection
@@ -20,9 +21,25 @@ module Data.Types exposing
     , documentIdToInt
     , folderIdFromInt
     , folderIdToInt
+    , nodeIdFromInt
+    , nodeIdToInt
     )
 
 import Dict exposing (Dict)
+
+
+type alias NodeId =
+    ( Int, Float, Float )
+
+
+nodeIdToInt : NodeId -> Int
+nodeIdToInt ( id, _, _ ) =
+    id
+
+
+nodeIdFromInt : Int -> NodeId
+nodeIdFromInt id =
+    ( id, 0.0, 0.0 )
 
 
 type alias FolderId =

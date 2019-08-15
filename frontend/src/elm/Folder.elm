@@ -1,8 +1,6 @@
 module Folder exposing
     ( dummy
     , hasSubfolder
-    , idFromInt
-    , idToInt
     , init
     , isRoot
     , view
@@ -32,7 +30,7 @@ import Icons
 
 dummy : Folder
 dummy =
-    { id = idFromInt -1
+    { id = Data.Types.folderIdFromInt -1
     , parent = Nothing
     , name = ""
     , isCollection = False
@@ -40,31 +38,14 @@ dummy =
     }
 
 
-init : Int -> Maybe Int -> String -> Bool -> Int -> Folder
-init idAsInt maybeParentIdAsInt name isCollection numSubfolder =
-    { id = idFromInt idAsInt
-    , parent =
-        case maybeParentIdAsInt of
-            Nothing ->
-                Nothing
-
-            Just parentIdAsInt ->
-                Just (idFromInt parentIdAsInt)
+init : FolderId -> Maybe FolderId -> String -> Bool -> Int -> Folder
+init id maybeParentId name isCollection numSubfolder =
+    { id = id
+    , parent = maybeParentId
     , name = name
     , isCollection = isCollection
     , numSubfolder = numSubfolder
     }
-
-
-idToInt : FolderId -> Int
-idToInt ( i, _ ) =
-    -- TODO: Replaced with Data.Types.folderIdToInt
-    i
-
-
-idFromInt : Int -> FolderId
-idFromInt idAsInt =
-    ( idAsInt, 0.0 )
 
 
 isRoot : Folder -> Bool

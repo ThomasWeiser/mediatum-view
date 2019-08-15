@@ -12,7 +12,8 @@ import Tests.Data.Types exposing (..)
 suite : Test
 suite =
     describe "Data.Ordering"
-        [ testOrderingProperties "FolderId" fuzzerFolderId orderingFolderId
+        [ testOrderingProperties "NodeId" fuzzerNodeId orderingNodeId
+        , testOrderingProperties "FolderId" fuzzerFolderId orderingFolderId
         , testOrderingProperties "DocumentId" fuzzerDocumentId orderingDocumentId
         , testOrderingProperties "Selection" fuzzerSelection orderingSelection
         , testOrderingProperties "SelectionWindow" fuzzerSelectionWindow orderingSelectionWindow

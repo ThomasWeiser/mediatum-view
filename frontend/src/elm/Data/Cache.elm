@@ -39,7 +39,7 @@ type alias Model =
     { rootFolderIds : ApiData (List FolderId)
     , folders : Sort.Dict.Dict FolderId (ApiData Folder)
     , subfolderIds : Sort.Dict.Dict FolderId (ApiData (List FolderId))
-    , nodeTypes : Sort.Dict.Dict Int (ApiData NodeType)
+    , nodeTypes : Sort.Dict.Dict NodeId (ApiData NodeType)
     , documents : Sort.Dict.Dict DocumentId (ApiData (Maybe Document))
     , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
     , folderCounts : Sort.Dict.Dict Selection (ApiData (Dict.Dict FolderId Int))
@@ -51,7 +51,7 @@ type Needs
     | NeedListOfNeeds (List Needs)
     | NeedRootFolderIds
     | NeedSubfolders (List FolderId)
-    | NeedGenericNode Int
+    | NeedGenericNode NodeId
     | NeedDocument DocumentId
     | NeedDocumentsPage Selection Window
     | NeedFolderCounts Selection
@@ -62,7 +62,7 @@ initialModel =
     { rootFolderIds = NotAsked
     , folders = Sort.Dict.empty (sorter orderingFolderId)
     , subfolderIds = Sort.Dict.empty (sorter orderingFolderId)
-    , nodeTypes = Sort.Dict.empty Sort.increasing
+    , nodeTypes = Sort.Dict.empty (sorter orderingNodeId)
     , documents = Sort.Dict.empty (sorter orderingDocumentId)
     , documentsPages = Sort.Dict.empty (sorter orderingSelectionWindow)
     , folderCounts = Sort.Dict.empty (sorter orderingSelection)
@@ -78,7 +78,7 @@ get dict key =
 type Msg
     = ApiResponseToplevelFolder (Api.Response (List ( Folder, List Folder )))
     | ApiResponseSubfolder (List FolderId) (Api.Response (List Folder))
-    | ApiResponseGenericNode Int (Api.Response GenericNode)
+    | ApiResponseGenericNode NodeId (Api.Response GenericNode)
     | ApiResponseDocument DocumentId (Api.Response (Maybe Document))
     | ApiResponseDocumentsPage ( Selection, Window ) (Api.Response DocumentsPage)
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
@@ -138,16 +138,16 @@ requestNeeds needs model =
                     (Api.Queries.subfolder parentIdsWithUnknownChildren)
                 )
 
-        NeedGenericNode nodeNumber ->
-            case get model.nodeTypes nodeNumber of
+        NeedGenericNode nodeId ->
+            case get model.nodeTypes nodeId of
                 NotAsked ->
                     ( { model
                         | nodeTypes =
-                            Sort.Dict.insert nodeNumber Loading model.nodeTypes
+                            Sort.Dict.insert nodeId Loading model.nodeTypes
                       }
                     , Api.sendQueryRequest
-                        (ApiResponseGenericNode nodeNumber)
-                        (Api.Queries.genericNode nodeNumber)
+                        (ApiResponseGenericNode nodeId)
+                        (Api.Queries.genericNode nodeId)
                     )
 
                 _ ->
@@ -286,11 +286,11 @@ update msg model =
             , NoReturn
             )
 
-        ApiResponseGenericNode nodeNumber (Ok genericNode) ->
+        ApiResponseGenericNode nodeId (Ok genericNode) ->
             let
                 model1 =
                     model
-                        |> insertNodeType nodeNumber (GenericNode.toNodeType genericNode)
+                        |> insertNodeType nodeId (GenericNode.toNodeType genericNode)
             in
             case genericNode of
                 GenericNode.IsFolder lineage ->
@@ -319,10 +319,10 @@ update msg model =
                 GenericNode.IsNeither ->
                     ( model1, Cmd.none, NoReturn )
 
-        ApiResponseGenericNode nodeNumber (Err error) ->
+        ApiResponseGenericNode nodeId (Err error) ->
             ( { model
                 | nodeTypes =
-                    Sort.Dict.insert nodeNumber (Failure error) model.nodeTypes
+                    Sort.Dict.insert nodeId (Failure error) model.nodeTypes
               }
             , Cmd.none
             , NoReturn
@@ -421,7 +421,7 @@ insertFoldersAsNodeTypes listOfNewFolders model =
     List.foldl
         (\folder ->
             insertNodeType
-                (folderIdToInt folder.id)
+                (folder.id |> folderIdToInt |> nodeIdFromInt)
                 (if folder.isCollection then
                     NodeIsFolder FolderIsCollection
 
@@ -433,9 +433,9 @@ insertFoldersAsNodeTypes listOfNewFolders model =
         listOfNewFolders
 
 
-insertNodeType : Int -> NodeType -> Model -> Model
-insertNodeType nodeNumber nodeType model =
+insertNodeType : NodeId -> NodeType -> Model -> Model
+insertNodeType nodeId nodeType model =
     { model
         | nodeTypes =
-            Sort.Dict.insert nodeNumber (Success nodeType) model.nodeTypes
+            Sort.Dict.insert nodeId (Success nodeType) model.nodeTypes
     }

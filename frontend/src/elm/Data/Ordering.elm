@@ -4,6 +4,7 @@ module Data.Ordering exposing
     , orderingFilters
     , orderingFolderId
     , orderingFtsSorting
+    , orderingNodeId
     , orderingSearchMethod
     , orderingSelection
     , orderingSelectionWindow
@@ -22,6 +23,11 @@ import Utils
 sorter : Ordering a -> Sorter a
 sorter ordering =
     Sort.custom ordering
+
+
+orderingNodeId : Ordering NodeId
+orderingNodeId =
+    Ordering.byField nodeIdToInt
 
 
 orderingFolderId : Ordering FolderId

@@ -14,7 +14,7 @@ import Article
 import Cmd.Extra
 import Controls
 import Data.Cache as Cache
-import Data.Types exposing (FolderCounts)
+import Data.Types exposing (FolderCounts, NodeId)
 import Dict
 import GenericNode exposing (GenericNode)
 import Html exposing (Html)
@@ -52,7 +52,7 @@ type alias Model =
 
 type Msg
     = NoOp
-    | QueryGenericNode Int
+    | QueryGenericNode NodeId
     | GotRootFolders
     | GenericNodeQueryResponse (Api.Response GenericNode)
     | CacheMsg Cache.Msg
