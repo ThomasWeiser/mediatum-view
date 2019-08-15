@@ -7,9 +7,10 @@ module Article.Fts exposing
     , view
     )
 
+-- import Article.Iterator as Iterator
+
 import Api
 import Api.Queries
-import Article.Iterator as Iterator
 import Data.Cache as Cache exposing (ApiData)
 import Data.Types exposing (Document, DocumentId, DocumentResult, Folder, FolderCounts)
 import DocumentResult
@@ -38,7 +39,8 @@ type Return
 
 type alias Model =
     { pageResult : PageResult DocumentResult
-    , iterator : Maybe Iterator.Model
+
+    -- , iterator : Maybe Iterator.Model
     , doQueryFolderCounts : Bool
     }
 
@@ -48,16 +50,19 @@ type Msg
     | ApiResponseFtsFolderCounts (Api.Response FolderCounts)
     | PickPosition Page.Position
     | SelectDocument DocumentId
-    | IteratorMsg Iterator.Msg
 
 
-iteratorContext : Context -> Model -> Iterator.Context DocumentResult
-iteratorContext context model =
-    { cache = context.cache
-    , folder = context.ftsQuery.folder
-    , itemList = Maybe.Extra.unwrap [] Page.entries model.pageResult.page
-    , itemId = .document >> .id
-    }
+
+-- | IteratorMsg Iterator.Msg
+{-
+   iteratorContext : Context -> Model -> Iterator.Context DocumentResult
+   iteratorContext context model =
+       { cache = context.cache
+       , folder = context.ftsQuery.folder
+       , itemList = Maybe.Extra.unwrap [] Page.entries model.pageResult.page
+       , itemId = .document >> .id
+       }
+-}
 
 
 init : Context -> ( Model, Cmd Msg )
@@ -65,7 +70,8 @@ init context =
     let
         model =
             { pageResult = Page.initialPageResult
-            , iterator = Nothing
+
+            -- , iterator = Nothing
             , doQueryFolderCounts = True
             }
     in
@@ -124,82 +130,92 @@ update context msg model =
             )
 
         SelectDocument id ->
-            ( { model
-                | iterator =
-                    Just
-                        (Iterator.initialModel
-                            (iteratorContext context model)
-                            id
-                        )
-              }
+            ( model
+              {- { model
+                   | iterator =
+                       Just
+                           (Iterator.initialModel
+                               (iteratorContext context model)
+                               id
+                           )
+                 }
+              -}
             , Cmd.none
             , NoReturn
             )
 
-        IteratorMsg subMsg ->
-            case model.iterator of
-                Nothing ->
-                    ( model, Cmd.none, NoReturn )
 
-                Just iterator ->
-                    let
-                        ( subModel, subCmd, subReturn ) =
-                            Iterator.update
-                                (iteratorContext context model)
-                                subMsg
-                                iterator
-                    in
-                    ( { model
-                        | iterator =
-                            if subReturn == Iterator.CloseIterator then
-                                Nothing
 
-                            else
-                                Just subModel
-                      }
-                    , Cmd.map IteratorMsg subCmd
-                    , case subReturn of
-                        Iterator.ShowDocument id ->
-                            ShowDocument id
+{-
+   IteratorMsg subMsg ->
+       case model.iterator of
+           Nothing ->
+               ( model, Cmd.none, NoReturn )
 
-                        _ ->
-                            NoReturn
-                    )
+           Just iterator ->
+               let
+                   ( subModel, subCmd, subReturn ) =
+                       Iterator.update
+                           (iteratorContext context model)
+                           subMsg
+                           iterator
+               in
+               ( { model
+                   | iterator =
+                       if subReturn == Iterator.CloseIterator then
+                           Nothing
+
+                       else
+                           Just subModel
+                 }
+               , Cmd.map IteratorMsg subCmd
+               , case subReturn of
+                   Iterator.ShowDocument id ->
+                       ShowDocument id
+
+                   _ ->
+                       NoReturn
+               )
+-}
 
 
 view : Context -> Model -> Html Msg
 view context model =
     Html.div [] <|
-        case model.iterator of
+        -- case model.iterator of
+        -- Nothing ->
+        [ case model.pageResult.page of
             Nothing ->
-                [ case model.pageResult.page of
-                    Nothing ->
-                        Html.text ""
+                Html.text ""
 
-                    Just documentPage ->
-                        viewResponse
-                            PickPosition
-                            (viewPage (DocumentResult.view SelectDocument))
-                            documentPage
-                , if model.pageResult.loading then
-                    Icons.spinner
+            Just documentPage ->
+                viewResponse
+                    PickPosition
+                    (viewPage (DocumentResult.view SelectDocument))
+                    documentPage
+        , if model.pageResult.loading then
+            Icons.spinner
 
-                  else
-                    Html.text ""
-                , case model.pageResult.error of
-                    Nothing ->
-                        Html.text ""
+          else
+            Html.text ""
+        , case model.pageResult.error of
+            Nothing ->
+                Html.text ""
 
-                    Just error ->
-                        viewError error
-                ]
+            Just error ->
+                viewError error
+        ]
 
-            Just iterator ->
-                [ Iterator.view
-                    (iteratorContext context model)
-                    iterator
-                    |> Html.map IteratorMsg
-                ]
+
+
+{-
+   Just iterator ->
+       [ Iterator.view
+           (iteratorContext context model)
+           iterator
+           |> Html.map IteratorMsg
+       ]
+-}
 
 
 viewResponse :
