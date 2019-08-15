@@ -42,7 +42,7 @@ type alias Model =
     , nodeTypes : Sort.Dict.Dict NodeId (ApiData NodeType)
     , documents : Sort.Dict.Dict DocumentId (ApiData (Maybe Document))
     , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
-    , folderCounts : Sort.Dict.Dict Selection (ApiData (Dict.Dict FolderId Int))
+    , folderCounts : Sort.Dict.Dict Selection (ApiData (Sort.Dict.Dict FolderId Int))
     }
 
 
@@ -401,13 +401,13 @@ insertAsSubfolderIds allSubfoldersOfSomeNewParents model =
     { model
         | subfolderIds =
             Dict.Extra.filterGroupBy
-                .parent
+                (.parent >> Maybe.map folderIdToInt)
                 allSubfoldersOfSomeNewParents
                 |> Dict.toList
                 |> List.foldl
-                    (\( parentId, subfolders ) ->
+                    (\( parentIdAsInt, subfolders ) ->
                         Sort.Dict.insert
-                            parentId
+                            (folderIdFromInt parentIdAsInt)
                             (Success
                                 (List.map .id subfolders)
                             )

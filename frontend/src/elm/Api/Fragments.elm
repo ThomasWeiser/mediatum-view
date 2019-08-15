@@ -30,7 +30,7 @@ module Api.Fragments exposing
 -}
 
 import Data.Types exposing (..)
-import Dict
+import Data.Utils
 import Document
 import DocumentResult
 import Folder
@@ -54,6 +54,7 @@ import Mediatum.Object.PageInfo
 import Mediatum.Scalar
 import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
+import Sort.Dict
 
 
 {-| Selection set on a Folder to get basic properties of the folder.
@@ -166,7 +167,10 @@ _GraphQL notation:_
 folderAndSubfolderCounts : SelectionSet FolderCounts Mediatum.Object.Docset
 folderAndSubfolderCounts =
     SelectionSet.succeed
-        (\pair listOfPairs -> Dict.fromList (pair :: listOfPairs))
+        (\pair listOfPairs ->
+            Data.Utils.folderCountsFromList
+                (pair :: listOfPairs)
+        )
         |> SelectionSet.with
             (Mediatum.Object.Docset.folderCount
                 folderCount

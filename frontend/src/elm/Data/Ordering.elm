@@ -32,12 +32,12 @@ orderingNodeId =
 
 orderingFolderId : Ordering FolderId
 orderingFolderId =
-    Ordering.byField Tuple.first
+    Ordering.byField folderIdToInt
 
 
 orderingDocumentId : Ordering DocumentId
 orderingDocumentId =
-    Ordering.byField Tuple.second
+    Ordering.byField documentIdToInt
 
 
 orderingSelection : Ordering Selection

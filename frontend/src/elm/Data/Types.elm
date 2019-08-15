@@ -25,63 +25,50 @@ module Data.Types exposing
     , nodeIdToInt
     )
 
-import Dict exposing (Dict)
+import Dict
+import Sort.Dict
 
 
-type alias NodeId =
-    ( Int, Float, Float )
+type NodeId
+    = NodeId Int
 
 
 nodeIdToInt : NodeId -> Int
-nodeIdToInt ( id, _, _ ) =
+nodeIdToInt (NodeId id) =
     id
 
 
 nodeIdFromInt : Int -> NodeId
 nodeIdFromInt id =
-    ( id, 0.0, 0.0 )
+    NodeId id
 
 
-type alias FolderId =
-    ( Int, Float )
+type FolderId
+    = FolderId Int
 
 
 folderIdToInt : FolderId -> Int
-folderIdToInt ( id, _ ) =
+folderIdToInt (FolderId id) =
     id
 
 
 folderIdFromInt : Int -> FolderId
 folderIdFromInt id =
-    ( id, 0.0 )
+    FolderId id
 
 
-
-{- Actually, these types should be defined like this:
-
-       type DocumentId = DocumentId Int
-
-   But in Elm 0.19 union types are not comparable and therefore not usable as keys of a dict.
-   Only ints, floats, chars, strings, lists, and tuples are comparable.
-   So, as a workaround we use a tuple with some contrived structure to make it somewhat unique.
-
-   TODO: Can now be done if we consequently use Sort.Dict
-   TODO: GenericId
--}
-
-
-type alias DocumentId =
-    ( Float, Int )
+type DocumentId
+    = DocumentId Int
 
 
 documentIdToInt : DocumentId -> Int
-documentIdToInt ( _, id ) =
+documentIdToInt (DocumentId id) =
     id
 
 
 documentIdFromInt : Int -> DocumentId
 documentIdFromInt id =
-    ( 0.0, id )
+    DocumentId id
 
 
 type alias Folder =
@@ -122,7 +109,7 @@ type FtsSorting
 
 
 type alias Filters =
-    Dict String Filter
+    Dict.Dict String Filter
 
 
 type Filter
@@ -131,7 +118,7 @@ type Filter
 
 
 type alias FolderCounts =
-    Dict FolderId Int
+    Sort.Dict.Dict FolderId Int
 
 
 type alias Window =

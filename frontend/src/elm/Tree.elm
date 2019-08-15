@@ -14,8 +14,6 @@ import Api
 import Api.Queries
 import Data.Cache as Cache exposing (ApiData)
 import Data.Types exposing (Folder, FolderCounts, FolderId)
-import Dict exposing (Dict)
-import Dict.Extra
 import Folder
 import Html exposing (Html)
 import Html.Attributes
@@ -24,6 +22,7 @@ import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 import RemoteData
 import Route
+import Sort.Dict
 import Utils
 
 
@@ -188,7 +187,7 @@ viewFolder context model folderCounts id =
                     [ Html.Events.onClick (Select id) ]
                     [ Folder.view
                         folder
-                        (Dict.get folder.id folderCounts)
+                        (Sort.Dict.get folder.id folderCounts)
                         isSelectedFolder
                         expanded
                     ]

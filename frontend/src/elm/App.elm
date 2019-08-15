@@ -15,7 +15,7 @@ import Cmd.Extra
 import Controls
 import Data.Cache as Cache
 import Data.Types exposing (FolderCounts, NodeId)
-import Dict
+import Data.Utils
 import GenericNode exposing (GenericNode)
 import Html exposing (Html)
 import Html.Attributes
@@ -27,6 +27,7 @@ import Query exposing (Query)
 import Query.Filters
 import RemoteData
 import Route exposing (Route)
+import Sort.Dict
 import Tree
 import Utils
 
@@ -68,7 +69,7 @@ init route =
     , query = Query.emptyQuery
     , tree = Tree.initialModel
     , controls = Controls.init ()
-    , folderCounts = Dict.empty
+    , folderCounts = Data.Utils.folderCountsInit
     , article = Article.initialModelEmpty
     , needs = Cache.NeedNothing
     }
@@ -362,7 +363,7 @@ startQuery query model =
         | route = Query.toRoute query
         , query = Debug.log "startQuery" query
         , article = articleModel
-        , folderCounts = Dict.empty
+        , folderCounts = Data.Utils.folderCountsInit
       }
     , Cmd.map ArticleMsg articleCmd
     )
