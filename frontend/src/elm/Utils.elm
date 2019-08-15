@@ -38,8 +38,8 @@ tupleRemoveThird ( a, b, c ) =
     ( a, b )
 
 
-findAdjacent : List a -> (a -> Bool) -> Maybe ( Maybe a, a, Maybe a )
-findAdjacent list predicate =
+findAdjacent : (a -> Bool) -> List a -> Maybe ( Maybe a, a, Maybe a )
+findAdjacent predicate list =
     let
         walk : a -> List a -> Maybe ( Maybe a, a, Maybe a )
         walk head1 tail1 =

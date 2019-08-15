@@ -131,8 +131,8 @@ view context model =
 
         adjacent =
             Utils.findAdjacent
-                context.itemList
                 (\item -> context.itemId item == model.currentId)
+                context.itemList
 
         selectButtonAttrs maybeId =
             Maybe.Extra.unwrap
