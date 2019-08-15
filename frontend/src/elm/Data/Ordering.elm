@@ -1,8 +1,14 @@
 module Data.Ordering exposing
     ( orderingDocumentId
+    , orderingFilter
+    , orderingFilters
     , orderingFolderId
+    , orderingFtsSorting
+    , orderingSearchMethod
     , orderingSelection
     , orderingSelectionWindow
+    , orderingStringFilter
+    , orderingWindow
     , sorter
     )
 

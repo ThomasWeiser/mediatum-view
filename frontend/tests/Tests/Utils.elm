@@ -4,6 +4,7 @@ import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer)
 import List.Extra
 import Test exposing (..)
+import TestUtils exposing (..)
 import Utils
 
 
@@ -117,6 +118,14 @@ suite =
                         (String.toList strL)
                         (String.toList strR)
                         |> Expect.equal (compare strL strR)
+            , testOrderingProperties
+                "with fuzzy list (short)"
+                (shortList 3 (Fuzz.intRange 0 2))
+                (Utils.lexicalOrder compare)
+            , testOrderingProperties
+                "with fuzzy list (regular)"
+                (Fuzz.list Fuzz.int)
+                (Utils.lexicalOrder compare)
             ]
         ]
 

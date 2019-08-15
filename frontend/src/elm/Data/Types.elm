@@ -16,6 +16,9 @@ module Data.Types exposing
     , Selection
     , Window
     , WindowPage
+    , documentIdFromInt
+    , documentIdToInt
+    , folderIdFromInt
     , folderIdToInt
     )
 
@@ -27,8 +30,13 @@ type alias FolderId =
 
 
 folderIdToInt : FolderId -> Int
-folderIdToInt ( i, _ ) =
-    i
+folderIdToInt ( id, _ ) =
+    id
+
+
+folderIdFromInt : Int -> FolderId
+folderIdFromInt id =
+    ( id, 0.0 )
 
 
 
@@ -47,6 +55,16 @@ folderIdToInt ( i, _ ) =
 
 type alias DocumentId =
     ( Float, Int )
+
+
+documentIdToInt : DocumentId -> Int
+documentIdToInt ( _, id ) =
+    id
+
+
+documentIdFromInt : Int -> DocumentId
+documentIdFromInt id =
+    ( 0.0, id )
 
 
 type alias Folder =
