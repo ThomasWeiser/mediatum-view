@@ -64,10 +64,6 @@ type FtsSorting
     | ByDate
 
 
-type Msg
-    = RemoveFilter Int
-
-
 emptyQuery : Query
 emptyQuery =
     OnFolder
