@@ -140,8 +140,7 @@ needs query =
             Cache.NeedListOfNeeds
                 [ Cache.NeedDocumentsPage
                     selection
-                    -- TODO: Currently we don't have the paging location here
-                    { offset = 0, limit = 10 }
+                    folderQuery.window
                 , -- TODO: Currently we request the folderCounts in parallel. It should be sequentially after getting the page results
                   Cache.NeedFolderCounts
                     selection
@@ -167,8 +166,7 @@ needs query =
             Cache.NeedListOfNeeds
                 [ Cache.NeedDocumentsPage
                     selection
-                    -- TODO: Currently we don't have the paging location here
-                    { offset = 0, limit = 10 }
+                    ftsQuery.window
                 , -- TODO: Currently we request the folderCounts in parallel. It should be sequentially after getting the page results
                   Cache.NeedFolderCounts
                     selection
@@ -215,6 +213,13 @@ update context msg model =
                     , NoReturn
                     )
 
+                Article.Directory.SetWindow window ->
+                    ( model
+                    , Cmd.none
+                    , MapQuery <|
+                        Query.setWindow window
+                    )
+
                 Article.Directory.ShowDocument documentId ->
                     ( model
                     , Cmd.none
@@ -244,6 +249,13 @@ update context msg model =
                     ( { model | content = FtsModel subModel1 }
                     , Cmd.map FtsMsg subCmd
                     , NoReturn
+                    )
+
+                Article.Fts.SetWindow window ->
+                    ( model
+                    , Cmd.none
+                    , MapQuery <|
+                        Query.setWindow window
                     )
 
                 Article.Fts.ShowDocument documentId ->

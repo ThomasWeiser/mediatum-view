@@ -116,6 +116,7 @@ update context msg model =
                         Query.OnFolder
                             { folder = Query.getFolder context.query
                             , filters = Query.getFilters context.query
+                            , window = Query.initialWindow
                             }
 
                     else
@@ -124,6 +125,7 @@ update context msg model =
                             , filters = Query.getFilters context.query
                             , searchTerm = model.searchTerm
                             , sorting = model.sorting
+                            , window = Query.initialWindow
                             }
             in
             ( model
@@ -145,6 +147,7 @@ update context msg model =
                                 |> Filters.insert (FilterTitleFts "with")
                         , searchTerm = searchTerm
                         , sorting = model.sorting
+                        , window = Query.initialWindow
                         }
             in
             ( { model | searchTerm = searchTerm }

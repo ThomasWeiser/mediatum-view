@@ -12,7 +12,7 @@ module Article.Fts exposing
 
 import Api
 import Data.Cache as Cache exposing (ApiData)
-import Data.Types exposing (Document, DocumentId, DocumentResult, DocumentsPage, Folder, FolderCounts)
+import Data.Types exposing (Document, DocumentId, DocumentResult, DocumentsPage, Folder, FolderCounts, Window)
 import DocumentResult
 import Graphql.Extra
 import Html exposing (Html)
@@ -33,6 +33,7 @@ type alias Context =
 
 type Return
     = NoReturn
+    | SetWindow Window
     | ShowDocument DocumentId
 
 
@@ -43,11 +44,20 @@ type alias Model =
 
 type Msg
     = SelectDocument DocumentId
+    | PickPosition PaginationPosition
 
 
 
--- | PickPosition Page.Position
 -- | IteratorMsg Iterator.Msg
+
+
+type PaginationPosition
+    = First
+    | Previous
+    | Next
+
+
+
 {-
    iteratorContext : Context -> Model -> Iterator.Context DocumentResult
    iteratorContext context model =
@@ -68,21 +78,27 @@ initialModel context =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
-        {-
-           PickPosition paginationPosition ->
-               ( { model
-                   | pageResult = Page.loadingPageResult model.pageResult
-                 }
-               , Api.sendQueryRequest
-                   ApiResponseFtsPage
-                   (Api.Queries.ftsPage_ByQuery
-                       model.pageResult.page
-                       paginationPosition
-                       context.ftsQuery
-                   )
-               , NoReturn
-               )
-        -}
+        PickPosition position ->
+            let
+                window0 =
+                    context.ftsQuery.window
+
+                offset1 =
+                    case position of
+                        First ->
+                            0
+
+                        Previous ->
+                            window0.offset - window0.limit |> Basics.max 0
+
+                        Next ->
+                            window0.offset + window0.limit
+            in
+            ( model
+            , Cmd.none
+            , SetWindow { window0 | offset = offset1 }
+            )
+
         SelectDocument id ->
             ( model
               {- { model
@@ -136,23 +152,22 @@ update context msg model =
 view : Context -> Model -> Html Msg
 view context model =
     let
-        selection =
-            { scope = context.ftsQuery.folder.id
-            , searchMethod =
-                Data.Types.SelectByFullTextSearch
-                    context.ftsQuery.searchTerm
-                    (case context.ftsQuery.sorting of
-                        Query.ByRank ->
-                            Data.Types.FtsByRank
+        ( selection, window ) =
+            ( { scope = context.ftsQuery.folder.id
+              , searchMethod =
+                    Data.Types.SelectByFullTextSearch
+                        context.ftsQuery.searchTerm
+                        (case context.ftsQuery.sorting of
+                            Query.ByRank ->
+                                Data.Types.FtsByRank
 
-                        Query.ByDate ->
-                            Data.Types.FtsByDate
-                    )
-            , filters = context.ftsQuery.filters
-            }
-
-        window =
-            { offset = 0, limit = 10 }
+                            Query.ByDate ->
+                                Data.Types.FtsByDate
+                        )
+              , filters = context.ftsQuery.filters
+              }
+            , context.ftsQuery.window
+            )
     in
     Html.div [] <|
         -- case model.iterator of
@@ -197,40 +212,36 @@ viewDocumentsPage documentsPage =
                 (DocumentResult.view SelectDocument)
                 documentsPage.content
             )
-
-        -- , viewPaginationButtons page paginationTargetTagger
+        , viewPaginationButtons documentsPage
         ]
 
 
-
-{-
-   viewPaginationButtons : Page itemModel -> (Page.Position -> Msg) -> Html Msg
-   viewPaginationButtons page targetTagger =
-       let
-           viewButton : String -> Msg -> Bool -> Html Msg
-           viewButton label msg enabled =
-               Html.button
-                   [ Html.Attributes.type_ "button"
-                   , Html.Attributes.disabled (not enabled)
-                   , Html.Events.onClick msg
-                   ]
-                   [ Html.text label ]
-       in
-       Html.div
-           [ Html.Attributes.style "margin" "4px 0px 8px 0px"
-           , Html.Attributes.class "input-group"
-           ]
-           [ viewButton "First"
-               (targetTagger Page.First)
-               (not (Page.isFirstPage page))
-           , viewButton "Prev"
-               (targetTagger Page.Previous)
-               (not (Page.isFirstPage page))
-           , viewButton "Next"
-               (targetTagger Page.Next)
-               page.hasNextPage
-           ]
--}
+viewPaginationButtons : DocumentsPage -> Html Msg
+viewPaginationButtons documentsPage =
+    let
+        viewButton : String -> Msg -> Bool -> Html Msg
+        viewButton label msg enabled =
+            Html.button
+                [ Html.Attributes.type_ "button"
+                , Html.Attributes.disabled (not enabled)
+                , Html.Events.onClick msg
+                ]
+                [ Html.text label ]
+    in
+    Html.div
+        [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+        , Html.Attributes.class "input-group"
+        ]
+        [ viewButton "First"
+            (PickPosition First)
+            (documentsPage.offset /= 0)
+        , viewButton "Prev"
+            (PickPosition Previous)
+            (documentsPage.offset /= 0)
+        , viewButton "Next"
+            (PickPosition Next)
+            documentsPage.hasNextPage
+        ]
 
 
 viewApiError : Api.Error -> Html msg

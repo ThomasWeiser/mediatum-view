@@ -180,6 +180,7 @@ updateWithoutReturn msg model =
                         (Query.OnFolder
                             { folder = List.Nonempty.head lineage
                             , filters = Query.getFilters model.query
+                            , window = Query.initialWindow
                             }
                         )
                         { model

@@ -8,15 +8,18 @@ module Query exposing
     , filtersToAttributeTests
     , getFilters
     , getFolder
+    , getWindow
+    , initialWindow
     , mapFilters
     , setFolder
+    , setWindow
     , showFilters
     , stopgapFolder
     , toRoute
     , view
     )
 
-import Data.Types exposing (DocumentId, Filter, Filters, Folder, FolderCounts)
+import Data.Types exposing (DocumentId, Filter, Filters, Folder, FolderCounts, Window)
 import Document
 import Folder
 import Html exposing (Html)
@@ -43,6 +46,7 @@ type alias DetailsQuery =
 type alias FolderQuery =
     { folder : Folder
     , filters : Filters
+    , window : Window
     }
 
 
@@ -51,6 +55,7 @@ type alias FtsQuery =
     , filters : Filters
     , searchTerm : String
     , sorting : FtsSorting
+    , window : Window
     }
 
 
@@ -68,7 +73,39 @@ emptyQuery =
     OnFolder
         { folder = Folder.dummy
         , filters = Filters.none
+        , window = initialWindow
         }
+
+
+initialWindow : Window
+initialWindow =
+    { offset = 0, limit = 10 }
+
+
+getWindow : Query -> Window
+getWindow query =
+    case query of
+        OnDetails _ ->
+            initialWindow
+
+        OnFolder { window } ->
+            window
+
+        OnFts { window } ->
+            window
+
+
+setWindow : Window -> Query -> Query
+setWindow window query =
+    case query of
+        OnDetails _ ->
+            query
+
+        OnFolder subQuery ->
+            OnFolder { subQuery | window = window }
+
+        OnFts subQuery ->
+            OnFts { subQuery | window = window }
 
 
 getFolder : Query -> Folder
@@ -91,6 +128,7 @@ setFolder folder query =
             OnFolder
                 { folder = folder
                 , filters = getFilters query
+                , window = initialWindow
                 }
 
         OnFolder subQuery ->
