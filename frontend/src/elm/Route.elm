@@ -29,6 +29,8 @@ type alias RouteParameters =
     , ftsSorting : Maybe RouteFtsSorting
     , filterByYear : Maybe ( Int, Int )
     , filterByTitle : Maybe (Nonempty String)
+    , offset : Maybe Int
+    , limit : Maybe Int
     }
 
 
@@ -43,6 +45,8 @@ emptyParameters =
     , ftsSorting = Nothing
     , filterByYear = Nothing
     , filterByTitle = Nothing
+    , offset = Nothing
+    , limit = Nothing
     }
 
 
@@ -58,7 +62,7 @@ parser =
 
 parserParameters : QueryParser.Parser RouteParameters
 parserParameters =
-    QueryParser.map4 RouteParameters
+    QueryParser.map6 RouteParameters
         (QueryParser.string "fts-term"
             |> QueryParser.map
                 (Maybe.andThen cleanSearchTerm)
@@ -80,6 +84,8 @@ parserParameters =
                 >> List.Nonempty.fromList
             )
         )
+        (QueryParser.int "offset")
+        (QueryParser.int "limit")
 
 
 elmParserYearRange : ElmParser.Parser ( Int, Int )
@@ -140,6 +146,14 @@ toString route =
                         |> List.map (Builder.string "filter-by-title")
                 )
                 route.parameters.filterByTitle
+            ++ Maybe.Extra.values
+                [ Maybe.map
+                    (Builder.int "offset")
+                    route.parameters.offset
+                , Maybe.map
+                    (Builder.int "limit")
+                    route.parameters.limit
+                ]
         )
 
 

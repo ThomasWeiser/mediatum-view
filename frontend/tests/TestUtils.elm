@@ -1,6 +1,7 @@
-module TestUtils exposing (just, justAndThen, justAndThenAll, nothing, testString)
+module TestUtils exposing (just, justAndThen, justAndThenAll, nothing, shortList, testString)
 
 import Expect exposing (Expectation)
+import Fuzz exposing (Fuzzer)
 import Test exposing (Test)
 
 
@@ -57,3 +58,22 @@ just maybeSubject =
 nothing : Maybe subject -> Expectation
 nothing maybeSubject =
     Expect.equal Nothing maybeSubject
+
+
+{-| Given a fuzzer of a type, create a fuzzer of a list of that type.
+Probabilities are 0.5 for empty list, 0.25 for one element, 0.125 for two elements and so,
+up to the given maximum length.
+-}
+shortList : Int -> Fuzzer a -> Fuzzer (List a)
+shortList maxLength fuzzerElement =
+    if maxLength <= 0 then
+        Fuzz.constant []
+
+    else
+        Fuzz.oneOf
+            [ Fuzz.constant []
+            , Fuzz.map2
+                (::)
+                fuzzerElement
+                (shortList (maxLength - 1) fuzzerElement)
+            ]

@@ -154,21 +154,31 @@ fuzzerRoute =
             , ( 30, Fuzz.map2 Route.TwoIds (Fuzz.intRange 0 999999) (Fuzz.intRange 0 999999) )
             ]
         )
-        (Fuzz.map4 RouteParameters
-            (fuzzerSearchTerm
-                |> Fuzz.maybe
-            )
-            (Fuzz.oneOf [ Fuzz.constant ByRank, Fuzz.constant ByDate ]
-                |> Fuzz.maybe
-            )
-            (fuzzerYearRange
-                |> Fuzz.maybe
-            )
-            (Fuzz.list fuzzerSearchTerm
-                |> Fuzz.map (List.take 4)
-                -- Don't use longer lists
-                |> Fuzz.map List.Nonempty.fromList
-            )
+        (Fuzz.constant RouteParameters
+            |> Fuzz.andMap
+                (fuzzerSearchTerm
+                    |> Fuzz.maybe
+                )
+            |> Fuzz.andMap
+                (Fuzz.oneOf [ Fuzz.constant ByRank, Fuzz.constant ByDate ]
+                    |> Fuzz.maybe
+                )
+            |> Fuzz.andMap
+                (fuzzerYearRange
+                    |> Fuzz.maybe
+                )
+            |> Fuzz.andMap
+                (TestUtils.shortList 4 fuzzerSearchTerm
+                    |> Fuzz.map List.Nonempty.fromList
+                )
+            |> Fuzz.andMap
+                (fuzzerOffset
+                    |> Fuzz.maybe
+                )
+            |> Fuzz.andMap
+                (fuzzerLimit
+                    |> Fuzz.maybe
+                )
         )
 
 
@@ -233,3 +243,27 @@ fuzzerYearRange =
               )
             ]
         )
+
+
+fuzzerOffset : Fuzzer Int
+fuzzerOffset =
+    Fuzz.frequency
+        [ ( 100, Fuzz.constant 0 )
+        , ( 5, Fuzz.constant 5 )
+        , ( 50, Fuzz.constant 10 )
+        , ( 10, Fuzz.constant 20 )
+        , ( 5, Fuzz.constant 50 )
+        , ( 30, Fuzz.intRange 0 200 )
+        ]
+
+
+fuzzerLimit : Fuzzer Int
+fuzzerLimit =
+    Fuzz.frequency
+        [ ( 10, Fuzz.constant 0 )
+        , ( 5, Fuzz.constant 5 )
+        , ( 50, Fuzz.constant 10 )
+        , ( 10, Fuzz.constant 20 )
+        , ( 5, Fuzz.constant 50 )
+        , ( 30, Fuzz.intRange 0 200 )
+        ]
