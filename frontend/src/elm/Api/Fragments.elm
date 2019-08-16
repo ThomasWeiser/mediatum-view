@@ -55,6 +55,7 @@ import Mediatum.Scalar
 import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
 import Sort.Dict
+import Utils
 
 
 {-| Selection set on a Folder to get basic properties of the folder.
@@ -89,6 +90,8 @@ folder =
         |> SelectionSet.with
             (Mediatum.Object.Folder.isCollection
                 |> SelectionSet.nonNullOrFail
+                |> SelectionSet.map
+                    (Utils.ifElse FolderIsCollection FolderIsDirectory)
             )
         |> SelectionSet.with
             (Mediatum.Object.Folder.numSubfolder

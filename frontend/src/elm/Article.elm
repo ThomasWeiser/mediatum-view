@@ -21,6 +21,7 @@ import Data.Types
         , DocumentId
         , Filter
         , FolderCounts
+        , FolderType(..)
         , FtsSorting(..)
         , SearchMethod(..)
         )
@@ -88,26 +89,27 @@ initWithQuery context =
             )
 
         Query.OnFolder folderQuery ->
-            if folderQuery.folder.isCollection then
-                let
-                    ( subModel, subCmd ) =
-                        Article.Collection.init ()
-                in
-                ( { content = CollectionModel subModel }
-                , Cmd.map CollectionMsg subCmd
-                )
+            case folderQuery.folder.type_ of
+                FolderIsCollection ->
+                    let
+                        ( subModel, subCmd ) =
+                            Article.Collection.init ()
+                    in
+                    ( { content = CollectionModel subModel }
+                    , Cmd.map CollectionMsg subCmd
+                    )
 
-            else
-                let
-                    subModel =
-                        Article.Directory.initialModel
-                            { cache = context.cache
-                            , folderQuery = folderQuery
-                            }
-                in
-                ( { content = DirectoryModel subModel }
-                , Cmd.none
-                )
+                FolderIsDirectory ->
+                    let
+                        subModel =
+                            Article.Directory.initialModel
+                                { cache = context.cache
+                                , folderQuery = folderQuery
+                                }
+                    in
+                    ( { content = DirectoryModel subModel }
+                    , Cmd.none
+                    )
 
         Query.OnFts ftsQuery ->
             let

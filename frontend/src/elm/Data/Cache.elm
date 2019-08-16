@@ -422,12 +422,7 @@ insertFoldersAsNodeTypes listOfNewFolders model =
         (\folder ->
             insertNodeType
                 (folder.id |> folderIdToInt |> nodeIdFromInt)
-                (if folder.isCollection then
-                    NodeIsFolder FolderIsCollection
-
-                 else
-                    NodeIsFolder FolderIsDirectory
-                )
+                (NodeIsFolder folder.type_)
         )
         model
         listOfNewFolders

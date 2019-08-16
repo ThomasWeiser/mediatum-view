@@ -75,7 +75,7 @@ type alias Folder =
     { id : FolderId
     , parent : Maybe FolderId
     , name : String
-    , isCollection : Bool
+    , type_ : FolderType
     , numSubfolder : Int
     }
 

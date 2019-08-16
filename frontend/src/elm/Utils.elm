@@ -1,5 +1,6 @@
 module Utils exposing
     ( findAdjacent
+    , ifElse
     , lexicalOrder
     , noBreakSpace
     , onChange
@@ -19,13 +20,20 @@ noBreakSpace =
     String.fromChar (Char.fromCode 160)
 
 
-when : (a -> a) -> Bool -> a -> a
-when fn cond =
-    if cond then
-        fn
+{-| Return the first argument if the given boolean is `True`. Otherwise, return the second argument.
+-}
+ifElse : a -> a -> Bool -> a
+ifElse ifTrue ifFalse bool =
+    if bool then
+        ifTrue
 
     else
-        identity
+        ifFalse
+
+
+when : (a -> a) -> Bool -> a -> a
+when fn =
+    ifElse fn identity
 
 
 tupleAddThird : c -> ( a, b ) -> ( a, b, c )

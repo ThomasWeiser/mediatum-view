@@ -180,7 +180,7 @@ showFilters query =
             False
 
         OnFolder { folder } ->
-            not folder.isCollection
+            folder.type_ == Data.Types.FolderIsDirectory
 
         OnFts _ ->
             True
@@ -216,13 +216,14 @@ view query =
                 []
 
             OnFolder { folder } ->
-                if folder.isCollection then
-                    []
+                case folder.type_ of
+                    Data.Types.FolderIsCollection ->
+                        []
 
-                else
-                    [ Html.div []
-                        [ Html.span [] [ Html.text "All Documents" ] ]
-                    ]
+                    Data.Types.FolderIsDirectory ->
+                        [ Html.div []
+                            [ Html.span [] [ Html.text "All Documents" ] ]
+                        ]
 
             OnFts { searchTerm } ->
                 [ Html.div []
