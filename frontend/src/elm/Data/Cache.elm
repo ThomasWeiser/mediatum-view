@@ -49,6 +49,7 @@ type alias Model =
 type Needs
     = NeedNothing
     | NeedListOfNeeds (List Needs)
+    | NeedSequentially Needs Needs
     | NeedRootFolderIds
     | NeedSubfolders (List FolderId)
     | NeedGenericNode NodeId
@@ -126,6 +127,9 @@ status model needs =
             else
                 Fulfilled
 
+        NeedSequentially needOne needTwo ->
+            status model (NeedListOfNeeds [ needOne, needTwo ])
+
         NeedRootFolderIds ->
             model.rootFolderIds
                 |> statusFromRemoteData
@@ -177,6 +181,13 @@ requestNeeds needs model =
                         (Basics.Extra.flip requestNeeds)
                         model
                     |> Tuple.mapSecond Cmd.batch
+
+            NeedSequentially needOne needTwo ->
+                if status model needOne == Fulfilled then
+                    requestNeeds needTwo model
+
+                else
+                    requestNeeds needOne model
 
             NeedRootFolderIds ->
                 ( { model

@@ -141,20 +141,9 @@ needs context =
                     , filters = folderQuery.filters
                     }
             in
-            Cache.NeedListOfNeeds
-                [ Cache.NeedDocumentsPage
-                    selection
-                    folderQuery.window
-                , if
-                    RemoteData.isSuccess <|
-                        Cache.get context.cache.documentsPages ( selection, folderQuery.window )
-                  then
-                    Cache.NeedFolderCounts
-                        selection
-
-                  else
-                    Cache.NeedNothing
-                ]
+            Cache.NeedSequentially
+                (Cache.NeedDocumentsPage selection folderQuery.window)
+                (Cache.NeedFolderCounts selection)
 
         Query.OnFts ftsQuery ->
             let
@@ -173,20 +162,9 @@ needs context =
                     , filters = ftsQuery.filters
                     }
             in
-            Cache.NeedListOfNeeds
-                [ Cache.NeedDocumentsPage
-                    selection
-                    ftsQuery.window
-                , if
-                    RemoteData.isSuccess <|
-                        Cache.get context.cache.documentsPages ( selection, ftsQuery.window )
-                  then
-                    Cache.NeedFolderCounts
-                        selection
-
-                  else
-                    Cache.NeedNothing
-                ]
+            Cache.NeedSequentially
+                (Cache.NeedDocumentsPage selection ftsQuery.window)
+                (Cache.NeedFolderCounts selection)
 
 
 folderCountsForQuery : Context -> FolderCounts
