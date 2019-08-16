@@ -84,145 +84,201 @@ type Msg
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
 
 
-requestNeeds : Needs -> Model -> ( Model, Cmd Msg )
-requestNeeds needs model =
+type Status
+    = NotRequested
+    | Fulfilled
+    | OnGoing
+
+
+statusFromRemoteData : RemoteData e a -> Status
+statusFromRemoteData remoteData =
+    case remoteData of
+        NotAsked ->
+            NotRequested
+
+        Loading ->
+            OnGoing
+
+        Failure _ ->
+            OnGoing
+
+        Success _ ->
+            Fulfilled
+
+
+status : Model -> Needs -> Status
+status model needs =
     case needs of
         NeedNothing ->
-            ( model, Cmd.none )
+            Fulfilled
 
         NeedListOfNeeds listOfNeeds ->
-            listOfNeeds
-                |> List.Extra.mapAccuml
-                    (Basics.Extra.flip requestNeeds)
-                    model
-                |> Tuple.mapSecond Cmd.batch
+            let
+                listOfStatus =
+                    List.map (status model) listOfNeeds
+            in
+            if List.member OnGoing listOfStatus then
+                OnGoing
+
+            else if List.member NotRequested listOfStatus then
+                NotRequested
+
+            else
+                Fulfilled
 
         NeedRootFolderIds ->
-            case model.rootFolderIds of
-                NotAsked ->
-                    ( { model
-                        | rootFolderIds = Loading
-                      }
-                    , Api.sendQueryRequest
-                        ApiResponseToplevelFolder
-                        Api.Queries.toplevelFolder
-                    )
-
-                _ ->
-                    ( model, Cmd.none )
+            model.rootFolderIds
+                |> statusFromRemoteData
 
         NeedSubfolders parentIds ->
             let
-                parentIdsWithUnknownChildren =
-                    List.filter
-                        (\parentId ->
-                            get model.subfolderIds parentId == NotAsked
-                        )
-                        parentIds
+                listOfRemoteData =
+                    List.map (get model.subfolderIds) parentIds
             in
-            if List.isEmpty parentIdsWithUnknownChildren then
-                ( model, Cmd.none )
+            if List.any RemoteData.isNotAsked listOfRemoteData then
+                NotRequested
+
+            else if List.all RemoteData.isSuccess listOfRemoteData then
+                Fulfilled
 
             else
-                ( { model
-                    | subfolderIds =
-                        List.foldl
-                            (\parentId subfolderIds ->
-                                Sort.Dict.insert parentId Loading subfolderIds
-                            )
-                            model.subfolderIds
-                            parentIdsWithUnknownChildren
-                  }
-                , Api.sendQueryRequest
-                    (ApiResponseSubfolder parentIds)
-                    (Api.Queries.subfolder parentIdsWithUnknownChildren)
-                )
+                OnGoing
 
         NeedGenericNode nodeId ->
-            case get model.nodeTypes nodeId of
-                NotAsked ->
-                    ( { model
-                        | nodeTypes =
-                            Sort.Dict.insert nodeId Loading model.nodeTypes
-                      }
-                    , Api.sendQueryRequest
-                        (ApiResponseGenericNode nodeId)
-                        (Api.Queries.genericNode nodeId)
-                    )
-
-                _ ->
-                    ( model, Cmd.none )
+            get model.nodeTypes nodeId
+                |> statusFromRemoteData
 
         NeedDocument documentId ->
-            case get model.documents documentId of
-                NotAsked ->
-                    ( { model
-                        | documents =
-                            Sort.Dict.insert documentId Loading model.documents
-                      }
-                    , Api.sendQueryRequest
-                        (ApiResponseDocument documentId)
-                        (Api.Queries.documentDetails documentId)
-                    )
-
-                _ ->
-                    ( model, Cmd.none )
+            get model.documents documentId
+                |> statusFromRemoteData
 
         NeedDocumentsPage selection window ->
-            case get model.documentsPages ( selection, window ) of
-                NotAsked ->
-                    ( { model
-                        | documentsPages =
-                            Sort.Dict.insert ( selection, window ) Loading model.documentsPages
-                      }
-                    , Api.sendQueryRequest
-                        (ApiResponseDocumentsPage ( selection, window ))
-                        (case selection.searchMethod of
-                            SelectByFolderListing ->
-                                Api.Queries.folderDocumentsPage
-                                    window
-                                    selection.scope
-                                    selection.filters
-
-                            SelectByFullTextSearch searchTerm ftsSorting ->
-                                Api.Queries.ftsPage
-                                    window
-                                    selection.scope
-                                    searchTerm
-                                    ftsSorting
-                                    selection.filters
-                        )
-                    )
-
-                _ ->
-                    ( model, Cmd.none )
+            get model.documentsPages ( selection, window )
+                |> statusFromRemoteData
 
         NeedFolderCounts selection ->
-            case get model.folderCounts selection of
-                NotAsked ->
+            get model.folderCounts selection
+                |> statusFromRemoteData
+
+
+requestNeeds : Needs -> Model -> ( Model, Cmd Msg )
+requestNeeds needs model =
+    if status model needs /= NotRequested then
+        ( model, Cmd.none )
+
+    else
+        case needs of
+            NeedNothing ->
+                ( model, Cmd.none )
+
+            NeedListOfNeeds listOfNeeds ->
+                listOfNeeds
+                    |> List.Extra.mapAccuml
+                        (Basics.Extra.flip requestNeeds)
+                        model
+                    |> Tuple.mapSecond Cmd.batch
+
+            NeedRootFolderIds ->
+                ( { model
+                    | rootFolderIds = Loading
+                  }
+                , Api.sendQueryRequest
+                    ApiResponseToplevelFolder
+                    Api.Queries.toplevelFolder
+                )
+
+            NeedSubfolders parentIds ->
+                let
+                    parentIdsWithUnknownChildren =
+                        List.filter
+                            (\parentId ->
+                                get model.subfolderIds parentId == NotAsked
+                            )
+                            parentIds
+                in
+                if List.isEmpty parentIdsWithUnknownChildren then
+                    ( model, Cmd.none )
+
+                else
                     ( { model
-                        | folderCounts =
-                            Sort.Dict.insert selection Loading model.folderCounts
+                        | subfolderIds =
+                            List.foldl
+                                (\parentId subfolderIds ->
+                                    Sort.Dict.insert parentId Loading subfolderIds
+                                )
+                                model.subfolderIds
+                                parentIdsWithUnknownChildren
                       }
                     , Api.sendQueryRequest
-                        (ApiResponseFolderCounts selection)
-                        (case selection.searchMethod of
-                            SelectByFolderListing ->
-                                Api.Queries.folderDocumentsFolderCounts
-                                    selection.scope
-                                    selection.filters
-
-                            SelectByFullTextSearch searchTerm ftsSorting ->
-                                Api.Queries.ftsFolderCounts
-                                    selection.scope
-                                    searchTerm
-                                    ftsSorting
-                                    selection.filters
-                        )
+                        (ApiResponseSubfolder parentIds)
+                        (Api.Queries.subfolder parentIdsWithUnknownChildren)
                     )
 
-                _ ->
-                    ( model, Cmd.none )
+            NeedGenericNode nodeId ->
+                ( { model
+                    | nodeTypes =
+                        Sort.Dict.insert nodeId Loading model.nodeTypes
+                  }
+                , Api.sendQueryRequest
+                    (ApiResponseGenericNode nodeId)
+                    (Api.Queries.genericNode nodeId)
+                )
+
+            NeedDocument documentId ->
+                ( { model
+                    | documents =
+                        Sort.Dict.insert documentId Loading model.documents
+                  }
+                , Api.sendQueryRequest
+                    (ApiResponseDocument documentId)
+                    (Api.Queries.documentDetails documentId)
+                )
+
+            NeedDocumentsPage selection window ->
+                ( { model
+                    | documentsPages =
+                        Sort.Dict.insert ( selection, window ) Loading model.documentsPages
+                  }
+                , Api.sendQueryRequest
+                    (ApiResponseDocumentsPage ( selection, window ))
+                    (case selection.searchMethod of
+                        SelectByFolderListing ->
+                            Api.Queries.folderDocumentsPage
+                                window
+                                selection.scope
+                                selection.filters
+
+                        SelectByFullTextSearch searchTerm ftsSorting ->
+                            Api.Queries.ftsPage
+                                window
+                                selection.scope
+                                searchTerm
+                                ftsSorting
+                                selection.filters
+                    )
+                )
+
+            NeedFolderCounts selection ->
+                ( { model
+                    | folderCounts =
+                        Sort.Dict.insert selection Loading model.folderCounts
+                  }
+                , Api.sendQueryRequest
+                    (ApiResponseFolderCounts selection)
+                    (case selection.searchMethod of
+                        SelectByFolderListing ->
+                            Api.Queries.folderDocumentsFolderCounts
+                                selection.scope
+                                selection.filters
+
+                        SelectByFullTextSearch searchTerm ftsSorting ->
+                            Api.Queries.ftsFolderCounts
+                                selection.scope
+                                searchTerm
+                                ftsSorting
+                                selection.filters
+                    )
+                )
 
 
 updateWithModifiedDocument : Document -> Model -> Model
