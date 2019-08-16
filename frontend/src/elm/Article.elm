@@ -146,7 +146,7 @@ needs context =
                     Cache.NeedNothing
 
                 FolderIsDirectory ->
-                    Cache.NeedSequentially
+                    Cache.NeedAndThen
                         (Cache.NeedDocumentsPage selection folderQuery.window)
                         (Cache.NeedFolderCounts selection)
 
@@ -167,7 +167,7 @@ needs context =
                     , filters = ftsQuery.filters
                     }
             in
-            Cache.NeedSequentially
+            Cache.NeedAndThen
                 (Cache.NeedDocumentsPage selection ftsQuery.window)
                 (Cache.NeedFolderCounts selection)
 

@@ -100,7 +100,7 @@ changeRouteTo route model =
 
 needs : Model -> Cache.Needs
 needs model =
-    Cache.NeedListOfNeeds
+    Cache.needsFromList
         [ Cache.NeedRootFolderIds
         , case model.route.path of
             Route.OneId nodeId ->

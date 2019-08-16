@@ -6,6 +6,7 @@ module Data.Cache exposing
     , Return(..)
     , get
     , initialModel
+    , needsFromList
     , requestNeeds
     , update
     , updateWithModifiedDocument
@@ -48,8 +49,9 @@ type alias Model =
 
 type Needs
     = NeedNothing
+    | NeedAnd Needs Needs
     | NeedListOfNeeds (List Needs)
-    | NeedSequentially Needs Needs
+    | NeedAndThen Needs Needs
     | NeedRootFolderIds
     | NeedSubfolders (List FolderId)
     | NeedGenericNode NodeId
@@ -68,6 +70,16 @@ initialModel =
     , documentsPages = Sort.Dict.empty (sorter orderingSelectionWindow)
     , folderCounts = Sort.Dict.empty (sorter orderingSelection)
     }
+
+
+needsFromList : List Needs -> Needs
+needsFromList listOfNeeds =
+    List.foldr
+        (\need accu ->
+            NeedAnd need accu
+        )
+        NeedNothing
+        listOfNeeds
 
 
 get : Sort.Dict.Dict k (ApiData v) -> k -> ApiData v
@@ -113,6 +125,23 @@ status model needs =
         NeedNothing ->
             Fulfilled
 
+        NeedAnd needOne needTwo ->
+            let
+                statusOne =
+                    status model needOne
+
+                statusTwo =
+                    status model needTwo
+            in
+            if statusOne == NotRequested || statusTwo == NotRequested then
+                NotRequested
+
+            else if statusOne == OnGoing || statusTwo == OnGoing then
+                OnGoing
+
+            else
+                Fulfilled
+
         NeedListOfNeeds listOfNeeds ->
             let
                 listOfStatus =
@@ -127,7 +156,7 @@ status model needs =
             else
                 Fulfilled
 
-        NeedSequentially needOne needTwo ->
+        NeedAndThen needOne needTwo ->
             status model (NeedListOfNeeds [ needOne, needTwo ])
 
         NeedRootFolderIds ->
@@ -175,6 +204,18 @@ requestNeeds needs model =
             NeedNothing ->
                 ( model, Cmd.none )
 
+            NeedAnd needOne needTwo ->
+                let
+                    ( modelOne, cmdOne ) =
+                        requestNeeds needOne model
+
+                    ( modelTwo, cmdTwo ) =
+                        requestNeeds needTwo modelOne
+                in
+                ( modelTwo
+                , Cmd.batch [ cmdOne, cmdTwo ]
+                )
+
             NeedListOfNeeds listOfNeeds ->
                 listOfNeeds
                     |> List.Extra.mapAccuml
@@ -182,7 +223,7 @@ requestNeeds needs model =
                         model
                     |> Tuple.mapSecond Cmd.batch
 
-            NeedSequentially needOne needTwo ->
+            NeedAndThen needOne needTwo ->
                 if status model needOne == Fulfilled then
                     requestNeeds needTwo model
 
