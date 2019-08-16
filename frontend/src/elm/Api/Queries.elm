@@ -56,8 +56,8 @@ import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
-import Query
 import Query.Attribute
+import Query.Filters
 
 
 {-| Get the root folders and their sub-folders.
@@ -190,7 +190,7 @@ folderDocumentsPage window folderId filters =
                 | folderId = Present (folderIdToInt folderId)
                 , attributeTests =
                     filters
-                        |> Query.filtersToAttributeTests
+                        |> Query.Filters.toAttributeTests
                         |> Query.Attribute.testsAsGraphqlArgument
                         |> Present
                 , limit = Present window.limit
@@ -228,7 +228,7 @@ folderDocumentsFolderCounts folderId filters =
                 | folderId = Present (folderIdToInt folderId)
                 , attributeTests =
                     filters
-                        |> Query.filtersToAttributeTests
+                        |> Query.Filters.toAttributeTests
                         |> Query.Attribute.testsAsGraphqlArgument
                         |> Present
             }
@@ -281,7 +281,7 @@ ftsPage window folderId searchTerm ftsSorting filters =
                         )
                 , attributeTests =
                     filters
-                        |> Query.filtersToAttributeTests
+                        |> Query.Filters.toAttributeTests
                         |> Query.Attribute.testsAsGraphqlArgument
                         |> Present
                 , limit = Present window.limit
@@ -325,7 +325,7 @@ ftsFolderCounts folderId searchTerm ftsSorting filters =
                 , text = Present searchTerm
                 , attributeTests =
                     filters
-                        |> Query.filtersToAttributeTests
+                        |> Query.Filters.toAttributeTests
                         |> Query.Attribute.testsAsGraphqlArgument
                         |> Present
             }

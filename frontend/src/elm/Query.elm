@@ -5,7 +5,6 @@ module Query exposing
     , FtsSorting(..)
     , Query(..)
     , emptyQuery
-    , filtersToAttributeTests
     , getFilters
     , getFolder
     , getWindow
@@ -228,9 +227,3 @@ view query =
                     , Html.span [] [ Html.text "\"" ]
                     ]
                 ]
-
-
-filtersToAttributeTests : Filters -> List Query.Attribute.Test
-filtersToAttributeTests filters =
-    Filters.toList filters
-        |> List.map Filter.toAttributeTest

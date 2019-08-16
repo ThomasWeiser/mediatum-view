@@ -2,11 +2,13 @@ module Query.Filters exposing
     ( insert
     , none
     , remove
+    , toAttributeTests
     , toList
     )
 
 import Data.Types exposing (Filter, Filters)
 import Dict exposing (Dict)
+import Query.Attribute
 import Query.Filter as Filter
 
 
@@ -28,3 +30,9 @@ remove handle filters =
 toList : Filters -> List Filter
 toList filters =
     Dict.values filters
+
+
+toAttributeTests : Filters -> List Query.Attribute.Test
+toAttributeTests filters =
+    toList filters
+        |> List.map Filter.toAttributeTest
