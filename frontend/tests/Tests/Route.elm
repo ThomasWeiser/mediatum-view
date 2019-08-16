@@ -1,5 +1,6 @@
 module Tests.Route exposing (suite)
 
+import Data.Types exposing (NodeId, nodeIdFromInt, nodeIdToInt)
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import List.Nonempty exposing (Nonempty)
@@ -7,6 +8,7 @@ import Route exposing (Route, RouteFtsSorting(..), RouteParameters, RoutePath(..
 import String.Extra
 import Test exposing (..)
 import TestUtils exposing (..)
+import Tests.Data.Types exposing (..)
 import Url exposing (Url)
 
 
@@ -56,7 +58,7 @@ suite =
                 Url.fromString
                     >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
-                        [ .path >> Expect.equal (Route.OneId 123)
+                        [ .path >> Expect.equal (Route.OneId (nodeIdFromInt 123))
                         , .parameters >> .ftsTerm >> nothing
                         , Route.toString >> Expect.equal "/123"
                         ]
@@ -64,7 +66,7 @@ suite =
                 Url.fromString
                     >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
-                        [ .path >> Expect.equal (Route.OneId 123)
+                        [ .path >> Expect.equal (Route.OneId (nodeIdFromInt 123))
                         , .parameters >> .ftsTerm >> nothing
                         , .parameters >> .ftsSorting >> nothing
                         , .parameters >> .filterByYear >> nothing
@@ -83,7 +85,7 @@ suite =
                 Url.fromString
                     >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
-                        [ .path >> Expect.equal (Route.TwoIds 123 456)
+                        [ .path >> Expect.equal (Route.TwoIds (nodeIdFromInt 123) (nodeIdFromInt 456))
                         , .parameters >> .ftsTerm >> Expect.equal (Just "foo")
                         , Route.toString >> Expect.equal "/123/456?fts-term=foo"
                         ]
@@ -102,7 +104,7 @@ suite =
                 Url.fromString
                     >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
-                        [ .path >> Expect.equal (Route.OneId 789)
+                        [ .path >> Expect.equal (Route.OneId (nodeIdFromInt 789))
                         , .parameters >> .ftsTerm >> Expect.equal (Just "foo bar")
                         , Route.toString >> Expect.equal "/789?fts-term=foo%20bar"
                         ]
@@ -110,7 +112,7 @@ suite =
                 Url.fromString
                     >> Maybe.andThen Route.parseUrl
                     >> justAndThenAll
-                        [ .path >> Expect.equal (Route.OneId 789)
+                        [ .path >> Expect.equal (Route.OneId (nodeIdFromInt 789))
                         , .parameters >> .ftsTerm >> nothing
                         , .parameters >> .ftsSorting >> Expect.equal (Just Route.ByRank)
                         , .parameters >> .filterByYear >> Expect.equal (Just ( 2001, 2011 ))
@@ -150,8 +152,8 @@ fuzzerRoute =
     Fuzz.map2 Route
         (Fuzz.frequency
             [ ( 10, Fuzz.constant Route.NoId )
-            , ( 20, Fuzz.map Route.OneId (Fuzz.intRange 0 999999) )
-            , ( 30, Fuzz.map2 Route.TwoIds (Fuzz.intRange 0 999999) (Fuzz.intRange 0 999999) )
+            , ( 20, Fuzz.map Route.OneId fuzzerNodeId )
+            , ( 30, Fuzz.map2 Route.TwoIds fuzzerNodeId fuzzerNodeId )
             ]
         )
         (Fuzz.constant RouteParameters

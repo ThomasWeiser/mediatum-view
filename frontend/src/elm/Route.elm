@@ -1,6 +1,16 @@
-module Route exposing (Route, RouteFtsSorting(..), RouteParameters, RoutePath(..), parseUrl, toString)
+module Route exposing
+    ( Route
+    , RouteFtsSorting(..)
+    , RouteParameters
+    , RoutePath(..)
+    , fromOneId
+    , home
+    , parseUrl
+    , toString
+    )
 
 import Browser.Navigation
+import Data.Types exposing (NodeId, nodeIdFromInt, nodeIdToInt)
 import Dict
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
@@ -20,8 +30,8 @@ type alias Route =
 
 type RoutePath
     = NoId
-    | OneId Int
-    | TwoIds Int Int
+    | OneId NodeId
+    | TwoIds NodeId NodeId
 
 
 type alias RouteParameters =
@@ -37,6 +47,21 @@ type alias RouteParameters =
 type RouteFtsSorting
     = ByRank
     | ByDate
+
+
+fromOneId : NodeId -> Route
+fromOneId nodeId =
+    -- TODO: Only for adopting legacy code. To be removed later.
+    { path = OneId nodeId
+    , parameters = emptyParameters
+    }
+
+
+home : Route
+home =
+    { path = NoId
+    , parameters = emptyParameters
+    }
 
 
 emptyParameters : RouteParameters
@@ -55,8 +80,12 @@ parser =
     Parser.map Route <|
         Parser.oneOf
             [ Parser.map NoId Parser.top <?> parserParameters
-            , Parser.map OneId Parser.int <?> parserParameters
-            , Parser.map TwoIds (Parser.int </> Parser.int) <?> parserParameters
+            , Parser.map OneId (Parser.map nodeIdFromInt Parser.int) <?> parserParameters
+            , Parser.map TwoIds
+                (Parser.map nodeIdFromInt Parser.int
+                    </> Parser.map nodeIdFromInt Parser.int
+                )
+                <?> parserParameters
             ]
 
 
@@ -109,10 +138,10 @@ toString route =
                 []
 
             OneId id ->
-                [ String.fromInt id ]
+                [ id |> nodeIdToInt |> String.fromInt ]
 
             TwoIds id1 id2 ->
-                [ String.fromInt id1, String.fromInt id2 ]
+                [ id1 |> nodeIdToInt |> String.fromInt, id2 |> nodeIdToInt |> String.fromInt ]
         )
         (Maybe.Extra.values
             [ Maybe.map

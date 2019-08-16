@@ -39,7 +39,9 @@ init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url navigationKey =
     let
         ( appModel, appCmd ) =
-            App.init (Route.parseUrl url)
+            Route.parseUrl url
+                |> Maybe.withDefault Route.home
+                |> App.init
     in
     ( { navigationKey = navigationKey
       , app = appModel
@@ -72,6 +74,7 @@ update msg model =
             let
                 route =
                     Route.parseUrl url
+                        |> Maybe.withDefault Route.home
 
                 ( subModel, subCmd ) =
                     App.changeRouteTo route model.app

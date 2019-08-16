@@ -193,19 +193,19 @@ toRoute query =
             documentId
                 |> Data.Types.documentIdToInt
                 |> Data.Types.nodeIdFromInt
-                |> Route.NodeId
+                |> Route.fromOneId
 
         OnFolder { folder } ->
             folder.id
                 |> Data.Types.folderIdToInt
                 |> Data.Types.nodeIdFromInt
-                |> Route.NodeId
+                |> Route.fromOneId
 
         OnFts { folder } ->
             folder.id
                 |> Data.Types.folderIdToInt
                 |> Data.Types.nodeIdFromInt
-                |> Route.NodeId
+                |> Route.fromOneId
 
 
 view : Query -> Html Never

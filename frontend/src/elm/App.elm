@@ -63,7 +63,7 @@ type Msg
 
 init : Route -> ( Model, Cmd Msg )
 init route =
-    { route = Route.Invalid "to be initialized"
+    { route = Route.home
     , cache = Cache.initialModel
     , query = Query.emptyQuery
     , tree = Tree.initialModel
@@ -81,12 +81,12 @@ changeRouteTo route model =
         model1 =
             { model | route = route }
     in
-    case route of
-        Route.Home ->
+    case route.path of
+        Route.NoId ->
             ( model1, Cmd.none )
 
-        Route.NodeId nodeId ->
-            if model.route /= route then
+        Route.OneId nodeId ->
+            if model.route.path /= route.path then
                 updateWithoutReturn
                     (QueryGenericNode nodeId)
                     model1
@@ -94,7 +94,7 @@ changeRouteTo route model =
             else
                 ( model1, Cmd.none )
 
-        Route.Invalid errorMsg ->
+        Route.TwoIds nodeIdOne nodeIdTwo ->
             ( model1, Cmd.none )
 
 
@@ -102,8 +102,8 @@ needs : Model -> Cache.Needs
 needs model =
     Cache.NeedListOfNeeds
         [ Cache.NeedRootFolderIds
-        , case model.route of
-            Route.NodeId nodeId ->
+        , case model.route.path of
+            Route.OneId nodeId ->
                 Cache.NeedGenericNode nodeId
 
             _ ->
@@ -221,7 +221,7 @@ updateWithoutReturn msg model =
                             { model | tree = Tree.showFolder id model.tree }
             in
             case
-                ( model1.route
+                ( model1.route.path
                 , firstRootFolderId
                     |> Maybe.andThen
                         (Cache.get model1.cache.folders
@@ -229,7 +229,7 @@ updateWithoutReturn msg model =
                         )
                 )
             of
-                ( Route.Home, Just rootFolderToBeQueried ) ->
+                ( Route.NoId, Just rootFolderToBeQueried ) ->
                     startQuery
                         (Query.setFolder
                             rootFolderToBeQueried

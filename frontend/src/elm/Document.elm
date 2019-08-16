@@ -46,7 +46,7 @@ view clickMsg maybeNumber document =
                 , document.id
                     |> Data.Types.documentIdToInt
                     |> Data.Types.nodeIdFromInt
-                    |> Route.NodeId
+                    |> Route.fromOneId
                     |> Route.toString
                     |> Html.Attributes.href
                 ]
