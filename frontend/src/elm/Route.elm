@@ -1,6 +1,5 @@
 module Route exposing
     ( Route
-    , RouteFtsSorting(..)
     , RouteParameters
     , RoutePath(..)
     , fromOneId
@@ -10,7 +9,7 @@ module Route exposing
     )
 
 import Browser.Navigation
-import Data.Types exposing (NodeId, nodeIdFromInt, nodeIdToInt)
+import Data.Types exposing (FtsSorting(..), NodeId, nodeIdFromInt, nodeIdToInt)
 import Dict
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
@@ -36,17 +35,12 @@ type RoutePath
 
 type alias RouteParameters =
     { ftsTerm : Maybe String
-    , ftsSorting : Maybe RouteFtsSorting
+    , ftsSorting : Maybe FtsSorting
     , filterByYear : Maybe ( Int, Int )
     , filterByTitle : Maybe (Nonempty String)
     , offset : Maybe Int
     , limit : Maybe Int
     }
-
-
-type RouteFtsSorting
-    = ByRank
-    | ByDate
 
 
 fromOneId : NodeId -> Route
@@ -97,7 +91,7 @@ parserParameters =
                 (Maybe.andThen cleanSearchTerm)
         )
         (QueryParser.enum "fts-sorting"
-            (Dict.fromList [ ( "by-rank", ByRank ), ( "by-date", ByDate ) ])
+            (Dict.fromList [ ( "by-rank", FtsByRank ), ( "by-date", FtsByDate ) ])
         )
         (QueryParser.string "filter-by-year"
             |> QueryParser.map
@@ -151,10 +145,10 @@ toString route =
                 (\ftsSorting ->
                     Builder.string "fts-sorting" <|
                         case ftsSorting of
-                            ByRank ->
+                            FtsByRank ->
                                 "by-rank"
 
-                            ByDate ->
+                            FtsByDate ->
                                 "by-date"
                 )
                 route.parameters.ftsSorting

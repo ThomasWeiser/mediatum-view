@@ -1,8 +1,14 @@
-module Data.Utils exposing (folderCountsFromList, folderCountsInit)
+module Data.Utils exposing (filtersNone, folderCountsFromList, folderCountsInit)
 
 import Data.Ordering
 import Data.Types exposing (..)
+import Dict
 import Sort.Dict
+
+
+filtersNone : Filters
+filtersNone =
+    Dict.empty
 
 
 folderCountsInit : FolderCounts

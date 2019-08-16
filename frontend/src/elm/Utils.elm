@@ -4,6 +4,8 @@ module Utils exposing
     , lexicalOrder
     , noBreakSpace
     , onChange
+    , prependIf
+    , prependMaybe
     , tupleAddThird
     , tupleRemoveThird
     , when
@@ -46,6 +48,33 @@ tupleRemoveThird ( a, b, c ) =
     ( a, b )
 
 
+{-| Conditionally add an element to the front of a list.
+-}
+prependIf : a -> Bool -> List a -> List a
+prependIf element condition list =
+    if condition then
+        element :: list
+
+    else
+        list
+
+
+{-| Conditionally add an element to the front of a list.
+-}
+prependMaybe : Maybe a -> List a -> List a
+prependMaybe maybeElement list =
+    case maybeElement of
+        Nothing ->
+            list
+
+        Just element ->
+            element :: list
+
+
+{-| Find the first element that satisfies a predicate
+and return the element with its direct neighbours,
+using `Maybe` for the neighbours as well as the return value at whole.
+-}
 findAdjacent : (a -> Bool) -> List a -> Maybe ( Maybe a, a, Maybe a )
 findAdjacent predicate list =
     let

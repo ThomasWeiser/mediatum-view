@@ -1,10 +1,10 @@
 module Tests.Route exposing (suite)
 
-import Data.Types exposing (NodeId, nodeIdFromInt, nodeIdToInt)
+import Data.Types exposing (FtsSorting(..), NodeId, nodeIdFromInt, nodeIdToInt)
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import List.Nonempty exposing (Nonempty)
-import Route exposing (Route, RouteFtsSorting(..), RouteParameters, RoutePath(..))
+import Route exposing (Route, RouteParameters, RoutePath(..))
 import String.Extra
 import Test exposing (..)
 import TestUtils exposing (..)
@@ -114,7 +114,7 @@ suite =
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId (nodeIdFromInt 789))
                         , .parameters >> .ftsTerm >> nothing
-                        , .parameters >> .ftsSorting >> Expect.equal (Just Route.ByRank)
+                        , .parameters >> .ftsSorting >> Expect.equal (Just FtsByRank)
                         , .parameters >> .filterByYear >> Expect.equal (Just ( 2001, 2011 ))
                         , .parameters >> .filterByTitle >> Expect.equal (List.Nonempty.fromList [ "foo", "\"bar baz\"" ])
                         , Route.toString >> Expect.equal "/789?fts-sorting=by-rank&filter-by-year=2001-2011&filter-by-title=foo&filter-by-title=%22bar%20baz%22"
@@ -162,7 +162,7 @@ fuzzerRoute =
                     |> Fuzz.maybe
                 )
             |> Fuzz.andMap
-                (Fuzz.oneOf [ Fuzz.constant ByRank, Fuzz.constant ByDate ]
+                (Fuzz.oneOf [ Fuzz.constant FtsByRank, Fuzz.constant FtsByDate ]
                     |> Fuzz.maybe
                 )
             |> Fuzz.andMap
