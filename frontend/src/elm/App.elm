@@ -14,7 +14,7 @@ import Article
 import Cmd.Extra
 import Controls
 import Data.Cache as Cache
-import Data.Types exposing (FolderCounts, NodeId)
+import Data.Types exposing (NodeId)
 import Data.Utils
 import GenericNode exposing (GenericNode)
 import Html exposing (Html)
@@ -43,7 +43,6 @@ type alias Model =
     , query : Query
     , tree : Tree.Model
     , controls : Controls.Model
-    , folderCounts : FolderCounts
     , article : Article.Model
 
     -- TODO: We store the Needs here only for debugging
@@ -69,7 +68,6 @@ init route =
     , query = Query.emptyQuery
     , tree = Tree.initialModel
     , controls = Controls.init ()
-    , folderCounts = Data.Utils.folderCountsInit
     , article = Article.initialModelEmpty
     , needs = Cache.NeedNothing
     }
@@ -333,11 +331,6 @@ updateWithoutReturn msg model =
                     , Cmd.none
                     )
 
-                Article.FolderCounts folderCounts1 ->
-                    ( { model1 | folderCounts = folderCounts1 }
-                    , Cmd.none
-                    )
-
                 Article.MapQuery queryMapping ->
                     startQuery (queryMapping model1.query) model1
 
@@ -364,7 +357,6 @@ startQuery query model =
         | route = Query.toRoute query
         , query = Debug.log "startQuery" query
         , article = articleModel
-        , folderCounts = Data.Utils.folderCountsInit
       }
     , Cmd.map ArticleMsg articleCmd
     )
@@ -405,7 +397,11 @@ view model =
                     Tree.view
                         { cache = model.cache }
                         model.tree
-                        model.folderCounts
+                        (Article.folderCountsForQuery
+                            { cache = model.cache
+                            , query = model.query
+                            }
+                        )
                 ]
             , Html.map ArticleMsg <|
                 Article.view

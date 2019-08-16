@@ -2,6 +2,7 @@ module Article exposing
     ( Model
     , Msg
     , Return(..)
+    , folderCountsForQuery
     , initWithQuery
     , initialModelEmpty
     , needs
@@ -25,11 +26,13 @@ import Data.Types
         , FtsSorting(..)
         , SearchMethod(..)
         )
+import Data.Utils
 import Html exposing (Html)
 import Html.Attributes
 import Query exposing (Query)
 import Query.Filter
 import Query.Filters
+import RemoteData
 import Tree
 import Utils
 
@@ -42,7 +45,6 @@ type alias Context =
 
 type Return
     = NoReturn
-    | FolderCounts FolderCounts
     | MapQuery (Query -> Query)
     | UpdateCacheWithModifiedDocument Document
 
@@ -173,6 +175,44 @@ needs query =
                   Cache.NeedFolderCounts
                     selection
                 ]
+
+
+folderCountsForQuery : Context -> FolderCounts
+folderCountsForQuery context =
+    case context.query of
+        Query.OnDetails detailsQuery ->
+            Data.Utils.folderCountsInit
+
+        Query.OnFolder folderQuery ->
+            let
+                selection =
+                    { scope = folderQuery.folder.id
+                    , searchMethod = SelectByFolderListing
+                    , filters = folderQuery.filters
+                    }
+            in
+            Cache.get context.cache.folderCounts selection
+                |> RemoteData.withDefault Data.Utils.folderCountsInit
+
+        Query.OnFts ftsQuery ->
+            let
+                selection =
+                    { scope = ftsQuery.folder.id
+                    , searchMethod =
+                        SelectByFullTextSearch
+                            ftsQuery.searchTerm
+                            (case ftsQuery.sorting of
+                                Query.ByRank ->
+                                    FtsByRank
+
+                                Query.ByDate ->
+                                    FtsByDate
+                            )
+                    , filters = ftsQuery.filters
+                    }
+            in
+            Cache.get context.cache.folderCounts selection
+                |> RemoteData.withDefault Data.Utils.folderCountsInit
 
 
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
