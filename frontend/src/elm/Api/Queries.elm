@@ -3,7 +3,6 @@ module Api.Queries exposing
     , folderDocumentsPage, folderDocumentsFolderCounts, ftsPage, ftsFolderCounts
     , documentDetails
     , genericNode, authorSearch
-    , folderDocumentsFolderCounts_ByQuery, folderDocumentsPage_ByQuery, ftsFolderCounts_ByQuery, ftsPage_ByQuery
     )
 
 {-| Definitions of all specific GraphQL queries needed in the application.
@@ -174,39 +173,11 @@ _GraphQL notation:_
             limit: $limitNumberUsedForPagination
             offset: $offsetNumberUsedForPagination
         ) {
-            ...documentResultPage
+            ...documentsPage
         }
     }
 
 -}
-folderDocumentsPage_ByQuery :
-    Maybe (Pagination.Offset.Page.Page DocumentResult)
-    -> Pagination.Offset.Page.Position
-    -> Query.FolderQuery
-    -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
-folderDocumentsPage_ByQuery referencePage paginationPosition folderQuery =
-    Mediatum.Query.allDocumentsPage
-        (\optionals ->
-            { optionals
-                | folderId = folderQuery.folder |> .id |> folderIdToInt |> Present
-                , attributeTests =
-                    folderQuery.filters
-                        |> Query.filtersToAttributeTests
-                        |> Query.Attribute.testsAsGraphqlArgument
-                        |> Present
-                , limit = Present Config.pageSize
-                , offset =
-                    Pagination.Offset.Page.positionToOffset
-                        Config.pageSize
-                        referencePage
-                        paginationPosition
-                        |> Present
-            }
-        )
-        (Api.Fragments.documentResultPage "nodesmall")
-        |> SelectionSet.nonNullOrFail
-
-
 folderDocumentsPage :
     Window
     -> FolderId
@@ -226,7 +197,7 @@ folderDocumentsPage window folderId filters =
                 , offset = Present window.offset
             }
         )
-        (Api.Fragments.documentResultPage "nodesmall")
+        (Api.Fragments.documentsPage "nodesmall")
         |> SelectionSet.nonNullOrFail
 
 
@@ -246,25 +217,6 @@ _GraphQL notation:_
     }
 
 -}
-folderDocumentsFolderCounts_ByQuery :
-    Query.FolderQuery
-    -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-folderDocumentsFolderCounts_ByQuery folderQuery =
-    Mediatum.Query.allDocumentsDocset
-        (\optionals ->
-            { optionals
-                | folderId = folderQuery.folder |> .id |> folderIdToInt |> Present
-                , attributeTests =
-                    folderQuery.filters
-                        |> Query.filtersToAttributeTests
-                        |> Query.Attribute.testsAsGraphqlArgument
-                        |> Present
-            }
-        )
-        Api.Fragments.folderAndSubfolderCounts
-        |> SelectionSet.nonNullOrFail
-
-
 folderDocumentsFolderCounts :
     FolderId
     -> Filters
@@ -300,49 +252,11 @@ _GraphQL notation:_
             limit: $limitNumberUsedForPagination
             offset: $offsetNumberUsedForPagination
         ) {
-            ...documentResultPage
+            ...documentsPage
         }
     }
 
 -}
-ftsPage_ByQuery :
-    Maybe (Pagination.Offset.Page.Page DocumentResult)
-    -> Pagination.Offset.Page.Position
-    -> Query.FtsQuery
-    -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
-ftsPage_ByQuery referencePage paginationPosition ftsQuery =
-    Mediatum.Query.ftsDocumentsPage
-        (\optionals ->
-            { optionals
-                | folderId = ftsQuery.folder |> .id |> folderIdToInt |> Present
-                , text = Present ftsQuery.searchTerm
-                , sorting =
-                    Present
-                        (case ftsQuery.sorting of
-                            Query.ByRank ->
-                                Mediatum.Enum.FtsSorting.ByRank
-
-                            Query.ByDate ->
-                                Mediatum.Enum.FtsSorting.ByDate
-                        )
-                , attributeTests =
-                    ftsQuery.filters
-                        |> Query.filtersToAttributeTests
-                        |> Query.Attribute.testsAsGraphqlArgument
-                        |> Present
-                , limit = Present Config.pageSize
-                , offset =
-                    Pagination.Offset.Page.positionToOffset
-                        Config.pageSize
-                        referencePage
-                        paginationPosition
-                        |> Present
-            }
-        )
-        (Api.Fragments.documentResultPage "nodesmall")
-        |> SelectionSet.nonNullOrFail
-
-
 ftsPage :
     Window
     -> FolderId
@@ -374,7 +288,7 @@ ftsPage window folderId searchTerm ftsSorting filters =
                 , offset = Present window.offset
             }
         )
-        (Api.Fragments.documentResultPage "nodesmall")
+        (Api.Fragments.documentsPage "nodesmall")
         |> SelectionSet.nonNullOrFail
 
 
@@ -397,26 +311,6 @@ _GraphQL notation:_
     }
 
 -}
-ftsFolderCounts_ByQuery :
-    Query.FtsQuery
-    -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-ftsFolderCounts_ByQuery ftsQuery =
-    Mediatum.Query.ftsDocumentsDocset
-        (\optionals ->
-            { optionals
-                | folderId = ftsQuery.folder |> .id |> folderIdToInt |> Present
-                , text = Present ftsQuery.searchTerm
-                , attributeTests =
-                    ftsQuery.filters
-                        |> Query.filtersToAttributeTests
-                        |> Query.Attribute.testsAsGraphqlArgument
-                        |> Present
-            }
-        )
-        Api.Fragments.folderAndSubfolderCounts
-        |> SelectionSet.nonNullOrFail
-
-
 ftsFolderCounts :
     FolderId
     -> String

@@ -163,6 +163,9 @@ view context model =
             RemoteData.Loading ->
                 Icons.spinner
 
+            RemoteData.Failure error ->
+                viewApiError error
+
             RemoteData.Success (Just document) ->
                 viewDocument model document
 
@@ -176,9 +179,6 @@ view context model =
                         )
                     , Html.text " not available"
                     ]
-
-            RemoteData.Failure error ->
-                viewApiError error
         ]
 
 

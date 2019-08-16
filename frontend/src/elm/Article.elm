@@ -99,26 +99,26 @@ initWithQuery context =
 
             else
                 let
-                    ( subModel, subCmd ) =
-                        Article.Directory.init
+                    subModel =
+                        Article.Directory.initialModel
                             { cache = context.cache
                             , folderQuery = folderQuery
                             }
                 in
                 ( { content = DirectoryModel subModel }
-                , Cmd.map DirectoryMsg subCmd
+                , Cmd.none
                 )
 
         Query.OnFts ftsQuery ->
             let
-                ( subModel, subCmd ) =
-                    Article.Fts.init
+                subModel =
+                    Article.Fts.initialModel
                         { cache = context.cache
                         , ftsQuery = ftsQuery
                         }
             in
             ( { content = FtsModel subModel }
-            , Cmd.map FtsMsg subCmd
+            , Cmd.none
             )
 
 
@@ -215,12 +215,6 @@ update context msg model =
                     , NoReturn
                     )
 
-                Article.Directory.FolderCounts folderCounts ->
-                    ( model
-                    , Cmd.none
-                    , FolderCounts folderCounts
-                    )
-
                 Article.Directory.ShowDocument documentId ->
                     ( model
                     , Cmd.none
@@ -250,12 +244,6 @@ update context msg model =
                     ( { model | content = FtsModel subModel1 }
                     , Cmd.map FtsMsg subCmd
                     , NoReturn
-                    )
-
-                Article.Fts.FolderCounts folderCounts ->
-                    ( model
-                    , Cmd.none
-                    , FolderCounts folderCounts
                     )
 
                 Article.Fts.ShowDocument documentId ->

@@ -2,17 +2,17 @@ module Article.Directory exposing
     ( Model
     , Msg
     , Return(..)
-    , init
+    , initialModel
     , update
     , view
     )
 
 -- import Article.Iterator as Iterator
+-- import Pagination.Offset.Page as Page exposing (Page, PageResult)
 
 import Api
-import Api.Queries
 import Data.Cache as Cache exposing (ApiData)
-import Data.Types exposing (DocumentId, DocumentResult, FolderCounts)
+import Data.Types exposing (DocumentId, DocumentResult, DocumentsPage)
 import DocumentResult
 import Graphql.Extra
 import Html exposing (Html)
@@ -20,8 +20,8 @@ import Html.Attributes
 import Html.Events
 import Icons
 import Maybe.Extra
-import Pagination.Offset.Page as Page exposing (Page, PageResult)
 import Query
+import RemoteData
 import Utils
 
 
@@ -34,25 +34,19 @@ type alias Context =
 type Return
     = NoReturn
     | ShowDocument DocumentId
-    | FolderCounts FolderCounts
 
 
 type alias Model =
-    { pageResult : PageResult DocumentResult
-
-    -- , iterator : Maybe Iterator.Model
-    , doQueryFolderCounts : Bool
+    { -- , iterator : Maybe Iterator.Model
     }
 
 
 type Msg
-    = ApiResponsePage (Api.Response (Page DocumentResult))
-    | ApiResponseFolderCounts (Api.Response FolderCounts)
-    | PickPosition Page.Position
-    | SelectDocument DocumentId
+    = SelectDocument DocumentId
 
 
 
+-- | PickPosition Page.Position
 -- | IteratorMsg Iterator.Msg
 {-
    iteratorContext : Context -> Model -> Iterator.Context DocumentResult
@@ -65,70 +59,30 @@ type Msg
 -}
 
 
-init : Context -> ( Model, Cmd Msg )
-init context =
-    let
-        model =
-            { pageResult = Page.initialPageResult
-
-            -- , iterator = Nothing
-            , doQueryFolderCounts = True
-            }
-    in
-    update
-        context
-        (PickPosition Page.First)
-        model
-        |> Utils.tupleRemoveThird
+initialModel : Context -> Model
+initialModel context =
+    { -- , iterator = Nothing
+    }
 
 
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
-        PickPosition paginationPosition ->
-            ( { model
-                | pageResult = Page.loadingPageResult model.pageResult
-              }
-            , Api.sendQueryRequest
-                ApiResponsePage
-                (Api.Queries.folderDocumentsPage_ByQuery
-                    model.pageResult.page
-                    paginationPosition
-                    context.folderQuery
-                )
-            , NoReturn
-            )
-
-        ApiResponsePage result ->
-            ( { model
-                | pageResult = Page.updatePageResultFromResult result model.pageResult
-                , doQueryFolderCounts = False
-              }
-            , if model.doQueryFolderCounts then
-                Api.sendQueryRequest
-                    ApiResponseFolderCounts
-                    (Api.Queries.folderDocumentsFolderCounts_ByQuery
-                        context.folderQuery
-                    )
-
-              else
-                Cmd.none
-            , NoReturn
-            )
-
-        ApiResponseFolderCounts (Err error) ->
-            -- TODO
-            ( model
-            , Cmd.none
-            , NoReturn
-            )
-
-        ApiResponseFolderCounts (Ok folderCountMap) ->
-            ( model
-            , Cmd.none
-            , FolderCounts folderCountMap
-            )
-
+        {-
+           PickPosition paginationPosition ->
+               ( { model
+                   | pageResult = Page.loadingPageResult model.pageResult
+                 }
+               , Api.sendQueryRequest
+                   ApiResponsePage
+                   (Api.Queries.folderDocumentsPage_ByQuery
+                       model.pageResult.page
+                       paginationPosition
+                       context.folderQuery
+                   )
+               , NoReturn
+               )
+        -}
         SelectDocument id ->
             ( model
               {- { model
@@ -180,29 +134,36 @@ update context msg model =
 
 view : Context -> Model -> Html Msg
 view context model =
+    let
+        selection =
+            { scope = context.folderQuery.folder.id
+            , searchMethod = Data.Types.SelectByFolderListing
+            , filters = context.folderQuery.filters
+            }
+
+        window =
+            { offset = 0, limit = 10 }
+    in
     Html.div [] <|
         -- case model.iterator of
         -- Nothing ->
-        [ case model.pageResult.page of
-            Nothing ->
-                Html.text ""
+        [ case
+            Cache.get
+                context.cache.documentsPages
+                ( selection, window )
+          of
+            RemoteData.NotAsked ->
+                -- Should never happen
+                Icons.spinner
 
-            Just documentPage ->
-                viewResponse
-                    PickPosition
-                    (viewPage (DocumentResult.view SelectDocument))
-                    documentPage
-        , if model.pageResult.loading then
-            Icons.spinner
+            RemoteData.Loading ->
+                Icons.spinner
 
-          else
-            Html.text ""
-        , case model.pageResult.error of
-            Nothing ->
-                Html.text ""
+            RemoteData.Failure error ->
+                viewApiError error
 
-            Just error ->
-                viewError error
+            RemoteData.Success documentsPage ->
+                viewDocumentsPage documentsPage
         ]
 
 
@@ -217,56 +178,52 @@ view context model =
 -}
 
 
-viewResponse :
-    (Page.Position -> Msg)
-    -> (Page itemModel -> Html Msg)
-    -> Page itemModel
-    -> Html Msg
-viewResponse paginationTargetTagger viewEntity page =
-    Html.div []
-        [ viewEntity page
-        , viewPaginationButtons page paginationTargetTagger
-        ]
-
-
-viewPage : (itemModel -> Html Msg) -> Page itemModel -> Html Msg
-viewPage viewItem page =
+viewDocumentsPage : DocumentsPage -> Html Msg
+viewDocumentsPage documentsPage =
     Html.div []
         [ Html.div []
-            (List.map viewItem (Page.entries page))
+            (List.map
+                (DocumentResult.view SelectDocument)
+                documentsPage.content
+            )
+
+        -- , viewPaginationButtons page paginationTargetTagger
         ]
 
 
-viewPaginationButtons : Page itemModel -> (Page.Position -> Msg) -> Html Msg
-viewPaginationButtons page targetTagger =
-    let
-        viewButton : String -> Msg -> Bool -> Html Msg
-        viewButton label msg enabled =
-            Html.button
-                [ Html.Attributes.type_ "button"
-                , Html.Attributes.disabled (not enabled)
-                , Html.Events.onClick msg
-                ]
-                [ Html.text label ]
-    in
-    Html.div
-        [ Html.Attributes.style "margin" "4px 0px 8px 0px"
-        , Html.Attributes.class "input-group"
-        ]
-        [ viewButton "First"
-            (targetTagger Page.First)
-            (not (Page.isFirstPage page))
-        , viewButton "Prev"
-            (targetTagger Page.Previous)
-            (not (Page.isFirstPage page))
-        , viewButton "Next"
-            (targetTagger Page.Next)
-            page.hasNextPage
-        ]
+
+{-
+   viewPaginationButtons : Page itemModel -> (Page.Position -> Msg) -> Html Msg
+   viewPaginationButtons page targetTagger =
+       let
+           viewButton : String -> Msg -> Bool -> Html Msg
+           viewButton label msg enabled =
+               Html.button
+                   [ Html.Attributes.type_ "button"
+                   , Html.Attributes.disabled (not enabled)
+                   , Html.Events.onClick msg
+                   ]
+                   [ Html.text label ]
+       in
+       Html.div
+           [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+           , Html.Attributes.class "input-group"
+           ]
+           [ viewButton "First"
+               (targetTagger Page.First)
+               (not (Page.isFirstPage page))
+           , viewButton "Prev"
+               (targetTagger Page.Previous)
+               (not (Page.isFirstPage page))
+           , viewButton "Next"
+               (targetTagger Page.Next)
+               page.hasNextPage
+           ]
+-}
 
 
-viewError : Api.Error -> Html msg
-viewError error =
+viewApiError : Api.Error -> Html msg
+viewApiError error =
     Html.div
         [ Html.Attributes.class "error" ]
         [ Html.text (Graphql.Extra.errorToString error) ]
