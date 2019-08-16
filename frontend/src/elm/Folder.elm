@@ -33,7 +33,7 @@ dummy =
     { id = Data.Types.folderIdFromInt -1
     , parent = Nothing
     , name = ""
-    , type_ = Data.Types.FolderIsDirectory
+    , type_ = Data.Types.FolderIsCollection
     , numSubfolder = 0
     }
 

@@ -141,9 +141,14 @@ needs context =
                     , filters = folderQuery.filters
                     }
             in
-            Cache.NeedSequentially
-                (Cache.NeedDocumentsPage selection folderQuery.window)
-                (Cache.NeedFolderCounts selection)
+            case folderQuery.folder.type_ of
+                FolderIsCollection ->
+                    Cache.NeedNothing
+
+                FolderIsDirectory ->
+                    Cache.NeedSequentially
+                        (Cache.NeedDocumentsPage selection folderQuery.window)
+                        (Cache.NeedFolderCounts selection)
 
         Query.OnFts ftsQuery ->
             let
