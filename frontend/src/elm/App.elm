@@ -109,7 +109,7 @@ needs model =
             _ ->
                 Cache.NeedNothing
         , Tree.needs { cache = model.cache } model.tree
-        , Article.needs model.query
+        , Article.needs { cache = model.cache, query = model.query }
         ]
         |> Debug.log "App needs"
 

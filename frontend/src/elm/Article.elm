@@ -126,9 +126,9 @@ initWithQuery context =
             )
 
 
-needs : Query -> Cache.Needs
-needs query =
-    case query of
+needs : Context -> Cache.Needs
+needs context =
+    case context.query of
         Query.OnDetails detailsQuery ->
             Cache.NeedDocument detailsQuery.documentId
 
@@ -145,9 +145,15 @@ needs query =
                 [ Cache.NeedDocumentsPage
                     selection
                     folderQuery.window
-                , -- TODO: Currently we request the folderCounts in parallel. It should be sequentially after getting the page results
-                  Cache.NeedFolderCounts
-                    selection
+                , if
+                    RemoteData.isSuccess <|
+                        Cache.get context.cache.documentsPages ( selection, folderQuery.window )
+                  then
+                    Cache.NeedFolderCounts
+                        selection
+
+                  else
+                    Cache.NeedNothing
                 ]
 
         Query.OnFts ftsQuery ->
@@ -171,9 +177,15 @@ needs query =
                 [ Cache.NeedDocumentsPage
                     selection
                     ftsQuery.window
-                , -- TODO: Currently we request the folderCounts in parallel. It should be sequentially after getting the page results
-                  Cache.NeedFolderCounts
-                    selection
+                , if
+                    RemoteData.isSuccess <|
+                        Cache.get context.cache.documentsPages ( selection, ftsQuery.window )
+                  then
+                    Cache.NeedFolderCounts
+                        selection
+
+                  else
+                    Cache.NeedNothing
                 ]
 
 
