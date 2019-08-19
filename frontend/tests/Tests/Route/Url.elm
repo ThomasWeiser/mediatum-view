@@ -9,6 +9,7 @@ import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Route
 import Url exposing (Url)
+import Utils
 
 
 suite : Test
@@ -59,15 +60,7 @@ suite =
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId (nodeIdFromInt 123))
                         , .parameters >> .ftsTerm >> Expect.equal ""
-                        , Route.Url.toString >> Expect.equal "/123"
-                        ]
-            , testString "https://example.com/123/" <|
-                Url.fromString
-                    >> Maybe.andThen Route.Url.parseUrl
-                    >> justAndThenAll
-                        [ .path >> Expect.equal (Route.OneId (nodeIdFromInt 123))
-                        , .parameters >> .ftsTerm >> Expect.equal ""
-                        , .parameters >> .ftsSorting >> Expect.equal FtsByRank
+                        , .parameters >> .ftsSorting >> Expect.equal Route.defaultFtsSorting
                         , .parameters >> .filterByYear >> nothing
                         , .parameters >> .filterByTitle >> Expect.equal []
                         , Route.Url.toString >> Expect.equal "/123"
@@ -87,7 +80,12 @@ suite =
                         [ .path >> Expect.equal Route.NoId
                         , .parameters >> .ftsTerm >> Expect.equal ""
                         , .parameters >> .ftsSorting >> Expect.equal FtsByRank
-                        , Route.Url.toString >> Expect.equal "/"
+                        , Route.Url.toString
+                            >> Expect.equal
+                                (Route.defaultFtsSorting
+                                    == FtsByRank
+                                    |> Utils.ifElse "/" "/?fts-sorting=by-rank"
+                                )
                         ]
             , testString "https://example.com/?fts-sorting=by-date" <|
                 Url.fromString
@@ -96,7 +94,12 @@ suite =
                         [ .path >> Expect.equal Route.NoId
                         , .parameters >> .ftsTerm >> Expect.equal ""
                         , .parameters >> .ftsSorting >> Expect.equal FtsByDate
-                        , Route.Url.toString >> Expect.equal "/?fts-sorting=by-date"
+                        , Route.Url.toString
+                            >> Expect.equal
+                                (Route.defaultFtsSorting
+                                    == FtsByDate
+                                    |> Utils.ifElse "/" "/?fts-sorting=by-date"
+                                )
                         ]
             , testString "https://example.com/123/456?fts-term=foo" <|
                 Url.fromString
@@ -125,16 +128,15 @@ suite =
                         , .parameters >> .ftsTerm >> Expect.equal "foo bar"
                         , Route.Url.toString >> Expect.equal "/789?fts-term=foo%20bar"
                         ]
-            , testString "https://example.com/789/?filter-by-title=%20foo%20&filter-by-year=2001-2011&filter-by-title=\"bar%20%20baz\"&fts-sorting=by-date" <|
+            , testString "https://example.com/789/?filter-by-title=%20foo%20&filter-by-year=2001-2011&filter-by-title=\"bar%20%20baz\"" <|
                 Url.fromString
                     >> Maybe.andThen Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId (nodeIdFromInt 789))
                         , .parameters >> .ftsTerm >> Expect.equal ""
-                        , .parameters >> .ftsSorting >> Expect.equal FtsByDate
                         , .parameters >> .filterByYear >> Expect.equal (Just ( 2001, 2011 ))
                         , .parameters >> .filterByTitle >> Expect.equal [ "foo", "\"bar baz\"" ]
-                        , Route.Url.toString >> Expect.equal "/789?fts-sorting=by-date&filter-by-year=2001-2011&filter-by-title=foo&filter-by-title=%22bar%20baz%22"
+                        , Route.Url.toString >> Expect.equal "/789?filter-by-year=2001-2011&filter-by-title=foo&filter-by-title=%22bar%20baz%22"
                         ]
 
             {- I guess percent-coding should work within the path, but it doesn't

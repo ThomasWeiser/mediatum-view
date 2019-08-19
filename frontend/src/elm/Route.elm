@@ -3,12 +3,24 @@ module Route exposing
     , RouteParameters
     , RoutePath(..)
     , cleanSearchTerm
+    , defaultFtsSorting
+    , defaultLimit
     , fromOneId
     , home
     )
 
 import Data.Types exposing (FtsSorting(..), NodeId)
 import String.Extra
+
+
+defaultLimit : Int
+defaultLimit =
+    10
+
+
+defaultFtsSorting : FtsSorting
+defaultFtsSorting =
+    FtsByRank
 
 
 type alias Route =
@@ -51,11 +63,11 @@ home =
 emptyParameters : RouteParameters
 emptyParameters =
     { ftsTerm = ""
-    , ftsSorting = FtsByRank
+    , ftsSorting = defaultFtsSorting
     , filterByYear = Nothing
     , filterByTitle = []
     , offset = 0
-    , limit = 10
+    , limit = defaultLimit
     }
 
 

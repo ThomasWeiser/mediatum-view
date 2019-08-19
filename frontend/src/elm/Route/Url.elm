@@ -43,7 +43,7 @@ parserParameters =
         )
         (QueryParser.enum "fts-sorting"
             (Dict.fromList [ ( "by-rank", FtsByRank ), ( "by-date", FtsByDate ) ])
-            |> queryParserWithDefault FtsByRank
+            |> queryParserWithDefault defaultFtsSorting
         )
         (QueryParser.string "filter-by-year"
             |> QueryParser.map
@@ -62,7 +62,7 @@ parserParameters =
             |> queryParserWithDefault 0
         )
         (QueryParser.int "limit"
-            |> queryParserWithDefault 10
+            |> queryParserWithDefault defaultLimit
         )
 
 
@@ -101,7 +101,7 @@ toString route =
                 route.parameters.ftsTerm
             , buildParameterIfNotDefault
                 (ftsSortingTostring >> Builder.string "fts-sorting")
-                FtsByRank
+                defaultFtsSorting
                 route.parameters.ftsSorting
             , Maybe.map
                 (\( year1, year2 ) ->
@@ -122,7 +122,7 @@ toString route =
                     route.parameters.offset
                 , buildParameterIfNotDefault
                     (Builder.int "limit")
-                    10
+                    defaultLimit
                     route.parameters.limit
                 ]
         )
