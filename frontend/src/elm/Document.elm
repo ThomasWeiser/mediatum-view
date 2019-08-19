@@ -11,6 +11,7 @@ import Html.Events
 import List.Extra
 import Regex
 import Route
+import Route.Url
 
 
 init : DocumentId -> String -> String -> List DocumentAttribute -> Document
@@ -47,7 +48,7 @@ view clickMsg maybeNumber document =
                     |> Data.Types.documentIdToInt
                     |> Data.Types.nodeIdFromInt
                     |> Route.fromOneId
-                    |> Route.toString
+                    |> Route.Url.toString
                     |> Html.Attributes.href
                 ]
                 [ Html.text document.metadatatypeName ]

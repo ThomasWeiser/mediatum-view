@@ -22,6 +22,7 @@ import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 import RemoteData
 import Route
+import Route.Url
 import Sort.Dict
 import Utils
 
@@ -225,7 +226,7 @@ viewBreadcrumbs context model id =
                                                 |> Data.Types.folderIdToInt
                                                 |> Data.Types.nodeIdFromInt
                                                 |> Route.fromOneId
-                                                |> Route.toString
+                                                |> Route.Url.toString
                                                 |> Html.Attributes.href
                                             ]
                                             [ Html.text folder.name ]
