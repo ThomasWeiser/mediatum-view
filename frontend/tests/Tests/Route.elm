@@ -22,27 +22,20 @@ fuzzerRoute =
             |> Fuzz.andMap
                 (fuzzerSearchTerm
                     |> Fuzz.maybe
+                    |> Fuzz.map (Maybe.withDefault "")
                 )
             |> Fuzz.andMap
-                (Fuzz.oneOf [ Fuzz.constant FtsByRank, Fuzz.constant FtsByDate ]
-                    |> Fuzz.maybe
-                )
+                (Fuzz.oneOf [ Fuzz.constant FtsByRank, Fuzz.constant FtsByDate ])
             |> Fuzz.andMap
                 (fuzzerYearRange
                     |> Fuzz.maybe
                 )
             |> Fuzz.andMap
-                (TestUtils.shortList 4 fuzzerSearchTerm
-                    |> Fuzz.map List.Nonempty.fromList
-                )
+                (TestUtils.shortList 4 fuzzerSearchTerm)
             |> Fuzz.andMap
-                (fuzzerOffset
-                    |> Fuzz.maybe
-                )
+                fuzzerOffset
             |> Fuzz.andMap
-                (fuzzerLimit
-                    |> Fuzz.maybe
-                )
+                fuzzerLimit
         )
 
 

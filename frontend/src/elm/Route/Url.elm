@@ -5,10 +5,10 @@ module Route.Url exposing
 
 import Data.Types exposing (FtsSorting(..), NodeId, nodeIdFromInt, nodeIdToInt)
 import Dict
-import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
 import Route exposing (..)
+import String.Extra
 import Url exposing (Url)
 import Url.Builder as Builder
 import Url.Parser as Parser exposing ((</>), (<?>), Parser)
@@ -38,11 +38,12 @@ parserParameters : QueryParser.Parser RouteParameters
 parserParameters =
     QueryParser.map6 RouteParameters
         (QueryParser.string "fts-term"
-            |> QueryParser.map
-                (Maybe.andThen cleanSearchTerm)
+            |> queryParserWithDefault ""
+            |> QueryParser.map cleanSearchTerm
         )
         (QueryParser.enum "fts-sorting"
             (Dict.fromList [ ( "by-rank", FtsByRank ), ( "by-date", FtsByDate ) ])
+            |> queryParserWithDefault FtsByRank
         )
         (QueryParser.string "filter-by-year"
             |> QueryParser.map
@@ -53,13 +54,23 @@ parserParameters =
                 )
         )
         (QueryParser.custom "filter-by-title"
-            (List.map cleanSearchTerm
+            (List.map (cleanSearchTerm >> String.Extra.nonEmpty)
                 >> Maybe.Extra.values
-                >> List.Nonempty.fromList
             )
         )
-        (QueryParser.int "offset")
-        (QueryParser.int "limit")
+        (QueryParser.int "offset"
+            |> queryParserWithDefault 0
+        )
+        (QueryParser.int "limit"
+            |> queryParserWithDefault 10
+        )
+
+
+queryParserWithDefault : a -> QueryParser.Parser (Maybe a) -> QueryParser.Parser a
+queryParserWithDefault defaultValue parserOfMaybe =
+    QueryParser.map
+        (Maybe.withDefault defaultValue)
+        parserOfMaybe
 
 
 elmParserYearRange : ElmParser.Parser ( Int, Int )
@@ -84,19 +95,13 @@ toString route =
                 [ id1 |> nodeIdToInt |> String.fromInt, id2 |> nodeIdToInt |> String.fromInt ]
         )
         (Maybe.Extra.values
-            [ Maybe.map
+            [ buildParameterIfNotDefault
                 (Builder.string "fts-term")
+                ""
                 route.parameters.ftsTerm
-            , Maybe.map
-                (\ftsSorting ->
-                    Builder.string "fts-sorting" <|
-                        case ftsSorting of
-                            FtsByRank ->
-                                "by-rank"
-
-                            FtsByDate ->
-                                "by-date"
-                )
+            , buildParameterIfNotDefault
+                (ftsSortingTostring >> Builder.string "fts-sorting")
+                FtsByRank
                 route.parameters.ftsSorting
             , Maybe.map
                 (\( year1, year2 ) ->
@@ -107,20 +112,36 @@ toString route =
                 )
                 route.parameters.filterByYear
             ]
-            ++ Maybe.Extra.unwrap
-                []
-                (\byTitleList ->
-                    byTitleList
-                        |> List.Nonempty.toList
-                        |> List.map (Builder.string "filter-by-title")
-                )
-                route.parameters.filterByTitle
+            ++ (route.parameters.filterByTitle
+                    |> List.map (Builder.string "filter-by-title")
+               )
             ++ Maybe.Extra.values
-                [ Maybe.map
+                [ buildParameterIfNotDefault
                     (Builder.int "offset")
+                    0
                     route.parameters.offset
-                , Maybe.map
+                , buildParameterIfNotDefault
                     (Builder.int "limit")
+                    10
                     route.parameters.limit
                 ]
         )
+
+
+ftsSortingTostring : FtsSorting -> String
+ftsSortingTostring ftsSorting =
+    case ftsSorting of
+        FtsByRank ->
+            "by-rank"
+
+        FtsByDate ->
+            "by-date"
+
+
+buildParameterIfNotDefault : (a -> Builder.QueryParameter) -> a -> a -> Maybe Builder.QueryParameter
+buildParameterIfNotDefault mapParameter defaultValue actualValue =
+    if defaultValue == actualValue then
+        Nothing
+
+    else
+        Just (mapParameter actualValue)

@@ -8,7 +8,6 @@ module Route exposing
     )
 
 import Data.Types exposing (FtsSorting(..), NodeId)
-import List.Nonempty exposing (Nonempty)
 import String.Extra
 
 
@@ -25,12 +24,12 @@ type RoutePath
 
 
 type alias RouteParameters =
-    { ftsTerm : Maybe String
-    , ftsSorting : Maybe FtsSorting
+    { ftsTerm : String
+    , ftsSorting : FtsSorting
     , filterByYear : Maybe ( Int, Int )
-    , filterByTitle : Maybe (Nonempty String)
-    , offset : Maybe Int
-    , limit : Maybe Int
+    , filterByTitle : List String
+    , offset : Int
+    , limit : Int
     }
 
 
@@ -51,17 +50,17 @@ home =
 
 emptyParameters : RouteParameters
 emptyParameters =
-    { ftsTerm = Nothing
-    , ftsSorting = Nothing
+    { ftsTerm = ""
+    , ftsSorting = FtsByRank
     , filterByYear = Nothing
-    , filterByTitle = Nothing
-    , offset = Nothing
-    , limit = Nothing
+    , filterByTitle = []
+    , offset = 0
+    , limit = 10
     }
 
 
-cleanSearchTerm : String -> Maybe String
+cleanSearchTerm : String -> String
 cleanSearchTerm =
     -- Trim the whitespace of both sides of the string
     -- and compress repeated whitespace internally to a single whitespace char.
-    String.Extra.clean >> String.Extra.nonBlank
+    String.Extra.clean
