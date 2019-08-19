@@ -8,6 +8,7 @@ import Dict
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
 import Route exposing (..)
+import Set
 import String.Extra
 import Url exposing (Url)
 import Url.Builder as Builder
@@ -56,6 +57,7 @@ parserParameters =
         (QueryParser.custom "filter-by-title"
             (List.map (cleanSearchTerm >> String.Extra.nonEmpty)
                 >> Maybe.Extra.values
+                >> Set.fromList
             )
         )
         (QueryParser.int "offset"
@@ -113,6 +115,7 @@ toString route =
                 route.parameters.filterByYear
             ]
             ++ (route.parameters.filterByTitle
+                    |> Set.toList
                     |> List.map (Builder.string "filter-by-title")
                )
             ++ Maybe.Extra.values

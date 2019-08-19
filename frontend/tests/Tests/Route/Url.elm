@@ -5,6 +5,7 @@ import Expect exposing (Expectation)
 import List.Nonempty exposing (Nonempty)
 import Route exposing (Route, RouteParameters, RoutePath(..))
 import Route.Url
+import Set
 import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Route
@@ -62,7 +63,7 @@ suite =
                         , .parameters >> .ftsTerm >> Expect.equal ""
                         , .parameters >> .ftsSorting >> Expect.equal Route.defaultFtsSorting
                         , .parameters >> .filterByYear >> nothing
-                        , .parameters >> .filterByTitle >> Expect.equal []
+                        , .parameters >> .filterByTitle >> Expect.equal Set.empty
                         , Route.Url.toString >> Expect.equal "/123"
                         ]
             , testString "https://example.com/?fts-term=foo" <|
@@ -116,7 +117,7 @@ suite =
                         >> justAndThenAll
                             [ .path >> Expect.equal Route.NoId
                             , .parameters >> .ftsTerm >> Expect.equal ""
-                            , .parameters >> .filterByTitle >> Expect.equal []
+                            , .parameters >> .filterByTitle >> Expect.equal Set.empty
                             , Route.Url.toString >> Expect.equal "/"
                             ]
                 ]
@@ -135,8 +136,8 @@ suite =
                         [ .path >> Expect.equal (Route.OneId (nodeIdFromInt 789))
                         , .parameters >> .ftsTerm >> Expect.equal ""
                         , .parameters >> .filterByYear >> Expect.equal (Just ( 2001, 2011 ))
-                        , .parameters >> .filterByTitle >> Expect.equal [ "foo", "\"bar baz\"" ]
-                        , Route.Url.toString >> Expect.equal "/789?filter-by-year=2001-2011&filter-by-title=foo&filter-by-title=%22bar%20baz%22"
+                        , .parameters >> .filterByTitle >> Expect.equal (Set.fromList [ "\"bar baz\"", "foo" ])
+                        , Route.Url.toString >> Expect.equal "/789?filter-by-year=2001-2011&filter-by-title=%22bar%20baz%22&filter-by-title=foo"
                         ]
 
             {- I guess percent-coding should work within the path, but it doesn't

@@ -10,6 +10,7 @@ module Route exposing
     )
 
 import Data.Types exposing (FtsSorting(..), NodeId)
+import Set exposing (Set)
 import String.Extra
 
 
@@ -39,7 +40,7 @@ type alias RouteParameters =
     { ftsTerm : String
     , ftsSorting : FtsSorting
     , filterByYear : Maybe ( Int, Int )
-    , filterByTitle : List String
+    , filterByTitle : Set String
     , offset : Int
     , limit : Int
     }
@@ -65,7 +66,7 @@ emptyParameters =
     { ftsTerm = ""
     , ftsSorting = defaultFtsSorting
     , filterByYear = Nothing
-    , filterByTitle = []
+    , filterByTitle = Set.empty
     , offset = 0
     , limit = defaultLimit
     }

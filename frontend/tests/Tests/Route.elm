@@ -4,6 +4,7 @@ import Data.Types exposing (FtsSorting(..), NodeId, nodeIdFromInt, nodeIdToInt)
 import Fuzz exposing (Fuzzer, int, list, string)
 import List.Nonempty exposing (Nonempty)
 import Route exposing (Route, RouteParameters, RoutePath(..))
+import Set
 import String.Extra
 import TestUtils exposing (..)
 import Tests.Data.Types exposing (..)
@@ -31,7 +32,9 @@ fuzzerRoute =
                     |> Fuzz.maybe
                 )
             |> Fuzz.andMap
-                (TestUtils.shortList 4 fuzzerSearchTerm)
+                (TestUtils.shortList 4 fuzzerSearchTerm
+                    |> Fuzz.map Set.fromList
+                )
             |> Fuzz.andMap
                 fuzzerOffset
             |> Fuzz.andMap
