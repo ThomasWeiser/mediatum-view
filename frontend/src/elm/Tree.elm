@@ -34,7 +34,7 @@ type alias Context =
 
 type Return
     = NoReturn
-    | UserSelection Folder
+    | UserSelection FolderId
 
 
 type alias Model =
@@ -70,11 +70,7 @@ update context msg model =
                     not (model.selection == Just id) || not model.showSubselection
               }
             , if model.selection /= Just id then
-                Cache.get context.cache.folders id
-                    |> RemoteData.toMaybe
-                    |> Maybe.Extra.unwrap
-                        NoReturn
-                        UserSelection
+                UserSelection id
 
               else
                 NoReturn
@@ -139,12 +135,12 @@ showFolder id model =
     }
 
 
-view : Context -> Model -> FolderCounts -> Html Msg
-view context model folderCounts =
+view : Context -> Model -> Maybe FolderCounts -> Html Msg
+view context model maybeFolderCounts =
     Html.div []
         [ case context.cache.rootFolderIds of
             RemoteData.Success rootIds ->
-                viewListOfFolders context model folderCounts rootIds
+                viewListOfFolders context model maybeFolderCounts rootIds
 
             -- TODO: RemoteData.Failure error ->
             noSuccess ->
@@ -152,13 +148,13 @@ view context model folderCounts =
         ]
 
 
-viewListOfFolders : Context -> Model -> FolderCounts -> List FolderId -> Html Msg
-viewListOfFolders context model folderCounts folderIds =
+viewListOfFolders : Context -> Model -> Maybe FolderCounts -> List FolderId -> Html Msg
+viewListOfFolders context model maybeFolderCounts folderIds =
     Html.ul [ Html.Attributes.class "folder-list" ] <|
         List.map
             (\id ->
                 Html.li []
-                    [ viewFolder context model folderCounts id ]
+                    [ viewFolder context model maybeFolderCounts id ]
             )
             folderIds
 
@@ -171,8 +167,8 @@ viewListOfFoldersLoading =
         ]
 
 
-viewFolder : Context -> Model -> FolderCounts -> FolderId -> Html Msg
-viewFolder context model folderCounts id =
+viewFolder : Context -> Model -> Maybe FolderCounts -> FolderId -> Html Msg
+viewFolder context model maybeFolderCounts id =
     let
         isSelectedFolder =
             model.selection == Just id
@@ -188,14 +184,16 @@ viewFolder context model folderCounts id =
                     [ Html.Events.onClick (Select id) ]
                     [ Folder.view
                         folder
-                        (Sort.Dict.get folder.id folderCounts)
+                        (maybeFolderCounts
+                            |> Maybe.andThen (Sort.Dict.get folder.id)
+                        )
                         isSelectedFolder
                         expanded
                     ]
                 , if expanded then
                     case Cache.get context.cache.subfolderIds id of
                         RemoteData.Success subfolderIds ->
-                            viewListOfFolders context model folderCounts subfolderIds
+                            viewListOfFolders context model maybeFolderCounts subfolderIds
 
                         noSuccess ->
                             Html.text (Debug.toString noSuccess)
@@ -208,32 +206,37 @@ viewFolder context model folderCounts id =
             Html.text (Debug.toString noSuccess)
 
 
-viewBreadcrumbs : Context -> Model -> FolderId -> Html msg
-viewBreadcrumbs context model id =
-    getPath context.cache id
-        |> RemoteData.unwrap
-            [ Html.text "..." ]
-            (List.reverse
-                >> List.map
-                    (\idPathSegment ->
-                        Html.span []
-                            [ Cache.get context.cache.folders idPathSegment
-                                |> RemoteData.unwrap
-                                    (Html.text "...")
-                                    (\folder ->
-                                        Html.a
-                                            [ folder.id
-                                                |> Data.Types.folderIdToInt
-                                                |> Data.Types.nodeIdFromInt
-                                                |> Route.fromOneId
-                                                |> Route.Url.toString
-                                                |> Html.Attributes.href
-                                            ]
-                                            [ Html.text folder.name ]
-                                    )
-                            ]
-                    )
-                >> List.intersperse
-                    (Html.span [] [ Html.text " > " ])
-            )
-        |> Html.span []
+viewBreadcrumbs : Context -> Model -> Maybe FolderId -> Html msg
+viewBreadcrumbs context model maybeFolderId =
+    Html.span [] <|
+        case maybeFolderId of
+            Nothing ->
+                [ Html.text "(no specific path)" ]
+
+            Just folderId ->
+                getPath context.cache folderId
+                    |> RemoteData.unwrap
+                        [ Html.text "..." ]
+                        (List.reverse
+                            >> List.map
+                                (\idPathSegment ->
+                                    Html.span []
+                                        [ Cache.get context.cache.folders idPathSegment
+                                            |> RemoteData.unwrap
+                                                (Html.text "...")
+                                                (\folder ->
+                                                    Html.a
+                                                        [ folder.id
+                                                            |> Data.Types.folderIdToInt
+                                                            |> Data.Types.nodeIdFromInt
+                                                            |> Route.fromOneId
+                                                            |> Route.Url.toString
+                                                            |> Html.Attributes.href
+                                                        ]
+                                                        [ Html.text folder.name ]
+                                                )
+                                        ]
+                                )
+                            >> List.intersperse
+                                (Html.span [] [ Html.text " > " ])
+                        )

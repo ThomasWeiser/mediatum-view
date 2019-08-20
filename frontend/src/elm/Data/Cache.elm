@@ -5,6 +5,8 @@ module Data.Cache exposing
     , Needs(..)
     , Return(..)
     , get
+    , getAsDocumentId
+    , getAsFolderId
     , initialModel
     , needsFromList
     , requestNeeds
@@ -86,6 +88,26 @@ get : Sort.Dict.Dict k (ApiData v) -> k -> ApiData v
 get dict key =
     Sort.Dict.get key dict
         |> Maybe.withDefault NotAsked
+
+
+getAsFolderId : Model -> NodeId -> Maybe FolderId
+getAsFolderId cache nodeId =
+    case get cache.nodeTypes nodeId of
+        Success (NodeIsFolder _) ->
+            nodeId |> nodeIdToInt |> folderIdFromInt |> Just
+
+        _ ->
+            Nothing
+
+
+getAsDocumentId : Model -> NodeId -> Maybe DocumentId
+getAsDocumentId cache nodeId =
+    case get cache.nodeTypes nodeId of
+        Success NodeIsDocument ->
+            nodeId |> nodeIdToInt |> documentIdFromInt |> Just
+
+        _ ->
+            Nothing
 
 
 type Msg

@@ -1,4 +1,11 @@
-module Presentation exposing (Presentation(..), fromRoute, showFilters, toRoute, view)
+module Presentation exposing
+    ( Presentation(..)
+    , fromRoute
+    , getFolderId
+    , showFilters
+    , toRoute
+    , view
+    )
 
 import Data.Cache as Cache
 import Data.Types exposing (..)
@@ -35,6 +42,24 @@ showFilters presentation =
 
         _ ->
             False
+
+
+getFolderId : Cache.Model -> Presentation -> Maybe FolderId
+getFolderId cache presentation =
+    case presentation of
+        GenericPresentation maybeNodeIds ->
+            maybeNodeIds
+                |> Maybe.andThen
+                    (Tuple.first >> Cache.getAsFolderId cache)
+
+        DocumentPresentation maybeFolderId documentId ->
+            maybeFolderId
+
+        CollectionPresentation folderId ->
+            Just folderId
+
+        DocumentsPagePresentation selection window ->
+            Just selection.scope
 
 
 getNodeType : Cache.Model -> NodeId -> Maybe NodeType
@@ -79,7 +104,7 @@ fromRoute cache route =
                                 DocumentsPagePresentation
                                     { scope = rootFolderId
                                     , searchMethod = searchMethodFromRoute route
-                                    , filters = filtersFromRoute route
+                                    , filters = Filters.filtersFromRoute route
                                     }
                                     (windowFromRoute route)
                     )
@@ -102,7 +127,7 @@ fromRoute cache route =
                     DocumentsPagePresentation
                         { scope = nodeId |> nodeIdToInt |> folderIdFromInt
                         , searchMethod = searchMethodFromRoute route
-                        , filters = filtersFromRoute route
+                        , filters = Filters.filtersFromRoute route
                         }
                         (windowFromRoute route)
 
@@ -134,18 +159,6 @@ searchMethodFromRoute route =
             SelectByFullTextSearch
                 ftsTerm
                 route.parameters.ftsSorting
-
-
-filtersFromRoute : Route -> Filters
-filtersFromRoute route =
-    Set.toList route.parameters.filterByTitle
-        |> List.map FilterTitleFts
-        |> Utils.prependMaybe
-            (route.parameters.filterByYear
-                |> Maybe.map FilterYearWithin
-            )
-        |> List.map (\filter -> ( Filter.handle filter, filter ))
-        |> Dict.fromList
 
 
 toRoute : Presentation -> Route

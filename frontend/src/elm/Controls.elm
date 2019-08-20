@@ -3,13 +3,13 @@ module Controls exposing
     , Model
     , Msg
     , Return(..)
-    , init
+    , initialModel
     , submitExampleQuery
     , update
     , view
     )
 
-import Data.Types exposing (Filter(..), Filters)
+import Data.Types exposing (Filter(..), Filters, FtsSorting(..))
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes
@@ -17,36 +17,38 @@ import Html.Events
 import Icons
 import List.Extra
 import Maybe.Extra
-import Query exposing (Query)
+import Navigation exposing (Navigation)
+import Presentation exposing (Presentation)
 import Query.Filter as Filter
 import Query.FilterEditor as FilterEditor
 import Query.Filters as Filters
 import Range
+import Route exposing (Route)
 import Tree
 import Utils
 
 
 type alias Context =
-    { query : Query
+    { route : Route
+    , presentation : Presentation
     }
 
 
 type Return
     = NoReturn
-    | MapQuery (Query -> Query)
+    | Navigate Navigation
 
 
 type alias Model =
-    { searchTerm : String
-    , sorting : Query.FtsSorting
+    { ftsTerm : String
+    , ftsSorting : FtsSorting
     , filterEditors : Dict String FilterEditor.Model
     }
 
 
 type Msg
-    = NoOp
-    | SetSearchTerm String
-    | SetSorting Query.FtsSorting
+    = SetSearchTerm String
+    | SetSorting FtsSorting
     | AddFilter Filter.FilterType
     | EditFilter Filter
     | RemoveFilter Filter
@@ -60,28 +62,39 @@ submitExampleQuery =
     SubmitExampleQuery
 
 
-init : () -> Model
-init _ =
-    { searchTerm = ""
-    , sorting = Query.ByRank
+initialModel : Route -> Model
+initialModel route =
+    { ftsTerm = route.parameters.ftsTerm
+    , ftsSorting = route.parameters.ftsSorting
     , filterEditors = Dict.empty
     }
 
 
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
-    case msg of
-        NoOp ->
-            ( model, Cmd.none, NoReturn )
+    let
+        removeFilter filterHandle =
+            Filters.filtersFromRoute context.route
+                |> Filters.remove filterHandle
+                |> Navigation.SetFilters
+                |> Navigate
 
-        SetSearchTerm str ->
-            ( { model | searchTerm = str }
+        insertFilter oldFilterHandlefilter newFilter =
+            Filters.filtersFromRoute context.route
+                |> Filters.remove oldFilterHandlefilter
+                |> Filters.insert newFilter
+                |> Navigation.SetFilters
+                |> Navigate
+    in
+    case msg of
+        SetSearchTerm ftsTerm ->
+            ( { model | ftsTerm = ftsTerm }
             , Cmd.none
             , NoReturn
             )
 
-        SetSorting sorting ->
-            ( { model | sorting = sorting }
+        SetSorting ftsSorting ->
+            ( { model | ftsSorting = ftsSorting }
             , Cmd.none
             , NoReturn
             )
@@ -121,58 +134,32 @@ update context msg model =
         RemoveFilter filter ->
             ( model
             , Cmd.none
-            , MapQuery <|
-                Query.mapFilters <|
-                    Filters.remove <|
-                        Filter.handle filter
+            , removeFilter (Filter.handle filter)
             )
 
         Submit ->
-            let
-                query =
-                    if model.searchTerm == "" then
-                        Query.OnFolder
-                            { folder = Query.getFolder context.query
-                            , filters = Query.getFilters context.query
-                            , window = Query.initialWindow
-                            }
-
-                    else
-                        Query.OnFts
-                            { folder = Query.getFolder context.query
-                            , filters = Query.getFilters context.query
-                            , searchTerm = model.searchTerm
-                            , sorting = model.sorting
-                            , window = Query.initialWindow
-                            }
-            in
             ( model
             , Cmd.none
-            , MapQuery (always query)
+            , Navigate
+                (Navigation.FtsParameter model.ftsTerm model.ftsSorting)
             )
 
         SubmitExampleQuery ->
             let
-                searchTerm =
-                    "variable"
-
-                query =
-                    Query.OnFts
-                        { folder = Query.getFolder context.query
-                        , filters =
-                            Filters.none
-                                |> Filters.insert
-                                    (FilterYearWithin (Range.fromTo ( 2000, 2010 )))
-                                |> Filters.insert
-                                    (FilterTitleFts "with")
-                        , searchTerm = searchTerm
-                        , sorting = model.sorting
-                        , window = Query.initialWindow
-                        }
+                filters =
+                    Filters.none
+                        |> Filters.insert
+                            (FilterYearWithin (Range.fromTo ( 2000, 2010 )))
+                        |> Filters.insert
+                            (FilterTitleFts "with")
             in
-            ( { model | searchTerm = searchTerm }
+            ( model
             , Cmd.none
-            , MapQuery (always query)
+            , [ Navigation.FtsParameter "variable" context.route.parameters.ftsSorting
+              , Navigation.SetFilters filters
+              ]
+                |> Navigation.ListOfNavigations
+                |> Navigate
             )
 
         FilterEditorMsg filterHandle subMsg ->
@@ -204,21 +191,13 @@ update context msg model =
                         FilterEditor.Saved newFilter ->
                             ( modelWithEditorClosed
                             , cmd
-                            , MapQuery
-                                (Query.mapFilters
-                                    (Filters.remove filterHandle
-                                        >> Filters.insert newFilter
-                                    )
-                                )
+                            , insertFilter filterHandle newFilter
                             )
 
                         FilterEditor.Removed ->
                             ( modelWithEditorClosed
                             , cmd
-                            , MapQuery
-                                (Query.mapFilters
-                                    (Filters.remove filterHandle)
-                                )
+                            , removeFilter filterHandle
                             )
 
                         FilterEditor.Canceled ->
@@ -235,7 +214,7 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.div []
         [ viewSearch context model
-        , if Query.showFilters context.query then
+        , if Presentation.showFilters context.presentation then
             viewFilters context model
 
           else
@@ -252,20 +231,28 @@ viewSearch context model =
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
                 , Html.Attributes.placeholder "Search ..."
-                , Html.Attributes.value model.searchTerm
+                , Html.Attributes.value model.ftsTerm
                 , Utils.onChange SetSearchTerm
                 ]
                 []
             , Html.button
                 [ Html.Attributes.type_ "submit"
-                , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByRank ) ]
-                , Html.Events.onClick (SetSorting Query.ByRank)
+                , Html.Attributes.classList
+                    [ ( "selected"
+                      , model.ftsSorting == FtsByRank
+                      )
+                    ]
+                , Html.Events.onClick (SetSorting FtsByRank)
                 ]
                 [ Icons.search, Html.text " By Rank" ]
             , Html.button
                 [ Html.Attributes.type_ "submit"
-                , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByDate ) ]
-                , Html.Events.onClick (SetSorting Query.ByDate)
+                , Html.Attributes.classList
+                    [ ( "selected"
+                      , model.ftsSorting == FtsByDate
+                      )
+                    ]
+                , Html.Events.onClick (SetSorting FtsByDate)
                 ]
                 [ Icons.search, Html.text " By Date" ]
             ]
@@ -291,7 +278,7 @@ viewFilters context model =
                 Filter.filterTypes
         , viewExistingFilters
             model
-            (Query.getFilters context.query)
+            (Filters.filtersFromRoute context.route)
         , Html.span [] <|
             List.map
                 (\( filterHandle, filterEditor ) ->

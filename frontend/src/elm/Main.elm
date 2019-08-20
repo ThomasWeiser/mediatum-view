@@ -76,14 +76,11 @@ update msg model =
                 route =
                     Route.Url.parseUrl url
                         |> Maybe.withDefault Route.home
-
-                ( subModel, subCmd ) =
-                    App.changeRouteTo route model.app
             in
             ( { model
-                | app = subModel
+                | app = App.changeRouteTo route model.app
               }
-            , Cmd.map AppMsg subCmd
+            , Cmd.none
             )
 
         AppMsg subMsg ->

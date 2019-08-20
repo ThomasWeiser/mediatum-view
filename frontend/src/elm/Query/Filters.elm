@@ -1,15 +1,19 @@
 module Query.Filters exposing
-    ( insert
+    ( filtersFromRoute
+    , insert
     , none
     , remove
     , toAttributeTests
     , toList
     )
 
-import Data.Types exposing (Filter, Filters)
+import Data.Types exposing (Filter(..), Filters)
 import Dict exposing (Dict)
 import Query.Attribute
 import Query.Filter as Filter
+import Route exposing (Route)
+import Set
+import Utils
 
 
 none : Filters
@@ -36,3 +40,15 @@ toAttributeTests : Filters -> List Query.Attribute.Test
 toAttributeTests filters =
     toList filters
         |> List.map Filter.toAttributeTest
+
+
+filtersFromRoute : Route -> Filters
+filtersFromRoute route =
+    Set.toList route.parameters.filterByTitle
+        |> List.map FilterTitleFts
+        |> Utils.prependMaybe
+            (route.parameters.filterByYear
+                |> Maybe.map FilterYearWithin
+            )
+        |> List.map (\filter -> ( Filter.handle filter, filter ))
+        |> Dict.fromList

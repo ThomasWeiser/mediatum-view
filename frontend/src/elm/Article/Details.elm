@@ -20,14 +20,13 @@ import Html.Attributes
 import Html.Events
 import Icons
 import Maybe.Extra
-import Query
 import RemoteData
 import Utils
 
 
 type alias Context =
     { cache : Cache.Model
-    , detailsQuery : Query.DetailsQuery
+    , documentId : DocumentId
     }
 
 
@@ -57,8 +56,8 @@ type Msg
     | SubmitMutation DocumentId
 
 
-initialModel : Context -> Model
-initialModel context =
+initialModel : Model
+initialModel =
     { editAttributeKey = ""
     , editAttributeValue = ""
     , mutationState = Init
@@ -120,7 +119,7 @@ initEditAttributeValue context model =
     case
         Cache.get
             context.cache.documents
-            context.detailsQuery.documentId
+            context.documentId
     of
         RemoteData.Success (Just document) ->
             let
@@ -154,7 +153,7 @@ view context model =
         [ case
             Cache.get
                 context.cache.documents
-                context.detailsQuery.documentId
+                context.documentId
           of
             RemoteData.NotAsked ->
                 -- Should never happen
@@ -173,7 +172,7 @@ view context model =
                 Html.span []
                     [ Html.text "Document with id "
                     , Html.text
-                        (context.detailsQuery.documentId
+                        (context.documentId
                             |> Data.Types.documentIdToInt
                             |> String.fromInt
                         )
