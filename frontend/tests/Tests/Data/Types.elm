@@ -4,11 +4,15 @@ module Tests.Data.Types exposing
     , fuzzerFilters
     , fuzzerFolderId
     , fuzzerFtsSorting
+    , fuzzerLimit
     , fuzzerNodeId
+    , fuzzerOffset
     , fuzzerSearchMethod
+    , fuzzerSearchTerm
     , fuzzerSelection
     , fuzzerSelectionWindow
     , fuzzerWindow
+    , fuzzerYear
     )
 
 import Basics.Extra
@@ -107,18 +111,27 @@ fuzzerFilter =
 fuzzerWindow : Fuzzer Window
 fuzzerWindow =
     Fuzz.map2 Window
-        (Fuzz.oneOf
-            [ Fuzz.constant 0
-            , fuzzerOffsetOrLimit
-            ]
-        )
-        fuzzerOffsetOrLimit
+        fuzzerOffset
+        fuzzerLimit
 
 
-fuzzerOffsetOrLimit : Fuzzer Int
-fuzzerOffsetOrLimit =
+fuzzerOffset : Fuzzer Int
+fuzzerOffset =
     Fuzz.frequency
-        [ ( 5, Fuzz.constant 5 )
+        [ ( 100, Fuzz.constant 0 )
+        , ( 5, Fuzz.constant 5 )
+        , ( 50, Fuzz.constant 10 )
+        , ( 10, Fuzz.constant 20 )
+        , ( 5, Fuzz.constant 50 )
+        , ( 30, Fuzz.intRange 0 200 )
+        ]
+
+
+fuzzerLimit : Fuzzer Int
+fuzzerLimit =
+    Fuzz.frequency
+        [ ( 10, Fuzz.constant 0 )
+        , ( 5, Fuzz.constant 5 )
         , ( 50, Fuzz.constant 10 )
         , ( 10, Fuzz.constant 20 )
         , ( 5, Fuzz.constant 50 )
@@ -149,7 +162,10 @@ fuzzerSearchTerm =
             |> Fuzz.oneOf
         , Fuzz.string
             |> Fuzz.map
-                (String.Extra.clean >> String.Extra.nonBlank >> Maybe.withDefault "baz")
+                (String.Extra.clean
+                    >> String.Extra.nonBlank
+                    >> Maybe.withDefault "baz"
+                )
         ]
 
 
