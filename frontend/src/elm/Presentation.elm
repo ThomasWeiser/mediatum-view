@@ -15,6 +15,8 @@ import Query.Filter as Filter
 import Query.Filters as Filters
 import RemoteData
 import Route exposing (Route)
+import Set
+import String.Extra
 import Utils
 
 
@@ -117,36 +119,30 @@ fromRoute cache route =
 
 windowFromRoute : Route -> Window
 windowFromRoute route =
-    { offset = route.parameters.offset |> Maybe.withDefault 0
-    , limit = route.parameters.offset |> Maybe.withDefault 10
+    { offset = route.parameters.offset
+    , limit = route.parameters.offset
     }
 
 
 searchMethodFromRoute : Route -> SearchMethod
 searchMethodFromRoute route =
-    case route.parameters.ftsTerm of
+    case String.Extra.nonBlank route.parameters.ftsTerm of
         Nothing ->
             SelectByFolderListing
 
         Just ftsTerm ->
             SelectByFullTextSearch
                 ftsTerm
-                (route.parameters.ftsSorting |> Maybe.withDefault FtsByRank)
+                route.parameters.ftsSorting
 
 
 filtersFromRoute : Route -> Filters
 filtersFromRoute route =
-    Maybe.Extra.unwrap
-        []
-        List.Nonempty.toList
-        route.parameters.filterByTitle
+    Set.toList route.parameters.filterByTitle
         |> List.map FilterTitleFts
         |> Utils.prependMaybe
             (route.parameters.filterByYear
-                |> Maybe.map
-                    (\( year1, year2 ) ->
-                        FilterYearWithin (String.fromInt year1) (String.fromInt year2)
-                    )
+                |> Maybe.map FilterYearWithin
             )
         |> List.map (\filter -> ( Filter.handle filter, filter ))
         |> Dict.fromList
