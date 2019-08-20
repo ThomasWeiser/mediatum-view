@@ -19,6 +19,7 @@ import Fuzz exposing (Fuzzer)
 import String.Extra
 import Test exposing (..)
 import TestUtils exposing (..)
+import Tests.Range
 
 
 fuzzerId : Fuzzer Int
@@ -95,11 +96,8 @@ fuzzerFilter : Fuzzer Filter
 fuzzerFilter =
     Fuzz.oneOf
         [ Fuzz.map
-            (Basics.Extra.uncurry FilterYearWithin)
-            (Fuzz.map
-                (Tuple.mapBoth String.fromInt String.fromInt)
-                fuzzerYearRange
-            )
+            FilterYearWithin
+            (Tests.Range.fuzzerRange fuzzerYear)
         , Fuzz.map
             FilterTitleFts
             fuzzerSearchTerm
@@ -165,27 +163,3 @@ fuzzerYear =
         [ ( 1, Fuzz.intRange 0 99999 )
         , ( 5, Fuzz.intRange 1960 2040 )
         ]
-
-
-{-| A fuzzer for pairs of years, favoring canonically sorted pairs.
--}
-fuzzerYearRange : Fuzzer ( Int, Int )
-fuzzerYearRange =
-    Fuzz.andMap
-        (Fuzz.tuple
-            ( fuzzerYear, fuzzerYear )
-        )
-        (Fuzz.frequency
-            [ ( 1, Fuzz.constant identity )
-            , ( 3
-              , Fuzz.constant
-                    (\( year1, year2 ) ->
-                        if year1 <= year2 then
-                            ( year1, year2 )
-
-                        else
-                            ( year2, year1 )
-                    )
-              )
-            ]
-        )

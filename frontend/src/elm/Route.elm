@@ -2,7 +2,6 @@ module Route exposing
     ( Route
     , RouteParameters
     , RoutePath(..)
-    , cleanSearchTerm
     , defaultFtsSorting
     , defaultLimit
     , fromOneId
@@ -10,8 +9,8 @@ module Route exposing
     )
 
 import Data.Types exposing (FtsSorting(..), NodeId)
+import Range exposing (Range)
 import Set exposing (Set)
-import String.Extra
 
 
 defaultLimit : Int
@@ -39,7 +38,7 @@ type RoutePath
 type alias RouteParameters =
     { ftsTerm : String
     , ftsSorting : FtsSorting
-    , filterByYear : Maybe ( Int, Int )
+    , filterByYear : Maybe (Range Int)
     , filterByTitle : Set String
     , offset : Int
     , limit : Int
@@ -70,10 +69,3 @@ emptyParameters =
     , offset = 0
     , limit = defaultLimit
     }
-
-
-cleanSearchTerm : String -> String
-cleanSearchTerm =
-    -- Trim the whitespace of both sides of the string
-    -- and compress repeated whitespace internally to a single whitespace char.
-    String.Extra.clean

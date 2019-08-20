@@ -21,6 +21,7 @@ import Query exposing (Query)
 import Query.Filter as Filter
 import Query.FilterEditor as FilterEditor
 import Query.Filters as Filters
+import Range
 import Tree
 import Utils
 
@@ -46,6 +47,7 @@ type Msg
     = NoOp
     | SetSearchTerm String
     | SetSorting Query.FtsSorting
+    | AddFilter Filter.FilterType
     | EditFilter Filter
     | RemoveFilter Filter
     | Submit
@@ -84,10 +86,26 @@ update context msg model =
             , NoReturn
             )
 
+        AddFilter filterType ->
+            let
+                ( filterEditorModel, filterEditorCmd ) =
+                    FilterEditor.init filterType.initControls
+
+                filterHandle =
+                    "new-" ++ filterType.name
+            in
+            ( { model
+                | filterEditors =
+                    Dict.insert filterHandle filterEditorModel model.filterEditors
+              }
+            , filterEditorCmd |> Cmd.map (FilterEditorMsg filterHandle)
+            , NoReturn
+            )
+
         EditFilter filter ->
             let
                 ( filterEditorModel, filterEditorCmd ) =
-                    FilterEditor.init filter
+                    FilterEditor.init (Filter.controlsFromFilter filter)
 
                 filterHandle =
                     Filter.handle filter
@@ -143,8 +161,10 @@ update context msg model =
                         { folder = Query.getFolder context.query
                         , filters =
                             Filters.none
-                                |> Filters.insert (FilterYearWithin "2000" "2010")
-                                |> Filters.insert (FilterTitleFts "with")
+                                |> Filters.insert
+                                    (FilterYearWithin (Range.fromTo ( 2000, 2010 )))
+                                |> Filters.insert
+                                    (FilterTitleFts "with")
                         , searchTerm = searchTerm
                         , sorting = model.sorting
                         , window = Query.initialWindow
@@ -257,15 +277,15 @@ viewFilters context model =
     Html.div [ Html.Attributes.class "filters-bar" ]
         [ Html.span [] <|
             List.map
-                (\{ name, initFilter } ->
+                (\filterType ->
                     Html.span
                         [ Html.Attributes.class "input-group" ]
                         [ Html.button
                             [ Html.Attributes.type_ "button"
-                            , Html.Events.onClick <| EditFilter initFilter
+                            , Html.Events.onClick <| AddFilter filterType
                             , Html.Attributes.class "filter-button"
                             ]
-                            [ Html.text <| name ++ "..." ]
+                            [ Html.text <| filterType.name ++ "..." ]
                         ]
                 )
                 Filter.filterTypes

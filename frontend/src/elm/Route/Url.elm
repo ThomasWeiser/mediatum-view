@@ -4,9 +4,11 @@ module Route.Url exposing
     )
 
 import Data.Types exposing (FtsSorting(..), NodeId, nodeIdFromInt, nodeIdToInt)
+import Data.Utils
 import Dict
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
+import Range exposing (Range)
 import Route exposing (..)
 import Set
 import String.Extra
@@ -40,7 +42,7 @@ parserParameters =
     QueryParser.map6 RouteParameters
         (QueryParser.string "fts-term"
             |> queryParserWithDefault ""
-            |> QueryParser.map cleanSearchTerm
+            |> QueryParser.map Data.Utils.cleanSearchTerm
         )
         (QueryParser.enum "fts-sorting"
             (Dict.fromList [ ( "by-rank", FtsByRank ), ( "by-date", FtsByDate ) ])
@@ -51,11 +53,13 @@ parserParameters =
                 (Maybe.andThen
                     (ElmParser.run elmParserYearRange
                         >> Result.toMaybe
+                        >> Maybe.map Range.fromMaybe
+                        >> Maybe.Extra.join
                     )
                 )
         )
         (QueryParser.custom "filter-by-title"
-            (List.map (cleanSearchTerm >> String.Extra.nonEmpty)
+            (List.map (Data.Utils.cleanSearchTerm >> String.Extra.nonEmpty)
                 >> Maybe.Extra.values
                 >> Set.fromList
             )
@@ -75,12 +79,21 @@ queryParserWithDefault defaultValue parserOfMaybe =
         parserOfMaybe
 
 
-elmParserYearRange : ElmParser.Parser ( Int, Int )
+elmParserYearRange : ElmParser.Parser ( Maybe Int, Maybe Int )
 elmParserYearRange =
     ElmParser.succeed Tuple.pair
-        |= ElmParser.int
+        |= ElmParser.oneOf
+            [ ElmParser.succeed Just
+                |= ElmParser.int
+            , ElmParser.succeed Nothing
+            ]
         |. ElmParser.symbol "-"
-        |= ElmParser.int
+        |= ElmParser.oneOf
+            [ ElmParser.succeed Just
+                |= ElmParser.int
+            , ElmParser.succeed Nothing
+            ]
+        |. ElmParser.end
 
 
 toString : Route -> String
@@ -106,11 +119,15 @@ toString route =
                 defaultFtsSorting
                 route.parameters.ftsSorting
             , Maybe.map
-                (\( year1, year2 ) ->
+                (\range ->
+                    let
+                        ( maybeYear1, maybeYear2 ) =
+                            Range.toMaybe range
+                    in
                     Builder.string "filter-by-year" <|
-                        String.fromInt year1
+                        Maybe.Extra.unwrap "" String.fromInt maybeYear1
                             ++ "-"
-                            ++ String.fromInt year2
+                            ++ Maybe.Extra.unwrap "" String.fromInt maybeYear2
                 )
                 route.parameters.filterByYear
             ]

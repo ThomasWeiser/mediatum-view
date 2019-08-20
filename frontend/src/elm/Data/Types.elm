@@ -26,6 +26,7 @@ module Data.Types exposing
     )
 
 import Dict
+import Range exposing (Range)
 import Sort.Dict
 
 
@@ -113,7 +114,7 @@ type alias Filters =
 
 
 type Filter
-    = FilterYearWithin String String
+    = FilterYearWithin (Range Int)
     | FilterTitleFts String
 
 

@@ -8,6 +8,7 @@ import Set
 import String.Extra
 import TestUtils exposing (..)
 import Tests.Data.Types exposing (..)
+import Tests.Range
 
 
 fuzzerRoute : Fuzzer Route
@@ -28,7 +29,7 @@ fuzzerRoute =
             |> Fuzz.andMap
                 (Fuzz.oneOf [ Fuzz.constant FtsByRank, Fuzz.constant FtsByDate ])
             |> Fuzz.andMap
-                (fuzzerYearRange
+                (Tests.Range.fuzzerRange fuzzerYear
                     |> Fuzz.maybe
                 )
             |> Fuzz.andMap

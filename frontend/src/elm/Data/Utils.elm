@@ -1,9 +1,15 @@
-module Data.Utils exposing (filtersNone, folderCountsFromList, folderCountsInit)
+module Data.Utils exposing
+    ( cleanSearchTerm
+    , filtersNone
+    , folderCountsFromList
+    , folderCountsInit
+    )
 
 import Data.Ordering
 import Data.Types exposing (..)
 import Dict
 import Sort.Dict
+import String.Extra
 
 
 filtersNone : Filters
@@ -22,3 +28,10 @@ folderCountsFromList listOfPairs =
     Sort.Dict.fromList
         (Data.Ordering.sorter Data.Ordering.orderingFolderId)
         listOfPairs
+
+
+cleanSearchTerm : String -> String
+cleanSearchTerm =
+    -- Trim the whitespace of both sides of the string
+    -- and compress repeated whitespace internally to a single whitespace char.
+    String.Extra.clean

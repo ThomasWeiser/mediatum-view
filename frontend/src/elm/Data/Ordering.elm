@@ -16,6 +16,7 @@ module Data.Ordering exposing
 import Data.Types exposing (..)
 import Dict
 import Ordering exposing (..)
+import Range exposing (Range)
 import Sort exposing (Sorter)
 import Utils
 
@@ -106,7 +107,7 @@ orderingFilter =
     Ordering.byRank
         (\filter ->
             case filter of
-                FilterYearWithin _ _ ->
+                FilterYearWithin _ ->
                     1
 
                 FilterTitleFts _ ->
@@ -116,8 +117,8 @@ orderingFilter =
             case
                 ( filterL, filterR )
             of
-                ( FilterYearWithin s1L s2L, FilterYearWithin s1R s2R ) ->
-                    natural ( s1L, s2L ) ( s1R, s2R )
+                ( FilterYearWithin range1, FilterYearWithin range2 ) ->
+                    Range.compare range1 range2
 
                 ( FilterTitleFts sL, FilterTitleFts sR ) ->
                     natural sL sR

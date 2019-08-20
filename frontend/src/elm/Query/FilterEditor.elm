@@ -12,7 +12,7 @@ import Data.Types exposing (Filter(..), Filters)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Query.Filter as Filter
+import Query.Filter as Filter exposing (Controls(..))
 import Task
 import Time
 import Utils
@@ -26,23 +26,25 @@ type Return
 
 
 type alias Model =
-    { filter : Filter
+    { controls : Controls
     , focusId : String
     }
 
 
 type Msg
     = NoOp
-    | Change Filter
+    | Change Controls
     | Submit
     | Cancel
     | Focus String Int
 
 
-init : Filter -> ( Model, Cmd Msg )
-init filter =
-    ( { filter = filter
-      , focusId = "filter-editor-provisional-focus-id"
+init : Controls -> ( Model, Cmd Msg )
+init controls =
+    ( { controls = controls
+      , focusId =
+            -- TODO
+            "filter-editor-provisional-focus-id"
       }
     , Task.perform
         (\posix ->
@@ -63,8 +65,8 @@ update msg model =
             , NoReturn
             )
 
-        Change filter ->
-            ( { model | filter = filter }
+        Change controls ->
+            ( { model | controls = controls }
             , Cmd.none
             , NoReturn
             )
@@ -72,11 +74,12 @@ update msg model =
         Submit ->
             ( model
             , Cmd.none
-            , if Filter.isEmpty model.filter then
-                Removed
+            , case Filter.controlsToFilter model.controls of
+                Nothing ->
+                    Removed
 
-              else
-                Saved (Filter.normalize model.filter)
+                Just filter ->
+                    Saved filter
             )
 
         Cancel ->
@@ -88,15 +91,15 @@ update msg model =
         Focus focusId year ->
             ( { model
                 | focusId = focusId
-                , filter =
-                    case model.filter of
-                        FilterYearWithin "" "" ->
-                            FilterYearWithin
-                                (String.fromInt (year - 9))
-                                (String.fromInt year)
+                , controls =
+                    case model.controls of
+                        ControlsYearWithin Nothing Nothing ->
+                            ControlsYearWithin
+                                (Just (year - 9))
+                                (Just year)
 
                         _ ->
-                            model.filter
+                            model.controls
               }
             , Browser.Dom.focus focusId
                 |> Task.attempt (always NoOp)
@@ -112,7 +115,7 @@ view model =
         ]
         [ Filter.viewEdit
             model.focusId
-            model.filter
+            model.controls
             |> Html.map Change
         , Html.button
             [ Html.Attributes.type_ "submit"

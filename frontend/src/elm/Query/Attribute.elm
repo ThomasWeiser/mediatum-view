@@ -19,7 +19,7 @@ type Operation
     = Equality String
     | ILike String (Maybe String)
     | SimpleFts String
-    | DateRange String String
+    | DateRange ( String, String )
 
 
 testsAsGraphqlArgument : List Test -> List (Maybe AttributeTestInput)
@@ -53,7 +53,7 @@ testInput test =
             , extra = Absent
             }
 
-        DateRange fromDate toDate ->
+        DateRange ( fromDate, toDate ) ->
             { key = Present test.key
             , operator = Present Operator.Daterange
             , value = Present fromDate
