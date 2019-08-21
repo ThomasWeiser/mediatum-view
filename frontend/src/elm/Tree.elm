@@ -2,9 +2,9 @@ module Tree exposing
     ( Model
     , Msg
     , Return(..)
+    , expandPresentationFolder
     , initialModel
     , needs
-    , showFolder
     , update
     , view
     , viewBreadcrumbs
@@ -20,6 +20,7 @@ import Html.Attributes
 import Html.Events
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
+import Presentation exposing (Presentation(..))
 import RemoteData
 import Route
 import Route.Url
@@ -29,6 +30,7 @@ import Utils
 
 type alias Context =
     { cache : Cache.Model
+    , presentation : Presentation
     }
 
 
@@ -38,8 +40,7 @@ type Return
 
 
 type alias Model =
-    { selection : Maybe FolderId
-    , showSubselection : Bool
+    { collapsedPresentationFolder : Maybe FolderId
     }
 
 
@@ -49,32 +50,48 @@ type Msg
 
 initialModel : Model
 initialModel =
-    { selection = Nothing
-    , showSubselection = True
+    { collapsedPresentationFolder = Nothing
     }
 
 
 needs : Context -> Model -> Cache.Needs
 needs context model =
-    Cache.NeedSubfolders
-        (getPathAsFarAsCached context.cache model.selection)
+    getPresentationFolderId context
+        |> getPathAsFarAsCached context.cache
+        |> Cache.NeedSubfolders
+
+
+expandPresentationFolder : Model -> Model
+expandPresentationFolder model =
+    { model
+        | collapsedPresentationFolder = Nothing
+    }
 
 
 update : Context -> Msg -> Model -> ( Model, Return )
 update context msg model =
     case msg of
         Select id ->
-            ( { model
-                | selection = Just id
-                , showSubselection =
-                    not (model.selection == Just id) || not model.showSubselection
-              }
-            , if model.selection /= Just id then
-                UserSelection id
+            if getPresentationFolderId context == Just id then
+                ( { model
+                    | collapsedPresentationFolder =
+                        (model.collapsedPresentationFolder == Just id)
+                            |> Utils.ifElse
+                                Nothing
+                                (Just id)
+                  }
+                , NoReturn
+                )
 
-              else
-                NoReturn
-            )
+            else
+                ( model
+                , UserSelection id
+                )
+
+
+getPresentationFolderId : Context -> Maybe FolderId
+getPresentationFolderId context =
+    Presentation.getFolderId context.cache context.presentation
 
 
 getParentId : Cache.Model -> FolderId -> ApiData (Maybe FolderId)
@@ -124,17 +141,6 @@ isOnPath cache requestedId =
         )
 
 
-showFolder : FolderId -> Model -> Model
-showFolder id model =
-    { model
-        | selection = Just id
-        , showSubselection =
-            -- TODO: Maybe always show subSelection.
-            -- Currently we keep the state if the folder is already selected.
-            not (model.selection == Just id) || model.showSubselection
-    }
-
-
 view : Context -> Model -> Maybe FolderCounts -> Html Msg
 view context model maybeFolderCounts =
     Html.div []
@@ -170,12 +176,15 @@ viewListOfFoldersLoading =
 viewFolder : Context -> Model -> Maybe FolderCounts -> FolderId -> Html Msg
 viewFolder context model maybeFolderCounts id =
     let
+        presentationFolderId =
+            getPresentationFolderId context
+
         isSelectedFolder =
-            model.selection == Just id
+            presentationFolderId == Just id
 
         expanded =
-            (not isSelectedFolder || model.showSubselection)
-                && isOnPath context.cache id model.selection
+            (model.collapsedPresentationFolder /= Just id)
+                && isOnPath context.cache id presentationFolderId
     in
     case Cache.get context.cache.folders id of
         RemoteData.Success folder ->

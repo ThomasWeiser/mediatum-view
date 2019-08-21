@@ -214,7 +214,9 @@ view tree context model =
         [ Html.div
             [ Html.Attributes.class "breadcrumbs" ]
             [ Tree.viewBreadcrumbs
-                { cache = context.cache }
+                { cache = context.cache
+                , presentation = context.presentation
+                }
                 tree
                 (Presentation.getFolderId context.cache context.presentation)
             ]

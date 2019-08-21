@@ -73,11 +73,22 @@ init route =
 
 updateRoute : Route -> Model -> Model
 updateRoute route model =
-    { model
-        | route = route
-        , controls = Controls.initialModel route
-    }
-        |> adjust
+    let
+        model1 =
+            { model
+                | route = route
+                , controls = Controls.initialModel route
+            }
+
+        model2 =
+            adjust model1
+
+        model3 =
+            { model2
+                | tree = Tree.expandPresentationFolder model2.tree
+            }
+    in
+    model3
 
 
 adjust : Model -> Model
@@ -115,7 +126,9 @@ needs model =
                     (Cache.NeedGenericNode nodeIdOne)
                     (Cache.NeedGenericNode nodeIdOne)
         , Tree.needs
-            { cache = model.cache }
+            { cache = model.cache
+            , presentation = model.presentation
+            }
             model.tree
         , Article.needs
             { cache = model.cache
@@ -149,28 +162,28 @@ update msg model =
         ( model1, cmd1, maybeNavigation ) =
             updateSubModel msg model
 
-        ( model2, cmd2 ) =
-            requestNeeds model1
-
-        ( model3, return ) =
+        ( model2, return ) =
             case maybeNavigation of
                 Nothing ->
-                    ( model2, NoReturn )
+                    ( model1, NoReturn )
 
                 Just navigation ->
                     let
                         route =
                             Navigation.alterRoute
-                                model2.cache
+                                model1.cache
                                 navigation
-                                model2.route
+                                model1.route
                     in
-                    ( updateRoute route model2
+                    ( updateRoute route model1
                     , ReflectRoute route
                     )
+
+        ( model3, cmd3 ) =
+            requestNeeds model2
     in
     ( model3
-    , Cmd.batch [ cmd1, cmd2 ]
+    , Cmd.batch [ cmd1, cmd3 ]
     , return
     )
 
@@ -194,18 +207,7 @@ updateSubModel msg model =
                             model1
 
                         Cache.GotRootFolders ->
-                            let
-                                firstRootFolderId =
-                                    model1.cache.rootFolderIds
-                                        |> RemoteData.withDefault []
-                                        |> List.head
-                            in
-                            case firstRootFolderId of
-                                Nothing ->
-                                    model1
-
-                                Just id ->
-                                    { model1 | tree = Tree.showFolder id model1.tree }
+                            model1
             in
             ( model2 |> adjust
             , cmd1
@@ -216,7 +218,9 @@ updateSubModel msg model =
             let
                 ( subModel, subReturn ) =
                     Tree.update
-                        { cache = model.cache }
+                        { cache = model.cache
+                        , presentation = model.presentation
+                        }
                         subMsg
                         model.tree
             in
@@ -321,7 +325,9 @@ view model =
             [ Html.aside []
                 [ Html.map TreeMsg <|
                     Tree.view
-                        { cache = model.cache }
+                        { cache = model.cache
+                        , presentation = model.presentation
+                        }
                         model.tree
                         (Article.folderCountsForQuery
                             { cache = model.cache
