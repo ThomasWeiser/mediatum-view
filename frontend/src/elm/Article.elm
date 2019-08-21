@@ -220,6 +220,10 @@ view tree context model =
             ]
         , Presentation.view context.presentation
             |> Html.map never
+        , Html.div []
+            [ Html.text "Article.content: "
+            , Html.text <| Debug.toString model.content
+            ]
         , viewContent context model
         ]
 
