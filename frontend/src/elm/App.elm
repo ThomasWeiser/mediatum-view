@@ -2,9 +2,9 @@ module App exposing
     ( Model
     , Msg
     , Return(..)
-    , changeRouteTo
     , init
     , update
+    , updateRoute
     , view
     )
 
@@ -68,27 +68,39 @@ init route =
     , needs = Cache.NeedNothing
     }
         |> requestNeeds
-        |> Cmd.Extra.andThen (changeRouteTo route >> Cmd.Extra.withNoCmd)
+        |> Cmd.Extra.andThen (updateRoute route >> Cmd.Extra.withNoCmd)
 
 
-changeRouteTo : Route -> Model -> Model
-changeRouteTo route model =
-    let
-        presentation =
-            Presentation.fromRoute model.cache route
-    in
+updateRoute : Route -> Model -> Model
+updateRoute route model =
     { model
         | route = route
-        , presentation = presentation
         , controls = Controls.initialModel route
+    }
+        |> adjust
+
+
+adjust : Model -> Model
+adjust model =
+    let
+        presentation =
+            model.route
+                -- |> Debug.log "adjust route"
+                |> Presentation.fromRoute model.cache
+                -- |> Debug.log "adjust presentation"
+                |> identity
+    in
+    { model
+        | presentation = presentation
         , article =
             Article.initialModel
-                { cache = model.cache, presentation = model.presentation }
+                { cache = model.cache, presentation = presentation }
     }
 
 
 needs : Model -> Cache.Needs
 needs model =
+    -- Debug.log "app needs" <|
     Cache.needsFromList
         [ Cache.NeedRootFolderIds
         , case model.route.path of
@@ -110,7 +122,6 @@ needs model =
             , presentation = model.presentation
             }
         ]
-        |> Debug.log "App needs"
 
 
 requestNeeds : Model -> ( Model, Cmd Msg )
@@ -154,7 +165,7 @@ update msg model =
                                 navigation
                                 model2.route
                     in
-                    ( changeRouteTo route { model2 | route = route }
+                    ( updateRoute route model2
                     , ReflectRoute route
                     )
     in
@@ -196,7 +207,7 @@ updateSubModel msg model =
                                 Just id ->
                                     { model1 | tree = Tree.showFolder id model1.tree }
             in
-            ( model2
+            ( model2 |> adjust
             , cmd1
             , Nothing
             )

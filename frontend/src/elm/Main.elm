@@ -78,7 +78,7 @@ update msg model =
                         |> Maybe.withDefault Route.home
             in
             ( { model
-                | app = App.changeRouteTo route model.app
+                | app = App.updateRoute route model.app
               }
             , Cmd.none
             )
