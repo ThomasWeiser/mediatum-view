@@ -90,23 +90,37 @@ getRootFolder cache =
 
 fromRoute : Cache.Model -> Route -> Presentation
 fromRoute cache route =
+    let
+        folderPresentation folderId folderType =
+            case searchMethodFromRoute route of
+                SelectByFolderListing ->
+                    case folderType of
+                        FolderIsCollection ->
+                            CollectionPresentation folderId
+
+                        FolderIsDirectory ->
+                            DocumentsPagePresentation
+                                { scope = folderId
+                                , searchMethod = SelectByFolderListing
+                                , filters = Filters.filtersFromRoute route
+                                }
+                                (windowFromRoute route)
+
+                searchMethod ->
+                    DocumentsPagePresentation
+                        { scope = folderId
+                        , searchMethod = searchMethod
+                        , filters = Filters.filtersFromRoute route
+                        }
+                        (windowFromRoute route)
+    in
     case route.path of
         Route.NoId ->
             getRootFolder cache
                 |> Maybe.Extra.unwrap
                     (GenericPresentation Nothing)
                     (\( rootFolderId, rootFolderType ) ->
-                        case rootFolderType of
-                            FolderIsCollection ->
-                                CollectionPresentation rootFolderId
-
-                            FolderIsDirectory ->
-                                DocumentsPagePresentation
-                                    { scope = rootFolderId
-                                    , searchMethod = searchMethodFromRoute route
-                                    , filters = Filters.filtersFromRoute route
-                                    }
-                                    (windowFromRoute route)
+                        folderPresentation rootFolderId rootFolderType
                     )
 
         Route.OneId nodeId ->
@@ -120,16 +134,10 @@ fromRoute cache route =
                 Just NodeIsDocument ->
                     DocumentPresentation Nothing (nodeId |> nodeIdToInt |> documentIdFromInt)
 
-                Just (NodeIsFolder FolderIsCollection) ->
-                    CollectionPresentation (nodeId |> nodeIdToInt |> folderIdFromInt)
-
-                Just (NodeIsFolder FolderIsDirectory) ->
-                    DocumentsPagePresentation
-                        { scope = nodeId |> nodeIdToInt |> folderIdFromInt
-                        , searchMethod = searchMethodFromRoute route
-                        , filters = Filters.filtersFromRoute route
-                        }
-                        (windowFromRoute route)
+                Just (NodeIsFolder folderType) ->
+                    folderPresentation
+                        (nodeId |> nodeIdToInt |> folderIdFromInt)
+                        folderType
 
         Route.TwoIds nodeIdOne nodeIdTwo ->
             case ( getNodeType cache nodeIdOne, getNodeType cache nodeIdTwo ) of
@@ -145,7 +153,7 @@ fromRoute cache route =
 windowFromRoute : Route -> Window
 windowFromRoute route =
     { offset = route.parameters.offset
-    , limit = route.parameters.offset
+    , limit = route.parameters.limit
     }
 
 
@@ -172,7 +180,10 @@ view : Presentation -> Html Never
 view presentation =
     -- TODO: implement
     -- TODO: needed? Possibly handy in some form for UX.
-    Html.div [] [ Html.text <| Debug.toString presentation ]
+    Html.div []
+        [ Html.text "Presentation: "
+        , Html.text <| Debug.toString presentation
+        ]
 
 
 
