@@ -2,7 +2,6 @@ module Presentation exposing
     ( Presentation(..)
     , fromRoute
     , getFolderId
-    , showFilters
     , toRoute
     , view
     )
@@ -32,16 +31,6 @@ type Presentation
     | CollectionPresentation FolderId
     | DocumentPresentation (Maybe FolderId) DocumentId
     | DocumentsPagePresentation Selection Window
-
-
-showFilters : Presentation -> Bool
-showFilters presentation =
-    case presentation of
-        DocumentsPagePresentation _ _ ->
-            True
-
-        _ ->
-            False
 
 
 getFolderId : Cache.Model -> Presentation -> Maybe FolderId
