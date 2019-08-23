@@ -3,6 +3,7 @@ module App exposing
     , Msg
     , Return(..)
     , init
+    , requestNeeds
     , update
     , updateRoute
     , view
@@ -96,9 +97,9 @@ adjust model =
     let
         presentation =
             model.route
-                -- |> Debug.log "adjust route"
+                |> Debug.log "adjust route"
                 |> Presentation.fromRoute model.cache
-                -- |> Debug.log "adjust presentation"
+                |> Debug.log "adjust presentation"
                 |> identity
     in
     { model
@@ -111,30 +112,30 @@ adjust model =
 
 needs : Model -> Cache.Needs
 needs model =
-    -- Debug.log "app needs" <|
-    Cache.needsFromList
-        [ Cache.NeedRootFolderIds
-        , case model.route.path of
-            Route.NoId ->
-                Cache.NeedNothing
+    Debug.log "app needs" <|
+        Cache.needsFromList
+            [ Cache.NeedRootFolderIds
+            , case model.route.path of
+                Route.NoId ->
+                    Cache.NeedNothing
 
-            Route.OneId nodeId ->
-                Cache.NeedGenericNode nodeId
+                Route.OneId nodeId ->
+                    Cache.NeedGenericNode nodeId
 
-            Route.TwoIds nodeIdOne nodeIdTwo ->
-                Cache.NeedAnd
-                    (Cache.NeedGenericNode nodeIdOne)
-                    (Cache.NeedGenericNode nodeIdOne)
-        , Tree.needs
-            { cache = model.cache
-            , presentation = model.presentation
-            }
-            model.tree
-        , Article.needs
-            { cache = model.cache
-            , presentation = model.presentation
-            }
-        ]
+                Route.TwoIds nodeIdOne nodeIdTwo ->
+                    Cache.NeedAnd
+                        (Cache.NeedGenericNode nodeIdOne)
+                        (Cache.NeedGenericNode nodeIdOne)
+            , Tree.needs
+                { cache = model.cache
+                , presentation = model.presentation
+                }
+                model.tree
+            , Article.needs
+                { cache = model.cache
+                , presentation = model.presentation
+                }
+            ]
 
 
 requestNeeds : Model -> ( Model, Cmd Msg )
@@ -178,12 +179,9 @@ update msg model =
                     ( updateRoute route model1
                     , ReflectRoute route
                     )
-
-        ( model3, cmd3 ) =
-            requestNeeds model2
     in
-    ( model3
-    , Cmd.batch [ cmd1, cmd3 ]
+    ( model2
+    , cmd1
     , return
     )
 

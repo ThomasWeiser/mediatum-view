@@ -76,24 +76,33 @@ update msg model =
                 route =
                     Route.Url.parseUrl url
                         |> Maybe.withDefault Route.home
-            in
-            ( { model
-                | app = App.updateRoute route model.app
-              }
-            , Cmd.none
-            )
 
-        AppMsg subMsg ->
-            let
-                ( subModel, subCmd, subReturn ) =
-                    App.update subMsg model.app
+                ( subModel, subCmd ) =
+                    model.app
+                        |> App.updateRoute route
+                        |> App.requestNeeds
             in
             ( { model
                 | app = subModel
               }
+            , Cmd.map AppMsg subCmd
+            )
+
+        AppMsg subMsg ->
+            let
+                ( subModel1, subCmd1, subReturn1 ) =
+                    App.update subMsg model.app
+
+                ( subModel2, subCmd2 ) =
+                    App.requestNeeds subModel1
+            in
+            ( { model
+                | app = subModel2
+              }
             , Cmd.batch
-                [ Cmd.map AppMsg subCmd
-                , case subReturn of
+                [ Cmd.map AppMsg subCmd1
+                , Cmd.map AppMsg subCmd2
+                , case subReturn1 of
                     App.ReflectRoute route ->
                         Browser.Navigation.pushUrl
                             model.navigationKey

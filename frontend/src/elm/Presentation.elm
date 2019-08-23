@@ -113,7 +113,7 @@ fromRoute cache route =
                     )
 
         Route.OneId nodeId ->
-            case getNodeType cache nodeId of
+            case getNodeType cache nodeId |> Debug.log "fromRoute OneId getNodeType" of
                 Nothing ->
                     GenericPresentation (Just ( nodeId, Nothing ))
 
