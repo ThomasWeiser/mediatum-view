@@ -228,7 +228,7 @@ updateSubModel msg model =
             , Cmd.none
             , case subReturn of
                 Tree.UserSelection selectedFolder ->
-                    Just (Navigation.FolderId selectedFolder)
+                    Just (Navigation.ShowListingWithFolder selectedFolder)
 
                 Tree.NoReturn ->
                     Nothing

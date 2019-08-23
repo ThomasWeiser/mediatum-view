@@ -76,14 +76,14 @@ update context msg model =
         removeFilter filterHandle =
             Filters.filtersFromRoute context.route
                 |> Filters.remove filterHandle
-                |> Navigation.SetFilters
+                |> Navigation.ShowListingWithFilters
                 |> Navigate
 
         insertFilter oldFilterHandlefilter newFilter =
             Filters.filtersFromRoute context.route
                 |> Filters.remove oldFilterHandlefilter
                 |> Filters.insert newFilter
-                |> Navigation.SetFilters
+                |> Navigation.ShowListingWithFilters
                 |> Navigate
     in
     case msg of
@@ -141,7 +141,7 @@ update context msg model =
             ( model
             , Cmd.none
             , Navigate
-                (Navigation.FtsParameter model.ftsTerm model.ftsSorting)
+                (Navigation.ShowListingWithSearch model.ftsTerm model.ftsSorting)
             )
 
         SubmitExampleQuery ->
@@ -155,8 +155,8 @@ update context msg model =
             in
             ( model
             , Cmd.none
-            , [ Navigation.FtsParameter "variable" context.route.parameters.ftsSorting
-              , Navigation.SetFilters filters
+            , [ Navigation.ShowListingWithSearch "variable" context.route.parameters.ftsSorting
+              , Navigation.ShowListingWithFilters filters
               ]
                 |> Navigation.ListOfNavigations
                 |> Navigate

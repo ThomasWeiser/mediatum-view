@@ -22,8 +22,8 @@ import Icons
 import Maybe.Extra
 import Navigation exposing (Navigation)
 import RemoteData
-import Utils
 import Route
+import Utils
 
 
 type alias Context =
@@ -94,7 +94,7 @@ update context msg model =
             in
             ( model
             , Cmd.none
-            , Navigate (Navigation.Offset newOffset)
+            , Navigate (Navigation.SetOffset newOffset)
             )
 
         SelectDocument documentId ->
@@ -109,13 +109,8 @@ update context msg model =
                  }
               -}
             , Cmd.none
-            , Navigate 
-                (Navigation.RoutePath 
-                    (Route.TwoIds
-                        (context.selection.scope |> folderIdToInt |> nodeIdFromInt)
-                        (documentId |> documentIdToInt |> nodeIdFromInt)
-                    )
-                )
+            , Navigate
+                (Navigation.ShowDocument context.selection.scope documentId)
             )
 
 

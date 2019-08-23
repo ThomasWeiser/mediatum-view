@@ -13,70 +13,68 @@ import String.Extra
 
 type Navigation
     = ListOfNavigations (List Navigation)
-    | RoutePath RoutePath
-    | FolderId FolderId
-    | FtsParameter String FtsSorting
-    | SetFilters Filters
-    | Offset Int
-    | Limit Int
+    | ShowDocument FolderId DocumentId
+    | ShowListingWithFolder FolderId
+    | ShowListingWithSearch String FtsSorting
+    | ShowListingWithFilters Filters
+    | SetOffset Int
+    | SetLimit Int
 
 
 alterRoute : Cache.Model -> Navigation -> Route -> Route
 alterRoute cache navigation route =
     let
+        listingRoute =
+            { path =
+                case route.path of
+                    Route.NoId ->
+                        Route.NoId
+
+                    Route.OneId idOne ->
+                        if Cache.getAsFolderId cache idOne == Nothing then
+                            Route.NoId
+
+                        else
+                            Route.OneId idOne
+
+                    Route.TwoIds idOne _ ->
+                        Route.OneId idOne
+            , parameters =
+                { parameters | offset = 0 }
+            }
+
         parameters =
             route.parameters
-
-        setParameters newParameters =
-            { route
-                | parameters = newParameters
-            }
-
-        setParametersAndResetOffset newParameters =
-            { route
-                | parameters =
-                    { newParameters | offset = 0 }
-            }
     in
     case navigation of
         ListOfNavigations listOfNavigations ->
             List.foldl (alterRoute cache) route listOfNavigations
 
-        RoutePath path ->
-            { route | path = path }
-
-        FolderId folderId ->
+        ShowDocument folderId documentId ->
             { route
                 | path =
-                    let
-                        nodeId =
-                            folderId |> folderIdToInt |> nodeIdFromInt
-                    in
-                    case route.path of
-                        Route.NoId ->
-                            Route.OneId nodeId
-
-                        Route.OneId idOne ->
-                            if Cache.getAsFolderId cache idOne == Nothing then
-                                Route.TwoIds nodeId idOne
-
-                            else
-                                Route.OneId nodeId
-
-                        Route.TwoIds _ idTwo ->
-                            Route.TwoIds nodeId idTwo
-                , parameters =
-                    { parameters | offset = 0 }
+                    Route.TwoIds
+                        (folderId |> folderIdToInt |> nodeIdFromInt)
+                        (documentId |> documentIdToInt |> nodeIdFromInt)
             }
 
-        FtsParameter ftsTerm ftsSorting ->
-            { parameters
-                | ftsTerm = ftsTerm
-                , ftsSorting = ftsSorting
+        ShowListingWithFolder folderId ->
+            { listingRoute
+                | path =
+                    Route.OneId
+                        (folderId |> folderIdToInt |> nodeIdFromInt)
             }
-                |> setParametersAndResetOffset
 
-        SetFilters filters ->
+        ShowListingWithSearch ftsTerm ftsSorting ->
+            { listingRoute
+                | parameters =
+                    { parameters
+                        | ftsTerm = ftsTerm
+                        , ftsSorting = ftsSorting
+                    }
+            }
+
+        ShowListingWithFilters filters ->
             let
                 ( filterByYear, filterByTitle ) =
                     List.foldl
@@ -95,16 +93,22 @@ alterRoute cache navigation route =
                         ( Nothing, Set.empty )
                         (Dict.values filters)
             in
-            { parameters
-                | filterByYear = filterByYear
-                , filterByTitle = filterByTitle
+            { listingRoute
+                | parameters =
+                    { parameters
+                        | filterByYear = filterByYear
+                        , filterByTitle = filterByTitle
+                    }
             }
-                |> setParametersAndResetOffset
 
-        Offset offset ->
-            { parameters | offset = offset }
-                |> setParameters
+        SetOffset offset ->
+            { route
+                | parameters =
+                    { parameters | offset = offset }
+            }
 
-        Limit limit ->
-            { parameters | limit = limit }
-                |> setParameters
+        SetLimit limit ->
+            { route
+                | parameters =
+                    { parameters | limit = limit }
+            }
