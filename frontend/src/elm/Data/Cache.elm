@@ -343,7 +343,7 @@ requestNeeds needs model =
                                 parentIdsWithUnknownChildren
                       }
                     , Api.sendQueryRequest
-                        (ApiResponseSubfolder parentIds)
+                        (ApiResponseSubfolder parentIdsWithUnknownChildren)
                         (Api.Queries.subfolder parentIdsWithUnknownChildren)
                     )
 
@@ -431,6 +431,15 @@ update msg model =
                     listOfRootFoldersWithSubfolders
                         |> List.map (Basics.Extra.uncurry (::))
                         |> List.concat
+
+                allRootFolderIds =
+                    listOfRootFoldersWithSubfolders
+                        |> List.map (Tuple.first >> .id)
+
+                allSubfolders =
+                    listOfRootFoldersWithSubfolders
+                        |> List.map Tuple.second
+                        |> List.concat
               in
               { model
                 | rootFolderIds =
@@ -438,7 +447,7 @@ update msg model =
                         (List.map (Tuple.first >> .id) listOfRootFoldersWithSubfolders)
               }
                 |> insertAsFolders allNewFolders
-                |> insertAsSubfolderIds allNewFolders
+                |> insertAsSubfolderIds allRootFolderIds allSubfolders
                 |> insertFoldersAsNodeTypes allNewFolders
             , Cmd.none
             )
@@ -450,10 +459,10 @@ update msg model =
             , Cmd.none
             )
 
-        ApiResponseSubfolder _ (Ok listOfSubfolders) ->
+        ApiResponseSubfolder listOfParentFolders (Ok listOfSubfolders) ->
             ( model
                 |> insertAsFolders listOfSubfolders
-                |> insertAsSubfolderIds listOfSubfolders
+                |> insertAsSubfolderIds listOfParentFolders listOfSubfolders
                 |> insertFoldersAsNodeTypes listOfSubfolders
             , Cmd.none
             )
@@ -571,26 +580,41 @@ insertAsFolders listOfNewFolders model =
                 )
                 model.folders
                 listOfNewFolders
+        , subfolderIds =
+            listOfNewFolders
+                |> List.filter
+                    (\folder -> folder.numSubfolder == 0)
+                |> List.foldl
+                    (\folder ->
+                        Sort.Dict.insert folder.id (Success [])
+                    )
+                    model.subfolderIds
     }
 
 
-insertAsSubfolderIds : List Folder -> Model -> Model
-insertAsSubfolderIds allSubfoldersOfSomeNewParents model =
+insertAsSubfolderIds : List FolderId -> List Folder -> Model -> Model
+insertAsSubfolderIds parentFolderIds allSubfoldersOfTheParents model =
     { model
         | subfolderIds =
-            Dict.Extra.filterGroupBy
-                (.parent >> Maybe.map folderIdToInt)
-                allSubfoldersOfSomeNewParents
-                |> Dict.toList
-                |> List.foldl
-                    (\( parentIdAsInt, subfolders ) ->
-                        Sort.Dict.insert
-                            (folderIdFromInt parentIdAsInt)
-                            (Success
-                                (List.map .id subfolders)
+            List.foldl
+                (\parentFolderId ->
+                    Sort.Dict.insert
+                        parentFolderId
+                        (Success
+                            (List.filterMap
+                                (\subfolder ->
+                                    if subfolder.parent == Just parentFolderId then
+                                        Just subfolder.id
+
+                                    else
+                                        Nothing
+                                )
+                                allSubfoldersOfTheParents
                             )
-                    )
-                    model.subfolderIds
+                        )
+                )
+                model.subfolderIds
+                parentFolderIds
     }
 
 
