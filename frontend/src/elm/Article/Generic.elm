@@ -82,17 +82,18 @@ view context model =
                             )
                         |> RemoteData.map (always "Going to show document in folder")
     in
-    Html.div []
-        [ case remoteDataMessage of
+    Html.div [] <|
+        case remoteDataMessage of
             NotAsked ->
-                Icons.spinner
+                [ Icons.spinner ]
 
             Loading ->
-                Icons.spinner
+                [ Icons.spinner ]
 
             Success notification ->
-                Html.text notification
+                [ Html.text notification ]
 
             Failure cacheError ->
-                Html.text (Cache.errorToString cacheError)
-        ]
+                [ Html.div [] [ Html.text "Oops, something went wrong here ..." ]
+                , Html.small [] [ Html.text (Cache.errorToString cacheError) ]
+                ]
