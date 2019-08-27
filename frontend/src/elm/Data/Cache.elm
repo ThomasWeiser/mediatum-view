@@ -3,7 +3,6 @@ module Data.Cache exposing
     , Model
     , Msg(..)
     , Needs(..)
-    , Return(..)
     , get
     , getAsDocumentId
     , getAsFolderId
@@ -31,11 +30,6 @@ import Sort.Dict
 
 type alias ApiData a =
     RemoteData Api.Error a
-
-
-type Return
-    = NoReturn
-    | GotRootFolders
 
 
 type alias Model =
@@ -363,7 +357,7 @@ updateWithModifiedDocument document model =
     }
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, Return )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ApiResponseToplevelFolder (Ok listOfRootFoldersWithSubfolders) ->
@@ -382,7 +376,6 @@ update msg model =
                 |> insertAsSubfolderIds allNewFolders
                 |> insertFoldersAsNodeTypes allNewFolders
             , Cmd.none
-            , GotRootFolders
             )
 
         ApiResponseToplevelFolder (Err error) ->
@@ -390,7 +383,6 @@ update msg model =
                 | rootFolderIds = Failure error
               }
             , Cmd.none
-            , NoReturn
             )
 
         ApiResponseSubfolder _ (Ok listOfSubfolders) ->
@@ -399,7 +391,6 @@ update msg model =
                 |> insertAsSubfolderIds listOfSubfolders
                 |> insertFoldersAsNodeTypes listOfSubfolders
             , Cmd.none
-            , NoReturn
             )
 
         ApiResponseSubfolder parentIds (Err error) ->
@@ -413,7 +404,6 @@ update msg model =
                         parentIds
               }
             , Cmd.none
-            , NoReturn
             )
 
         ApiResponseGenericNode nodeId (Ok genericNode) ->
@@ -436,18 +426,18 @@ update msg model =
                     in
                     ( model2
                     , cmd
-                    , NoReturn
                     )
 
                 GenericNode.IsDocument document ->
                     ( model1
                         |> updateWithModifiedDocument document
                     , Cmd.none
-                    , NoReturn
                     )
 
                 GenericNode.IsNeither ->
-                    ( model1, Cmd.none, NoReturn )
+                    ( model1
+                    , Cmd.none
+                    )
 
         ApiResponseGenericNode nodeId (Err error) ->
             ( { model
@@ -455,7 +445,6 @@ update msg model =
                     Sort.Dict.insert nodeId (Failure error) model.nodeTypes
               }
             , Cmd.none
-            , NoReturn
             )
 
         ApiResponseDocument documentId (Ok maybeDocument) ->
@@ -464,7 +453,6 @@ update msg model =
                     Sort.Dict.insert documentId (Success maybeDocument) model.documents
               }
             , Cmd.none
-            , NoReturn
             )
 
         ApiResponseDocument documentId (Err error) ->
@@ -473,7 +461,6 @@ update msg model =
                     Sort.Dict.insert documentId (Failure error) model.documents
               }
             , Cmd.none
-            , NoReturn
             )
 
         ApiResponseDocumentsPage selectionAndWindow (Ok documentsPage) ->
@@ -482,7 +469,6 @@ update msg model =
                     Sort.Dict.insert selectionAndWindow (Success documentsPage) model.documentsPages
               }
             , Cmd.none
-            , NoReturn
             )
 
         ApiResponseDocumentsPage selectionAndWindow (Err error) ->
@@ -491,7 +477,6 @@ update msg model =
                     Sort.Dict.insert selectionAndWindow (Failure error) model.documentsPages
               }
             , Cmd.none
-            , NoReturn
             )
 
         ApiResponseFolderCounts selection (Ok folderCounts) ->
@@ -500,7 +485,6 @@ update msg model =
                     Sort.Dict.insert selection (Success folderCounts) model.folderCounts
               }
             , Cmd.none
-            , NoReturn
             )
 
         ApiResponseFolderCounts selection (Err error) ->
@@ -509,7 +493,6 @@ update msg model =
                     Sort.Dict.insert selection (Failure error) model.folderCounts
               }
             , Cmd.none
-            , NoReturn
             )
 
 

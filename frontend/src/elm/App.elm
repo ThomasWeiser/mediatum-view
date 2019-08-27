@@ -191,23 +191,15 @@ updateSubModel msg model =
     case msg of
         CacheMsg subMsg ->
             let
-                ( subModel, subCmd, subReturn ) =
+                ( subModel, subCmd ) =
                     Cache.update subMsg model.cache
 
                 ( model1, cmd1 ) =
                     ( { model | cache = subModel }
                     , Cmd.map CacheMsg subCmd
                     )
-
-                model2 =
-                    case subReturn of
-                        Cache.NoReturn ->
-                            model1
-
-                        Cache.GotRootFolders ->
-                            model1
             in
-            ( model2 |> adjust
+            ( model1 |> adjust
             , cmd1
             , Nothing
             )
