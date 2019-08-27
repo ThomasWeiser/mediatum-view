@@ -3,6 +3,7 @@ module Data.Utils exposing
     , filtersNone
     , folderCountsFromList
     , folderCountsInit
+    , nodeIdToString
     )
 
 import Data.Ordering
@@ -35,3 +36,8 @@ cleanSearchTerm =
     -- Trim the whitespace of both sides of the string
     -- and compress repeated whitespace internally to a single whitespace char.
     String.Extra.clean
+
+
+nodeIdToString : NodeId -> String
+nodeIdToString nodeId =
+    nodeId |> nodeIdToInt |> String.fromInt
