@@ -65,7 +65,11 @@ init route =
     , presentation = GenericPresentation Nothing
     , tree = Tree.initialModel
     , controls = Controls.initialModel Route.home
-    , article = Article.initialModelEmpty
+    , article =
+        Article.initialModel
+            { cache = Cache.initialModel
+            , presentation = GenericPresentation Nothing
+            }
     , needs = Cache.NeedNothing
     }
         |> requestNeeds

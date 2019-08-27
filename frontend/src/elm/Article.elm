@@ -4,7 +4,6 @@ module Article exposing
     , Return(..)
     , folderCountsForQuery
     , initialModel
-    , initialModelEmpty
     , needs
     , update
     , view
@@ -13,7 +12,7 @@ module Article exposing
 import Article.Collection
 import Article.Details
 import Article.DocumentsPage
-import Article.Empty
+import Article.Generic
 import Data.Cache as Cache exposing (ApiData)
 import Data.Types exposing (..)
 import Data.Utils
@@ -47,30 +46,24 @@ type alias Model =
 
 
 type Content
-    = EmptyModel Article.Empty.Model
+    = GenericModel Article.Generic.Model
     | CollectionModel Article.Collection.Model
     | DocumentsPageModel Article.DocumentsPage.Model
     | DetailsModel Article.Details.Model
 
 
 type Msg
-    = EmptyMsg Article.Empty.Msg
+    = GenericMsg Article.Generic.Msg
     | CollectionMsg Article.Collection.Msg
     | DocumentsPageMsg Article.DocumentsPage.Msg
     | DetailsMsg Article.Details.Msg
-
-
-initialModelEmpty : Model
-initialModelEmpty =
-    { content = EmptyModel Article.Empty.initialModel }
 
 
 initialModel : Context -> Model
 initialModel context =
     case context.presentation of
         GenericPresentation maybeNodeIds ->
-            -- TODO
-            initialModelEmpty
+            { content = GenericModel Article.Generic.initialModel }
 
         DocumentPresentation maybeFolderId documentId ->
             { content = DetailsModel Article.Details.initialModel }
@@ -138,13 +131,13 @@ folderCountsForQuery context =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case ( msg, model.content, context.presentation ) of
-        ( EmptyMsg subMsg, EmptyModel subModel, _ ) ->
+        ( GenericMsg subMsg, GenericModel subModel, _ ) ->
             let
                 ( subModel1, subCmd ) =
-                    Article.Empty.update subMsg subModel
+                    Article.Generic.update subMsg subModel
             in
-            ( { model | content = EmptyModel subModel1 }
-            , Cmd.map EmptyMsg subCmd
+            ( { model | content = GenericModel subModel1 }
+            , Cmd.map GenericMsg subCmd
             , NoReturn
             )
 
@@ -233,9 +226,13 @@ view tree context model =
 viewContent : Context -> Model -> Html Msg
 viewContent context model =
     case ( model.content, context.presentation ) of
-        ( EmptyModel subModel, _ ) ->
-            Article.Empty.view subModel
-                |> Html.map EmptyMsg
+        ( GenericModel subModel, GenericPresentation nodeIds ) ->
+            Article.Generic.view
+                { cache = context.cache
+                , nodeIds = nodeIds
+                }
+                subModel
+                |> Html.map GenericMsg
 
         ( CollectionModel subModel, CollectionPresentation folderId ) ->
             Article.Collection.view
