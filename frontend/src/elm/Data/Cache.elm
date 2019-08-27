@@ -11,9 +11,7 @@ module Data.Cache exposing
     , getAsDocumentId
     , getAsFolderId
     , getNodeType
-    , getNodeType_AD
     , getRootFolder
-    , getRootFolder_DD
     , initialModel
     , needsFromList
     , requestNeeds
@@ -136,39 +134,13 @@ getAsDocumentId cache nodeId =
             Nothing
 
 
-getNodeType : Model -> NodeId -> Maybe NodeType
+getNodeType : Model -> NodeId -> ApiData NodeType
 getNodeType cache nodeId =
     get cache.nodeTypes nodeId
-        |> RemoteData.toMaybe
 
 
-getNodeType_AD : Model -> NodeId -> ApiData NodeType
-getNodeType_AD cache nodeId =
-    get cache.nodeTypes nodeId
-
-
-getRootFolder : Model -> Maybe ( FolderId, FolderType )
+getRootFolder : Model -> DerivedData ( FolderId, FolderType )
 getRootFolder cache =
-    cache.rootFolderIds
-        |> RemoteData.toMaybe
-        |> Maybe.andThen List.head
-        |> Maybe.andThen
-            (\folderId ->
-                getNodeType cache (folderId |> folderIdToInt |> nodeIdFromInt)
-                    |> Maybe.andThen
-                        (\nodeType ->
-                            case nodeType of
-                                NodeIsFolder folderType ->
-                                    Just ( folderId, folderType )
-
-                                _ ->
-                                    Nothing
-                        )
-            )
-
-
-getRootFolder_DD : Model -> DerivedData ( FolderId, FolderType )
-getRootFolder_DD cache =
     cache.rootFolderIds
         |> RemoteData.mapError CacheApiError
         |> RemoteData.andThen

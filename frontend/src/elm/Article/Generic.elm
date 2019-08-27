@@ -46,11 +46,11 @@ view context model =
         remoteDataMessage =
             case context.nodeIds of
                 Nothing ->
-                    Cache.getRootFolder_DD context.cache
+                    Cache.getRootFolder context.cache
                         |> RemoteData.map (always "Going to show the root folder")
 
                 Just ( nodeId, Nothing ) ->
-                    Cache.getNodeType_AD context.cache nodeId
+                    Cache.getNodeType context.cache nodeId
                         |> Cache.asDerivedData
                         |> Utils.remoteDataCheck
                             (\nodeType ->
@@ -65,8 +65,8 @@ view context model =
 
                 Just ( nodeIdOne, Just nodeIdTwo ) ->
                     RemoteData.map2 Tuple.pair
-                        (Cache.getNodeType_AD context.cache nodeIdOne |> Cache.asDerivedData)
-                        (Cache.getNodeType_AD context.cache nodeIdTwo |> Cache.asDerivedData)
+                        (Cache.getNodeType context.cache nodeIdOne |> Cache.asDerivedData)
+                        (Cache.getNodeType context.cache nodeIdTwo |> Cache.asDerivedData)
                         |> Utils.remoteDataCheck
                             (\( nodeTypeOne, nodeTypeTwo ) ->
                                 Maybe.map Cache.CacheDataError <|

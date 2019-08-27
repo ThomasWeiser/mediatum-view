@@ -80,6 +80,7 @@ fromRoute cache route =
     case route.path of
         Route.NoId ->
             Cache.getRootFolder cache
+                |> RemoteData.toMaybe
                 |> Maybe.Extra.unwrap
                     (GenericPresentation Nothing)
                     (\( rootFolderId, rootFolderType ) ->
@@ -89,7 +90,7 @@ fromRoute cache route =
         Route.OneId nodeId ->
             case
                 Cache.getNodeType cache nodeId
-                    |> Debug.log "fromRoute OneId getNodeType"
+                    |> RemoteData.toMaybe
             of
                 Nothing ->
                     GenericPresentation (Just ( nodeId, Nothing ))
@@ -107,9 +108,12 @@ fromRoute cache route =
 
         Route.TwoIds nodeIdOne nodeIdTwo ->
             case
-                ( Cache.getNodeType cache nodeIdOne, Cache.getNodeType cache nodeIdTwo )
+                RemoteData.map2 Tuple.pair
+                    (Cache.getNodeType cache nodeIdOne)
+                    (Cache.getNodeType cache nodeIdTwo)
+                    |> RemoteData.toMaybe
             of
-                ( Just (NodeIsFolder folderType), Just NodeIsDocument ) ->
+                Just ( NodeIsFolder folderType, NodeIsDocument ) ->
                     DocumentPresentation
                         (Just (nodeIdOne |> nodeIdToInt |> folderIdFromInt))
                         (nodeIdTwo |> nodeIdToInt |> documentIdFromInt)
