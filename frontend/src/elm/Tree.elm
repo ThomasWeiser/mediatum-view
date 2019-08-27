@@ -175,19 +175,20 @@ viewListOfFoldersLoading =
 
 viewFolder : Context -> Model -> Maybe FolderCounts -> FolderId -> Html Msg
 viewFolder context model maybeFolderCounts id =
-    let
-        presentationFolderId =
-            getPresentationFolderId context
-
-        isSelectedFolder =
-            presentationFolderId == Just id
-
-        expanded =
-            (model.collapsedPresentationFolder /= Just id)
-                && isOnPath context.cache id presentationFolderId
-    in
     case Cache.get context.cache.folders id of
         RemoteData.Success folder ->
+            let
+                presentationFolderId =
+                    getPresentationFolderId context
+
+                isSelectedFolder =
+                    presentationFolderId == Just id
+
+                expanded =
+                    Folder.isRoot folder
+                        || (model.collapsedPresentationFolder /= Just id)
+                        && isOnPath context.cache id presentationFolderId
+            in
             Html.div []
                 [ Html.div
                     [ Html.Events.onClick (Select id) ]
