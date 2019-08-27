@@ -150,36 +150,5 @@ toRoute presentation =
 
 view : Presentation -> Html Never
 view presentation =
-    -- TODO: implement
     -- TODO: needed? Possibly handy in some form for UX.
-    Html.div []
-        [ Html.text "Presentation: "
-        , Html.text <| Debug.toString presentation
-        ]
-
-
-
-{-
-   Html.div [] <|
-       case query of
-           OnDetails _ ->
-               []
-
-           OnFolder { folder } ->
-               case folder.type_ of
-                   Data.Types.FolderIsCollection ->
-                       []
-
-                   Data.Types.FolderIsDirectory ->
-                       [ Html.div []
-                           [ Html.span [] [ Html.text "All Documents" ] ]
-                       ]
-
-           OnFts { searchTerm } ->
-               [ Html.div []
-                   [ Html.span [] [ Html.text "Search: \"" ]
-                   , Html.span [] [ Html.text searchTerm ]
-                   , Html.span [] [ Html.text "\"" ]
-                   ]
-               ]
--}
+    Html.text ""
