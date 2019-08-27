@@ -6,6 +6,8 @@ module Data.Cache exposing
     , get
     , getAsDocumentId
     , getAsFolderId
+    , getNodeType
+    , getRootFolder
     , initialModel
     , needsFromList
     , requestNeeds
@@ -102,6 +104,32 @@ getAsDocumentId cache nodeId =
 
         _ ->
             Nothing
+
+
+getNodeType : Model -> NodeId -> Maybe NodeType
+getNodeType cache nodeId =
+    get cache.nodeTypes nodeId
+        |> RemoteData.toMaybe
+
+
+getRootFolder : Model -> Maybe ( FolderId, FolderType )
+getRootFolder cache =
+    cache.rootFolderIds
+        |> RemoteData.toMaybe
+        |> Maybe.andThen List.head
+        |> Maybe.andThen
+            (\folderId ->
+                getNodeType cache (folderId |> folderIdToInt |> nodeIdFromInt)
+                    |> Maybe.andThen
+                        (\nodeType ->
+                            case nodeType of
+                                NodeIsFolder folderType ->
+                                    Just ( folderId, folderType )
+
+                                _ ->
+                                    Nothing
+                        )
+            )
 
 
 type Msg

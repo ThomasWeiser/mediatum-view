@@ -51,32 +51,6 @@ getFolderId cache presentation =
             Just selection.scope
 
 
-getNodeType : Cache.Model -> NodeId -> Maybe NodeType
-getNodeType cache nodeId =
-    Cache.get cache.nodeTypes nodeId
-        |> RemoteData.toMaybe
-
-
-getRootFolder : Cache.Model -> Maybe ( FolderId, FolderType )
-getRootFolder cache =
-    cache.rootFolderIds
-        |> RemoteData.toMaybe
-        |> Maybe.andThen List.head
-        |> Maybe.andThen
-            (\folderId ->
-                getNodeType cache (folderId |> folderIdToInt |> nodeIdFromInt)
-                    |> Maybe.andThen
-                        (\nodeType ->
-                            case nodeType of
-                                NodeIsFolder folderType ->
-                                    Just ( folderId, folderType )
-
-                                _ ->
-                                    Nothing
-                        )
-            )
-
-
 fromRoute : Cache.Model -> Route -> Presentation
 fromRoute cache route =
     let
@@ -105,7 +79,7 @@ fromRoute cache route =
     in
     case route.path of
         Route.NoId ->
-            getRootFolder cache
+            Cache.getRootFolder cache
                 |> Maybe.Extra.unwrap
                     (GenericPresentation Nothing)
                     (\( rootFolderId, rootFolderType ) ->
@@ -113,7 +87,10 @@ fromRoute cache route =
                     )
 
         Route.OneId nodeId ->
-            case getNodeType cache nodeId |> Debug.log "fromRoute OneId getNodeType" of
+            case
+                Cache.getNodeType cache nodeId
+                    |> Debug.log "fromRoute OneId getNodeType"
+            of
                 Nothing ->
                     GenericPresentation (Just ( nodeId, Nothing ))
 
@@ -129,7 +106,9 @@ fromRoute cache route =
                         folderType
 
         Route.TwoIds nodeIdOne nodeIdTwo ->
-            case ( getNodeType cache nodeIdOne, getNodeType cache nodeIdTwo ) of
+            case
+                ( Cache.getNodeType cache nodeIdOne, Cache.getNodeType cache nodeIdTwo )
+            of
                 ( Just (NodeIsFolder folderType), Just NodeIsDocument ) ->
                     DocumentPresentation
                         (Just (nodeIdOne |> nodeIdToInt |> folderIdFromInt))
