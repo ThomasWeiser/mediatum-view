@@ -6,6 +6,8 @@ module Utils exposing
     , onChange
     , prependIf
     , prependMaybe
+    , remoteDataCheck
+    , remoteDataMapFallible
     , tupleAddThird
     , tupleRemoveThird
     , when
@@ -15,6 +17,7 @@ import Char
 import Html
 import Html.Events
 import Json.Decode
+import RemoteData exposing (RemoteData)
 
 
 noBreakSpace : String
@@ -135,3 +138,28 @@ lexicalOrder compareElements listL listR =
 
                 EQ ->
                     lexicalOrder compareElements tailL tailR
+
+
+remoteDataMapFallible : (a -> Result e a) -> RemoteData e a -> RemoteData e a
+remoteDataMapFallible mapping remoteData =
+    case remoteData of
+        RemoteData.Success value ->
+            mapping value |> RemoteData.fromResult
+
+        _ ->
+            remoteData
+
+
+remoteDataCheck : (a -> Maybe e) -> RemoteData e a -> RemoteData e a
+remoteDataCheck check remoteData =
+    case remoteData of
+        RemoteData.Success value ->
+            case check value of
+                Nothing ->
+                    remoteData
+
+                Just error ->
+                    RemoteData.Failure error
+
+        _ ->
+            remoteData

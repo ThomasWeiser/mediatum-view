@@ -1,13 +1,19 @@
 module Data.Cache exposing
     ( ApiData
+    , DerivedData
+    , Error(..)
     , Model
     , Msg(..)
     , Needs(..)
+    , asDerivedData
+    , errorToString
     , get
     , getAsDocumentId
     , getAsFolderId
     , getNodeType
+    , getNodeType_AD
     , getRootFolder
+    , getRootFolder_DD
     , initialModel
     , needsFromList
     , requestNeeds
@@ -34,6 +40,15 @@ type alias ApiData a =
     RemoteData Api.Error a
 
 
+type alias DerivedData a =
+    RemoteData Error a
+
+
+type Error
+    = CacheApiError Api.Error
+    | CacheDataError String
+
+
 type alias Model =
     { rootFolderIds : ApiData (List FolderId)
     , folders : Sort.Dict.Dict FolderId (ApiData Folder)
@@ -56,6 +71,21 @@ type Needs
     | NeedDocument DocumentId
     | NeedDocumentsPage Selection Window
     | NeedFolderCounts Selection
+
+
+asDerivedData : ApiData a -> DerivedData a
+asDerivedData =
+    RemoteData.mapError CacheApiError
+
+
+errorToString : Error -> String
+errorToString error =
+    case error of
+        CacheApiError apiError ->
+            Api.errorToString apiError
+
+        CacheDataError str ->
+            str
 
 
 initialModel : Model
@@ -112,6 +142,11 @@ getNodeType cache nodeId =
         |> RemoteData.toMaybe
 
 
+getNodeType_AD : Model -> NodeId -> ApiData NodeType
+getNodeType_AD cache nodeId =
+    get cache.nodeTypes nodeId
+
+
 getRootFolder : Model -> Maybe ( FolderId, FolderType )
 getRootFolder cache =
     cache.rootFolderIds
@@ -128,6 +163,31 @@ getRootFolder cache =
 
                                 _ ->
                                     Nothing
+                        )
+            )
+
+
+getRootFolder_DD : Model -> DerivedData ( FolderId, FolderType )
+getRootFolder_DD cache =
+    cache.rootFolderIds
+        |> RemoteData.mapError CacheApiError
+        |> RemoteData.andThen
+            (\listOfFolderIds ->
+                List.head listOfFolderIds
+                    |> RemoteData.fromMaybe (CacheDataError "List of root folders is empty")
+            )
+        |> RemoteData.andThen
+            (\folderId ->
+                get cache.nodeTypes (folderId |> folderIdToInt |> nodeIdFromInt)
+                    |> RemoteData.mapError CacheApiError
+                    |> RemoteData.andThen
+                        (\nodeType ->
+                            case nodeType of
+                                NodeIsFolder folderType ->
+                                    Success ( folderId, folderType )
+
+                                _ ->
+                                    Failure (CacheDataError "Root node is not a folder")
                         )
             )
 
