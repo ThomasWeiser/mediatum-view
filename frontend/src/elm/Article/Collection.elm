@@ -15,7 +15,6 @@ import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Icons
-import Query
 import RemoteData
 
 

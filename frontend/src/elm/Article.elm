@@ -20,7 +20,6 @@ import Html exposing (Html)
 import Html.Attributes
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation(..))
-import Query exposing (Query)
 import Query.Filter
 import Query.Filters
 import RemoteData
