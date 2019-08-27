@@ -34,6 +34,11 @@ import Sort
 import Sort.Dict
 
 
+
+-- TODO: Review naming of the types (ApiData, DerivedData, Error)
+-- TODO: Possibly all getX functions should uniformly return DerivedData instead of ApiData
+
+
 type alias ApiData a =
     RemoteData Api.Error a
 
