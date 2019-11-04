@@ -66,7 +66,6 @@ type alias Model =
 type Needs
     = NeedNothing
     | NeedAnd Needs Needs
-    | NeedListOfNeeds (List Needs)
     | NeedAndThen Needs Needs
     | NeedRootFolderIds
     | NeedSubfolders (List FolderId)
@@ -223,22 +222,16 @@ status model needs =
             else
                 Fulfilled
 
-        NeedListOfNeeds listOfNeeds ->
+        NeedAndThen needOne needTwo ->
             let
-                listOfStatus =
-                    List.map (status model) listOfNeeds
+                statusOne =
+                    status model needOne
             in
-            if List.member OnGoing listOfStatus then
-                OnGoing
-
-            else if List.member NotRequested listOfStatus then
-                NotRequested
+            if statusOne /= Fulfilled then
+                statusOne
 
             else
-                Fulfilled
-
-        NeedAndThen needOne needTwo ->
-            status model (NeedListOfNeeds [ needOne, needTwo ])
+                status model needTwo
 
         NeedRootFolderIds ->
             model.rootFolderIds
@@ -296,13 +289,6 @@ requestNeeds needs model =
                 ( modelTwo
                 , Cmd.batch [ cmdOne, cmdTwo ]
                 )
-
-            NeedListOfNeeds listOfNeeds ->
-                listOfNeeds
-                    |> List.Extra.mapAccuml
-                        (Basics.Extra.flip requestNeeds)
-                        model
-                    |> Tuple.mapSecond Cmd.batch
 
             NeedAndThen needOne needTwo ->
                 if status model needOne == Fulfilled then
