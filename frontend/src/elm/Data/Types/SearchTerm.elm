@@ -52,32 +52,33 @@ ordering =
     Ordering.byField toString
 
 
-type alias SetOfSearchTerms =
-    Sort.Set.Set SearchTerm
+type SetOfSearchTerms
+    = SetOfSearchTerms (Sort.Set.Set SearchTerm)
 
 
 emptySet : SetOfSearchTerms
 emptySet =
-    Sort.Set.empty
-        (Sort.custom ordering)
+    SetOfSearchTerms <|
+        Sort.Set.empty (Sort.custom ordering)
 
 
 setFromList : List SearchTerm -> SetOfSearchTerms
-setFromList =
-    Sort.Set.fromList
-        (Sort.custom ordering)
+setFromList list =
+    SetOfSearchTerms <|
+        Sort.Set.fromList (Sort.custom ordering) list
 
 
 setToList : SetOfSearchTerms -> List SearchTerm
-setToList =
-    Sort.Set.toList
+setToList (SetOfSearchTerms set) =
+    Sort.Set.toList set
 
 
 setInsert : SearchTerm -> SetOfSearchTerms -> SetOfSearchTerms
-setInsert =
-    Sort.Set.insert
+setInsert el (SetOfSearchTerms set) =
+    SetOfSearchTerms <|
+        Sort.Set.insert el set
 
 
 setIsEmpty : SetOfSearchTerms -> Bool
-setIsEmpty =
-    Sort.Set.isEmpty
+setIsEmpty (SetOfSearchTerms set) =
+    Sort.Set.isEmpty set
