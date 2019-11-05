@@ -13,7 +13,7 @@ suite =
     describe "Utils"
         [ describe "findAdjacent"
             [ describe "empty list"
-                [ test "always True on on empty list" <|
+                [ test "always True on empty list" <|
                     \() ->
                         Expect.equal (Utils.findAdjacent (always True) []) Nothing
                 , test "always False on on empty list" <|
@@ -108,6 +108,31 @@ suite =
                         Expect.equal
                             (Utils.findAdjacent (\v -> modBy 8 v == 1) l)
                             (findAdjacentAlternativeImplementation (\v -> modBy 8 v == 1) l)
+                ]
+            ]
+        , describe "findMap" <|
+            let
+                add100IfEven x =
+                    if x // 2 * 2 == x then
+                        Just (x + 100)
+
+                    else
+                        Nothing
+            in
+            [ test "on empty list" <|
+                \() ->
+                    Expect.equal (Utils.findMap add100IfEven []) Nothing
+            , describe "add100IfEven"
+                [ test "[ 1, 2, 3, 4, 5 ]" <|
+                    \() ->
+                        Expect.equal
+                            (Utils.findMap add100IfEven [ 1, 2, 3, 4, 5 ])
+                            (Just 102)
+                , test "[ 1, 3, 5, 7, 9 ]" <|
+                    \() ->
+                        Expect.equal
+                            (Utils.findMap add100IfEven [ 1, 3, 5, 7, 9 ])
+                            Nothing
                 ]
             ]
         , describe "lexicalOrder"

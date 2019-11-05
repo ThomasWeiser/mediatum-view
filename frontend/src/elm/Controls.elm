@@ -81,13 +81,13 @@ update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     let
         removeFilter filterHandle =
-            Filters.filtersFromRoute context.route
+            Filters.fromRoute context.route
                 |> Filters.remove filterHandle
                 |> Navigation.ShowListingWithFilters
                 |> Navigate
 
         insertFilter oldFilterHandlefilter newFilter =
-            Filters.filtersFromRoute context.route
+            Filters.fromRoute context.route
                 |> Filters.remove oldFilterHandlefilter
                 |> Filters.insert newFilter
                 |> Navigation.ShowListingWithFilters
@@ -289,7 +289,7 @@ viewFilters context model =
                 Filter.filterTypes
         , viewExistingFilters
             model
-            (Filters.filtersFromRoute context.route)
+            (Filters.fromRoute context.route)
         , Html.span [] <|
             List.map
                 (\( filterHandle, filterEditor ) ->

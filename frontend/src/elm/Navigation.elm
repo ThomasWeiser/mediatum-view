@@ -7,6 +7,7 @@ import Data.Cache as Cache
 import Data.Types exposing (..)
 import Data.Types.SearchTerm exposing (SearchTerm)
 import Dict
+import Query.Filters
 import Route exposing (..)
 import String.Extra
 
@@ -75,31 +76,7 @@ alterRoute cache navigation route =
             }
 
         ShowListingWithFilters filters ->
-            let
-                ( filterByYear, filterByTitle ) =
-                    List.foldl
-                        (\filter ( accuFilterByYear, accuFilterByTitle ) ->
-                            case filter of
-                                FilterYearWithin range ->
-                                    ( Just range
-                                    , accuFilterByTitle
-                                    )
-
-                                FilterTitleFts titleSearchTerm ->
-                                    ( accuFilterByYear
-                                    , Data.Types.SearchTerm.setInsert titleSearchTerm accuFilterByTitle
-                                    )
-                        )
-                        ( Nothing, Data.Types.SearchTerm.emptySet )
-                        (Dict.values filters)
-            in
-            { listingRoute
-                | parameters =
-                    { parameters
-                        | filterByYear = filterByYear
-                        , filterByTitle = filterByTitle
-                    }
-            }
+            Query.Filters.alterRoute filters listingRoute
 
         SetOffset offset ->
             { route

@@ -64,7 +64,7 @@ fromRoute cache route =
                             DocumentsPagePresentation
                                 { scope = folderId
                                 , searchMethod = SelectByFolderListing
-                                , filters = Filters.filtersFromRoute route
+                                , filters = Filters.fromRoute route
                                 }
                                 (windowFromRoute route)
 
@@ -72,7 +72,7 @@ fromRoute cache route =
                     DocumentsPagePresentation
                         { scope = folderId
                         , searchMethod = searchMethod
-                        , filters = Filters.filtersFromRoute route
+                        , filters = Filters.fromRoute route
                         }
                         (windowFromRoute route)
     in

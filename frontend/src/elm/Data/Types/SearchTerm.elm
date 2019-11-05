@@ -6,7 +6,6 @@ module Data.Types.SearchTerm exposing
     , fromStringWithDefault
     , ordering
     , setFromList
-    , setInsert
     , setIsEmpty
     , setToList
     , toString
@@ -21,7 +20,7 @@ import String.Extra
 
   - non-empty
   - has no whitespace at either end
-  - has no repeated whitespace within
+  - has no repeated whitespace within the string
 
 -}
 type SearchTerm
@@ -60,6 +59,11 @@ emptySet =
     SetOfSearchTerms List.Unique.empty
 
 
+setIsEmpty : SetOfSearchTerms -> Bool
+setIsEmpty (SetOfSearchTerms set) =
+    List.Unique.isEmpty set
+
+
 setFromList : List SearchTerm -> SetOfSearchTerms
 setFromList list =
     SetOfSearchTerms <|
@@ -69,14 +73,3 @@ setFromList list =
 setToList : SetOfSearchTerms -> List SearchTerm
 setToList (SetOfSearchTerms set) =
     List.Unique.toList set
-
-
-setInsert : SearchTerm -> SetOfSearchTerms -> SetOfSearchTerms
-setInsert el (SetOfSearchTerms set) =
-    SetOfSearchTerms <|
-        List.Unique.cons el set
-
-
-setIsEmpty : SetOfSearchTerms -> Bool
-setIsEmpty (SetOfSearchTerms set) =
-    List.Unique.isEmpty set

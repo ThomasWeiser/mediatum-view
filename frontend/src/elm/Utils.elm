@@ -1,5 +1,6 @@
 module Utils exposing
     ( findAdjacent
+    , findMap
     , ifElse
     , lexicalOrder
     , noBreakSpace
@@ -72,6 +73,24 @@ prependMaybe maybeElement list =
 
         Just element ->
             element :: list
+
+
+{-| Find the first element that maps to a `Just b` and return this mapping.
+If none match, return Nothing.
+-}
+findMap : (a -> Maybe b) -> List a -> Maybe b
+findMap mapping list =
+    case list of
+        [] ->
+            Nothing
+
+        first :: rest ->
+            case mapping first of
+                Just result ->
+                    Just result
+
+                Nothing ->
+                    findMap mapping rest
 
 
 {-| Find the first element that satisfies a predicate
