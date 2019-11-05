@@ -12,9 +12,8 @@ module Data.Types.SearchTerm exposing
     , toString
     )
 
+import List.Unique
 import Ordering exposing (..)
-import Sort
-import Sort.Set
 import String.Extra
 
 
@@ -53,32 +52,31 @@ ordering =
 
 
 type SetOfSearchTerms
-    = SetOfSearchTerms (Sort.Set.Set SearchTerm)
+    = SetOfSearchTerms (List.Unique.UniqueList SearchTerm)
 
 
 emptySet : SetOfSearchTerms
 emptySet =
-    SetOfSearchTerms <|
-        Sort.Set.empty (Sort.custom ordering)
+    SetOfSearchTerms List.Unique.empty
 
 
 setFromList : List SearchTerm -> SetOfSearchTerms
 setFromList list =
     SetOfSearchTerms <|
-        Sort.Set.fromList (Sort.custom ordering) list
+        List.Unique.fromList list
 
 
 setToList : SetOfSearchTerms -> List SearchTerm
 setToList (SetOfSearchTerms set) =
-    Sort.Set.toList set
+    List.Unique.toList set
 
 
 setInsert : SearchTerm -> SetOfSearchTerms -> SetOfSearchTerms
 setInsert el (SetOfSearchTerms set) =
     SetOfSearchTerms <|
-        Sort.Set.insert el set
+        List.Unique.cons el set
 
 
 setIsEmpty : SetOfSearchTerms -> Bool
 setIsEmpty (SetOfSearchTerms set) =
-    Sort.Set.isEmpty set
+    List.Unique.isEmpty set
