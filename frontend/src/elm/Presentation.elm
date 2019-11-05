@@ -131,7 +131,7 @@ windowFromRoute route =
 
 searchMethodFromRoute : Route -> SearchMethod
 searchMethodFromRoute route =
-    case String.Extra.nonBlank route.parameters.ftsTerm of
+    case route.parameters.ftsTerm of
         Nothing ->
             SelectByFolderListing
 

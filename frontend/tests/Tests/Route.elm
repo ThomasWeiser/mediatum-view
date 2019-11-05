@@ -1,6 +1,7 @@
 module Tests.Route exposing (fuzzerRoute)
 
 import Data.Types exposing (FtsSorting(..), NodeId, nodeIdFromInt, nodeIdToInt)
+import Data.Utils
 import Fuzz exposing (Fuzzer, int, list, string)
 import List.Nonempty exposing (Nonempty)
 import Route exposing (Route, RouteParameters, RoutePath(..))
@@ -24,7 +25,6 @@ fuzzerRoute =
             |> Fuzz.andMap
                 (fuzzerSearchTerm
                     |> Fuzz.maybe
-                    |> Fuzz.map (Maybe.withDefault "")
                 )
             |> Fuzz.andMap
                 (Fuzz.oneOf [ Fuzz.constant FtsByRank, Fuzz.constant FtsByDate ])
@@ -34,7 +34,7 @@ fuzzerRoute =
                 )
             |> Fuzz.andMap
                 (TestUtils.shortList 4 fuzzerSearchTerm
-                    |> Fuzz.map Set.fromList
+                    |> Fuzz.map Data.Utils.setOfSearchTermsFromList
                 )
             |> Fuzz.andMap
                 fuzzerOffset

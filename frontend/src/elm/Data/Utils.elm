@@ -1,15 +1,17 @@
 module Data.Utils exposing
-    ( cleanSearchTerm
-    , filtersNone
+    ( filtersNone
     , folderCountsFromList
     , folderCountsInit
     , nodeIdToString
+    , setOfSearchTermsFromList
+    , setOfSearchTermsInit
     )
 
 import Data.Ordering
 import Data.Types exposing (..)
 import Dict
 import Sort.Dict
+import Sort.Set
 import String.Extra
 
 
@@ -31,11 +33,17 @@ folderCountsFromList listOfPairs =
         listOfPairs
 
 
-cleanSearchTerm : String -> String
-cleanSearchTerm =
-    -- Trim the whitespace of both sides of the string
-    -- and compress repeated whitespace internally to a single whitespace char.
-    String.Extra.clean
+setOfSearchTermsInit : Sort.Set.Set SearchTerm
+setOfSearchTermsInit =
+    Sort.Set.empty
+        (Data.Ordering.sorter Data.Ordering.orderingSearchTerm)
+
+
+setOfSearchTermsFromList : List SearchTerm -> Sort.Set.Set SearchTerm
+setOfSearchTermsFromList listOfSearchTerms =
+    Sort.Set.fromList
+        (Data.Ordering.sorter Data.Ordering.orderingSearchTerm)
+        listOfSearchTerms
 
 
 nodeIdToString : NodeId -> String

@@ -8,9 +8,11 @@ module Route exposing
     , home
     )
 
-import Data.Types exposing (FtsSorting(..), NodeId)
+import Data.Ordering
+import Data.Types exposing (FtsSorting(..), NodeId, SearchTerm)
+import Data.Utils
 import Range exposing (Range)
-import Set exposing (Set)
+import Sort.Set
 
 
 defaultLimit : Int
@@ -36,10 +38,10 @@ type RoutePath
 
 
 type alias RouteParameters =
-    { ftsTerm : String
+    { ftsTerm : Maybe SearchTerm
     , ftsSorting : FtsSorting
     , filterByYear : Maybe (Range Int)
-    , filterByTitle : Set String
+    , filterByTitle : Sort.Set.Set SearchTerm
     , offset : Int
     , limit : Int
     }
@@ -62,10 +64,10 @@ home =
 
 emptyParameters : RouteParameters
 emptyParameters =
-    { ftsTerm = ""
+    { ftsTerm = Nothing
     , ftsSorting = defaultFtsSorting
     , filterByYear = Nothing
-    , filterByTitle = Set.empty
+    , filterByTitle = Data.Utils.setOfSearchTermsInit
     , offset = 0
     , limit = defaultLimit
     }

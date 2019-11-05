@@ -14,6 +14,7 @@ module Data.Types exposing
     , NodeId
     , NodeType(..)
     , SearchMethod(..)
+    , SearchTerm
     , Selection
     , Window
     , WindowPage
@@ -23,11 +24,15 @@ module Data.Types exposing
     , folderIdToInt
     , nodeIdFromInt
     , nodeIdToInt
+    , searchTermFromString
+    , searchTermFromStringWithDefault
+    , searchTermToString
     )
 
 import Dict
 import Range exposing (Range)
 import Sort.Dict
+import String.Extra
 
 
 type NodeId
@@ -101,7 +106,7 @@ type alias Selection =
 
 type SearchMethod
     = SelectByFolderListing
-    | SelectByFullTextSearch String FtsSorting
+    | SelectByFullTextSearch SearchTerm FtsSorting
 
 
 type FtsSorting
@@ -115,7 +120,7 @@ type alias Filters =
 
 type Filter
     = FilterYearWithin (Range Int)
-    | FilterTitleFts String
+    | FilterTitleFts SearchTerm
 
 
 type alias FolderCounts =
@@ -160,3 +165,32 @@ type alias DocumentAttribute =
     , width : Int
     , value : Maybe String
     }
+
+
+{-| A search term is a string that is
+
+  - non-empty
+  - has no whitespace at either end
+  - has no repeated whitespace within
+
+-}
+type SearchTerm
+    = SearchTerm String
+
+
+searchTermFromString : String -> Maybe SearchTerm
+searchTermFromString =
+    String.Extra.clean
+        >> String.Extra.nonEmpty
+        >> Maybe.map SearchTerm
+
+
+searchTermFromStringWithDefault : String -> String -> SearchTerm
+searchTermFromStringWithDefault default string =
+    searchTermFromString string
+        |> Maybe.withDefault (SearchTerm default)
+
+
+searchTermToString : SearchTerm -> String
+searchTermToString (SearchTerm s) =
+    s

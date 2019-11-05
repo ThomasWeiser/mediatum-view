@@ -64,7 +64,13 @@ submitExampleQuery =
 
 initialModel : Route -> Model
 initialModel route =
-    { ftsTerm = route.parameters.ftsTerm
+    { ftsTerm =
+        case route.parameters.ftsTerm of
+            Nothing ->
+                ""
+
+            Just seachTerm ->
+                Data.Types.searchTermToString seachTerm
     , ftsSorting = route.parameters.ftsSorting
     , filterEditors = Dict.empty
     }
@@ -141,7 +147,10 @@ update context msg model =
             ( model
             , Cmd.none
             , Navigate
-                (Navigation.ShowListingWithSearch model.ftsTerm model.ftsSorting)
+                (Navigation.ShowListingWithSearch
+                    (Data.Types.searchTermFromString model.ftsTerm)
+                    model.ftsSorting
+                )
             )
 
         SubmitExampleQuery ->
@@ -151,12 +160,17 @@ update context msg model =
                         |> Filters.insert
                             (FilterYearWithin (Range.fromTo ( 2000, 2010 )))
                         |> Filters.insert
-                            (FilterTitleFts "with")
+                            (FilterTitleFts
+                                (Data.Types.searchTermFromStringWithDefault "no-default-needed" "with")
+                            )
             in
             ( model
             , Cmd.none
-            , [ Navigation.ShowListingWithSearch "variable" context.route.parameters.ftsSorting
-              , Navigation.ShowListingWithFilters filters
+            , [ Navigation.ShowListingWithSearch
+                    (Data.Types.searchTermFromString "variable")
+                    context.route.parameters.ftsSorting
+              , Navigation.ShowListingWithFilters
+                    filters
               ]
                 |> Navigation.ListOfNavigations
                 |> Navigate

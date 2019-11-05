@@ -146,7 +146,7 @@ and without repeated whitespace within the string.
 It generates some common search string formats as well as random search strings.
 
 -}
-fuzzerSearchTerm : Fuzzer String
+fuzzerSearchTerm : Fuzzer SearchTerm
 fuzzerSearchTerm =
     Fuzz.oneOf
         [ [ "foo"
@@ -161,12 +161,9 @@ fuzzerSearchTerm =
             |> List.map Fuzz.constant
             |> Fuzz.oneOf
         , Fuzz.string
-            |> Fuzz.map
-                (String.Extra.clean
-                    >> String.Extra.nonBlank
-                    >> Maybe.withDefault "baz"
-                )
         ]
+        |> Fuzz.map
+            (Data.Types.searchTermFromStringWithDefault "baz")
 
 
 {-| A fuzzer for numbers representing years,

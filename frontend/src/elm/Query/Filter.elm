@@ -5,7 +5,6 @@ module Query.Filter exposing
     , controlsToFilter
     , filterTypes
     , handle
-    , normalize
     , toAttributeTest
     , view
     , viewEdit
@@ -60,7 +59,7 @@ controlsFromFilter filter =
                 (Range.toMaybe range)
 
         FilterTitleFts searchTerm ->
-            ControlsTitleFts searchTerm
+            ControlsTitleFts (Data.Types.searchTermToString searchTerm)
 
 
 controlsToFilter : Controls -> Maybe Filter
@@ -72,8 +71,7 @@ controlsToFilter controls =
 
         ControlsTitleFts searchTerm ->
             searchTerm
-                |> Data.Utils.cleanSearchTerm
-                |> String.Extra.nonBlank
+                |> Data.Types.searchTermFromString
                 |> Maybe.map FilterTitleFts
 
 
@@ -84,17 +82,7 @@ handle filter =
             "YearWithin"
 
         FilterTitleFts searchTerm ->
-            "TitleFts-" ++ searchTerm
-
-
-normalize : Filter -> Filter
-normalize filter =
-    case filter of
-        FilterTitleFts titleSearchTerm ->
-            FilterTitleFts (Data.Utils.cleanSearchTerm titleSearchTerm)
-
-        _ ->
-            filter
+            "TitleFts-" ++ Data.Types.searchTermToString searchTerm
 
 
 toAttributeTest : Filter -> Query.Attribute.Test
@@ -109,7 +97,9 @@ toAttributeTest filter =
 
         FilterTitleFts searchTerm ->
             { key = "title"
-            , operation = Query.Attribute.SimpleFts searchTerm
+            , operation =
+                Query.Attribute.SimpleFts
+                    (Data.Types.searchTermToString searchTerm)
             }
 
 
@@ -139,13 +129,9 @@ view filter =
                 , quote (String.fromInt toYear)
                 ]
 
-        FilterTitleFts "" ->
-            -- Should never occur here
-            [ Html.text "" ]
-
         FilterTitleFts searchTerm ->
             [ Html.text "Title: "
-            , quote searchTerm
+            , quote (Data.Types.searchTermToString searchTerm)
             ]
 
 
@@ -192,10 +178,7 @@ viewEdit focusId controls =
                     , Html.Attributes.type_ "text"
                     , Html.Attributes.placeholder "Title full text filter"
                     , Html.Attributes.value searchTerm
-                    , Utils.onChange
-                        (\input ->
-                            ControlsTitleFts (Data.Utils.cleanSearchTerm input)
-                        )
+                    , Utils.onChange ControlsTitleFts
                     ]
                     []
                 ]

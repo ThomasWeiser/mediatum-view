@@ -12,7 +12,7 @@ import Dict exposing (Dict)
 import Query.Attribute
 import Query.Filter as Filter
 import Route exposing (Route)
-import Set
+import Sort.Set
 import Utils
 
 
@@ -44,7 +44,7 @@ toAttributeTests filters =
 
 filtersFromRoute : Route -> Filters
 filtersFromRoute route =
-    Set.toList route.parameters.filterByTitle
+    Sort.Set.toList route.parameters.filterByTitle
         |> List.map FilterTitleFts
         |> Utils.prependMaybe
             (route.parameters.filterByYear

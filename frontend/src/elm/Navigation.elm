@@ -5,9 +5,10 @@ module Navigation exposing
 
 import Data.Cache as Cache
 import Data.Types exposing (..)
+import Data.Utils
 import Dict
 import Route exposing (..)
-import Set
+import Sort.Set
 import String.Extra
 
 
@@ -15,7 +16,7 @@ type Navigation
     = ListOfNavigations (List Navigation)
     | ShowDocument FolderId DocumentId
     | ShowListingWithFolder FolderId
-    | ShowListingWithSearch String FtsSorting
+    | ShowListingWithSearch (Maybe SearchTerm) FtsSorting
     | ShowListingWithFilters Filters
     | SetOffset Int
     | SetLimit Int
@@ -65,11 +66,11 @@ alterRoute cache navigation route =
                         (folderId |> folderIdToInt |> nodeIdFromInt)
             }
 
-        ShowListingWithSearch ftsTerm ftsSorting ->
+        ShowListingWithSearch maybeFtsTerm ftsSorting ->
             { listingRoute
                 | parameters =
                     { parameters
-                        | ftsTerm = ftsTerm
+                        | ftsTerm = maybeFtsTerm
                         , ftsSorting = ftsSorting
                     }
             }
@@ -87,10 +88,10 @@ alterRoute cache navigation route =
 
                                 FilterTitleFts titleSearchTerm ->
                                     ( accuFilterByYear
-                                    , Set.insert titleSearchTerm accuFilterByTitle
+                                    , Sort.Set.insert titleSearchTerm accuFilterByTitle
                                     )
                         )
-                        ( Nothing, Set.empty )
+                        ( Nothing, Data.Utils.setOfSearchTermsInit )
                         (Dict.values filters)
             in
             { listingRoute

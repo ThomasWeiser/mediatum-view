@@ -260,7 +260,7 @@ _GraphQL notation:_
 ftsPage :
     Window
     -> FolderId
-    -> String
+    -> SearchTerm
     -> FtsSorting
     -> Filters
     -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
@@ -269,7 +269,7 @@ ftsPage window folderId searchTerm ftsSorting filters =
         (\optionals ->
             { optionals
                 | folderId = Present (folderIdToInt folderId)
-                , text = Present searchTerm
+                , text = Present (searchTermToString searchTerm)
                 , sorting =
                     Present
                         (case ftsSorting of
@@ -313,7 +313,7 @@ _GraphQL notation:_
 -}
 ftsFolderCounts :
     FolderId
-    -> String
+    -> SearchTerm
     -> FtsSorting
     -> Filters
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
@@ -322,7 +322,7 @@ ftsFolderCounts folderId searchTerm ftsSorting filters =
         (\optionals ->
             { optionals
                 | folderId = Present (folderIdToInt folderId)
-                , text = Present searchTerm
+                , text = Present (searchTermToString searchTerm)
                 , attributeTests =
                     filters
                         |> Query.Filters.toAttributeTests

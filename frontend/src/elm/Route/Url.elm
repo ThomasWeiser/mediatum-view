@@ -10,7 +10,7 @@ import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
 import Range exposing (Range)
 import Route exposing (..)
-import Set
+import Sort.Set
 import String.Extra
 import Url exposing (Url)
 import Url.Builder as Builder
@@ -41,8 +41,8 @@ parserParameters : QueryParser.Parser RouteParameters
 parserParameters =
     QueryParser.map6 RouteParameters
         (QueryParser.string "fts-term"
-            |> queryParserWithDefault ""
-            |> QueryParser.map Data.Utils.cleanSearchTerm
+            |> QueryParser.map
+                (Maybe.andThen Data.Types.searchTermFromString)
         )
         (QueryParser.enum "fts-sorting"
             (Dict.fromList [ ( "by-rank", FtsByRank ), ( "by-date", FtsByDate ) ])
@@ -59,9 +59,9 @@ parserParameters =
                 )
         )
         (QueryParser.custom "filter-by-title"
-            (List.map (Data.Utils.cleanSearchTerm >> String.Extra.nonEmpty)
+            (List.map Data.Types.searchTermFromString
                 >> Maybe.Extra.values
-                >> Set.fromList
+                >> Data.Utils.setOfSearchTermsFromList
             )
         )
         (QueryParser.int "offset"
@@ -110,10 +110,11 @@ toString route =
                 [ id1 |> nodeIdToInt |> String.fromInt, id2 |> nodeIdToInt |> String.fromInt ]
         )
         (Maybe.Extra.values
-            [ buildParameterIfNotDefault
-                (Builder.string "fts-term")
-                ""
-                route.parameters.ftsTerm
+            [ route.parameters.ftsTerm
+                |> Maybe.map
+                    (Data.Types.searchTermToString
+                        >> Builder.string "fts-term"
+                    )
             , buildParameterIfNotDefault
                 (ftsSortingTostring >> Builder.string "fts-sorting")
                 defaultFtsSorting
@@ -132,8 +133,11 @@ toString route =
                 route.parameters.filterByYear
             ]
             ++ (route.parameters.filterByTitle
-                    |> Set.toList
-                    |> List.map (Builder.string "filter-by-title")
+                    |> Sort.Set.toList
+                    |> List.map
+                        (Data.Types.searchTermToString
+                            >> Builder.string "filter-by-title"
+                        )
                )
             ++ Maybe.Extra.values
                 [ buildParameterIfNotDefault
