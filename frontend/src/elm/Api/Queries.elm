@@ -41,6 +41,7 @@ The `elm-graphql` package won't use the fragment notation.
 import Api.Fragments
 import Config
 import Data.Types exposing (..)
+import Data.Types.SearchTerm exposing (SearchTerm)
 import Document
 import Folder
 import GenericNode exposing (GenericNode)
@@ -269,7 +270,7 @@ ftsPage window folderId searchTerm ftsSorting filters =
         (\optionals ->
             { optionals
                 | folderId = Present (folderIdToInt folderId)
-                , text = Present (searchTermToString searchTerm)
+                , text = Present (Data.Types.SearchTerm.toString searchTerm)
                 , sorting =
                     Present
                         (case ftsSorting of
@@ -322,7 +323,7 @@ ftsFolderCounts folderId searchTerm ftsSorting filters =
         (\optionals ->
             { optionals
                 | folderId = Present (folderIdToInt folderId)
-                , text = Present (searchTermToString searchTerm)
+                , text = Present (Data.Types.SearchTerm.toString searchTerm)
                 , attributeTests =
                     filters
                         |> Query.Filters.toAttributeTests

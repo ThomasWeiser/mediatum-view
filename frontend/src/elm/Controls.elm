@@ -10,6 +10,7 @@ module Controls exposing
     )
 
 import Data.Types exposing (Filter(..), Filters, FtsSorting(..))
+import Data.Types.SearchTerm exposing (SearchTerm)
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes
@@ -70,7 +71,7 @@ initialModel route =
                 ""
 
             Just seachTerm ->
-                Data.Types.searchTermToString seachTerm
+                Data.Types.SearchTerm.toString seachTerm
     , ftsSorting = route.parameters.ftsSorting
     , filterEditors = Dict.empty
     }
@@ -148,7 +149,7 @@ update context msg model =
             , Cmd.none
             , Navigate
                 (Navigation.ShowListingWithSearch
-                    (Data.Types.searchTermFromString model.ftsTerm)
+                    (Data.Types.SearchTerm.fromString model.ftsTerm)
                     model.ftsSorting
                 )
             )
@@ -161,13 +162,13 @@ update context msg model =
                             (FilterYearWithin (Range.fromTo ( 2000, 2010 )))
                         |> Filters.insert
                             (FilterTitleFts
-                                (Data.Types.searchTermFromStringWithDefault "no-default-needed" "with")
+                                (Data.Types.SearchTerm.fromStringWithDefault "no-default-needed" "with")
                             )
             in
             ( model
             , Cmd.none
             , [ Navigation.ShowListingWithSearch
-                    (Data.Types.searchTermFromString "variable")
+                    (Data.Types.SearchTerm.fromString "variable")
                     context.route.parameters.ftsSorting
               , Navigation.ShowListingWithFilters
                     filters

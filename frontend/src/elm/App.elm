@@ -16,7 +16,6 @@ import Cmd.Extra
 import Controls
 import Data.Cache as Cache
 import Data.Types exposing (NodeId)
-import Data.Utils
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events

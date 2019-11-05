@@ -1,6 +1,7 @@
 module Tests.Route exposing (fuzzerRoute)
 
-import Data.Types exposing (FtsSorting(..), NodeId, nodeIdFromInt, nodeIdToInt)
+import Data.Types exposing (FtsSorting(..))
+import Data.Types.SearchTerm
 import Data.Utils
 import Fuzz exposing (Fuzzer, int, list, string)
 import List.Nonempty exposing (Nonempty)
@@ -34,7 +35,7 @@ fuzzerRoute =
                 )
             |> Fuzz.andMap
                 (TestUtils.shortList 4 fuzzerSearchTerm
-                    |> Fuzz.map Data.Utils.setOfSearchTermsFromList
+                    |> Fuzz.map Data.Types.SearchTerm.setFromList
                 )
             |> Fuzz.andMap
                 fuzzerOffset

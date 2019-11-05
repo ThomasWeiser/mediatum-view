@@ -1,7 +1,7 @@
 module Tests.Route.Url exposing (suite)
 
-import Data.Types exposing (FtsSorting(..), SearchTerm, nodeIdFromInt, searchTermFromString, searchTermToString)
-import Data.Utils
+import Data.Types exposing (FtsSorting(..), nodeIdFromInt)
+import Data.Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 import Expect exposing (Expectation)
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
@@ -65,7 +65,8 @@ suite =
                         , .parameters >> .ftsTerm >> nothing
                         , .parameters >> .ftsSorting >> Expect.equal Route.defaultFtsSorting
                         , .parameters >> .filterByYear >> nothing
-                        , .parameters >> .filterByTitle >> Expect.equal Data.Utils.setOfSearchTermsInit
+                        , .parameters >> .filterByTitle >> expectEmptySetOfSearchTerms
+                        , .parameters >> .filterByTitle >> Expect.equal Data.Types.SearchTerm.emptySet
                         , Route.Url.toString >> Expect.equal "/123"
                         ]
             , testString "https://example.com/?fts-term=foo" <|
@@ -73,7 +74,7 @@ suite =
                     >> Maybe.andThen Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal Route.NoId
-                        , .parameters >> .ftsTerm >> expectSearchTerm "foo"
+                        , .parameters >> .ftsTerm >> expectJustSearchTerm "foo"
                         , Route.Url.toString >> Expect.equal "/?fts-term=foo"
                         ]
             , testString "https://example.com/?fts-sorting=by-rank" <|
@@ -109,7 +110,7 @@ suite =
                     >> Maybe.andThen Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.TwoIds (nodeIdFromInt 123) (nodeIdFromInt 456))
-                        , .parameters >> .ftsTerm >> expectSearchTerm "foo"
+                        , .parameters >> .ftsTerm >> expectJustSearchTerm "foo"
                         , Route.Url.toString >> Expect.equal "/123/456?fts-term=foo"
                         ]
             , testString "https://example.com/200/?filter-by-year=2001-2011" <|
@@ -154,7 +155,7 @@ suite =
                         >> justAndThenAll
                             [ .path >> Expect.equal Route.NoId
                             , .parameters >> .ftsTerm >> nothing
-                            , .parameters >> .filterByTitle >> Expect.equal Data.Utils.setOfSearchTermsInit
+                            , .parameters >> .filterByTitle >> expectEmptySetOfSearchTerms
                             , Route.Url.toString >> Expect.equal "/"
                             ]
                 ]
@@ -163,7 +164,7 @@ suite =
                     >> Maybe.andThen Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId (nodeIdFromInt 789))
-                        , .parameters >> .ftsTerm >> expectSearchTerm "foo bar"
+                        , .parameters >> .ftsTerm >> expectJustSearchTerm "foo bar"
                         , Route.Url.toString >> Expect.equal "/789?fts-term=foo%20bar"
                         ]
             , testString "https://example.com/789/?filter-by-title=%20foo%20&filter-by-year=2001-2011&filter-by-title=\"bar%20%20baz\"" <|
@@ -175,12 +176,7 @@ suite =
                         , .parameters >> .filterByYear >> Expect.equal (Just (Range.FromTo 2001 2011))
                         , .parameters
                             >> .filterByTitle
-                            >> Expect.equal
-                                ([ "\"bar baz\"", "foo" ]
-                                    |> List.map searchTermFromString
-                                    |> Maybe.Extra.values
-                                    |> Data.Utils.setOfSearchTermsFromList
-                                )
+                            >> expectSetOfSearchTerms [ "\"bar baz\"", "foo" ]
                         , Route.Url.toString >> Expect.equal "/789?filter-by-year=2001-2011&filter-by-title=%22bar%20baz%22&filter-by-title=foo"
                         ]
 
@@ -211,7 +207,21 @@ suite =
         ]
 
 
-expectSearchTerm : String -> Maybe SearchTerm -> Expectation
-expectSearchTerm expectedString =
+expectJustSearchTerm : String -> Maybe SearchTerm -> Expectation
+expectJustSearchTerm expectedString =
     justAndThen
-        (searchTermToString >> Expect.equal expectedString)
+        (Data.Types.SearchTerm.toString >> Expect.equal expectedString)
+
+
+expectEmptySetOfSearchTerms : SetOfSearchTerms -> Expectation
+expectEmptySetOfSearchTerms =
+    Data.Types.SearchTerm.setIsEmpty >> Expect.true "Expected empty set of search terms."
+
+
+expectSetOfSearchTerms : List String -> SetOfSearchTerms -> Expectation
+expectSetOfSearchTerms listOfStrings =
+    listOfStrings
+        |> List.map Data.Types.SearchTerm.fromString
+        |> Maybe.Extra.values
+        |> Data.Types.SearchTerm.setFromList
+        |> Expect.equal

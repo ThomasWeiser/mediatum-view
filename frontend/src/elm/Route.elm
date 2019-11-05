@@ -9,10 +9,9 @@ module Route exposing
     )
 
 import Data.Ordering
-import Data.Types exposing (FtsSorting(..), NodeId, SearchTerm)
-import Data.Utils
+import Data.Types exposing (FtsSorting(..), NodeId)
+import Data.Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 import Range exposing (Range)
-import Sort.Set
 
 
 defaultLimit : Int
@@ -41,7 +40,7 @@ type alias RouteParameters =
     { ftsTerm : Maybe SearchTerm
     , ftsSorting : FtsSorting
     , filterByYear : Maybe (Range Int)
-    , filterByTitle : Sort.Set.Set SearchTerm
+    , filterByTitle : SetOfSearchTerms
     , offset : Int
     , limit : Int
     }
@@ -67,7 +66,7 @@ emptyParameters =
     { ftsTerm = Nothing
     , ftsSorting = defaultFtsSorting
     , filterByYear = Nothing
-    , filterByTitle = Data.Utils.setOfSearchTermsInit
+    , filterByTitle = Data.Types.SearchTerm.emptySet
     , offset = 0
     , limit = defaultLimit
     }

@@ -5,10 +5,9 @@ module Navigation exposing
 
 import Data.Cache as Cache
 import Data.Types exposing (..)
-import Data.Utils
+import Data.Types.SearchTerm exposing (SearchTerm)
 import Dict
 import Route exposing (..)
-import Sort.Set
 import String.Extra
 
 
@@ -88,10 +87,10 @@ alterRoute cache navigation route =
 
                                 FilterTitleFts titleSearchTerm ->
                                     ( accuFilterByYear
-                                    , Sort.Set.insert titleSearchTerm accuFilterByTitle
+                                    , Data.Types.SearchTerm.setInsert titleSearchTerm accuFilterByTitle
                                     )
                         )
-                        ( Nothing, Data.Utils.setOfSearchTermsInit )
+                        ( Nothing, Data.Types.SearchTerm.emptySet )
                         (Dict.values filters)
             in
             { listingRoute

@@ -8,11 +8,11 @@ module Query.Filters exposing
     )
 
 import Data.Types exposing (Filter(..), Filters)
+import Data.Types.SearchTerm
 import Dict exposing (Dict)
 import Query.Attribute
 import Query.Filter as Filter
 import Route exposing (Route)
-import Sort.Set
 import Utils
 
 
@@ -44,7 +44,8 @@ toAttributeTests filters =
 
 filtersFromRoute : Route -> Filters
 filtersFromRoute route =
-    Sort.Set.toList route.parameters.filterByTitle
+    route.parameters.filterByTitle
+        |> Data.Types.SearchTerm.setToList
         |> List.map FilterTitleFts
         |> Utils.prependMaybe
             (route.parameters.filterByYear

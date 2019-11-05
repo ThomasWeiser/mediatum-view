@@ -6,7 +6,6 @@ module Data.Ordering exposing
     , orderingFtsSorting
     , orderingNodeId
     , orderingSearchMethod
-    , orderingSearchTerm
     , orderingSelection
     , orderingSelectionWindow
     , orderingStringFilter
@@ -15,6 +14,7 @@ module Data.Ordering exposing
     )
 
 import Data.Types exposing (..)
+import Data.Types.SearchTerm as SearchTerm exposing (SearchTerm)
 import Dict
 import Ordering exposing (..)
 import Range exposing (Range)
@@ -74,7 +74,7 @@ orderingSearchMethod =
                 ( searchMethodL, searchMethodR )
             of
                 ( SelectByFullTextSearch searchTermL ftsSortingL, SelectByFullTextSearch searchTermR ftsSortingR ) ->
-                    orderingSearchTerm searchTermL searchTermR
+                    SearchTerm.ordering searchTermL searchTermR
                         |> Ordering.ifStillTiedThen
                             (orderingFtsSorting ftsSortingL ftsSortingR)
 
@@ -122,7 +122,7 @@ orderingFilter =
                     Range.compare range1 range2
 
                 ( FilterTitleFts sL, FilterTitleFts sR ) ->
-                    orderingSearchTerm sL sR
+                    SearchTerm.ordering sL sR
 
                 _ ->
                     Ordering.noConflicts
@@ -134,8 +134,3 @@ orderingWindow =
     Ordering.byField .offset
         |> Ordering.breakTiesWith
             (Ordering.byField .limit)
-
-
-orderingSearchTerm : Ordering SearchTerm
-orderingSearchTerm =
-    Ordering.byField searchTermToString

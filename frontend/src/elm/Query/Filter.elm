@@ -12,7 +12,7 @@ module Query.Filter exposing
 
 import Basics.Extra
 import Data.Types exposing (Filter(..))
-import Data.Utils
+import Data.Types.SearchTerm
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -59,7 +59,7 @@ controlsFromFilter filter =
                 (Range.toMaybe range)
 
         FilterTitleFts searchTerm ->
-            ControlsTitleFts (Data.Types.searchTermToString searchTerm)
+            ControlsTitleFts (Data.Types.SearchTerm.toString searchTerm)
 
 
 controlsToFilter : Controls -> Maybe Filter
@@ -71,7 +71,7 @@ controlsToFilter controls =
 
         ControlsTitleFts searchTerm ->
             searchTerm
-                |> Data.Types.searchTermFromString
+                |> Data.Types.SearchTerm.fromString
                 |> Maybe.map FilterTitleFts
 
 
@@ -82,7 +82,7 @@ handle filter =
             "YearWithin"
 
         FilterTitleFts searchTerm ->
-            "TitleFts-" ++ Data.Types.searchTermToString searchTerm
+            "TitleFts-" ++ Data.Types.SearchTerm.toString searchTerm
 
 
 toAttributeTest : Filter -> Query.Attribute.Test
@@ -99,7 +99,7 @@ toAttributeTest filter =
             { key = "title"
             , operation =
                 Query.Attribute.SimpleFts
-                    (Data.Types.searchTermToString searchTerm)
+                    (Data.Types.SearchTerm.toString searchTerm)
             }
 
 
@@ -131,7 +131,7 @@ view filter =
 
         FilterTitleFts searchTerm ->
             [ Html.text "Title: "
-            , quote (Data.Types.searchTermToString searchTerm)
+            , quote (Data.Types.SearchTerm.toString searchTerm)
             ]
 
 

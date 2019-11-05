@@ -8,7 +8,6 @@ module Presentation exposing
 
 import Data.Cache as Cache
 import Data.Types exposing (..)
-import Data.Utils
 import Dict
 import Document
 import Folder

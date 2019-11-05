@@ -4,13 +4,12 @@ module Route.Url exposing
     )
 
 import Data.Types exposing (FtsSorting(..), NodeId, nodeIdFromInt, nodeIdToInt)
-import Data.Utils
+import Data.Types.SearchTerm
 import Dict
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
 import Range exposing (Range)
 import Route exposing (..)
-import Sort.Set
 import String.Extra
 import Url exposing (Url)
 import Url.Builder as Builder
@@ -42,7 +41,7 @@ parserParameters =
     QueryParser.map6 RouteParameters
         (QueryParser.string "fts-term"
             |> QueryParser.map
-                (Maybe.andThen Data.Types.searchTermFromString)
+                (Maybe.andThen Data.Types.SearchTerm.fromString)
         )
         (QueryParser.enum "fts-sorting"
             (Dict.fromList [ ( "by-rank", FtsByRank ), ( "by-date", FtsByDate ) ])
@@ -59,9 +58,9 @@ parserParameters =
                 )
         )
         (QueryParser.custom "filter-by-title"
-            (List.map Data.Types.searchTermFromString
+            (List.map Data.Types.SearchTerm.fromString
                 >> Maybe.Extra.values
-                >> Data.Utils.setOfSearchTermsFromList
+                >> Data.Types.SearchTerm.setFromList
             )
         )
         (QueryParser.int "offset"
@@ -112,7 +111,7 @@ toString route =
         (Maybe.Extra.values
             [ route.parameters.ftsTerm
                 |> Maybe.map
-                    (Data.Types.searchTermToString
+                    (Data.Types.SearchTerm.toString
                         >> Builder.string "fts-term"
                     )
             , buildParameterIfNotDefault
@@ -133,9 +132,9 @@ toString route =
                 route.parameters.filterByYear
             ]
             ++ (route.parameters.filterByTitle
-                    |> Sort.Set.toList
+                    |> Data.Types.SearchTerm.setToList
                     |> List.map
-                        (Data.Types.searchTermToString
+                        (Data.Types.SearchTerm.toString
                             >> Builder.string "filter-by-title"
                         )
                )

@@ -17,6 +17,7 @@ module Tests.Data.Types exposing
 
 import Basics.Extra
 import Data.Types exposing (..)
+import Data.Types.SearchTerm exposing (SearchTerm)
 import Dict
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer)
@@ -163,7 +164,7 @@ fuzzerSearchTerm =
         , Fuzz.string
         ]
         |> Fuzz.map
-            (Data.Types.searchTermFromStringWithDefault "baz")
+            (Data.Types.SearchTerm.fromStringWithDefault "baz")
 
 
 {-| A fuzzer for numbers representing years,
