@@ -176,8 +176,8 @@ suite =
                         , .parameters >> .filterByYear >> Expect.equal (Just (Range.FromTo 2001 2011))
                         , .parameters
                             >> .filterByTitle
-                            >> expectSetOfSearchTerms [ "\"bar baz\"", "foo" ]
-                        , Route.Url.toString >> Expect.equal "/789?filter-by-year=2001-2011&filter-by-title=%22bar%20baz%22&filter-by-title=foo"
+                            >> expectSetOfSearchTerms [ "foo", "\"bar baz\"" ]
+                        , Route.Url.toString >> Expect.equal "/789?filter-by-year=2001-2011&filter-by-title=foo&filter-by-title=%22bar%20baz%22"
                         ]
 
             {- I guess percent-coding should work within the path, but it doesn't
