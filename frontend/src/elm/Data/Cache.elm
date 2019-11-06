@@ -445,10 +445,10 @@ update msg model =
             , Cmd.none
             )
 
-        ApiResponseSubfolder listOfParentFolders (Ok listOfSubfolders) ->
+        ApiResponseSubfolder parentIds (Ok listOfSubfolders) ->
             ( model
                 |> insertAsFolders listOfSubfolders
-                |> insertAsSubfolderIds listOfParentFolders listOfSubfolders
+                |> insertAsSubfolderIds parentIds listOfSubfolders
                 |> insertFoldersAsNodeTypes listOfSubfolders
             , Cmd.none
             )
@@ -507,50 +507,26 @@ update msg model =
             , Cmd.none
             )
 
-        ApiResponseDocument documentId (Ok maybeDocument) ->
+        ApiResponseDocument documentId result ->
             ( { model
                 | documents =
-                    Sort.Dict.insert documentId (Success maybeDocument) model.documents
+                    Sort.Dict.insert documentId (RemoteData.fromResult result) model.documents
               }
             , Cmd.none
             )
 
-        ApiResponseDocument documentId (Err error) ->
-            ( { model
-                | documents =
-                    Sort.Dict.insert documentId (Failure error) model.documents
-              }
-            , Cmd.none
-            )
-
-        ApiResponseDocumentsPage selectionAndWindow (Ok documentsPage) ->
+        ApiResponseDocumentsPage selectionAndWindow result ->
             ( { model
                 | documentsPages =
-                    Sort.Dict.insert selectionAndWindow (Success documentsPage) model.documentsPages
+                    Sort.Dict.insert selectionAndWindow (RemoteData.fromResult result) model.documentsPages
               }
             , Cmd.none
             )
 
-        ApiResponseDocumentsPage selectionAndWindow (Err error) ->
-            ( { model
-                | documentsPages =
-                    Sort.Dict.insert selectionAndWindow (Failure error) model.documentsPages
-              }
-            , Cmd.none
-            )
-
-        ApiResponseFolderCounts selection (Ok folderCounts) ->
+        ApiResponseFolderCounts selection result ->
             ( { model
                 | folderCounts =
-                    Sort.Dict.insert selection (Success folderCounts) model.folderCounts
-              }
-            , Cmd.none
-            )
-
-        ApiResponseFolderCounts selection (Err error) ->
-            ( { model
-                | folderCounts =
-                    Sort.Dict.insert selection (Failure error) model.folderCounts
+                    Sort.Dict.insert selection (RemoteData.fromResult result) model.folderCounts
               }
             , Cmd.none
             )
