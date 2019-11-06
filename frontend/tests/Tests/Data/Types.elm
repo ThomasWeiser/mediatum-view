@@ -8,7 +8,6 @@ module Tests.Data.Types exposing
     , fuzzerNodeId
     , fuzzerOffset
     , fuzzerSearchMethod
-    , fuzzerSearchTerm
     , fuzzerSelection
     , fuzzerSelectionWindow
     , fuzzerWindow
@@ -24,6 +23,7 @@ import Fuzz exposing (Fuzzer)
 import String.Extra
 import Test exposing (..)
 import TestUtils exposing (..)
+import Tests.Data.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Tests.Range
 
 
@@ -138,33 +138,6 @@ fuzzerLimit =
         , ( 5, Fuzz.constant 50 )
         , ( 30, Fuzz.intRange 0 200 )
         ]
-
-
-{-| A fuzzer for canonical search terms,
-i.e. without whitespace at the left and the right
-and without repeated whitespace within the string.
-
-It generates some common search string formats as well as random search strings.
-
--}
-fuzzerSearchTerm : Fuzzer SearchTerm
-fuzzerSearchTerm =
-    Fuzz.oneOf
-        [ [ "foo"
-          , "foo bar"
-          , "\"foo\""
-          , "\"foo bar\""
-          , "\"foo bar\" baz"
-          , "-foo"
-          , "foo -bar -baz"
-          , "-\"foo bar\" baz"
-          ]
-            |> List.map Fuzz.constant
-            |> Fuzz.oneOf
-        , Fuzz.string
-        ]
-        |> Fuzz.map
-            (Data.Types.SearchTerm.fromStringWithDefault "baz")
 
 
 {-| A fuzzer for numbers representing years,

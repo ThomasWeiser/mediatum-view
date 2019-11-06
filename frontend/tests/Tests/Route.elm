@@ -10,6 +10,7 @@ import Set
 import String.Extra
 import TestUtils exposing (..)
 import Tests.Data.Types exposing (..)
+import Tests.Data.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Tests.Range
 
 

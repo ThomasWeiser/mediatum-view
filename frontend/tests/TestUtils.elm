@@ -1,5 +1,6 @@
 module TestUtils exposing
-    ( just
+    ( fixpoint
+    , just
     , justAndThen
     , justAndThenAll
     , nothing
@@ -70,6 +71,13 @@ just maybeSubject =
 nothing : Maybe subject -> Expectation
 nothing maybeSubject =
     Expect.equal Nothing maybeSubject
+
+
+{-| Passes if the value maps to itself.
+-}
+fixpoint : (a -> a) -> a -> Expectation
+fixpoint mapping subject =
+    Expect.equal subject (mapping subject)
 
 
 {-| Given a fuzzer of a type, create a fuzzer of a list of that type.
