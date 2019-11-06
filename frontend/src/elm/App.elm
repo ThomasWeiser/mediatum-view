@@ -27,7 +27,6 @@ import Presentation exposing (Presentation(..))
 import Query.Filters
 import RemoteData
 import Route exposing (Route)
-import Sort.Dict
 import Tree
 import Utils
 

@@ -59,7 +59,7 @@ type alias Model =
     , nodeTypes : Sort.Dict.Dict NodeId (ApiData NodeType)
     , documents : Sort.Dict.Dict DocumentId (ApiData (Maybe Document))
     , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
-    , folderCounts : Sort.Dict.Dict Selection (ApiData (Sort.Dict.Dict FolderId Int))
+    , folderCounts : Sort.Dict.Dict Selection (ApiData FolderCounts)
     }
 
 
