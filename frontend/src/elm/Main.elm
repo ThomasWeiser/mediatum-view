@@ -28,8 +28,7 @@ main =
 
 
 type Msg
-    = NoOp
-    | UrlRequest Browser.UrlRequest
+    = UrlRequest Browser.UrlRequest
     | UrlChanged Url.Url
     | AppMsg App.Msg
 
@@ -52,9 +51,6 @@ init flags url navigationKey =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         UrlRequest urlRequest ->
             case urlRequest of
                 Browser.Internal url ->

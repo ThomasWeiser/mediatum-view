@@ -390,7 +390,6 @@ requestNeeds needs model =
                             Api.Queries.ftsFolderCounts
                                 selection.scope
                                 searchTerm
-                                ftsSorting
                                 selection.filters
                     )
                 )

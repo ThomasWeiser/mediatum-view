@@ -2,7 +2,6 @@ module Presentation exposing
     ( Presentation(..)
     , fromRoute
     , getFolderId
-    , toRoute
     )
 
 import Data.Cache as Cache
@@ -126,10 +125,3 @@ searchMethodFromRoute route =
             SelectByFullTextSearch
                 ftsTerm
                 route.parameters.ftsSorting
-
-
-toRoute : Presentation -> Route
-toRoute presentation =
-    -- TODO: implement
-    -- TODO: really needed? Possibly only for testing?
-    Route.home

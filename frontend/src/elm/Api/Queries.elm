@@ -312,10 +312,9 @@ _GraphQL notation:_
 ftsFolderCounts :
     FolderId
     -> SearchTerm
-    -> FtsSorting
     -> Filters
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-ftsFolderCounts folderId searchTerm ftsSorting filters =
+ftsFolderCounts folderId searchTerm filters =
     Mediatum.Query.ftsDocumentsDocset
         (\optionals ->
             { optionals
