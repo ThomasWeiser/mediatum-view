@@ -1,7 +1,4 @@
-module DocumentResult exposing
-    ( init
-    , view
-    )
+module DocumentResult exposing (init)
 
 import Data.Types exposing (Document, DocumentId, DocumentResult)
 import Document
@@ -21,11 +18,3 @@ init number distance document =
     , distance = distance
     , document = document
     }
-
-
-view : (DocumentId -> msg) -> DocumentResult -> Html msg
-view clickMsg documentResult =
-    Document.view
-        clickMsg
-        (Just documentResult.number)
-        documentResult.document

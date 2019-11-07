@@ -11,7 +11,6 @@ module Api.Mutations exposing (updateDocumentAttribute)
 
 import Api.Fragments
 import Data.Types exposing (..)
-import Document
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)

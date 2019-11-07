@@ -3,13 +3,11 @@ module Presentation exposing
     , fromRoute
     , getFolderId
     , toRoute
-    , view
     )
 
 import Data.Cache as Cache
 import Data.Types exposing (..)
 import Dict
-import Document
 import Folder
 import Html exposing (Html)
 import List.Extra
@@ -145,9 +143,3 @@ toRoute presentation =
     -- TODO: implement
     -- TODO: really needed? Possibly only for testing?
     Route.home
-
-
-view : Presentation -> Html Never
-view presentation =
-    -- TODO: needed? Possibly handy in some form for UX.
-    Html.text ""

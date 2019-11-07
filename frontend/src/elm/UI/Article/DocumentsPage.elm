@@ -21,8 +21,10 @@ import Html.Events
 import Icons
 import Maybe.Extra
 import Navigation exposing (Navigation)
+import Regex
 import RemoteData
 import Route
+import Route.Url
 import Utils
 
 
@@ -173,28 +175,104 @@ view context model =
         ]
 
 
-
-{-
-   Just iterator ->
-       [ Iterator.view
-           (iteratorContext context model)
-           iterator
-           |> Html.map IteratorMsg
-       ]
--}
-
-
 viewDocumentsPage : DocumentsPage -> Html Msg
 viewDocumentsPage documentsPage =
     Html.div []
         [ -- viewNumberOfResults page,
           Html.div []
             (List.map
-                (DocumentResult.view SelectDocument)
+                viewDocumentResult
                 documentsPage.content
             )
         , viewPaginationButtons documentsPage
         ]
+
+
+viewDocumentResult : DocumentResult -> Html Msg
+viewDocumentResult documentResult =
+    viewDocument
+        documentResult.number
+        documentResult.document
+
+
+viewDocument : Int -> Document -> Html Msg
+viewDocument number document =
+    Html.div [ Html.Attributes.class "document" ]
+        [ Html.div [ Html.Attributes.class "metadatatype" ]
+            [ Html.span [ Html.Attributes.class "result-number" ]
+                [ Html.text <| String.fromInt number ++ ". " ]
+            , Html.a
+                [ Html.Attributes.class "metadatatype"
+                , document.id
+                    |> Data.Types.documentIdToInt
+                    |> Data.Types.nodeIdFromInt
+                    |> Route.fromOneId
+                    |> Route.Url.toString
+                    |> Html.Attributes.href
+                ]
+                [ Html.text document.metadatatypeName ]
+            ]
+        , Html.div
+            [ Html.Attributes.class "attributes"
+            , Html.Events.onClick (SelectDocument document.id)
+            ]
+            (List.map
+                viewAttribute
+                document.attributes
+            )
+        ]
+
+
+maxAttributeStringLength : Int
+maxAttributeStringLength =
+    80
+
+
+viewAttribute : DocumentAttribute -> Html msg
+viewAttribute attribute =
+    let
+        isField regexString =
+            Regex.contains
+                (Maybe.withDefault Regex.never (Regex.fromString regexString))
+                attribute.field
+    in
+    case attribute.value of
+        Just valueLong ->
+            let
+                value =
+                    if String.length valueLong > maxAttributeStringLength then
+                        String.left (maxAttributeStringLength - 3) valueLong ++ "..."
+
+                    else
+                        valueLong
+            in
+            Html.span
+                [ Html.Attributes.classList
+                    [ ( "attribute", True )
+                    , ( "author", isField "author" )
+                    , ( "title"
+                      , isField "title"
+                            && not (isField "congress|journal")
+                      )
+                    ]
+                , Html.Attributes.title (attribute.name ++ ": " ++ valueLong)
+                ]
+                [ Html.text <|
+                    if isField "year" then
+                        String.left 4 value ++ ". "
+
+                    else if isField "author" then
+                        value ++ ": "
+
+                    else if isField "title|type" then
+                        value ++ ". "
+
+                    else
+                        attribute.name ++ ": " ++ value ++ ". "
+                ]
+
+        Nothing ->
+            Html.text ""
 
 
 viewPaginationButtons : DocumentsPage -> Html Msg

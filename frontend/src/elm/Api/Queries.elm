@@ -42,7 +42,6 @@ import Api.Fragments
 import Config
 import Data.Types exposing (..)
 import Data.Types.SearchTerm exposing (SearchTerm)
-import Document
 import Folder
 import GenericNode exposing (GenericNode)
 import Graphql.Operation

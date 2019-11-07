@@ -18,6 +18,7 @@ import Folder
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Icons
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 import Presentation exposing (Presentation(..))
@@ -160,7 +161,7 @@ viewListOfFolders context model maybeFolderCounts folderIds =
         List.map
             (\id ->
                 Html.li []
-                    [ viewFolder context model maybeFolderCounts id ]
+                    [ viewFolderTree context model maybeFolderCounts id ]
             )
             folderIds
 
@@ -173,8 +174,8 @@ viewListOfFoldersLoading =
         ]
 
 
-viewFolder : Context -> Model -> Maybe FolderCounts -> FolderId -> Html Msg
-viewFolder context model maybeFolderCounts id =
+viewFolderTree : Context -> Model -> Maybe FolderCounts -> FolderId -> Html Msg
+viewFolderTree context model maybeFolderCounts id =
     case Cache.get context.cache.folders id of
         RemoteData.Success folder ->
             let
@@ -192,7 +193,7 @@ viewFolder context model maybeFolderCounts id =
             Html.div []
                 [ Html.div
                     [ Html.Events.onClick (Select id) ]
-                    [ Folder.view
+                    [ viewFolderLine
                         folder
                         (maybeFolderCounts
                             |> Maybe.andThen (Sort.Dict.get folder.id)
@@ -214,6 +215,42 @@ viewFolder context model maybeFolderCounts id =
 
         noSuccess ->
             Html.text (Debug.toString noSuccess)
+
+
+viewFolderLine : Folder -> Maybe Int -> Bool -> Bool -> Html msg
+viewFolderLine folder maybeCount selected expanded =
+    Html.div
+        [ Html.Attributes.classList
+            [ ( "folder-head", True )
+            , ( "collection", folder.type_ == Data.Types.FolderIsCollection )
+            , ( "directory", folder.type_ == Data.Types.FolderIsDirectory )
+            , ( "collapsed", Folder.hasSubfolder folder && not expanded )
+            , ( "expanded", Folder.hasSubfolder folder && expanded )
+            , ( "leaf", not (Folder.hasSubfolder folder) )
+            , ( "selected", selected )
+            ]
+        ]
+        ([ if Folder.hasSubfolder folder then
+            Icons.expando
+
+           else
+            Icons.leaf
+         , Html.span
+            [ Html.Attributes.class "folder-name" ]
+            [ Html.text folder.name ]
+         ]
+            ++ (case maybeCount of
+                    Nothing ->
+                        []
+
+                    Just count ->
+                        [ Html.text " "
+                        , Html.span
+                            [ Html.Attributes.class "folder-count" ]
+                            [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
+                        ]
+               )
+        )
 
 
 viewBreadcrumbs : Context -> Model -> Maybe FolderId -> Html msg

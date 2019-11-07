@@ -9,10 +9,6 @@ module UI.Article exposing
     , view
     )
 
-import UI.Article.Collection
-import UI.Article.Details
-import UI.Article.DocumentsPage
-import UI.Article.Generic
 import Data.Cache as Cache exposing (ApiData)
 import Data.Types exposing (..)
 import Data.Utils
@@ -23,6 +19,10 @@ import Presentation exposing (Presentation(..))
 import Query.Filter
 import Query.Filters
 import RemoteData
+import UI.Article.Collection
+import UI.Article.Details
+import UI.Article.DocumentsPage
+import UI.Article.Generic
 import UI.Tree
 import Utils
 
@@ -212,8 +212,6 @@ view tree context model =
                 tree
                 (Presentation.getFolderId context.cache context.presentation)
             ]
-        , Presentation.view context.presentation
-            |> Html.map never
         , viewContent context model
         ]
 
