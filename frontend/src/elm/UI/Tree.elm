@@ -11,6 +11,7 @@ module UI.Tree exposing
     )
 
 import Data.Cache as Cache exposing (ApiData)
+import Data.Derive
 import Data.Types exposing (Folder, FolderCounts, FolderId)
 import Folder
 import Html exposing (Html)
@@ -55,7 +56,7 @@ initialModel =
 needs : Context -> Model -> Cache.Needs
 needs context model =
     getPresentationFolderId context
-        |> getPathAsFarAsCached context.cache
+        |> Data.Derive.getPathAsFarAsCached context.cache
         |> Cache.NeedSubfolders
 
 
@@ -90,53 +91,6 @@ update context msg model =
 getPresentationFolderId : Context -> Maybe FolderId
 getPresentationFolderId context =
     Presentation.getFolderId context.cache context.presentation
-
-
-getParentId : Cache.Model -> FolderId -> ApiData (Maybe FolderId)
-getParentId cache id =
-    Cache.get cache.folders id
-        |> RemoteData.map .parent
-
-
-getPath : Cache.Model -> FolderId -> ApiData (List FolderId)
-getPath cache id =
-    getParentId cache id
-        |> RemoteData.andThen
-            (Maybe.Extra.unwrap
-                (RemoteData.Success [ id ])
-                (getPath cache
-                    >> RemoteData.map ((::) id)
-                )
-            )
-
-
-getPathAsFarAsCached : Cache.Model -> Maybe FolderId -> List FolderId
-getPathAsFarAsCached cache =
-    Maybe.Extra.unwrap
-        []
-        (\id ->
-            id
-                :: (getParentId cache id
-                        |> RemoteData.toMaybe
-                        |> Maybe.Extra.join
-                        |> getPathAsFarAsCached cache
-                   )
-        )
-
-
-isOnPath : Cache.Model -> FolderId -> Maybe FolderId -> Bool
-isOnPath cache requestedId =
-    Maybe.Extra.unwrap
-        False
-        (\pathId ->
-            (requestedId == pathId)
-                || isOnPath cache
-                    requestedId
-                    (getParentId cache pathId
-                        |> RemoteData.toMaybe
-                        |> Maybe.Extra.join
-                    )
-        )
 
 
 view : Context -> Model -> Maybe FolderCounts -> Html Msg
@@ -185,7 +139,7 @@ viewFolderTree context model maybeFolderCounts id =
                 expanded =
                     Folder.isRoot folder
                         || (model.collapsedPresentationFolder /= Just id)
-                        && isOnPath context.cache id presentationFolderId
+                        && Data.Derive.isOnPath context.cache id presentationFolderId
             in
             Html.div []
                 [ Html.div
@@ -258,7 +212,7 @@ viewBreadcrumbs context model maybeFolderId =
                 [ Html.text "(no specific path)" ]
 
             Just folderId ->
-                getPath context.cache folderId
+                Data.Derive.getPath context.cache folderId
                     |> RemoteData.unwrap
                         [ Html.text "..." ]
                         (List.reverse
