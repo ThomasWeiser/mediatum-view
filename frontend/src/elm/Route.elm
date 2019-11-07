@@ -8,7 +8,6 @@ module Route exposing
     , home
     )
 
-import Data.Ordering
 import Data.Types exposing (FtsSorting(..), NodeId)
 import Data.Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 import Range exposing (Range)

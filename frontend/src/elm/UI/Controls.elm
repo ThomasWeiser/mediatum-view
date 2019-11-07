@@ -10,14 +10,12 @@ module UI.Controls exposing
     )
 
 import Data.Types exposing (Filter(..), Filters, FtsSorting(..))
-import Data.Types.SearchTerm exposing (SearchTerm)
+import Data.Types.SearchTerm
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
-import List.Extra
-import Maybe.Extra
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation)
 import Query.Filter as Filter

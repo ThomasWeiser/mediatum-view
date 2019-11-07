@@ -3,14 +3,13 @@ module Route.Url exposing
     , toString
     )
 
-import Data.Types exposing (FtsSorting(..), NodeId, nodeIdFromInt, nodeIdToInt)
+import Data.Types exposing (FtsSorting(..), nodeIdFromInt, nodeIdToInt)
 import Data.Types.SearchTerm
 import Dict
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
-import Range exposing (Range)
+import Range
 import Route exposing (..)
-import String.Extra
 import Url exposing (Url)
 import Url.Builder as Builder
 import Url.Parser as Parser exposing ((</>), (<?>), Parser)

@@ -5,10 +5,7 @@ module Folder exposing
     , isRoot
     )
 
-import Data.Types exposing (Folder, FolderCounts, FolderId, FolderType)
-import Dict exposing (Dict)
-import Html exposing (Html)
-import Html.Attributes
+import Data.Types exposing (Folder, FolderId, FolderType)
 
 
 dummy : Folder

@@ -29,7 +29,6 @@ import Data.Types.SearchTerm exposing (SearchTerm)
 import Dict
 import Range exposing (Range)
 import Sort.Dict
-import String.Extra
 
 
 type NodeId

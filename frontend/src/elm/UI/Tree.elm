@@ -10,8 +10,6 @@ module UI.Tree exposing
     , viewBreadcrumbs
     )
 
-import Api
-import Api.Queries
 import Data.Cache as Cache exposing (ApiData)
 import Data.Types exposing (Folder, FolderCounts, FolderId)
 import Folder
@@ -19,7 +17,6 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
-import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 import Presentation exposing (Presentation(..))
 import RemoteData

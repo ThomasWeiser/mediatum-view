@@ -8,14 +8,13 @@ module Query.FilterEditor exposing
     )
 
 import Browser.Dom
-import Data.Types exposing (Filter(..), Filters)
+import Data.Types exposing (Filter(..))
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Query.Filter as Filter exposing (Controls(..))
 import Task
 import Time
-import Utils
 
 
 type Return

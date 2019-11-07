@@ -10,7 +10,7 @@ module Query.Filters exposing
 
 import Data.Types exposing (Filter(..), Filters)
 import Data.Types.SearchTerm
-import Dict exposing (Dict)
+import Dict
 import Query.Attribute
 import Query.Filter as Filter
 import Route exposing (Route)

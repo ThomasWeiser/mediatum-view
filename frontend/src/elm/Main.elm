@@ -3,9 +3,7 @@ module Main exposing (main)
 import App
 import Browser
 import Browser.Navigation
-import Html exposing (Html)
-import Html.Attributes
-import Html.Events
+import Html
 import Route
 import Route.Url
 import Url exposing (Url)

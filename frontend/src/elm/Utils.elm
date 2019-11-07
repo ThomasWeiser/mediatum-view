@@ -48,7 +48,7 @@ tupleAddThird c ( a, b ) =
 
 
 tupleRemoveThird : ( a, b, c ) -> ( a, b )
-tupleRemoveThird ( a, b, c ) =
+tupleRemoveThird ( a, b, _ ) =
     ( a, b )
 
 

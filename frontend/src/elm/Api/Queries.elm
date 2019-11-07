@@ -42,7 +42,6 @@ import Api.Fragments
 import Config
 import Data.Types exposing (..)
 import Data.Types.SearchTerm exposing (SearchTerm)
-import Folder
 import GenericNode exposing (GenericNode)
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
@@ -52,7 +51,6 @@ import Mediatum.Enum.FtsSorting
 import Mediatum.Object.FoldersConnection
 import Mediatum.Object.GenericNode
 import Mediatum.Query
-import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination

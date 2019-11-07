@@ -9,7 +9,7 @@ module UI.Article.Iterator exposing
     )
 
 import Article.Details as Details
-import Data.Cache as Cache exposing (ApiData)
+import Data.Cache as Cache
 import Data.Types exposing (Document, DocumentId, Folder)
 import Html exposing (Html)
 import Html.Attributes

@@ -4,9 +4,6 @@ module Document exposing
     )
 
 import Data.Types exposing (Document, DocumentAttribute, DocumentId)
-import Html exposing (Html)
-import Html.Attributes
-import Html.Events
 import List.Extra
 
 

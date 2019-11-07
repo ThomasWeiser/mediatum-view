@@ -15,11 +15,9 @@ import Data.Types exposing (Filter(..))
 import Data.Types.SearchTerm
 import Html exposing (Html)
 import Html.Attributes
-import Html.Events
 import Maybe.Extra
 import Query.Attribute
-import Range exposing (Range)
-import String.Extra
+import Range
 import Utils
 
 

@@ -11,21 +11,18 @@ module UI.Article.DocumentsPage exposing
 -- import Pagination.Offset.Page as Page exposing (Page, PageResult)
 
 import Api
-import Data.Cache as Cache exposing (ApiData)
+import Data.Cache as Cache
 import Data.Types exposing (..)
-import DocumentResult
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
-import Maybe.Extra
 import Navigation exposing (Navigation)
 import Regex
 import RemoteData
 import Route
 import Route.Url
-import Utils
 
 
 type alias Context =

@@ -14,10 +14,10 @@ module Data.Ordering exposing
     )
 
 import Data.Types exposing (..)
-import Data.Types.SearchTerm as SearchTerm exposing (SearchTerm)
+import Data.Types.SearchTerm as SearchTerm
 import Dict
 import Ordering exposing (..)
-import Range exposing (Range)
+import Range
 import Sort exposing (Sorter)
 import Utils
 

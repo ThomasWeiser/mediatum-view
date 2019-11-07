@@ -10,8 +10,7 @@ module UI.Article.Details exposing
 
 import Api
 import Api.Mutations
-import Api.Queries
-import Data.Cache as Cache exposing (ApiData)
+import Data.Cache as Cache
 import Data.Types exposing (Document, DocumentAttribute, DocumentId)
 import Document
 import Graphql.Extra

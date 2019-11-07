@@ -7,20 +7,10 @@ module Presentation exposing
 
 import Data.Cache as Cache
 import Data.Types exposing (..)
-import Dict
-import Folder
-import Html exposing (Html)
-import List.Extra
-import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
-import Query.Attribute
-import Query.Filter as Filter
 import Query.Filters as Filters
 import RemoteData
 import Route exposing (Route)
-import Set
-import String.Extra
-import Utils
 
 
 type Presentation

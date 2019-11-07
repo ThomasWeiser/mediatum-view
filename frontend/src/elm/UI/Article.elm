@@ -9,15 +9,13 @@ module UI.Article exposing
     , view
     )
 
-import Data.Cache as Cache exposing (ApiData)
+import Data.Cache as Cache
 import Data.Types exposing (..)
 import Data.Utils
 import Html exposing (Html)
 import Html.Attributes
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation(..))
-import Query.Filter
-import Query.Filters
 import RemoteData
 import UI.Article.Collection
 import UI.Article.Details

@@ -52,7 +52,6 @@ import Mediatum.Object.FoldersConnection
 import Mediatum.Object.Metadatatype
 import Mediatum.Object.PageInfo
 import Mediatum.Scalar
-import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
 import Utils
 

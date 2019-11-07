@@ -106,13 +106,13 @@ compare rL rR =
         ( To tL, To tR ) ->
             Basics.compare tL tR
 
-        ( To tL, FromTo _ _ ) ->
+        ( To _, FromTo _ _ ) ->
             LT
 
-        ( FromTo fL tL, From fR ) ->
+        ( FromTo fL _, From fR ) ->
             Basics.compare fL fR |> ifEq LT
 
-        ( FromTo fL tL, To tR ) ->
+        ( FromTo _ _, To _ ) ->
             GT
 
         ( FromTo fL tL, FromTo fR tR ) ->

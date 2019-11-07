@@ -1,8 +1,6 @@
 module DocumentResult exposing (init)
 
-import Data.Types exposing (Document, DocumentId, DocumentResult)
-import Document
-import Html exposing (Html)
+import Data.Types exposing (Document, DocumentResult)
 
 
 type alias DocumentResult =

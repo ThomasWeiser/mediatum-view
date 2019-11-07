@@ -9,7 +9,6 @@ import Data.Ordering
 import Data.Types exposing (..)
 import Dict
 import Sort.Dict
-import String.Extra
 
 
 filtersNone : Filters

@@ -19,7 +19,6 @@ the respective sub-fields. This simplified uniform error reporting.
 
 import Graphql.Http
 import Graphql.Http.GraphqlError
-import Http
 import Json.Decode
 
 

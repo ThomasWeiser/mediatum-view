@@ -6,7 +6,7 @@ module UI.Article.Generic exposing
     , view
     )
 
-import Data.Cache as Cache exposing (ApiData)
+import Data.Cache as Cache
 import Data.Types exposing (NodeId, NodeType(..))
 import Data.Utils exposing (nodeIdToString)
 import Html exposing (Html)
