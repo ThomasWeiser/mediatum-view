@@ -1,4 +1,4 @@
-module Tree exposing
+module UI.Tree exposing
     ( Model
     , Msg
     , Return(..)

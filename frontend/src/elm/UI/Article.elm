@@ -1,4 +1,4 @@
-module Article exposing
+module UI.Article exposing
     ( Model
     , Msg
     , Return(..)
@@ -9,10 +9,10 @@ module Article exposing
     , view
     )
 
-import Article.Collection
-import Article.Details
-import Article.DocumentsPage
-import Article.Generic
+import UI.Article.Collection
+import UI.Article.Details
+import UI.Article.DocumentsPage
+import UI.Article.Generic
 import Data.Cache as Cache exposing (ApiData)
 import Data.Types exposing (..)
 import Data.Utils
@@ -23,7 +23,7 @@ import Presentation exposing (Presentation(..))
 import Query.Filter
 import Query.Filters
 import RemoteData
-import Tree
+import UI.Tree
 import Utils
 
 
@@ -45,33 +45,33 @@ type alias Model =
 
 
 type Content
-    = GenericModel Article.Generic.Model
-    | CollectionModel Article.Collection.Model
-    | DocumentsPageModel Article.DocumentsPage.Model
-    | DetailsModel Article.Details.Model
+    = GenericModel UI.Article.Generic.Model
+    | CollectionModel UI.Article.Collection.Model
+    | DocumentsPageModel UI.Article.DocumentsPage.Model
+    | DetailsModel UI.Article.Details.Model
 
 
 type Msg
-    = GenericMsg Article.Generic.Msg
-    | CollectionMsg Article.Collection.Msg
-    | DocumentsPageMsg Article.DocumentsPage.Msg
-    | DetailsMsg Article.Details.Msg
+    = GenericMsg UI.Article.Generic.Msg
+    | CollectionMsg UI.Article.Collection.Msg
+    | DocumentsPageMsg UI.Article.DocumentsPage.Msg
+    | DetailsMsg UI.Article.Details.Msg
 
 
 initialModel : Context -> Model
 initialModel context =
     case context.presentation of
         GenericPresentation maybeNodeIds ->
-            { content = GenericModel Article.Generic.initialModel }
+            { content = GenericModel UI.Article.Generic.initialModel }
 
         DocumentPresentation maybeFolderId documentId ->
-            { content = DetailsModel Article.Details.initialModel }
+            { content = DetailsModel UI.Article.Details.initialModel }
 
         CollectionPresentation folderId ->
-            { content = CollectionModel Article.Collection.initialModel }
+            { content = CollectionModel UI.Article.Collection.initialModel }
 
         DocumentsPagePresentation selection window ->
-            { content = DocumentsPageModel Article.DocumentsPage.initialModel }
+            { content = DocumentsPageModel UI.Article.DocumentsPage.initialModel }
 
 
 needs : Context -> Cache.Needs
@@ -133,7 +133,7 @@ update context msg model =
         ( GenericMsg subMsg, GenericModel subModel, _ ) ->
             let
                 ( subModel1, subCmd ) =
-                    Article.Generic.update subMsg subModel
+                    UI.Article.Generic.update subMsg subModel
             in
             ( { model | content = GenericModel subModel1 }
             , Cmd.map GenericMsg subCmd
@@ -143,7 +143,7 @@ update context msg model =
         ( CollectionMsg subMsg, CollectionModel subModel, _ ) ->
             let
                 ( subModel1, subCmd ) =
-                    Article.Collection.update subMsg subModel
+                    UI.Article.Collection.update subMsg subModel
             in
             ( { model | content = CollectionModel subModel1 }
             , Cmd.map CollectionMsg subCmd
@@ -153,7 +153,7 @@ update context msg model =
         ( DocumentsPageMsg subMsg, DocumentsPageModel subModel, DocumentsPagePresentation selection window ) ->
             let
                 ( subModel1, subCmd, subReturn ) =
-                    Article.DocumentsPage.update
+                    UI.Article.DocumentsPage.update
                         { cache = context.cache
                         , selection = selection
                         , window = window
@@ -166,17 +166,17 @@ update context msg model =
             )
                 |> Utils.tupleAddThird
                     (case subReturn of
-                        Article.DocumentsPage.NoReturn ->
+                        UI.Article.DocumentsPage.NoReturn ->
                             NoReturn
 
-                        Article.DocumentsPage.Navigate navigation ->
+                        UI.Article.DocumentsPage.Navigate navigation ->
                             Navigate navigation
                     )
 
         ( DetailsMsg subMsg, DetailsModel subModel, DocumentPresentation maybeFolderId documentId ) ->
             let
                 ( subModel1, subCmd, subReturn ) =
-                    Article.Details.update
+                    UI.Article.Details.update
                         { cache = context.cache
                         , documentId = documentId
                         }
@@ -186,10 +186,10 @@ update context msg model =
             ( { model | content = DetailsModel subModel1 }
             , Cmd.map DetailsMsg subCmd
             , case subReturn of
-                Article.Details.NoReturn ->
+                UI.Article.Details.NoReturn ->
                     NoReturn
 
-                Article.Details.UpdateCacheWithModifiedDocument document ->
+                UI.Article.Details.UpdateCacheWithModifiedDocument document ->
                     UpdateCacheWithModifiedDocument document
             )
 
@@ -199,13 +199,13 @@ update context msg model =
             ( model, Cmd.none, NoReturn )
 
 
-view : Tree.Model -> Context -> Model -> Html Msg
+view : UI.Tree.Model -> Context -> Model -> Html Msg
 view tree context model =
     Html.article
         [ Html.Attributes.class "article" ]
         [ Html.div
             [ Html.Attributes.class "breadcrumbs" ]
-            [ Tree.viewBreadcrumbs
+            [ UI.Tree.viewBreadcrumbs
                 { cache = context.cache
                 , presentation = context.presentation
                 }
@@ -222,7 +222,7 @@ viewContent : Context -> Model -> Html Msg
 viewContent context model =
     case ( model.content, context.presentation ) of
         ( GenericModel subModel, GenericPresentation nodeIds ) ->
-            Article.Generic.view
+            UI.Article.Generic.view
                 { cache = context.cache
                 , nodeIds = nodeIds
                 }
@@ -230,7 +230,7 @@ viewContent context model =
                 |> Html.map GenericMsg
 
         ( CollectionModel subModel, CollectionPresentation folderId ) ->
-            Article.Collection.view
+            UI.Article.Collection.view
                 { cache = context.cache
                 , folderId = folderId
                 }
@@ -238,7 +238,7 @@ viewContent context model =
                 |> Html.map CollectionMsg
 
         ( DocumentsPageModel subModel, DocumentsPagePresentation selection window ) ->
-            Article.DocumentsPage.view
+            UI.Article.DocumentsPage.view
                 { cache = context.cache
                 , selection = selection
                 , window = window
@@ -247,7 +247,7 @@ viewContent context model =
                 |> Html.map DocumentsPageMsg
 
         ( DetailsModel subModel, DocumentPresentation maybeFolderId documentId ) ->
-            Article.Details.view
+            UI.Article.Details.view
                 { cache = context.cache
                 , documentId = documentId
                 }

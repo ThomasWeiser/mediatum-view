@@ -1,4 +1,4 @@
-module Article.Generic exposing
+module UI.Article.Generic exposing
     ( Model
     , Msg
     , initialModel

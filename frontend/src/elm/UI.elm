@@ -11,8 +11,6 @@ module UI exposing
     , view
     )
 
-import Article
-import Controls
 import Data.Cache as Cache
 import Data.Types exposing (Document)
 import Html exposing (Html)
@@ -22,7 +20,9 @@ import Icons
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation(..))
 import Route exposing (Route)
-import Tree
+import UI.Article
+import UI.Controls
+import UI.Tree
 
 
 type alias Context =
@@ -39,24 +39,24 @@ type Return
 
 
 type alias Model =
-    { tree : Tree.Model
-    , controls : Controls.Model
-    , article : Article.Model
+    { tree : UI.Tree.Model
+    , controls : UI.Controls.Model
+    , article : UI.Article.Model
     }
 
 
 type Msg
-    = TreeMsg Tree.Msg
-    | ControlsMsg Controls.Msg
-    | ArticleMsg Article.Msg
+    = TreeMsg UI.Tree.Msg
+    | ControlsMsg UI.Controls.Msg
+    | ArticleMsg UI.Article.Msg
 
 
 init : Model
 init =
-    { tree = Tree.initialModel
-    , controls = Controls.initialModel Route.home
+    { tree = UI.Tree.initialModel
+    , controls = UI.Controls.initialModel Route.home
     , article =
-        Article.initialModel
+        UI.Article.initialModel
             { cache = Cache.initialModel
             , presentation = GenericPresentation Nothing
             }
@@ -66,13 +66,13 @@ init =
 needs : Context -> Model -> Cache.Needs
 needs context model =
     Cache.NeedAnd
-        (Tree.needs
+        (UI.Tree.needs
             { cache = context.cache
             , presentation = context.presentation
             }
             model.tree
         )
-        (Article.needs
+        (UI.Article.needs
             { cache = context.cache
             , presentation = context.presentation
             }
@@ -82,8 +82,8 @@ needs context model =
 updateOnChangedRoute : Context -> Model -> Model
 updateOnChangedRoute context model =
     { model
-        | controls = Controls.initialModel context.route
-        , tree = Tree.expandPresentationFolder model.tree
+        | controls = UI.Controls.initialModel context.route
+        , tree = UI.Tree.expandPresentationFolder model.tree
     }
 
 
@@ -91,7 +91,7 @@ adjust : Context -> Model -> Model
 adjust context model =
     { model
         | article =
-            Article.initialModel
+            UI.Article.initialModel
                 { cache = context.cache
                 , presentation = context.presentation
                 }
@@ -104,7 +104,7 @@ update context msg model =
         TreeMsg subMsg ->
             let
                 ( subModel, subReturn ) =
-                    Tree.update
+                    UI.Tree.update
                         { cache = context.cache
                         , presentation = context.presentation
                         }
@@ -114,17 +114,17 @@ update context msg model =
             ( { model | tree = subModel }
             , Cmd.none
             , case subReturn of
-                Tree.NoReturn ->
+                UI.Tree.NoReturn ->
                     NoReturn
 
-                Tree.UserSelection selectedFolder ->
+                UI.Tree.UserSelection selectedFolder ->
                     Navigate (Navigation.ShowListingWithFolder selectedFolder)
             )
 
         ControlsMsg subMsg ->
             let
                 ( subModel, subCmd, subReturn ) =
-                    Controls.update
+                    UI.Controls.update
                         { route = context.route
                         , presentation = context.presentation
                         }
@@ -134,17 +134,17 @@ update context msg model =
             ( { model | controls = subModel }
             , Cmd.map ControlsMsg subCmd
             , case subReturn of
-                Controls.NoReturn ->
+                UI.Controls.NoReturn ->
                     NoReturn
 
-                Controls.Navigate navigation ->
+                UI.Controls.Navigate navigation ->
                     Navigate navigation
             )
 
         ArticleMsg subMsg ->
             let
                 ( subModel, subCmd, subReturn ) =
-                    Article.update
+                    UI.Article.update
                         { cache = context.cache
                         , presentation = context.presentation
                         }
@@ -154,13 +154,13 @@ update context msg model =
             ( { model | article = subModel }
             , Cmd.map ArticleMsg subCmd
             , case subReturn of
-                Article.NoReturn ->
+                UI.Article.NoReturn ->
                     NoReturn
 
-                Article.Navigate navigation ->
+                UI.Article.Navigate navigation ->
                     Navigate navigation
 
-                Article.UpdateCacheWithModifiedDocument document ->
+                UI.Article.UpdateCacheWithModifiedDocument document ->
                     UpdateCacheWithModifiedDocument document
             )
 
@@ -180,7 +180,7 @@ view context model =
                     , Html.span
                         [ Html.Attributes.class "subtitle"
                         , Html.Attributes.title "You may click here to start an example query."
-                        , Html.Events.onClick (ControlsMsg Controls.submitExampleQuery)
+                        , Html.Events.onClick (ControlsMsg UI.Controls.submitExampleQuery)
                         ]
                         [ Html.text "WIP" ]
                     , Html.img
@@ -191,7 +191,7 @@ view context model =
                         []
                     ]
                 ]
-            , Controls.view
+            , UI.Controls.view
                 { route = context.route
                 , presentation = context.presentation
                 }
@@ -201,19 +201,19 @@ view context model =
         , Html.main_ []
             [ Html.aside []
                 [ Html.map TreeMsg <|
-                    Tree.view
+                    UI.Tree.view
                         { cache = context.cache
                         , presentation = context.presentation
                         }
                         model.tree
-                        (Article.folderCountsForQuery
+                        (UI.Article.folderCountsForQuery
                             { cache = context.cache
                             , presentation = context.presentation
                             }
                         )
                 ]
             , Html.map ArticleMsg <|
-                Article.view
+                UI.Article.view
                     model.tree
                     { cache = context.cache
                     , presentation = context.presentation

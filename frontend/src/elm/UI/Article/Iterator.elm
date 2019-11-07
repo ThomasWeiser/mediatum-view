@@ -1,4 +1,4 @@
-module Article.Iterator exposing
+module UI.Article.Iterator exposing
     ( Context
     , Model
     , Msg

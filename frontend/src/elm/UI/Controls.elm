@@ -1,4 +1,4 @@
-module Controls exposing
+module UI.Controls exposing
     ( Context
     , Model
     , Msg
@@ -25,7 +25,6 @@ import Query.FilterEditor as FilterEditor
 import Query.Filters as Filters
 import Range
 import Route exposing (Route)
-import Tree
 import Utils
 
 

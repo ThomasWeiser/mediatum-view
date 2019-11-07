@@ -1,4 +1,4 @@
-module Article.Collection exposing
+module UI.Article.Collection exposing
     ( Context
     , Model
     , Msg

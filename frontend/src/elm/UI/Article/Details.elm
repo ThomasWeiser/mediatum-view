@@ -1,4 +1,4 @@
-module Article.Details exposing
+module UI.Article.Details exposing
     ( Context
     , Model
     , Msg
