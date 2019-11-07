@@ -105,7 +105,7 @@ needs model =
                 Route.TwoIds nodeIdOne nodeIdTwo ->
                     Cache.NeedAnd
                         (Cache.NeedGenericNode nodeIdOne)
-                        (Cache.NeedGenericNode nodeIdOne)
+                        (Cache.NeedGenericNode nodeIdTwo)
             , UI.needs
                 (uiContext model)
                 model.ui
