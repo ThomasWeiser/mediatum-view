@@ -1,6 +1,7 @@
 module Api exposing
     ( Response, Error
     , sendQueryRequest, sendMutationRequest
+    , errorToString
     )
 
 {-| This module and its sub-modules are responsible
@@ -38,6 +39,11 @@ type alias Response decodesTo =
 -}
 type alias Error =
     Graphql.Extra.StrippedError
+
+
+errorToString : Error -> String
+errorToString error =
+    Graphql.Extra.errorToString error
 
 
 {-| Create a GraphQL query.

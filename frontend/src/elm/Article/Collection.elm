@@ -2,18 +2,25 @@ module Article.Collection exposing
     ( Context
     , Model
     , Msg
-    , init
+    , initialModel
     , update
     , view
     )
 
-import Folder exposing (Folder)
+import Api
+import Data.Cache as Cache
+import Data.Types exposing (FolderId)
+import Folder
+import Graphql.Extra
 import Html exposing (Html)
-import Query
+import Html.Attributes
+import Icons
+import RemoteData
 
 
 type alias Context =
-    { folderQuery : Query.FolderQuery
+    { cache : Cache.Model
+    , folderId : FolderId
     }
 
 
@@ -25,9 +32,9 @@ type Msg
     = NoOp
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( (), Cmd.none )
+initialModel : Model
+initialModel =
+    ()
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -40,14 +47,37 @@ update msg model =
 view : Context -> Model -> Html Msg
 view context model =
     Html.div []
-        [ Html.h3 [] <|
-            if Folder.isRoot context.folderQuery.folder then
-                [ Html.text "Front page for root of all collections"
-                ]
+        [ case Cache.get context.cache.folders context.folderId of
+            RemoteData.NotAsked ->
+                -- Should never happen
+                Icons.spinner
 
-            else
-                [ Html.text "Front page for collection \""
-                , Html.text context.folderQuery.folder.name
-                , Html.text "\""
-                ]
+            RemoteData.Loading ->
+                Icons.spinner
+
+            RemoteData.Failure error ->
+                viewApiError error
+
+            RemoteData.Success folder ->
+                Html.h3 [] <|
+                    if Folder.isRoot folder then
+                        [ Html.text "Front page for root of all collections" ]
+
+                    else
+                        [ Html.text "Front page for collection \""
+                        , Html.text folder.name
+                        , Html.text "\""
+                        ]
         ]
+
+
+viewApiError : Api.Error -> Html msg
+viewApiError error =
+    viewError (Graphql.Extra.errorToString error)
+
+
+viewError : String -> Html msg
+viewError defect =
+    Html.div
+        [ Html.Attributes.class "error" ]
+        [ Html.text defect ]

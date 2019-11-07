@@ -2,8 +2,9 @@ module Tree exposing
     ( Model
     , Msg
     , Return(..)
-    , init
-    , openLineage
+    , expandPresentationFolder
+    , initialModel
+    , needs
     , update
     , view
     , viewBreadcrumbs
@@ -11,370 +12,241 @@ module Tree exposing
 
 import Api
 import Api.Queries
-import Dict exposing (Dict)
-import Dict.Extra
-import Folder exposing (Folder, FolderCounts, FolderId)
+import Data.Cache as Cache exposing (ApiData)
+import Data.Types exposing (Folder, FolderCounts, FolderId)
+import Folder
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
+import Presentation exposing (Presentation(..))
+import RemoteData
 import Route
+import Route.Url
+import Sort.Dict
 import Utils
+
+
+type alias Context =
+    { cache : Cache.Model
+    , presentation : Presentation
+    }
 
 
 type Return
     = NoReturn
-    | GotRootFolders (List Folder)
-    | UserSelection Folder
+    | UserSelection FolderId
 
 
 type alias Model =
-    { folderCache : Dict FolderId FolderInTree
-    , rootIds : List FolderId
-    , loading : Int
-    , error : Maybe Api.Error
-    , selection : List FolderId
-    , showSubselection : Bool
-    }
-
-
-type alias FolderInTree =
-    { folder : Folder
-    , subLinks : Maybe (List FolderId)
+    { collapsedPresentationFolder : Maybe FolderId
     }
 
 
 type Msg
-    = ApiResponseSubfolder (Api.Response (List Folder))
-    | ApiResponseToplevelFolder (Api.Response (List ( Folder, List Folder )))
-    | Select FolderId
+    = Select FolderId
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( { folderCache = Dict.empty
-      , rootIds = []
-      , loading = 1
-      , error = Nothing
-      , selection = []
-      , showSubselection = True
-      }
-    , Api.sendQueryRequest
-        ApiResponseToplevelFolder
-        Api.Queries.toplevelFolder
-    )
+initialModel : Model
+initialModel =
+    { collapsedPresentationFolder = Nothing
+    }
 
 
-selectedFolder : Model -> Maybe Folder
-selectedFolder model =
-    List.head model.selection
-        |> Maybe.andThen (\a -> Dict.get a model.folderCache)
-        |> Maybe.map .folder
+needs : Context -> Model -> Cache.Needs
+needs context model =
+    getPresentationFolderId context
+        |> getPathAsFarAsCached context.cache
+        |> Cache.NeedSubfolders
 
 
-openLineage : Nonempty Folder -> Model -> ( Model, Cmd Msg )
-openLineage lineage model =
-    let
-        offspring =
-            List.Nonempty.head lineage
-
-        lineageAsList =
-            List.Nonempty.toList lineage
-    in
-    model
-        |> addFolders lineageAsList
-        |> selectFolder offspring.id
-        |> loadSubfolders (List.map .id lineageAsList)
+expandPresentationFolder : Model -> Model
+expandPresentationFolder model =
+    { model
+        | collapsedPresentationFolder = Nothing
+    }
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, Return )
-update msg model =
+update : Context -> Msg -> Model -> ( Model, Return )
+update context msg model =
     case msg of
-        ApiResponseToplevelFolder (Err err) ->
-            ( { model
-                | loading = model.loading - 1
-                , error = Just err
-              }
-            , Cmd.none
-            , NoReturn
-            )
-
-        ApiResponseSubfolder (Err err) ->
-            ( { model
-                | loading = model.loading - 1
-                , error = Just err
-              }
-            , Cmd.none
-            , NoReturn
-            )
-
-        ApiResponseToplevelFolder (Ok listOfRootFoldersWithSubfolders) ->
-            ( { model
-                | loading = model.loading - 1
-                , error = Nothing
-              }
-                |> addRootFolders listOfRootFoldersWithSubfolders
-            , Cmd.none
-            , GotRootFolders
-                (List.map Tuple.first listOfRootFoldersWithSubfolders)
-            )
-
-        ApiResponseSubfolder (Ok folderList) ->
-            ( { model
-                | loading = model.loading - 1
-                , error = Nothing
-              }
-                |> addFolders folderList
-                |> linkAsSubfolders folderList
-            , Cmd.none
-            , NoReturn
-            )
-
         Select id ->
-            model
-                |> selectFolder id
-                |> loadSubfolders [ id ]
-                |> (\( model1, cmd1 ) ->
-                        ( model1
-                        , cmd1
-                        , if List.head model.selection /= Just id then
-                            Maybe.Extra.unwrap
-                                NoReturn
-                                UserSelection
-                                (selectedFolder model1)
-
-                          else
-                            NoReturn
-                        )
-                   )
-
-
-addRootFolders : List ( Folder, List Folder ) -> Model -> Model
-addRootFolders rootFoldersWithSubfolders model =
-    let
-        modelWithFoldersAdded : Model
-        modelWithFoldersAdded =
-            List.foldl
-                addRootFolder
-                model
-                rootFoldersWithSubfolders
-
-        addRootFolder : ( Folder, List Folder ) -> Model -> Model
-        addRootFolder ( rootFolder, subFolders ) model1 =
-            model1
-                |> addFolders (rootFolder :: subFolders)
-                |> linkAsSubfolders subFolders
-
-        rootIds : List FolderId
-        rootIds =
-            List.map (Tuple.first >> .id) rootFoldersWithSubfolders
-    in
-    { modelWithFoldersAdded
-        | rootIds = rootIds
-        , selection =
-            if List.isEmpty model.selection then
-                List.take 1 rootIds
+            if getPresentationFolderId context == Just id then
+                ( { model
+                    | collapsedPresentationFolder =
+                        (model.collapsedPresentationFolder == Just id)
+                            |> Utils.ifElse
+                                Nothing
+                                (Just id)
+                  }
+                , NoReturn
+                )
 
             else
-                model.selection
-    }
-
-
-addFolders : List Folder -> Model -> Model
-addFolders folderList model =
-    let
-        newFolderCache =
-            List.foldl
-                (\folder dict ->
-                    Dict.Extra.insertDedupe
-                        (\org new ->
-                            { folder = new.folder
-                            , subLinks = Maybe.Extra.or new.subLinks org.subLinks
-                            }
-                        )
-                        folder.id
-                        { folder = folder
-                        , subLinks =
-                            if Folder.hasSubfolder folder then
-                                Nothing
-
-                            else
-                                Just []
-                        }
-                        dict
+                ( model
+                , UserSelection id
                 )
-                model.folderCache
-                folderList
-    in
-    { model | folderCache = newFolderCache }
 
 
-linkAsSubfolders : List Folder -> Model -> Model
-linkAsSubfolders allSubfoldersOfSomeParents model =
-    { model
-        | folderCache =
-            Dict.Extra.filterGroupBy
-                .parent
-                allSubfoldersOfSomeParents
-                |> Dict.toList
-                |> List.foldl
-                    (\( parentId, subfolders ) ->
-                        Dict.update
-                            parentId
-                            (Maybe.map
-                                (\folderInTree ->
-                                    { folderInTree
-                                        | subLinks = Just (List.map .id subfolders)
-                                    }
-                                )
-                            )
-                    )
-                    model.folderCache
-    }
+getPresentationFolderId : Context -> Maybe FolderId
+getPresentationFolderId context =
+    Presentation.getFolderId context.cache context.presentation
 
 
-getSubLinks : FolderId -> Model -> Maybe (List FolderId)
-getSubLinks id model =
-    Dict.get id model.folderCache
-        |> Maybe.andThen .subLinks
+getParentId : Cache.Model -> FolderId -> ApiData (Maybe FolderId)
+getParentId cache id =
+    Cache.get cache.folders id
+        |> RemoteData.map .parent
 
 
-getParentId : FolderId -> Model -> Maybe FolderId
-getParentId id model =
-    Dict.get id model.folderCache
-        |> Maybe.andThen (.folder >> .parent)
+getPath : Cache.Model -> FolderId -> ApiData (List FolderId)
+getPath cache id =
+    getParentId cache id
+        |> RemoteData.andThen
+            (Maybe.Extra.unwrap
+                (RemoteData.Success [ id ])
+                (getPath cache
+                    >> RemoteData.map ((::) id)
+                )
+            )
 
 
-getPath : FolderId -> Model -> List FolderId
-getPath id model =
-    id
-        :: (case getParentId id model of
-                Nothing ->
-                    []
-
-                Just parentId ->
-                    getPath parentId model
-           )
-
-
-selectFolder : FolderId -> Model -> Model
-selectFolder id model =
-    let
-        alreadySelected =
-            List.head model.selection == Just id
-    in
-    { model
-        | selection = getPath id model
-        , showSubselection = not alreadySelected || not model.showSubselection
-    }
-
-
-loadSubfolders : List FolderId -> Model -> ( Model, Cmd Msg )
-loadSubfolders parentIds model =
-    let
-        parentIdsWithUnknownChildren =
-            List.filter
-                (\parentId -> getSubLinks parentId model == Nothing)
-                parentIds
-    in
-    if List.isEmpty parentIdsWithUnknownChildren then
-        ( model, Cmd.none )
-
-    else
-        ( { model | loading = model.loading + 1 }
-        , Api.sendQueryRequest
-            ApiResponseSubfolder
-            (Api.Queries.subfolder parentIdsWithUnknownChildren)
+getPathAsFarAsCached : Cache.Model -> Maybe FolderId -> List FolderId
+getPathAsFarAsCached cache =
+    Maybe.Extra.unwrap
+        []
+        (\id ->
+            id
+                :: (getParentId cache id
+                        |> RemoteData.toMaybe
+                        |> Maybe.Extra.join
+                        |> getPathAsFarAsCached cache
+                   )
         )
 
 
-view : Model -> FolderCounts -> Html Msg
-view model folderCounts =
+isOnPath : Cache.Model -> FolderId -> Maybe FolderId -> Bool
+isOnPath cache requestedId =
+    Maybe.Extra.unwrap
+        False
+        (\pathId ->
+            (requestedId == pathId)
+                || isOnPath cache
+                    requestedId
+                    (getParentId cache pathId
+                        |> RemoteData.toMaybe
+                        |> Maybe.Extra.join
+                    )
+        )
+
+
+view : Context -> Model -> Maybe FolderCounts -> Html Msg
+view context model maybeFolderCounts =
     Html.div []
-        [ viewListOfFolders model folderCounts model.rootIds ]
+        [ case context.cache.rootFolderIds of
+            RemoteData.Success rootIds ->
+                viewListOfFolders context model maybeFolderCounts rootIds
+
+            -- TODO: RemoteData.Failure error ->
+            noSuccess ->
+                Html.text (Debug.toString noSuccess)
+        ]
 
 
-viewListOfFolders : Model -> FolderCounts -> List FolderId -> Html Msg
-viewListOfFolders model folderCounts folderIds =
+viewListOfFolders : Context -> Model -> Maybe FolderCounts -> List FolderId -> Html Msg
+viewListOfFolders context model maybeFolderCounts folderIds =
     Html.ul [ Html.Attributes.class "folder-list" ] <|
         List.map
             (\id ->
                 Html.li []
-                    [ viewFolder model folderCounts id ]
+                    [ viewFolder context model maybeFolderCounts id ]
             )
             folderIds
 
 
 viewListOfFoldersLoading : Html Msg
 viewListOfFoldersLoading =
+    -- TODO: Currenty unused. Need a more general solution for showing RemoteData.Loading states.
     Html.ul [ Html.Attributes.class "folder-list" ]
         [ Html.li [] [ Html.text "..." ]
         ]
 
 
-viewFolder : Model -> FolderCounts -> FolderId -> Html Msg
-viewFolder model folderCounts id =
-    let
-        isSelectedFolder =
-            List.head model.selection == Just id
+viewFolder : Context -> Model -> Maybe FolderCounts -> FolderId -> Html Msg
+viewFolder context model maybeFolderCounts id =
+    case Cache.get context.cache.folders id of
+        RemoteData.Success folder ->
+            let
+                presentationFolderId =
+                    getPresentationFolderId context
 
-        expanded =
-            List.member id model.selection
-                && (not isSelectedFolder || model.showSubselection)
-    in
-    case Dict.get id model.folderCache of
-        Nothing ->
-            -- Cache miss. Should never happen,
-            -- because only cached folders are getting linked.
-            Html.div [] [ Html.text "..." ]
+                isSelectedFolder =
+                    presentationFolderId == Just id
 
-        Just { folder } ->
+                expanded =
+                    Folder.isRoot folder
+                        || (model.collapsedPresentationFolder /= Just id)
+                        && isOnPath context.cache id presentationFolderId
+            in
             Html.div []
                 [ Html.div
                     [ Html.Events.onClick (Select id) ]
                     [ Folder.view
                         folder
-                        (Dict.get folder.id folderCounts)
+                        (maybeFolderCounts
+                            |> Maybe.andThen (Sort.Dict.get folder.id)
+                        )
                         isSelectedFolder
                         expanded
                     ]
                 , if expanded then
-                    case getSubLinks id model of
-                        Nothing ->
-                            viewListOfFoldersLoading
+                    case Cache.get context.cache.subfolderIds id of
+                        RemoteData.Success subfolderIds ->
+                            viewListOfFolders context model maybeFolderCounts subfolderIds
 
-                        Just subLinks ->
-                            viewListOfFolders model folderCounts subLinks
+                        noSuccess ->
+                            Html.text (Debug.toString noSuccess)
 
                   else
                     Html.text ""
                 ]
 
+        noSuccess ->
+            Html.text (Debug.toString noSuccess)
 
-viewBreadcrumbs : Model -> FolderId -> Html msg
-viewBreadcrumbs model id =
-    Html.span []
-        (getPath id model
-            |> List.reverse
-            |> List.map
-                (\id1 ->
-                    Html.span []
-                        [ case Dict.get id1 model.folderCache of
-                            Just { folder } ->
-                                Html.a
-                                    [ folder.id
-                                        |> Folder.idToInt
-                                        |> Route.NodeId
-                                        |> Route.toString
-                                        |> Html.Attributes.href
-                                    ]
-                                    [ Html.text folder.name ]
 
-                            Nothing ->
-                                Html.text "..."
-                        ]
-                )
-            |> List.intersperse
-                (Html.span [] [ Html.text " > " ])
-        )
+viewBreadcrumbs : Context -> Model -> Maybe FolderId -> Html msg
+viewBreadcrumbs context model maybeFolderId =
+    Html.span [] <|
+        case maybeFolderId of
+            Nothing ->
+                [ Html.text "(no specific path)" ]
+
+            Just folderId ->
+                getPath context.cache folderId
+                    |> RemoteData.unwrap
+                        [ Html.text "..." ]
+                        (List.reverse
+                            >> List.map
+                                (\idPathSegment ->
+                                    Html.span []
+                                        [ Cache.get context.cache.folders idPathSegment
+                                            |> RemoteData.unwrap
+                                                (Html.text "...")
+                                                (\folder ->
+                                                    Html.a
+                                                        [ folder.id
+                                                            |> Data.Types.folderIdToInt
+                                                            |> Data.Types.nodeIdFromInt
+                                                            |> Route.fromOneId
+                                                            |> Route.Url.toString
+                                                            |> Html.Attributes.href
+                                                        ]
+                                                        [ Html.text folder.name ]
+                                                )
+                                        ]
+                                )
+                            >> List.intersperse
+                                (Html.span [] [ Html.text " > " ])
+                        )

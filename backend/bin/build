@@ -2,8 +2,9 @@
 
 set -e # Abort execution on first failing command
 
-p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER  -v ON_ERROR_STOP=on -f"
+p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -v ON_ERROR_STOP=on -f"
 
+$p src/sql/check_prerequisites.sql
 $p src/sql/drop_all.sql
 $p src/sql/types.sql
 $p src/sql/auxiliary.sql

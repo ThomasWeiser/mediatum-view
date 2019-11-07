@@ -2,9 +2,10 @@ module App exposing
     ( Model
     , Msg
     , Return(..)
-    , changeRouteTo
     , init
+    , requestNeeds
     , update
+    , updateRoute
     , view
     )
 
@@ -13,17 +14,18 @@ import Api.Queries
 import Article
 import Cmd.Extra
 import Controls
-import Dict
-import Folder exposing (FolderCounts)
-import GenericNode exposing (GenericNode)
+import Data.Cache as Cache
+import Data.Types exposing (NodeId)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
-import Query exposing (Query)
+import Navigation exposing (Navigation)
+import Presentation exposing (Presentation(..))
 import Query.Filters
+import RemoteData
 import Route exposing (Route)
 import Tree
 import Utils
@@ -36,18 +38,19 @@ type Return
 
 type alias Model =
     { route : Route
-    , query : Query
+    , cache : Cache.Model
+    , presentation : Presentation
     , tree : Tree.Model
     , controls : Controls.Model
-    , folderCounts : FolderCounts
     , article : Article.Model
+
+    -- TODO: We store the Needs here only for debugging
+    , needs : Cache.Needs
     }
 
 
 type Msg
-    = NoOp
-    | QueryGenericNode Int
-    | GenericNodeQueryResponse (Api.Response GenericNode)
+    = CacheMsg Cache.Msg
     | TreeMsg Tree.Msg
     | ControlsMsg Controls.Msg
     | ArticleMsg Article.Msg
@@ -55,235 +58,226 @@ type Msg
 
 init : Route -> ( Model, Cmd Msg )
 init route =
+    { route = Route.home
+    , cache = Cache.initialModel
+    , presentation = GenericPresentation Nothing
+    , tree = Tree.initialModel
+    , controls = Controls.initialModel Route.home
+    , article =
+        Article.initialModel
+            { cache = Cache.initialModel
+            , presentation = GenericPresentation Nothing
+            }
+    , needs = Cache.NeedNothing
+    }
+        |> requestNeeds
+        |> Cmd.Extra.andThen (updateRoute route >> Cmd.Extra.withNoCmd)
+
+
+updateRoute : Route -> Model -> Model
+updateRoute route model =
     let
-        ( treeModel, treeCmd ) =
-            Tree.init
-
-        controlsModel =
-            Controls.init ()
-
-        ( articleModel, articleCmd ) =
-            Article.initEmpty ()
-
         model1 =
-            { route = Route.Invalid "to be initialized"
-            , query = Query.emptyQuery
-            , tree = treeModel
-            , controls = controlsModel
-            , folderCounts = Dict.empty
-            , article = articleModel
+            { model
+                | route = route
+                , controls = Controls.initialModel route
             }
 
-        ( model2, cmd2 ) =
-            changeRouteTo route model1
+        model2 =
+            adjust model1
+
+        model3 =
+            { model2
+                | tree = Tree.expandPresentationFolder model2.tree
+            }
     in
-    ( model2
-    , Cmd.batch
-        [ Cmd.map TreeMsg treeCmd
-        , Cmd.map ArticleMsg articleCmd
-        , cmd2
-        ]
-    )
+    model3
 
 
-changeRouteTo : Route -> Model -> ( Model, Cmd Msg )
-changeRouteTo route model =
+adjust : Model -> Model
+adjust model =
     let
-        model1 =
-            { model | route = route }
+        presentation =
+            model.route
+                |> Debug.log "adjust route"
+                |> Presentation.fromRoute model.cache
+                |> Debug.log "adjust presentation"
+                |> identity
     in
-    case route of
-        Route.Home ->
-            ( model1, Cmd.none )
+    { model
+        | presentation = presentation
+        , article =
+            Article.initialModel
+                { cache = model.cache, presentation = presentation }
+    }
 
-        Route.NodeId nodeId ->
-            if model.route /= route then
-                updateWithoutReturn
-                    (QueryGenericNode nodeId)
-                    model1
 
-            else
-                ( model1, Cmd.none )
+needs : Model -> Cache.Needs
+needs model =
+    Debug.log "app needs" <|
+        Cache.needsFromList
+            [ Cache.NeedRootFolderIds
+            , case model.route.path of
+                Route.NoId ->
+                    Cache.NeedNothing
 
-        Route.Invalid errorMsg ->
-            ( model1, Cmd.none )
+                Route.OneId nodeId ->
+                    Cache.NeedGenericNode nodeId
+
+                Route.TwoIds nodeIdOne nodeIdTwo ->
+                    Cache.NeedAnd
+                        (Cache.NeedGenericNode nodeIdOne)
+                        (Cache.NeedGenericNode nodeIdOne)
+            , Tree.needs
+                { cache = model.cache
+                , presentation = model.presentation
+                }
+                model.tree
+            , Article.needs
+                { cache = model.cache
+                , presentation = model.presentation
+                }
+            ]
+
+
+requestNeeds : Model -> ( Model, Cmd Msg )
+requestNeeds model =
+    let
+        currentNeeds =
+            needs model
+
+        ( cacheModel, cacheCmd ) =
+            Cache.requestNeeds
+                currentNeeds
+                model.cache
+    in
+    ( { model
+        | needs = currentNeeds
+        , cache = cacheModel
+      }
+    , Cmd.map CacheMsg cacheCmd
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     let
-        ( model1, cmd1 ) =
-            updateWithoutReturn msg model
-    in
-    ( model1
-    , cmd1
-    , if model1.route /= model.route then
-        ReflectRoute model1.route
+        ( model1, cmd1, maybeNavigation ) =
+            updateSubModel msg model
 
-      else
-        NoReturn
+        ( model2, return ) =
+            case maybeNavigation of
+                Nothing ->
+                    ( model1, NoReturn )
+
+                Just navigation ->
+                    let
+                        route =
+                            Navigation.alterRoute
+                                model1.cache
+                                navigation
+                                model1.route
+                    in
+                    ( updateRoute route model1
+                    , ReflectRoute route
+                    )
+    in
+    ( model2
+    , cmd1
+    , return
     )
 
 
-updateWithoutReturn : Msg -> Model -> ( Model, Cmd Msg )
-updateWithoutReturn msg model =
+updateSubModel : Msg -> Model -> ( Model, Cmd Msg, Maybe Navigation )
+updateSubModel msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
-        QueryGenericNode nodeId ->
-            ( model
-            , Api.sendQueryRequest
-                GenericNodeQueryResponse
-                (Api.Queries.genericNode nodeId)
-            )
-
-        GenericNodeQueryResponse (Err err) ->
+        CacheMsg subMsg ->
             let
-                -- TODO
-                _ =
-                    Debug.log "GenericNodeQueryResponse" err
+                ( subModel, subCmd ) =
+                    Cache.update subMsg model.cache
+
+                ( model1, cmd1 ) =
+                    ( { model | cache = subModel }
+                    , Cmd.map CacheMsg subCmd
+                    )
             in
-            ( model, Cmd.none )
-
-        GenericNodeQueryResponse (Ok genericNode) ->
-            case genericNode of
-                GenericNode.IsFolder lineage ->
-                    let
-                        ( treeModel, treeCmd ) =
-                            Tree.openLineage lineage model.tree
-
-                        model1 =
-                            { model | tree = treeModel }
-                    in
-                    startQuery
-                        (Query.OnFolder
-                            { folder = List.Nonempty.head lineage
-                            , filters = Query.getFilters model.query
-                            }
-                        )
-                        model1
-                        |> Cmd.Extra.addCmd (Cmd.map TreeMsg treeCmd)
-
-                GenericNode.IsDocument document ->
-                    -- Currently we fetch the document once again here,
-                    -- which is not a big deal anyway.
-                    -- Will decide later what we really want here.
-                    startQuery
-                        (Query.OnDetails
-                            { folder = Query.getFolder model.query
-                            , documentId = document.id
-                            , filters = Query.getFilters model.query
-                            }
-                        )
-                        model
-
-                GenericNode.IsNeither ->
-                    -- TODO
-                    ( model, Cmd.none )
+            ( model1 |> adjust
+            , cmd1
+            , Nothing
+            )
 
         TreeMsg subMsg ->
             let
-                ( subModel, subCmd, subReturn ) =
-                    Tree.update subMsg model.tree
-
-                model1 =
-                    { model | tree = subModel }
+                ( subModel, subReturn ) =
+                    Tree.update
+                        { cache = model.cache
+                        , presentation = model.presentation
+                        }
+                        subMsg
+                        model.tree
             in
-            (case subReturn of
-                Tree.GotRootFolders rootFolders ->
-                    case ( model.route, List.head rootFolders ) of
-                        ( Route.Home, Just rootFolderToBeQueried ) ->
-                            startQuery
-                                (Query.setFolder
-                                    rootFolderToBeQueried
-                                    model1.query
-                                )
-                                model1
-
-                        _ ->
-                            ( { model1
-                                | query =
-                                    Query.stopgapFolder
-                                        (List.head rootFolders)
-                                        model1.query
-                              }
-                            , Cmd.none
-                            )
-
+            ( { model | tree = subModel }
+            , Cmd.none
+            , case subReturn of
                 Tree.UserSelection selectedFolder ->
-                    startQuery
-                        (Query.setFolder
-                            selectedFolder
-                            model1.query
-                        )
-                        model1
+                    Just (Navigation.ShowListingWithFolder selectedFolder)
 
                 Tree.NoReturn ->
-                    ( model1, Cmd.none )
+                    Nothing
             )
-                |> Cmd.Extra.addCmd (Cmd.map TreeMsg subCmd)
 
         ControlsMsg subMsg ->
             let
                 ( subModel, subCmd, subReturn ) =
                     Controls.update
-                        { query = model.query }
+                        { route = model.route
+                        , presentation = model.presentation
+                        }
                         subMsg
                         model.controls
-
-                model1 =
-                    { model | controls = subModel }
             in
-            (case subReturn of
+            ( { model | controls = subModel }
+            , Cmd.map ControlsMsg subCmd
+            , case subReturn of
                 Controls.NoReturn ->
-                    ( model1, Cmd.none )
+                    Nothing
 
-                Controls.MapQuery queryMapping ->
-                    startQuery (queryMapping model1.query) model1
+                Controls.Navigate navigation ->
+                    Just navigation
             )
-                |> Cmd.Extra.addCmd (Cmd.map ControlsMsg subCmd)
 
         ArticleMsg subMsg ->
             let
                 ( subModel, subCmd, subReturn ) =
                     Article.update
-                        { query = model.query }
+                        { cache = model.cache
+                        , presentation = model.presentation
+                        }
                         subMsg
                         model.article
 
                 model1 =
                     { model | article = subModel }
+
+                ( model2, maybeNavigation ) =
+                    case subReturn of
+                        Article.NoReturn ->
+                            ( model1, Nothing )
+
+                        Article.Navigate navigation ->
+                            ( model1, Just navigation )
+
+                        Article.UpdateCacheWithModifiedDocument document ->
+                            ( { model1
+                                | cache = Cache.updateWithModifiedDocument document model1.cache
+                              }
+                            , Nothing
+                            )
             in
-            (case subReturn of
-                Article.NoReturn ->
-                    ( model1, Cmd.none )
-
-                Article.FolderCounts folderCounts1 ->
-                    ( { model1 | folderCounts = folderCounts1 }
-                    , Cmd.none
-                    )
-
-                Article.MapQuery queryMapping ->
-                    startQuery (queryMapping model1.query) model1
+            ( model2
+            , Cmd.map ArticleMsg subCmd
+            , maybeNavigation
             )
-                |> Cmd.Extra.addCmd (Cmd.map ArticleMsg subCmd)
-
-
-startQuery : Query -> Model -> ( Model, Cmd Msg )
-startQuery query model =
-    let
-        ( articleModel, articleCmd ) =
-            Article.initWithQuery query
-    in
-    ( { model
-        | route = Query.toRoute query
-        , query = Debug.log "startQuery" query
-        , article = articleModel
-        , folderCounts = Dict.empty
-      }
-    , Cmd.map ArticleMsg articleCmd
-    )
 
 
 view : Model -> Html Msg
@@ -312,17 +306,33 @@ view model =
                         []
                     ]
                 ]
-            , Controls.view { query = model.query } model.controls
+            , Controls.view
+                { route = model.route
+                , presentation = model.presentation
+                }
+                model.controls
                 |> Html.map ControlsMsg
             ]
         , Html.main_ []
             [ Html.aside []
-                [ Html.map TreeMsg <| Tree.view model.tree model.folderCounts
+                [ Html.map TreeMsg <|
+                    Tree.view
+                        { cache = model.cache
+                        , presentation = model.presentation
+                        }
+                        model.tree
+                        (Article.folderCountsForQuery
+                            { cache = model.cache
+                            , presentation = model.presentation
+                            }
+                        )
                 ]
             , Html.map ArticleMsg <|
                 Article.view
                     model.tree
-                    { query = model.query }
+                    { cache = model.cache
+                    , presentation = model.presentation
+                    }
                     model.article
             ]
         ]

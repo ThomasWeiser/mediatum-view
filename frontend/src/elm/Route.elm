@@ -1,48 +1,72 @@
-module Route exposing (Route(..), parseUrl, toString)
+module Route exposing
+    ( Route
+    , RouteParameters
+    , RoutePath(..)
+    , defaultFtsSorting
+    , defaultLimit
+    , fromOneId
+    , home
+    )
 
-import Browser.Navigation
-import Maybe.Extra
-import Url exposing (Url)
-import Url.Builder as Builder
-import Url.Parser as Parser exposing ((</>), Parser)
-
-
-type Route
-    = Home
-    | NodeId Int
-    | Invalid String
-
-
-parser : Parser (Route -> a) a
-parser =
-    Parser.oneOf
-        [ Parser.map Home Parser.top
-        , Parser.map NodeId Parser.int
-        ]
+import Data.Ordering
+import Data.Types exposing (FtsSorting(..), NodeId)
+import Data.Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
+import Range exposing (Range)
 
 
-parseUrl : Url -> Route
-parseUrl url =
-    Parser.parse parser url
-        |> Maybe.Extra.unpack
-            (\_ ->
-                Invalid ("Invalid URL path: " ++ url.path)
-            )
-            identity
+defaultLimit : Int
+defaultLimit =
+    10
 
 
-toString : Route -> String
-toString page =
-    let
-        pieces =
-            case page of
-                Home ->
-                    []
+defaultFtsSorting : FtsSorting
+defaultFtsSorting =
+    FtsByRank
 
-                NodeId id ->
-                    [ String.fromInt id ]
 
-                Invalid _ ->
-                    []
-    in
-    Builder.absolute pieces []
+type alias Route =
+    { path : RoutePath
+    , parameters : RouteParameters
+    }
+
+
+type RoutePath
+    = NoId
+    | OneId NodeId
+    | TwoIds NodeId NodeId
+
+
+type alias RouteParameters =
+    { ftsTerm : Maybe SearchTerm
+    , ftsSorting : FtsSorting
+    , filterByYear : Maybe (Range Int)
+    , filterByTitle : SetOfSearchTerms
+    , offset : Int
+    , limit : Int
+    }
+
+
+fromOneId : NodeId -> Route
+fromOneId nodeId =
+    -- TODO: Only for adopting legacy code. To be removed later.
+    { path = OneId nodeId
+    , parameters = emptyParameters
+    }
+
+
+home : Route
+home =
+    { path = NoId
+    , parameters = emptyParameters
+    }
+
+
+emptyParameters : RouteParameters
+emptyParameters =
+    { ftsTerm = Nothing
+    , ftsSorting = defaultFtsSorting
+    , filterByYear = Nothing
+    , filterByTitle = Data.Types.SearchTerm.emptySet
+    , offset = 0
+    , limit = defaultLimit
+    }

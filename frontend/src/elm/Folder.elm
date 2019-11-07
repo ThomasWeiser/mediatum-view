@@ -1,16 +1,12 @@
 module Folder exposing
-    ( Folder
-    , FolderCounts
-    , FolderId
-    , dummy
+    ( dummy
     , hasSubfolder
-    , idFromInt
-    , idToInt
     , init
     , isRoot
     , view
     )
 
+import Data.Types exposing (Folder, FolderCounts, FolderId, FolderType)
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes
@@ -32,57 +28,24 @@ import Icons
 -}
 
 
-type alias FolderId =
-    ( Int, Float )
-
-
-type alias Folder =
-    { id : FolderId
-    , parent : Maybe FolderId
-    , name : String
-    , isCollection : Bool
-    , numSubfolder : Int
-    }
-
-
-type alias FolderCounts =
-    Dict FolderId Int
-
-
 dummy : Folder
 dummy =
-    { id = idFromInt -1
+    { id = Data.Types.folderIdFromInt -1
     , parent = Nothing
     , name = ""
-    , isCollection = False
+    , type_ = Data.Types.FolderIsCollection
     , numSubfolder = 0
     }
 
 
-init : Int -> Maybe Int -> String -> Bool -> Int -> Folder
-init idAsInt maybeParentIdAsInt name isCollection numSubfolder =
-    { id = idFromInt idAsInt
-    , parent =
-        case maybeParentIdAsInt of
-            Nothing ->
-                Nothing
-
-            Just parentIdAsInt ->
-                Just (idFromInt parentIdAsInt)
+init : FolderId -> Maybe FolderId -> String -> FolderType -> Int -> Folder
+init id maybeParentId name folderType numSubfolder =
+    { id = id
+    , parent = maybeParentId
     , name = name
-    , isCollection = isCollection
+    , type_ = folderType
     , numSubfolder = numSubfolder
     }
-
-
-idToInt : FolderId -> Int
-idToInt ( i, _ ) =
-    i
-
-
-idFromInt : Int -> FolderId
-idFromInt idAsInt =
-    ( idAsInt, 0.0 )
 
 
 isRoot : Folder -> Bool
@@ -100,8 +63,8 @@ view folder maybeCount selected expanded =
     Html.div
         [ Html.Attributes.classList
             [ ( "folder-head", True )
-            , ( "collection", folder.isCollection )
-            , ( "directory", not folder.isCollection )
+            , ( "collection", folder.type_ == Data.Types.FolderIsCollection )
+            , ( "directory", folder.type_ == Data.Types.FolderIsDirectory )
             , ( "collapsed", hasSubfolder folder && not expanded )
             , ( "expanded", hasSubfolder folder && expanded )
             , ( "leaf", not (hasSubfolder folder) )

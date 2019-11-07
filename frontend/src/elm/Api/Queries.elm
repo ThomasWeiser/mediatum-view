@@ -40,9 +40,10 @@ The `elm-graphql` package won't use the fragment notation.
 
 import Api.Fragments
 import Config
-import Document exposing (Document, DocumentId)
-import DocumentResult exposing (DocumentResult)
-import Folder exposing (Folder, FolderCounts, FolderId)
+import Data.Types exposing (..)
+import Data.Types.SearchTerm exposing (SearchTerm)
+import Document
+import Folder
 import GenericNode exposing (GenericNode)
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
@@ -56,8 +57,8 @@ import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
-import Query
 import Query.Attribute
+import Query.Filters
 
 
 {-| Get the root folders and their sub-folders.
@@ -104,7 +105,7 @@ subfolder folderIds =
     Mediatum.Query.allFolders
         (\optionals ->
             { optionals
-                | parentIds = List.map (Folder.idToInt >> Just) folderIds |> Present
+                | parentIds = List.map (folderIdToInt >> Just) folderIds |> Present
             }
         )
         (Mediatum.Object.FoldersConnection.nodes Api.Fragments.folder)
@@ -126,7 +127,7 @@ _GraphQL notation:_
     }
 
 -}
-genericNode : Int -> SelectionSet GenericNode Graphql.Operation.RootQuery
+genericNode : NodeId -> SelectionSet GenericNode Graphql.Operation.RootQuery
 genericNode nodeId =
     let
         constructor : Maybe (Nonempty Folder) -> Maybe Document -> GenericNode
@@ -144,7 +145,7 @@ genericNode nodeId =
     Mediatum.Query.genericNodeById
         (\optionals ->
             { optionals
-                | id = Present nodeId
+                | id = Present (nodeIdToInt nodeId)
             }
         )
         (SelectionSet.succeed constructor
@@ -173,36 +174,31 @@ _GraphQL notation:_
             limit: $limitNumberUsedForPagination
             offset: $offsetNumberUsedForPagination
         ) {
-            ...documentResultPage
+            ...documentsPage
         }
     }
 
 -}
 folderDocumentsPage :
-    Maybe (Pagination.Offset.Page.Page DocumentResult)
-    -> Pagination.Offset.Page.Position
-    -> Query.FolderQuery
-    -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
-folderDocumentsPage referencePage paginationPosition folderQuery =
+    Window
+    -> FolderId
+    -> Filters
+    -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
+folderDocumentsPage window folderId filters =
     Mediatum.Query.allDocumentsPage
         (\optionals ->
             { optionals
-                | folderId = folderQuery.folder |> .id |> Folder.idToInt |> Present
+                | folderId = Present (folderIdToInt folderId)
                 , attributeTests =
-                    folderQuery.filters
-                        |> Query.filtersToAttributeTests
+                    filters
+                        |> Query.Filters.toAttributeTests
                         |> Query.Attribute.testsAsGraphqlArgument
                         |> Present
-                , limit = Present Config.pageSize
-                , offset =
-                    Pagination.Offset.Page.positionToOffset
-                        Config.pageSize
-                        referencePage
-                        paginationPosition
-                        |> Present
+                , limit = Present window.limit
+                , offset = Present window.offset
             }
         )
-        (Api.Fragments.documentResultPage "nodesmall")
+        (Api.Fragments.documentsPage "nodesmall")
         |> SelectionSet.nonNullOrFail
 
 
@@ -223,16 +219,17 @@ _GraphQL notation:_
 
 -}
 folderDocumentsFolderCounts :
-    Query.FolderQuery
+    FolderId
+    -> Filters
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-folderDocumentsFolderCounts folderQuery =
+folderDocumentsFolderCounts folderId filters =
     Mediatum.Query.allDocumentsDocset
         (\optionals ->
             { optionals
-                | folderId = folderQuery.folder |> .id |> Folder.idToInt |> Present
+                | folderId = Present (folderIdToInt folderId)
                 , attributeTests =
-                    folderQuery.filters
-                        |> Query.filtersToAttributeTests
+                    filters
+                        |> Query.Filters.toAttributeTests
                         |> Query.Attribute.testsAsGraphqlArgument
                         |> Present
             }
@@ -256,46 +253,43 @@ _GraphQL notation:_
             limit: $limitNumberUsedForPagination
             offset: $offsetNumberUsedForPagination
         ) {
-            ...documentResultPage
+            ...documentsPage
         }
     }
 
 -}
 ftsPage :
-    Maybe (Pagination.Offset.Page.Page DocumentResult)
-    -> Pagination.Offset.Page.Position
-    -> Query.FtsQuery
-    -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Graphql.Operation.RootQuery
-ftsPage referencePage paginationPosition ftsQuery =
+    Window
+    -> FolderId
+    -> SearchTerm
+    -> FtsSorting
+    -> Filters
+    -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
+ftsPage window folderId searchTerm ftsSorting filters =
     Mediatum.Query.ftsDocumentsPage
         (\optionals ->
             { optionals
-                | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
-                , text = Present ftsQuery.searchTerm
+                | folderId = Present (folderIdToInt folderId)
+                , text = Present (Data.Types.SearchTerm.toString searchTerm)
                 , sorting =
                     Present
-                        (case ftsQuery.sorting of
-                            Query.ByRank ->
+                        (case ftsSorting of
+                            FtsByRank ->
                                 Mediatum.Enum.FtsSorting.ByRank
 
-                            Query.ByDate ->
+                            FtsByDate ->
                                 Mediatum.Enum.FtsSorting.ByDate
                         )
                 , attributeTests =
-                    ftsQuery.filters
-                        |> Query.filtersToAttributeTests
+                    filters
+                        |> Query.Filters.toAttributeTests
                         |> Query.Attribute.testsAsGraphqlArgument
                         |> Present
-                , limit = Present Config.pageSize
-                , offset =
-                    Pagination.Offset.Page.positionToOffset
-                        Config.pageSize
-                        referencePage
-                        paginationPosition
-                        |> Present
+                , limit = Present window.limit
+                , offset = Present window.offset
             }
         )
-        (Api.Fragments.documentResultPage "nodesmall")
+        (Api.Fragments.documentsPage "nodesmall")
         |> SelectionSet.nonNullOrFail
 
 
@@ -319,17 +313,20 @@ _GraphQL notation:_
 
 -}
 ftsFolderCounts :
-    Query.FtsQuery
+    FolderId
+    -> SearchTerm
+    -> FtsSorting
+    -> Filters
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-ftsFolderCounts ftsQuery =
+ftsFolderCounts folderId searchTerm ftsSorting filters =
     Mediatum.Query.ftsDocumentsDocset
         (\optionals ->
             { optionals
-                | folderId = ftsQuery.folder |> .id |> Folder.idToInt |> Present
-                , text = Present ftsQuery.searchTerm
+                | folderId = Present (folderIdToInt folderId)
+                , text = Present (Data.Types.SearchTerm.toString searchTerm)
                 , attributeTests =
-                    ftsQuery.filters
-                        |> Query.filtersToAttributeTests
+                    filters
+                        |> Query.Filters.toAttributeTests
                         |> Query.Attribute.testsAsGraphqlArgument
                         |> Present
             }
@@ -406,7 +403,7 @@ documentDetails documentId =
     Mediatum.Query.documentById
         (\optionals ->
             { optionals
-                | id = Present (Document.idToInt documentId)
+                | id = Present (documentIdToInt documentId)
             }
         )
         (Api.Fragments.documentByMask "nodebig")

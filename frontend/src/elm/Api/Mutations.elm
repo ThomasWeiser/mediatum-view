@@ -10,7 +10,8 @@ module Api.Mutations exposing (updateDocumentAttribute)
 -}
 
 import Api.Fragments
-import Document exposing (Document, DocumentId)
+import Data.Types exposing (..)
+import Document
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
@@ -48,7 +49,7 @@ updateDocumentAttribute documentId key value =
         (Mediatum.Mutation.updateDocumentAttribute
             { input =
                 { clientMutationId = Absent
-                , id = Present (Document.idToInt documentId)
+                , id = Present (documentIdToInt documentId)
                 , key = Present key
                 , value = Present value
                 }

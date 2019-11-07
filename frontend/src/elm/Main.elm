@@ -7,6 +7,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Route
+import Route.Url
 import Url exposing (Url)
 
 
@@ -39,7 +40,9 @@ init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url navigationKey =
     let
         ( appModel, appCmd ) =
-            App.init (Route.parseUrl url)
+            Route.Url.parseUrl url
+                |> Maybe.withDefault Route.home
+                |> App.init
     in
     ( { navigationKey = navigationKey
       , app = appModel
@@ -71,10 +74,13 @@ update msg model =
         UrlChanged url ->
             let
                 route =
-                    Route.parseUrl url
+                    Route.Url.parseUrl url
+                        |> Maybe.withDefault Route.home
 
                 ( subModel, subCmd ) =
-                    App.changeRouteTo route model.app
+                    model.app
+                        |> App.updateRoute route
+                        |> App.requestNeeds
             in
             ( { model
                 | app = subModel
@@ -84,19 +90,23 @@ update msg model =
 
         AppMsg subMsg ->
             let
-                ( subModel, subCmd, subReturn ) =
+                ( subModel1, subCmd1, subReturn1 ) =
                     App.update subMsg model.app
+
+                ( subModel2, subCmd2 ) =
+                    App.requestNeeds subModel1
             in
             ( { model
-                | app = subModel
+                | app = subModel2
               }
             , Cmd.batch
-                [ Cmd.map AppMsg subCmd
-                , case subReturn of
+                [ Cmd.map AppMsg subCmd1
+                , Cmd.map AppMsg subCmd2
+                , case subReturn1 of
                     App.ReflectRoute route ->
                         Browser.Navigation.pushUrl
                             model.navigationKey
-                            (Route.toString route)
+                            (Route.Url.toString route)
 
                     App.NoReturn ->
                         Cmd.none

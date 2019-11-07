@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "description": "Web app as a client for the GraphQL API of mediaTUM",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "elm-test",
+    "test-watch": "elm-test --watch",
     "generate": "rimraf gen && elm-graphql http://localhost:5000/graphql --base Mediatum --output gen/",
     "compile": "rimraf elm-stuff/build-artifacts && ncp src/assets dist && elm make --output=dist/app.js src/elm/Main.elm",
     "build": "npm run generate && npm run compile",
     "start": "ncp src/assets dist && elm-live -u -e node_modules/.bin/elm -d dist src/elm/Main.elm -x /graphql -y http://localhost:5000 -- --output=dist/app.js --debug",
-    "format": "elm-format --yes src/elm",
+    "format": "elm-format --yes src/elm tests",
     "clean": "rimraf gen elm-stuff"
   },
   "repository": {
@@ -33,12 +34,13 @@
   "homepage": "https://github.com/ThomasWeiser/mediatum-view#readme",
   "devDependencies": {
     "@dillonkearns/elm-graphql": "^3.6.2",
-    "elm-format": "^0.8.1",
+    "elm-format": "^0.8.2",
     "elm-live": "^3.4.1",
-    "rimraf": "^2.6.3",
-    "ncp": "^2.0.0"
+    "elm-test": "^0.19.1",
+    "ncp": "^2.0.0",
+    "rimraf": "^2.6.3"
   },
   "dependencies": {
-    "elm": "^0.19.0-no-deps"
+    "elm": "^0.19.1-3"
   }
 }

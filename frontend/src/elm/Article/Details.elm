@@ -2,7 +2,8 @@ module Article.Details exposing
     ( Context
     , Model
     , Msg
-    , init
+    , Return(..)
+    , initialModel
     , update
     , view
     )
@@ -10,35 +11,35 @@ module Article.Details exposing
 import Api
 import Api.Mutations
 import Api.Queries
-import Document exposing (Attribute, Document, DocumentId)
+import Data.Cache as Cache exposing (ApiData)
+import Data.Types exposing (Document, DocumentAttribute, DocumentId)
+import Document
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
 import Maybe.Extra
-import Query
+import RemoteData
 import Utils
 
 
 type alias Context =
-    { detailsQuery : Query.DetailsQuery
+    { cache : Cache.Model
+    , documentId : DocumentId
     }
+
+
+type Return
+    = NoReturn
+    | UpdateCacheWithModifiedDocument Document
 
 
 type alias Model =
-    { remoteDocument : RemoteDocument
-    , editAttributeKey : String
+    { editAttributeKey : String
     , editAttributeValue : String
     , mutationState : MutationState
     }
-
-
-type RemoteDocument
-    = Loading
-    | Success Document
-    | NotFound DocumentId
-    | QueryError Api.Error
 
 
 type MutationState
@@ -49,71 +50,55 @@ type MutationState
 
 
 type Msg
-    = ApiQueryResponse DocumentId (Api.Response (Maybe Document))
-    | ApiMutationResponse DocumentId String (Api.Response (Maybe Document))
+    = ApiMutationResponse DocumentId String (Api.Response (Maybe Document))
     | SetAttributeKey String
     | SetAttributeValue String
     | SubmitMutation DocumentId
 
 
-init : Context -> ( Model, Cmd Msg )
-init context =
-    ( { remoteDocument = Loading
-      , editAttributeKey = ""
-      , editAttributeValue = ""
-      , mutationState = Init
-      }
-    , Api.sendQueryRequest
-        (ApiQueryResponse context.detailsQuery.documentId)
-        (Api.Queries.documentDetails context.detailsQuery.documentId)
-    )
+initialModel : Model
+initialModel =
+    { editAttributeKey = ""
+    , editAttributeValue = ""
+    , mutationState = Init
+    }
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
+update context msg model =
     case msg of
-        ApiQueryResponse _ (Err err) ->
-            ( { model | remoteDocument = QueryError err }
-            , Cmd.none
-            )
-
-        ApiQueryResponse id (Ok result) ->
-            ( { model
-                | remoteDocument =
-                    Maybe.Extra.unwrap (NotFound id) Success result
-              }
-                |> initEditAttributeValue
-            , Cmd.none
-            )
-
         ApiMutationResponse _ _ (Err err) ->
             ( { model | mutationState = MutationError err }
             , Cmd.none
+            , NoReturn
             )
 
         ApiMutationResponse _ key (Ok Nothing) ->
             ( { model | mutationState = CannotUpdateKey key }
             , Cmd.none
+            , NoReturn
             )
 
         ApiMutationResponse id _ (Ok (Just result)) ->
             ( { model
-                | remoteDocument = Success result
-                , mutationState = Init
+                | mutationState = Init
               }
-                |> initEditAttributeValue
+                |> initEditAttributeValue context
             , Cmd.none
+            , UpdateCacheWithModifiedDocument result
             )
 
         SetAttributeKey key ->
             ( { model | editAttributeKey = key }
-                |> initEditAttributeValue
+                |> initEditAttributeValue context
             , Cmd.none
+            , NoReturn
             )
 
         SetAttributeValue value ->
             ( { model | editAttributeValue = value }
             , Cmd.none
+            , NoReturn
             )
 
         SubmitMutation documentId ->
@@ -125,13 +110,18 @@ update msg model =
                     model.editAttributeKey
                     model.editAttributeValue
                 )
+            , NoReturn
             )
 
 
-initEditAttributeValue : Model -> Model
-initEditAttributeValue model =
-    case model.remoteDocument of
-        Success document ->
+initEditAttributeValue : Context -> Model -> Model
+initEditAttributeValue context model =
+    case
+        Cache.get
+            context.cache.documents
+            context.documentId
+    of
+        RemoteData.Success (Just document) ->
             let
                 ( key1, value1 ) =
                     case Document.attributeValue model.editAttributeKey document of
@@ -157,25 +147,37 @@ initEditAttributeValue model =
             model
 
 
-view : Model -> Html Msg
-view model =
+view : Context -> Model -> Html Msg
+view context model =
     Html.div [ Html.Attributes.class "details" ]
-        [ case model.remoteDocument of
-            Loading ->
+        [ case
+            Cache.get
+                context.cache.documents
+                context.documentId
+          of
+            RemoteData.NotAsked ->
+                -- Should never happen
                 Icons.spinner
 
-            Success document ->
+            RemoteData.Loading ->
+                Icons.spinner
+
+            RemoteData.Failure error ->
+                viewApiError error
+
+            RemoteData.Success (Just document) ->
                 viewDocument model document
 
-            NotFound id ->
+            RemoteData.Success Nothing ->
                 Html.span []
                     [ Html.text "Document with id "
-                    , Html.text (Document.idToString id)
+                    , Html.text
+                        (context.documentId
+                            |> Data.Types.documentIdToInt
+                            |> String.fromInt
+                        )
                     , Html.text " not available"
                     ]
-
-            QueryError error ->
-                viewGraphqlError error
         ]
 
 
@@ -198,7 +200,7 @@ viewDocument model document =
         ]
 
 
-viewAttribute : Attribute -> Html msg
+viewAttribute : DocumentAttribute -> Html msg
 viewAttribute attribute =
     case attribute.value of
         Just value ->
@@ -211,8 +213,8 @@ viewAttribute attribute =
             Html.text ""
 
 
-viewGraphqlError : Api.Error -> Html msg
-viewGraphqlError error =
+viewApiError : Api.Error -> Html msg
+viewApiError error =
     viewError (Graphql.Extra.errorToString error)
 
 
@@ -267,7 +269,7 @@ viewEditAttribute model document =
                         viewError <| "Cannot update key \"" ++ key ++ "\". It's not present in the JSON attributes of the document's node"
 
                     MutationError error ->
-                        viewGraphqlError error
+                        viewApiError error
                 ]
             ]
         ]

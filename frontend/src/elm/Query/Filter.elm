@@ -1,145 +1,144 @@
 module Query.Filter exposing
-    ( Filter(..)
+    ( Controls(..)
     , FilterType
+    , controlsFromFilter
+    , controlsToFilter
     , filterTypes
     , handle
-    , isEmpty
-    , normalize
     , toAttributeTest
     , view
     , viewEdit
     )
 
+import Basics.Extra
+import Data.Types exposing (Filter(..))
+import Data.Types.SearchTerm
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Maybe.Extra
 import Query.Attribute
+import Range exposing (Range)
+import String.Extra
 import Utils
-
-
-type Filter
-    = YearWithin String String
-    | TitleFts String
 
 
 type alias FilterType =
     { name : String
-    , initFilter : Filter
+    , initControls : Controls
     }
+
+
+type Controls
+    = ControlsYearWithin (Maybe Int) (Maybe Int)
+    | ControlsTitleFts String
 
 
 filterTypes : List FilterType
 filterTypes =
-    [ { name = "Year", initFilter = initYearWithin }
-    , { name = "Title", initFilter = initTitleFts }
+    [ { name = "Year", initControls = initControlsYearWithin }
+    , { name = "Title", initControls = initControlsTitleFts }
     ]
 
 
-initYearWithin : Filter
-initYearWithin =
-    YearWithin "" ""
+initControlsYearWithin : Controls
+initControlsYearWithin =
+    ControlsYearWithin Nothing Nothing
 
 
-initTitleFts : Filter
-initTitleFts =
-    TitleFts ""
+initControlsTitleFts : Controls
+initControlsTitleFts =
+    ControlsTitleFts ""
+
+
+controlsFromFilter : Filter -> Controls
+controlsFromFilter filter =
+    case filter of
+        FilterYearWithin range ->
+            Basics.Extra.uncurry ControlsYearWithin
+                (Range.toMaybe range)
+
+        FilterTitleFts searchTerm ->
+            ControlsTitleFts (Data.Types.SearchTerm.toString searchTerm)
+
+
+controlsToFilter : Controls -> Maybe Filter
+controlsToFilter controls =
+    case controls of
+        ControlsYearWithin from to ->
+            Range.fromMaybe ( from, to )
+                |> Maybe.map FilterYearWithin
+
+        ControlsTitleFts searchTerm ->
+            searchTerm
+                |> Data.Types.SearchTerm.fromString
+                |> Maybe.map FilterTitleFts
 
 
 handle : Filter -> String
 handle filter =
     case filter of
-        YearWithin fromYear toYear ->
+        FilterYearWithin _ ->
             "YearWithin"
 
-        TitleFts searchTerm ->
-            "TitleFts-" ++ searchTerm
-
-
-normalize : Filter -> Filter
-normalize filter =
-    case filter of
-        YearWithin fromYear toYear ->
-            if Maybe.map2 (>) (String.toInt fromYear) (String.toInt toYear) == Just True then
-                YearWithin toYear fromYear
-
-            else
-                filter
-
-        _ ->
-            filter
-
-
-isEmpty : Filter -> Bool
-isEmpty filter =
-    case filter of
-        YearWithin "" "" ->
-            True
-
-        TitleFts "" ->
-            True
-
-        _ ->
-            False
+        FilterTitleFts searchTerm ->
+            "TitleFts-" ++ Data.Types.SearchTerm.toString searchTerm
 
 
 toAttributeTest : Filter -> Query.Attribute.Test
 toAttributeTest filter =
     case filter of
-        YearWithin fromYear toYear ->
+        FilterYearWithin range ->
             { key = "year"
-            , operation = Query.Attribute.DateRange fromYear toYear
+            , operation =
+                Query.Attribute.DateRange
+                    (Range.unwrap "" String.fromInt range)
             }
 
-        TitleFts searchTerm ->
+        FilterTitleFts searchTerm ->
             { key = "title"
-            , operation = Query.Attribute.SimpleFts searchTerm
+            , operation =
+                Query.Attribute.SimpleFts
+                    (Data.Types.SearchTerm.toString searchTerm)
             }
 
 
 view : Filter -> List (Html msg)
 view filter =
     case filter of
-        YearWithin "" "" ->
-            -- Should never occur here
-            [ Html.text "" ]
-
-        YearWithin fromYear "" ->
+        FilterYearWithin (Range.From fromYear) ->
             [ Html.text "Years from "
-            , quote fromYear
+            , quote (String.fromInt fromYear)
             ]
 
-        YearWithin "" toYear ->
+        FilterYearWithin (Range.To toYear) ->
             [ Html.text "Years up to "
-            , quote toYear
+            , quote (String.fromInt toYear)
             ]
 
-        YearWithin fromYear toYear ->
+        FilterYearWithin (Range.FromTo fromYear toYear) ->
             if fromYear == toYear then
                 [ Html.text "Year "
-                , quote fromYear
+                , quote (String.fromInt fromYear)
                 ]
 
             else
                 [ Html.text "Years from "
-                , quote fromYear
+                , quote (String.fromInt fromYear)
                 , Html.text " to "
-                , quote toYear
+                , quote (String.fromInt toYear)
                 ]
 
-        TitleFts "" ->
-            -- Should never occur here
-            [ Html.text "" ]
-
-        TitleFts searchTerm ->
+        FilterTitleFts searchTerm ->
             [ Html.text "Title: "
-            , quote searchTerm
+            , quote (Data.Types.SearchTerm.toString searchTerm)
             ]
 
 
-viewEdit : String -> Filter -> Html Filter
-viewEdit focusId filter =
-    case filter of
-        YearWithin from to ->
+viewEdit : String -> Controls -> Html Controls
+viewEdit focusId controls =
+    case controls of
+        ControlsYearWithin from to ->
             Html.span
                 [ Html.Attributes.class "filter-inputs" ]
                 [ Html.input
@@ -148,8 +147,12 @@ viewEdit focusId filter =
                     , Html.Attributes.min "1900"
                     , Html.Attributes.max "2100"
                     , Html.Attributes.placeholder "from"
-                    , Html.Attributes.value from
-                    , Utils.onChange (\from1 -> YearWithin from1 to)
+                    , Html.Attributes.value
+                        (Maybe.Extra.unwrap "" String.fromInt from)
+                    , Utils.onChange
+                        (\from1 ->
+                            ControlsYearWithin (String.toInt from1) to
+                        )
                     ]
                     []
                 , Html.input
@@ -157,13 +160,17 @@ viewEdit focusId filter =
                     , Html.Attributes.min "1900"
                     , Html.Attributes.max "2100"
                     , Html.Attributes.placeholder "to"
-                    , Html.Attributes.value to
-                    , Utils.onChange (\to1 -> YearWithin from to1)
+                    , Html.Attributes.value
+                        (Maybe.Extra.unwrap "" String.fromInt to)
+                    , Utils.onChange
+                        (\to1 ->
+                            ControlsYearWithin from (String.toInt to1)
+                        )
                     ]
                     []
                 ]
 
-        TitleFts searchTerm ->
+        ControlsTitleFts searchTerm ->
             Html.span
                 [ Html.Attributes.class "filter-inputs" ]
                 [ Html.input
@@ -171,7 +178,7 @@ viewEdit focusId filter =
                     , Html.Attributes.type_ "text"
                     , Html.Attributes.placeholder "Title full text filter"
                     , Html.Attributes.value searchTerm
-                    , Utils.onChange TitleFts
+                    , Utils.onChange ControlsTitleFts
                     ]
                     []
                 ]

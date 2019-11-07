@@ -3,12 +3,14 @@ module Controls exposing
     , Model
     , Msg
     , Return(..)
-    , init
+    , initialModel
     , submitExampleQuery
     , update
     , view
     )
 
+import Data.Types exposing (Filter(..), Filters, FtsSorting(..))
+import Data.Types.SearchTerm exposing (SearchTerm)
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes
@@ -16,35 +18,39 @@ import Html.Events
 import Icons
 import List.Extra
 import Maybe.Extra
-import Query exposing (Query)
-import Query.Filter as Filter exposing (Filter)
+import Navigation exposing (Navigation)
+import Presentation exposing (Presentation)
+import Query.Filter as Filter
 import Query.FilterEditor as FilterEditor
-import Query.Filters as Filters exposing (Filters)
+import Query.Filters as Filters
+import Range
+import Route exposing (Route)
 import Tree
 import Utils
 
 
 type alias Context =
-    { query : Query
+    { route : Route
+    , presentation : Presentation
     }
 
 
 type Return
     = NoReturn
-    | MapQuery (Query -> Query)
+    | Navigate Navigation
 
 
 type alias Model =
-    { searchTerm : String
-    , sorting : Query.FtsSorting
+    { ftsTerm : String
+    , ftsSorting : FtsSorting
     , filterEditors : Dict String FilterEditor.Model
     }
 
 
 type Msg
-    = NoOp
-    | SetSearchTerm String
-    | SetSorting Query.FtsSorting
+    = SetSearchTerm String
+    | SetSorting FtsSorting
+    | AddFilter Filter.FilterType
     | EditFilter Filter
     | RemoveFilter Filter
     | Submit
@@ -57,36 +63,69 @@ submitExampleQuery =
     SubmitExampleQuery
 
 
-init : () -> Model
-init _ =
-    { searchTerm = ""
-    , sorting = Query.ByRank
+initialModel : Route -> Model
+initialModel route =
+    { ftsTerm =
+        case route.parameters.ftsTerm of
+            Nothing ->
+                ""
+
+            Just seachTerm ->
+                Data.Types.SearchTerm.toString seachTerm
+    , ftsSorting = route.parameters.ftsSorting
     , filterEditors = Dict.empty
     }
 
 
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
-    case msg of
-        NoOp ->
-            ( model, Cmd.none, NoReturn )
+    let
+        removeFilter filterHandle =
+            Filters.fromRoute context.route
+                |> Filters.remove filterHandle
+                |> Navigation.ShowListingWithFilters
+                |> Navigate
 
-        SetSearchTerm str ->
-            ( { model | searchTerm = str }
+        insertFilter oldFilterHandlefilter newFilter =
+            Filters.fromRoute context.route
+                |> Filters.remove oldFilterHandlefilter
+                |> Filters.insert newFilter
+                |> Navigation.ShowListingWithFilters
+                |> Navigate
+    in
+    case msg of
+        SetSearchTerm ftsTerm ->
+            ( { model | ftsTerm = ftsTerm }
             , Cmd.none
             , NoReturn
             )
 
-        SetSorting sorting ->
-            ( { model | sorting = sorting }
+        SetSorting ftsSorting ->
+            ( { model | ftsSorting = ftsSorting }
             , Cmd.none
+            , NoReturn
+            )
+
+        AddFilter filterType ->
+            let
+                ( filterEditorModel, filterEditorCmd ) =
+                    FilterEditor.init filterType.initControls
+
+                filterHandle =
+                    "new-" ++ filterType.name
+            in
+            ( { model
+                | filterEditors =
+                    Dict.insert filterHandle filterEditorModel model.filterEditors
+              }
+            , filterEditorCmd |> Cmd.map (FilterEditorMsg filterHandle)
             , NoReturn
             )
 
         EditFilter filter ->
             let
                 ( filterEditorModel, filterEditorCmd ) =
-                    FilterEditor.init filter
+                    FilterEditor.init (Filter.controlsFromFilter filter)
 
                 filterHandle =
                     Filter.handle filter
@@ -102,53 +141,40 @@ update context msg model =
         RemoveFilter filter ->
             ( model
             , Cmd.none
-            , MapQuery <|
-                Query.mapFilters <|
-                    Filters.remove <|
-                        Filter.handle filter
+            , removeFilter (Filter.handle filter)
             )
 
         Submit ->
-            let
-                query =
-                    if model.searchTerm == "" then
-                        Query.OnFolder
-                            { folder = Query.getFolder context.query
-                            , filters = Query.getFilters context.query
-                            }
-
-                    else
-                        Query.OnFts
-                            { folder = Query.getFolder context.query
-                            , filters = Query.getFilters context.query
-                            , searchTerm = model.searchTerm
-                            , sorting = model.sorting
-                            }
-            in
             ( model
             , Cmd.none
-            , MapQuery (always query)
+            , Navigate
+                (Navigation.ShowListingWithSearch
+                    (Data.Types.SearchTerm.fromString model.ftsTerm)
+                    model.ftsSorting
+                )
             )
 
         SubmitExampleQuery ->
             let
-                searchTerm =
-                    "variable"
-
-                query =
-                    Query.OnFts
-                        { folder = Query.getFolder context.query
-                        , filters =
-                            Filters.none
-                                |> Filters.insert (Filter.YearWithin "2000" "2010")
-                                |> Filters.insert (Filter.TitleFts "with")
-                        , searchTerm = searchTerm
-                        , sorting = model.sorting
-                        }
+                filters =
+                    Filters.none
+                        |> Filters.insert
+                            (FilterYearWithin (Range.fromTo ( 2000, 2010 )))
+                        |> Filters.insert
+                            (FilterTitleFts
+                                (Data.Types.SearchTerm.fromStringWithDefault "no-default-needed" "with")
+                            )
             in
-            ( { model | searchTerm = searchTerm }
+            ( model
             , Cmd.none
-            , MapQuery (always query)
+            , [ Navigation.ShowListingWithSearch
+                    (Data.Types.SearchTerm.fromString "variable")
+                    context.route.parameters.ftsSorting
+              , Navigation.ShowListingWithFilters
+                    filters
+              ]
+                |> Navigation.ListOfNavigations
+                |> Navigate
             )
 
         FilterEditorMsg filterHandle subMsg ->
@@ -180,21 +206,13 @@ update context msg model =
                         FilterEditor.Saved newFilter ->
                             ( modelWithEditorClosed
                             , cmd
-                            , MapQuery
-                                (Query.mapFilters
-                                    (Filters.remove filterHandle
-                                        >> Filters.insert newFilter
-                                    )
-                                )
+                            , insertFilter filterHandle newFilter
                             )
 
                         FilterEditor.Removed ->
                             ( modelWithEditorClosed
                             , cmd
-                            , MapQuery
-                                (Query.mapFilters
-                                    (Filters.remove filterHandle)
-                                )
+                            , removeFilter filterHandle
                             )
 
                         FilterEditor.Canceled ->
@@ -211,11 +229,7 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.div []
         [ viewSearch context model
-        , if Query.showFilters context.query then
-            viewFilters context model
-
-          else
-            Html.text ""
+        , viewFilters context model
         ]
 
 
@@ -228,20 +242,28 @@ viewSearch context model =
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
                 , Html.Attributes.placeholder "Search ..."
-                , Html.Attributes.value model.searchTerm
+                , Html.Attributes.value model.ftsTerm
                 , Utils.onChange SetSearchTerm
                 ]
                 []
             , Html.button
                 [ Html.Attributes.type_ "submit"
-                , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByRank ) ]
-                , Html.Events.onClick (SetSorting Query.ByRank)
+                , Html.Attributes.classList
+                    [ ( "selected"
+                      , model.ftsSorting == FtsByRank
+                      )
+                    ]
+                , Html.Events.onClick (SetSorting FtsByRank)
                 ]
                 [ Icons.search, Html.text " By Rank" ]
             , Html.button
                 [ Html.Attributes.type_ "submit"
-                , Html.Attributes.classList [ ( "selected", model.sorting == Query.ByDate ) ]
-                , Html.Events.onClick (SetSorting Query.ByDate)
+                , Html.Attributes.classList
+                    [ ( "selected"
+                      , model.ftsSorting == FtsByDate
+                      )
+                    ]
+                , Html.Events.onClick (SetSorting FtsByDate)
                 ]
                 [ Icons.search, Html.text " By Date" ]
             ]
@@ -253,21 +275,21 @@ viewFilters context model =
     Html.div [ Html.Attributes.class "filters-bar" ]
         [ Html.span [] <|
             List.map
-                (\{ name, initFilter } ->
+                (\filterType ->
                     Html.span
                         [ Html.Attributes.class "input-group" ]
                         [ Html.button
                             [ Html.Attributes.type_ "button"
-                            , Html.Events.onClick <| EditFilter initFilter
+                            , Html.Events.onClick <| AddFilter filterType
                             , Html.Attributes.class "filter-button"
                             ]
-                            [ Html.text <| name ++ "..." ]
+                            [ Html.text <| filterType.name ++ "..." ]
                         ]
                 )
                 Filter.filterTypes
         , viewExistingFilters
             model
-            (Query.getFilters context.query)
+            (Filters.fromRoute context.route)
         , Html.span [] <|
             List.map
                 (\( filterHandle, filterEditor ) ->

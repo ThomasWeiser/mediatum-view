@@ -1,7 +1,7 @@
 module Api.Fragments exposing
     ( folder, folderAndSubfolders, folderLineage
     , folderAndSubfolderCounts, folderCount
-    , documentResultPage, documentResult, documentByMask
+    , documentsPage, documentResult, documentByMask
     , graphqlDocumentObjects
     )
 
@@ -20,7 +20,7 @@ module Api.Fragments exposing
 
 # Fragments for Document Results
 
-@docs documentResultPage, documentResult, documentByMask
+@docs documentsPage, documentResult, documentByMask
 
 
 # Relay Connection Utility
@@ -29,10 +29,11 @@ module Api.Fragments exposing
 
 -}
 
-import Dict
-import Document exposing (Document)
-import DocumentResult exposing (DocumentResult)
-import Folder exposing (Folder, FolderId)
+import Data.Types exposing (..)
+import Data.Utils
+import Document
+import DocumentResult
+import Folder
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
@@ -53,6 +54,7 @@ import Mediatum.Object.PageInfo
 import Mediatum.Scalar
 import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
+import Utils
 
 
 {-| Selection set on a Folder to get basic properties of the folder.
@@ -71,11 +73,29 @@ _GraphQL notation:_
 folder : SelectionSet Folder Mediatum.Object.Folder
 folder =
     SelectionSet.succeed Folder.init
-        |> SelectionSet.with (Mediatum.Object.Folder.id |> SelectionSet.nonNullOrFail)
-        |> SelectionSet.with Mediatum.Object.Folder.parentId
-        |> SelectionSet.with (Mediatum.Object.Folder.name |> SelectionSet.nonNullOrFail)
-        |> SelectionSet.with (Mediatum.Object.Folder.isCollection |> SelectionSet.nonNullOrFail)
-        |> SelectionSet.with (Mediatum.Object.Folder.numSubfolder |> SelectionSet.nonNullOrFail)
+        |> SelectionSet.with
+            (Mediatum.Object.Folder.id
+                |> SelectionSet.nonNullOrFail
+                |> SelectionSet.map folderIdFromInt
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.Folder.parentId
+                |> SelectionSet.map (Maybe.map folderIdFromInt)
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.Folder.name
+                |> SelectionSet.nonNullOrFail
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.Folder.isCollection
+                |> SelectionSet.nonNullOrFail
+                |> SelectionSet.map
+                    (Utils.ifElse FolderIsCollection FolderIsDirectory)
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.Folder.numSubfolder
+                |> SelectionSet.nonNullOrFail
+            )
 
 
 {-| Selection set on a folder to get the basic properties of that folder and of its sub-folders.
@@ -146,10 +166,13 @@ _GraphQL notation:_
     }
 
 -}
-folderAndSubfolderCounts : SelectionSet Folder.FolderCounts Mediatum.Object.Docset
+folderAndSubfolderCounts : SelectionSet FolderCounts Mediatum.Object.Docset
 folderAndSubfolderCounts =
     SelectionSet.succeed
-        (\pair listOfPairs -> Dict.fromList (pair :: listOfPairs))
+        (\pair listOfPairs ->
+            Data.Utils.folderCountsFromList
+                (pair :: listOfPairs)
+        )
         |> SelectionSet.with
             (Mediatum.Object.Docset.folderCount
                 folderCount
@@ -183,7 +206,7 @@ folderCount =
         |> SelectionSet.with
             (Mediatum.Object.FolderCount.folderId
                 |> SelectionSet.nonNullOrFail
-                |> SelectionSet.map Folder.idFromInt
+                |> SelectionSet.map folderIdFromInt
             )
         |> SelectionSet.with
             (Mediatum.Object.FolderCount.count
@@ -199,7 +222,7 @@ The nested documents are rendered according to a named mediaTUM mask.
 
 _GraphQL notation:_
 
-    fragment documentResultPage on DocumentResultPage {
+    fragment documentsPage on DocumentResultPage {
         offset
         hasNextPage
         content {
@@ -208,11 +231,11 @@ _GraphQL notation:_
     }
 
 -}
-documentResultPage :
+documentsPage :
     String
-    -> SelectionSet (Pagination.Offset.Page.Page DocumentResult) Mediatum.Object.DocumentResultPage
-documentResultPage maskName =
-    SelectionSet.succeed Pagination.Offset.Page.Page
+    -> SelectionSet DocumentsPage Mediatum.Object.DocumentResultPage
+documentsPage maskName =
+    SelectionSet.succeed WindowPage
         |> SelectionSet.with
             (Mediatum.Object.DocumentResultPage.offset
                 |> SelectionSet.nonNullOrFail
@@ -282,6 +305,7 @@ documentByMask maskName =
         |> SelectionSet.with
             (Mediatum.Object.Document.id
                 |> SelectionSet.nonNullOrFail
+                |> SelectionSet.map documentIdFromInt
             )
         |> SelectionSet.with
             (Mediatum.Object.Document.metadatatype
@@ -310,7 +334,7 @@ documentByMask maskName =
 
 {-| Decode a JSON string returned from a query that denotes the mata-values of a document.
 -}
-mapJsonToAttributes : Maybe Mediatum.Scalar.Json -> List Document.Attribute
+mapJsonToAttributes : Maybe Mediatum.Scalar.Json -> List DocumentAttribute
 mapJsonToAttributes maybeJson =
     case maybeJson of
         Nothing ->
@@ -321,12 +345,12 @@ mapJsonToAttributes maybeJson =
                 Json.Decode.decodeString decoderAttributeList str
 
 
-decoderAttributeList : Decoder (List Document.Attribute)
+decoderAttributeList : Decoder (List DocumentAttribute)
 decoderAttributeList =
     Json.Decode.oneOf
         [ Json.Decode.null []
         , Json.Decode.list <|
-            Json.Decode.map4 Document.Attribute
+            Json.Decode.map4 DocumentAttribute
                 (Json.Decode.field "field" Json.Decode.string)
                 (Json.Decode.field "name" Json.Decode.string)
                 (Json.Decode.field "width" Json.Decode.int)

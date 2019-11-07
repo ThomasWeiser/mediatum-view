@@ -2,37 +2,41 @@ module Article exposing
     ( Model
     , Msg
     , Return(..)
-    , initEmpty
-    , initWithQuery
+    , folderCountsForQuery
+    , initialModel
+    , needs
     , update
     , view
     )
 
 import Article.Collection
 import Article.Details
-import Article.Directory
-import Article.Empty
-import Article.Fts
-import Document exposing (DocumentId)
-import Folder exposing (Folder, FolderCounts)
+import Article.DocumentsPage
+import Article.Generic
+import Data.Cache as Cache exposing (ApiData)
+import Data.Types exposing (..)
+import Data.Utils
 import Html exposing (Html)
 import Html.Attributes
-import Query exposing (Query)
-import Query.Filter exposing (Filter)
+import Navigation exposing (Navigation)
+import Presentation exposing (Presentation(..))
+import Query.Filter
 import Query.Filters
+import RemoteData
 import Tree
 import Utils
 
 
 type alias Context =
-    { query : Query
+    { cache : Cache.Model
+    , presentation : Presentation
     }
 
 
 type Return
     = NoReturn
-    | FolderCounts FolderCounts
-    | MapQuery (Query -> Query)
+    | Navigate Navigation
+    | UpdateCacheWithModifiedDocument Document
 
 
 type alias Model =
@@ -41,85 +45,98 @@ type alias Model =
 
 
 type Content
-    = EmptyModel Article.Empty.Model
+    = GenericModel Article.Generic.Model
     | CollectionModel Article.Collection.Model
-    | DirectoryModel Article.Directory.Model
-    | FtsModel Article.Fts.Model
+    | DocumentsPageModel Article.DocumentsPage.Model
     | DetailsModel Article.Details.Model
 
 
 type Msg
-    = EmptyMsg Article.Empty.Msg
+    = GenericMsg Article.Generic.Msg
     | CollectionMsg Article.Collection.Msg
-    | DirectoryMsg Article.Directory.Msg
-    | FtsMsg Article.Fts.Msg
+    | DocumentsPageMsg Article.DocumentsPage.Msg
     | DetailsMsg Article.Details.Msg
 
 
-initEmpty : () -> ( Model, Cmd Msg )
-initEmpty _ =
-    let
-        ( subModel, subCmd ) =
-            Article.Empty.init ()
-    in
-    ( { content = EmptyModel subModel }
-    , Cmd.map EmptyMsg subCmd
-    )
+initialModel : Context -> Model
+initialModel context =
+    case context.presentation of
+        GenericPresentation maybeNodeIds ->
+            { content = GenericModel Article.Generic.initialModel }
+
+        DocumentPresentation maybeFolderId documentId ->
+            { content = DetailsModel Article.Details.initialModel }
+
+        CollectionPresentation folderId ->
+            { content = CollectionModel Article.Collection.initialModel }
+
+        DocumentsPagePresentation selection window ->
+            { content = DocumentsPageModel Article.DocumentsPage.initialModel }
 
 
-initWithQuery : Query -> ( Model, Cmd Msg )
-initWithQuery query =
-    case query of
-        Query.OnDetails detailsQuery ->
-            let
-                ( subModel, subCmd ) =
-                    Article.Details.init <|
-                        { detailsQuery = detailsQuery }
-            in
-            ( { content = DetailsModel subModel }
-            , Cmd.map DetailsMsg subCmd
-            )
+needs : Context -> Cache.Needs
+needs context =
+    case context.presentation of
+        GenericPresentation maybeNodeIds ->
+            -- TODO: Do we want to declare the NeedGenericNode here?
+            --       Currently we already declare these needs in App.needs.
+            case maybeNodeIds of
+                Nothing ->
+                    Cache.NeedNothing
 
-        Query.OnFolder folderQuery ->
-            if folderQuery.folder.isCollection then
-                let
-                    ( subModel, subCmd ) =
-                        Article.Collection.init ()
-                in
-                ( { content = CollectionModel subModel }
-                , Cmd.map CollectionMsg subCmd
-                )
+                Just ( nodeIdOne, maybeNodeIdTwo ) ->
+                    Cache.NeedAnd
+                        (Cache.NeedGenericNode nodeIdOne)
+                        (case maybeNodeIdTwo of
+                            Nothing ->
+                                Cache.NeedNothing
 
-            else
-                let
-                    ( subModel, subCmd ) =
-                        Article.Directory.init
-                            { folderQuery = folderQuery }
-                in
-                ( { content = DirectoryModel subModel }
-                , Cmd.map DirectoryMsg subCmd
-                )
+                            Just nodeIdTwo ->
+                                Cache.NeedGenericNode nodeIdTwo
+                        )
 
-        Query.OnFts ftsQuery ->
-            let
-                ( subModel, subCmd ) =
-                    Article.Fts.init { ftsQuery = ftsQuery }
-            in
-            ( { content = FtsModel subModel }
-            , Cmd.map FtsMsg subCmd
-            )
+        DocumentPresentation maybeFolderId documentId ->
+            Cache.NeedDocument documentId
+
+        CollectionPresentation folderId ->
+            -- TODO: Should there be a need for a folder?
+            Cache.NeedNothing
+
+        DocumentsPagePresentation selection window ->
+            -- TODO: We currently don't observe the needs of an Iterator
+            Cache.NeedAndThen
+                (Cache.NeedDocumentsPage selection window)
+                (Cache.NeedFolderCounts selection)
+
+
+folderCountsForQuery : Context -> Maybe FolderCounts
+folderCountsForQuery context =
+    case context.presentation of
+        GenericPresentation maybeNodeIds ->
+            Nothing
+
+        DocumentPresentation maybeFolderId documentId ->
+            Nothing
+
+        CollectionPresentation folderId ->
+            Nothing
+
+        DocumentsPagePresentation selection window ->
+            Cache.get context.cache.folderCounts selection
+                |> RemoteData.withDefault Data.Utils.folderCountsInit
+                |> Just
 
 
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
-    case ( msg, model.content, context.query ) of
-        ( EmptyMsg subMsg, EmptyModel subModel, _ ) ->
+    case ( msg, model.content, context.presentation ) of
+        ( GenericMsg subMsg, GenericModel subModel, _ ) ->
             let
                 ( subModel1, subCmd ) =
-                    Article.Empty.update subMsg subModel
+                    Article.Generic.update subMsg subModel
             in
-            ( { model | content = EmptyModel subModel1 }
-            , Cmd.map EmptyMsg subCmd
+            ( { model | content = GenericModel subModel1 }
+            , Cmd.map GenericMsg subCmd
             , NoReturn
             )
 
@@ -133,89 +150,52 @@ update context msg model =
             , NoReturn
             )
 
-        ( DirectoryMsg subMsg, DirectoryModel subModel, Query.OnFolder folderQuery ) ->
-            let
-                ( subModel1, subCmd, documentSelection ) =
-                    Article.Directory.update
-                        { folderQuery = folderQuery }
-                        subMsg
-                        subModel
-            in
-            case documentSelection of
-                Article.Directory.NoReturn ->
-                    ( { model | content = DirectoryModel subModel1 }
-                    , Cmd.map DirectoryMsg subCmd
-                    , NoReturn
-                    )
-
-                Article.Directory.FolderCounts folderCounts ->
-                    ( model
-                    , Cmd.none
-                    , FolderCounts folderCounts
-                    )
-
-                Article.Directory.ShowDocument documentId ->
-                    ( model
-                    , Cmd.none
-                    , MapQuery <|
-                        always <|
-                            Query.OnDetails
-                                { folder = folderQuery.folder
-                                , documentId = documentId
-
-                                -- KL: keep filters from original query
-                                , filters = folderQuery.filters
-                                }
-                    )
-
-        ( FtsMsg subMsg, FtsModel subModel, Query.OnFts ftsQuery ) ->
+        ( DocumentsPageMsg subMsg, DocumentsPageModel subModel, DocumentsPagePresentation selection window ) ->
             let
                 ( subModel1, subCmd, subReturn ) =
-                    Article.Fts.update
-                        { ftsQuery = ftsQuery }
+                    Article.DocumentsPage.update
+                        { cache = context.cache
+                        , selection = selection
+                        , window = window
+                        }
                         subMsg
                         subModel
             in
-            case subReturn of
-                Article.Fts.NoReturn ->
-                    ( { model | content = FtsModel subModel1 }
-                    , Cmd.map FtsMsg subCmd
-                    , NoReturn
+            ( { model | content = DocumentsPageModel subModel1 }
+            , Cmd.map DocumentsPageMsg subCmd
+            )
+                |> Utils.tupleAddThird
+                    (case subReturn of
+                        Article.DocumentsPage.NoReturn ->
+                            NoReturn
+
+                        Article.DocumentsPage.Navigate navigation ->
+                            Navigate navigation
                     )
 
-                Article.Fts.FolderCounts folderCounts ->
-                    ( model
-                    , Cmd.none
-                    , FolderCounts folderCounts
-                    )
-
-                Article.Fts.ShowDocument documentId ->
-                    ( model
-                    , Cmd.none
-                    , MapQuery <|
-                        always <|
-                            Query.OnDetails
-                                { folder = ftsQuery.folder
-                                , documentId = documentId
-
-                                -- KL: keep filters from original query
-                                , filters = ftsQuery.filters
-                                }
-                    )
-
-        ( DetailsMsg subMsg, DetailsModel subModel, _ ) ->
+        ( DetailsMsg subMsg, DetailsModel subModel, DocumentPresentation maybeFolderId documentId ) ->
             let
-                ( subModel1, subCmd ) =
-                    Article.Details.update subMsg subModel
+                ( subModel1, subCmd, subReturn ) =
+                    Article.Details.update
+                        { cache = context.cache
+                        , documentId = documentId
+                        }
+                        subMsg
+                        subModel
             in
             ( { model | content = DetailsModel subModel1 }
             , Cmd.map DetailsMsg subCmd
-            , NoReturn
+            , case subReturn of
+                Article.Details.NoReturn ->
+                    NoReturn
+
+                Article.Details.UpdateCacheWithModifiedDocument document ->
+                    UpdateCacheWithModifiedDocument document
             )
 
         _ ->
             -- Message doesn't match model; shouldn't never happen
-            -- Or model doesn't match query-context; TODO: Can this happen?
+            -- Or model doesn't match presentation; TODO: Can this happen?
             ( model, Cmd.none, NoReturn )
 
 
@@ -225,10 +205,14 @@ view tree context model =
         [ Html.Attributes.class "article" ]
         [ Html.div
             [ Html.Attributes.class "breadcrumbs" ]
-            [ Tree.viewBreadcrumbs tree
-                (Query.getFolder context.query |> .id)
+            [ Tree.viewBreadcrumbs
+                { cache = context.cache
+                , presentation = context.presentation
+                }
+                tree
+                (Presentation.getFolderId context.cache context.presentation)
             ]
-        , Query.view context.query
+        , Presentation.view context.presentation
             |> Html.map never
         , viewContent context model
         ]
@@ -236,31 +220,38 @@ view tree context model =
 
 viewContent : Context -> Model -> Html Msg
 viewContent context model =
-    case ( model.content, context.query ) of
-        ( EmptyModel subModel, _ ) ->
-            Article.Empty.view subModel
-                |> Html.map EmptyMsg
+    case ( model.content, context.presentation ) of
+        ( GenericModel subModel, GenericPresentation nodeIds ) ->
+            Article.Generic.view
+                { cache = context.cache
+                , nodeIds = nodeIds
+                }
+                subModel
+                |> Html.map GenericMsg
 
-        ( CollectionModel subModel, Query.OnFolder folderQuery ) ->
+        ( CollectionModel subModel, CollectionPresentation folderId ) ->
             Article.Collection.view
-                { folderQuery = folderQuery }
+                { cache = context.cache
+                , folderId = folderId
+                }
                 subModel
                 |> Html.map CollectionMsg
 
-        ( DirectoryModel subModel, Query.OnFolder folderQuery ) ->
-            Article.Directory.view
-                { folderQuery = folderQuery }
+        ( DocumentsPageModel subModel, DocumentsPagePresentation selection window ) ->
+            Article.DocumentsPage.view
+                { cache = context.cache
+                , selection = selection
+                , window = window
+                }
                 subModel
-                |> Html.map DirectoryMsg
+                |> Html.map DocumentsPageMsg
 
-        ( FtsModel subModel, Query.OnFts ftsQuery ) ->
-            Article.Fts.view
-                { ftsQuery = ftsQuery }
+        ( DetailsModel subModel, DocumentPresentation maybeFolderId documentId ) ->
+            Article.Details.view
+                { cache = context.cache
+                , documentId = documentId
+                }
                 subModel
-                |> Html.map FtsMsg
-
-        ( DetailsModel subModel, _ ) ->
-            Article.Details.view subModel
                 |> Html.map DetailsMsg
 
         _ ->
