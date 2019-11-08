@@ -1,10 +1,7 @@
 module Data.Ordering exposing
-    ( orderingDocumentId
-    , orderingFilter
+    ( orderingFilter
     , orderingFilters
-    , orderingFolderId
     , orderingFtsSorting
-    , orderingNodeId
     , orderingSearchMethod
     , orderingSelection
     , orderingSelectionWindow
@@ -18,6 +15,7 @@ import Ordering exposing (..)
 import Range
 import Sort exposing (Sorter)
 import Types exposing (..)
+import Types.FolderId as FolderId exposing (FolderId)
 import Types.SearchTerm as SearchTerm
 import Utils
 
@@ -27,24 +25,9 @@ sorter ordering =
     Sort.custom ordering
 
 
-orderingNodeId : Ordering NodeId
-orderingNodeId =
-    Ordering.byField nodeIdToInt
-
-
-orderingFolderId : Ordering FolderId
-orderingFolderId =
-    Ordering.byField folderIdToInt
-
-
-orderingDocumentId : Ordering DocumentId
-orderingDocumentId =
-    Ordering.byField documentIdToInt
-
-
 orderingSelection : Ordering Selection
 orderingSelection =
-    Ordering.byFieldWith orderingFolderId .scope
+    Ordering.byFieldWith FolderId.ordering .scope
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingSearchMethod .searchMethod)
         |> Ordering.breakTiesWith

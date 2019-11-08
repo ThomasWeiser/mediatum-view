@@ -28,6 +28,9 @@ import List.Nonempty
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (..)
+import Types.DocumentId as DocumentId exposing (DocumentId)
+import Types.FolderId as FolderId exposing (FolderId)
+import Types.NodeId as NodeId exposing (NodeId)
 
 
 
@@ -89,10 +92,10 @@ errorToString error =
 initialModel : Model
 initialModel =
     { rootFolderIds = NotAsked
-    , folders = Sort.Dict.empty (sorter orderingFolderId)
-    , subfolderIds = Sort.Dict.empty (sorter orderingFolderId)
-    , nodeTypes = Sort.Dict.empty (sorter orderingNodeId)
-    , documents = Sort.Dict.empty (sorter orderingDocumentId)
+    , folders = Sort.Dict.empty (sorter FolderId.ordering)
+    , subfolderIds = Sort.Dict.empty (sorter FolderId.ordering)
+    , nodeTypes = Sort.Dict.empty (sorter NodeId.ordering)
+    , documents = Sort.Dict.empty (sorter DocumentId.ordering)
     , documentsPages = Sort.Dict.empty (sorter orderingSelectionWindow)
     , folderCounts = Sort.Dict.empty (sorter orderingSelection)
     }
@@ -118,7 +121,7 @@ getAsFolderId : Model -> NodeId -> Maybe FolderId
 getAsFolderId cache nodeId =
     case get cache.nodeTypes nodeId of
         Success (NodeIsFolder _) ->
-            nodeId |> nodeIdToInt |> folderIdFromInt |> Just
+            nodeId |> NodeId.toInt |> FolderId.fromInt |> Just
 
         _ ->
             Nothing
@@ -128,7 +131,7 @@ getAsDocumentId : Model -> NodeId -> Maybe DocumentId
 getAsDocumentId cache nodeId =
     case get cache.nodeTypes nodeId of
         Success NodeIsDocument ->
-            nodeId |> nodeIdToInt |> documentIdFromInt |> Just
+            nodeId |> NodeId.toInt |> DocumentId.fromInt |> Just
 
         _ ->
             Nothing
@@ -150,7 +153,7 @@ getRootFolder cache =
             )
         |> RemoteData.andThen
             (\folderId ->
-                get cache.nodeTypes (folderId |> folderIdToInt |> nodeIdFromInt)
+                get cache.nodeTypes (folderId |> FolderId.toInt |> NodeId.fromInt)
                     |> RemoteData.mapError CacheApiError
                     |> RemoteData.andThen
                         (\nodeType ->
@@ -580,7 +583,7 @@ insertFoldersAsNodeTypes listOfNewFolders model =
     List.foldl
         (\folder ->
             insertNodeType
-                (folder.id |> folderIdToInt |> nodeIdFromInt)
+                (folder.id |> FolderId.toInt |> NodeId.fromInt)
                 (NodeIsFolder folder.type_)
         )
         model

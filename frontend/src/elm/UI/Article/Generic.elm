@@ -7,11 +7,11 @@ module UI.Article.Generic exposing
     )
 
 import Data.Cache as Cache
-import Data.Utils exposing (nodeIdToString)
 import Html exposing (Html)
 import Icons
 import RemoteData exposing (RemoteData(..))
-import Types exposing (NodeId, NodeType(..))
+import Types exposing (NodeType(..))
+import Types.NodeId as NodeId exposing (NodeId)
 import Utils
 
 
@@ -58,7 +58,7 @@ view context model =
                                     if nodeType == NodeIsNeither then
                                         Just <|
                                             "Node "
-                                                ++ nodeIdToString nodeId
+                                                ++ NodeId.toString nodeId
                                                 ++ " is neither a folder nor a document"
 
                                     else
@@ -67,7 +67,7 @@ view context model =
                         |> RemoteData.map
                             (always <|
                                 "Going to show the folder or document "
-                                    ++ nodeIdToString nodeId
+                                    ++ NodeId.toString nodeId
                             )
 
                 Just ( nodeIdOne, Just nodeIdTwo ) ->
@@ -84,21 +84,21 @@ view context model =
                                         ( NodeIsFolder _, _ ) ->
                                             Just <|
                                                 "Node "
-                                                    ++ nodeIdToString nodeIdOne
+                                                    ++ NodeId.toString nodeIdOne
                                                     ++ " is not a document"
 
                                         ( _, _ ) ->
                                             Just <|
                                                 "Node "
-                                                    ++ nodeIdToString nodeIdOne
+                                                    ++ NodeId.toString nodeIdOne
                                                     ++ " is not a folder"
                             )
                         |> RemoteData.map
                             (always <|
                                 "Going to show document "
-                                    ++ nodeIdToString nodeIdOne
+                                    ++ NodeId.toString nodeIdOne
                                     ++ " in folder"
-                                    ++ nodeIdToString nodeIdTwo
+                                    ++ NodeId.toString nodeIdTwo
                             )
     in
     Html.div [] <|

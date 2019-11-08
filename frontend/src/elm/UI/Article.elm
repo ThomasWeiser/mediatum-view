@@ -20,6 +20,8 @@ import RemoteData
 import Route
 import Route.Url
 import Types exposing (..)
+import Types.FolderId as FolderId exposing (FolderId)
+import Types.NodeId as NodeId exposing (NodeId)
 import UI.Article.Collection
 import UI.Article.Details
 import UI.Article.DocumentsPage
@@ -237,8 +239,8 @@ viewBreadcrumbs context maybeFolderId =
                                                 (\folder ->
                                                     Html.a
                                                         [ folder.id
-                                                            |> Types.folderIdToInt
-                                                            |> Types.nodeIdFromInt
+                                                            |> FolderId.toInt
+                                                            |> NodeId.fromInt
                                                             |> Route.fromOneId
                                                             |> Route.Url.toString
                                                             |> Html.Attributes.href

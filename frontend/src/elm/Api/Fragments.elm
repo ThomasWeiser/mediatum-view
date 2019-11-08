@@ -53,6 +53,8 @@ import Mediatum.Object.PageInfo
 import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection
 import Types exposing (..)
+import Types.DocumentId as DocumentId exposing (DocumentId)
+import Types.FolderId as FolderId exposing (FolderId)
 import Utils
 
 
@@ -75,11 +77,11 @@ folder =
         |> SelectionSet.with
             (Mediatum.Object.Folder.id
                 |> SelectionSet.nonNullOrFail
-                |> SelectionSet.map folderIdFromInt
+                |> SelectionSet.map FolderId.fromInt
             )
         |> SelectionSet.with
             (Mediatum.Object.Folder.parentId
-                |> SelectionSet.map (Maybe.map folderIdFromInt)
+                |> SelectionSet.map (Maybe.map FolderId.fromInt)
             )
         |> SelectionSet.with
             (Mediatum.Object.Folder.name
@@ -205,7 +207,7 @@ folderCount =
         |> SelectionSet.with
             (Mediatum.Object.FolderCount.folderId
                 |> SelectionSet.nonNullOrFail
-                |> SelectionSet.map folderIdFromInt
+                |> SelectionSet.map FolderId.fromInt
             )
         |> SelectionSet.with
             (Mediatum.Object.FolderCount.count
@@ -304,7 +306,7 @@ documentByMask maskName =
         |> SelectionSet.with
             (Mediatum.Object.Document.id
                 |> SelectionSet.nonNullOrFail
-                |> SelectionSet.map documentIdFromInt
+                |> SelectionSet.map DocumentId.fromInt
             )
         |> SelectionSet.with
             (Mediatum.Object.Document.metadatatype

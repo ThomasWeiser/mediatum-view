@@ -19,7 +19,8 @@ import Html.Events
 import Icons
 import Maybe.Extra
 import RemoteData
-import Types exposing (Document, DocumentAttribute, DocumentId)
+import Types exposing (Document, DocumentAttribute)
+import Types.DocumentId as DocumentId exposing (DocumentId)
 import Utils
 
 
@@ -172,7 +173,7 @@ view context model =
                     [ Html.text "Document with id "
                     , Html.text
                         (context.documentId
-                            |> Types.documentIdToInt
+                            |> DocumentId.toInt
                             |> String.fromInt
                         )
                     , Html.text " not available"

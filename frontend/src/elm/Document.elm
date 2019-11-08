@@ -4,7 +4,8 @@ module Document exposing
     )
 
 import List.Extra
-import Types exposing (Document, DocumentAttribute, DocumentId)
+import Types exposing (Document, DocumentAttribute)
+import Types.DocumentId as DocumentId exposing (DocumentId)
 
 
 init : DocumentId -> String -> String -> List DocumentAttribute -> Document

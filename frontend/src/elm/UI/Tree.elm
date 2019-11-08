@@ -20,7 +20,8 @@ import Maybe.Extra
 import Presentation exposing (Presentation(..))
 import RemoteData
 import Sort.Dict
-import Types exposing (Folder, FolderCounts, FolderId)
+import Types exposing (Folder, FolderCounts)
+import Types.FolderId as FolderId exposing (FolderId)
 import Utils
 
 

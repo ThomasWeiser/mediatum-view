@@ -15,7 +15,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Icons
 import RemoteData
-import Types exposing (FolderId)
+import Types.FolderId as FolderId exposing (FolderId)
 
 
 type alias Context =

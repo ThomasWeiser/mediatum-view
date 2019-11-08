@@ -8,7 +8,8 @@ import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
 import Range
 import Route exposing (..)
-import Types exposing (FtsSorting(..), nodeIdFromInt, nodeIdToInt)
+import Types exposing (FtsSorting(..))
+import Types.NodeId as NodeId
 import Types.SearchTerm
 import Url exposing (Url)
 import Url.Builder as Builder
@@ -26,10 +27,10 @@ parser =
     Parser.map Route <|
         Parser.oneOf
             [ Parser.map NoId Parser.top <?> parserParameters
-            , Parser.map OneId (Parser.map nodeIdFromInt Parser.int) <?> parserParameters
+            , Parser.map OneId (Parser.map NodeId.fromInt Parser.int) <?> parserParameters
             , Parser.map TwoIds
-                (Parser.map nodeIdFromInt Parser.int
-                    </> Parser.map nodeIdFromInt Parser.int
+                (Parser.map NodeId.fromInt Parser.int
+                    </> Parser.map NodeId.fromInt Parser.int
                 )
                 <?> parserParameters
             ]
@@ -102,10 +103,10 @@ toString route =
                 []
 
             OneId id ->
-                [ id |> nodeIdToInt |> String.fromInt ]
+                [ id |> NodeId.toInt |> String.fromInt ]
 
             TwoIds id1 id2 ->
-                [ id1 |> nodeIdToInt |> String.fromInt, id2 |> nodeIdToInt |> String.fromInt ]
+                [ id1 |> NodeId.toInt |> String.fromInt, id2 |> NodeId.toInt |> String.fromInt ]
         )
         (Maybe.Extra.values
             [ route.parameters.ftsTerm

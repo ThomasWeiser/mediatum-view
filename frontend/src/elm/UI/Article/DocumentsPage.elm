@@ -23,6 +23,8 @@ import RemoteData
 import Route
 import Route.Url
 import Types exposing (..)
+import Types.DocumentId as DocumentId exposing (DocumentId)
+import Types.NodeId as NodeId exposing (NodeId)
 
 
 type alias Context =
@@ -201,8 +203,8 @@ viewDocument number document =
             , Html.a
                 [ Html.Attributes.class "metadatatype"
                 , document.id
-                    |> Types.documentIdToInt
-                    |> Types.nodeIdFromInt
+                    |> DocumentId.toInt
+                    |> NodeId.fromInt
                     |> Route.fromOneId
                     |> Route.Url.toString
                     |> Html.Attributes.href

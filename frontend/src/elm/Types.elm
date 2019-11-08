@@ -1,76 +1,28 @@
 module Types exposing
     ( Document
     , DocumentAttribute
-    , DocumentId
     , DocumentResult
     , DocumentsPage
     , Filter(..)
     , Filters
     , Folder
     , FolderCounts
-    , FolderId
     , FolderType(..)
     , FtsSorting(..)
-    , NodeId
     , NodeType(..)
     , SearchMethod(..)
     , Selection
     , Window
     , WindowPage
-    , documentIdFromInt
-    , documentIdToInt
-    , folderIdFromInt
-    , folderIdToInt
-    , nodeIdFromInt
-    , nodeIdToInt
     )
 
 import Dict
 import Range exposing (Range)
 import Sort.Dict
+import Types.DocumentId as DocumentId exposing (DocumentId)
+import Types.FolderId as FolderId exposing (FolderId)
+import Types.NodeId as NodeId exposing (NodeId)
 import Types.SearchTerm exposing (SearchTerm)
-
-
-type NodeId
-    = NodeId Int
-
-
-nodeIdToInt : NodeId -> Int
-nodeIdToInt (NodeId id) =
-    id
-
-
-nodeIdFromInt : Int -> NodeId
-nodeIdFromInt id =
-    NodeId id
-
-
-type FolderId
-    = FolderId Int
-
-
-folderIdToInt : FolderId -> Int
-folderIdToInt (FolderId id) =
-    id
-
-
-folderIdFromInt : Int -> FolderId
-folderIdFromInt id =
-    FolderId id
-
-
-type DocumentId
-    = DocumentId Int
-
-
-documentIdToInt : DocumentId -> Int
-documentIdToInt (DocumentId id) =
-    id
-
-
-documentIdFromInt : Int -> DocumentId
-documentIdFromInt id =
-    DocumentId id
 
 
 type alias Folder =

@@ -8,7 +8,7 @@ module Data.Derive exposing
 import Data.Cache as Cache exposing (ApiData)
 import Maybe.Extra
 import RemoteData
-import Types exposing (..)
+import Types.FolderId as FolderId exposing (FolderId)
 
 
 getParentId : Cache.Model -> FolderId -> ApiData (Maybe FolderId)
