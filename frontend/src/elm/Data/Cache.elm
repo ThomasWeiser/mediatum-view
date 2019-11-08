@@ -23,11 +23,11 @@ import Api
 import Api.Queries
 import Basics.Extra
 import Data.Ordering exposing (..)
-import Data.Types exposing (..)
 import GenericNode exposing (GenericNode)
 import List.Nonempty
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
+import Types exposing (..)
 
 
 

@@ -4,10 +4,10 @@ module Navigation exposing
     )
 
 import Data.Cache as Cache
-import Data.Types exposing (..)
-import Data.Types.SearchTerm exposing (SearchTerm)
 import Query.Filters
 import Route exposing (Route)
+import Types exposing (..)
+import Types.SearchTerm exposing (SearchTerm)
 
 
 type Navigation

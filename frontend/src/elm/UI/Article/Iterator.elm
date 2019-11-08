@@ -10,12 +10,12 @@ module UI.Article.Iterator exposing
 
 import Article.Details as Details
 import Data.Cache as Cache
-import Data.Types exposing (Document, DocumentId, Folder)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Maybe.Extra
 import Query.Filters
+import Types exposing (Document, DocumentId, Folder)
 import Utils
 
 

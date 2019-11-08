@@ -1,4 +1,4 @@
-module Data.Types exposing
+module Types exposing
     ( Document
     , DocumentAttribute
     , DocumentId
@@ -25,10 +25,10 @@ module Data.Types exposing
     , nodeIdToInt
     )
 
-import Data.Types.SearchTerm exposing (SearchTerm)
 import Dict
 import Range exposing (Range)
 import Sort.Dict
+import Types.SearchTerm exposing (SearchTerm)
 
 
 type NodeId

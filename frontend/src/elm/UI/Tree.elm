@@ -11,7 +11,6 @@ module UI.Tree exposing
 
 import Data.Cache as Cache exposing (ApiData)
 import Data.Derive
-import Data.Types exposing (Folder, FolderCounts, FolderId)
 import Folder
 import Html exposing (Html)
 import Html.Attributes
@@ -21,6 +20,7 @@ import Maybe.Extra
 import Presentation exposing (Presentation(..))
 import RemoteData
 import Sort.Dict
+import Types exposing (Folder, FolderCounts, FolderId)
 import Utils
 
 
@@ -170,8 +170,8 @@ viewFolderLine folder maybeCount selected expanded =
     Html.div
         [ Html.Attributes.classList
             [ ( "folder-head", True )
-            , ( "collection", folder.type_ == Data.Types.FolderIsCollection )
-            , ( "directory", folder.type_ == Data.Types.FolderIsDirectory )
+            , ( "collection", folder.type_ == Types.FolderIsCollection )
+            , ( "directory", folder.type_ == Types.FolderIsDirectory )
             , ( "collapsed", Folder.hasSubfolder folder && not expanded )
             , ( "expanded", Folder.hasSubfolder folder && expanded )
             , ( "leaf", not (Folder.hasSubfolder folder) )

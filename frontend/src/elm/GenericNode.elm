@@ -1,7 +1,7 @@
 module GenericNode exposing (GenericNode(..), toNodeType)
 
-import Data.Types exposing (Document, Folder)
 import List.Nonempty exposing (Nonempty)
+import Types exposing (Document, Folder)
 
 
 type GenericNode
@@ -10,15 +10,15 @@ type GenericNode
     | IsNeither
 
 
-toNodeType : GenericNode -> Data.Types.NodeType
+toNodeType : GenericNode -> Types.NodeType
 toNodeType genericNode =
     case genericNode of
         IsFolder lineage ->
-            Data.Types.NodeIsFolder
+            Types.NodeIsFolder
                 (.type_ (List.Nonempty.head lineage))
 
         IsDocument _ ->
-            Data.Types.NodeIsDocument
+            Types.NodeIsDocument
 
         IsNeither ->
-            Data.Types.NodeIsNeither
+            Types.NodeIsNeither

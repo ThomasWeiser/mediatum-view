@@ -5,11 +5,11 @@ module Presentation exposing
     )
 
 import Data.Cache as Cache
-import Data.Types exposing (..)
 import Maybe.Extra
 import Query.Filters as Filters
 import RemoteData
 import Route exposing (Route)
+import Types exposing (..)
 
 
 type Presentation

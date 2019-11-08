@@ -3,8 +3,8 @@ module Document exposing
     , init
     )
 
-import Data.Types exposing (Document, DocumentAttribute, DocumentId)
 import List.Extra
+import Types exposing (Document, DocumentAttribute, DocumentId)
 
 
 init : DocumentId -> String -> String -> List DocumentAttribute -> Document

@@ -1,7 +1,5 @@
 module Tests.Route.Url exposing (suite)
 
-import Data.Types exposing (FtsSorting(..), nodeIdFromInt)
-import Data.Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 import Expect exposing (Expectation)
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
@@ -11,6 +9,8 @@ import Route.Url
 import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Route
+import Types exposing (FtsSorting(..), nodeIdFromInt)
+import Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 import Url exposing (Url)
 import Utils
 
@@ -66,7 +66,7 @@ suite =
                         , .parameters >> .ftsSorting >> Expect.equal Route.defaultFtsSorting
                         , .parameters >> .filterByYear >> nothing
                         , .parameters >> .filterByTitle >> expectEmptySetOfSearchTerms
-                        , .parameters >> .filterByTitle >> Expect.equal Data.Types.SearchTerm.emptySet
+                        , .parameters >> .filterByTitle >> Expect.equal Types.SearchTerm.emptySet
                         , Route.Url.toString >> Expect.equal "/123"
                         ]
             , testString "https://example.com/?fts-term=foo" <|
@@ -210,18 +210,18 @@ suite =
 expectJustSearchTerm : String -> Maybe SearchTerm -> Expectation
 expectJustSearchTerm expectedString =
     justAndThen
-        (Data.Types.SearchTerm.toString >> Expect.equal expectedString)
+        (Types.SearchTerm.toString >> Expect.equal expectedString)
 
 
 expectEmptySetOfSearchTerms : SetOfSearchTerms -> Expectation
 expectEmptySetOfSearchTerms =
-    Data.Types.SearchTerm.setIsEmpty >> Expect.true "Expected empty set of search terms."
+    Types.SearchTerm.setIsEmpty >> Expect.true "Expected empty set of search terms."
 
 
 expectSetOfSearchTerms : List String -> SetOfSearchTerms -> Expectation
 expectSetOfSearchTerms listOfStrings =
     listOfStrings
-        |> List.map Data.Types.SearchTerm.fromString
+        |> List.map Types.SearchTerm.fromString
         |> Maybe.Extra.values
-        |> Data.Types.SearchTerm.setFromList
+        |> Types.SearchTerm.setFromList
         |> Expect.equal

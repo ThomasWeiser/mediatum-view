@@ -3,13 +3,13 @@ module Route.Url exposing
     , toString
     )
 
-import Data.Types exposing (FtsSorting(..), nodeIdFromInt, nodeIdToInt)
-import Data.Types.SearchTerm
 import Dict
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
 import Range
 import Route exposing (..)
+import Types exposing (FtsSorting(..), nodeIdFromInt, nodeIdToInt)
+import Types.SearchTerm
 import Url exposing (Url)
 import Url.Builder as Builder
 import Url.Parser as Parser exposing ((</>), (<?>), Parser)
@@ -40,7 +40,7 @@ parserParameters =
     QueryParser.map6 RouteParameters
         (QueryParser.string "fts-term"
             |> QueryParser.map
-                (Maybe.andThen Data.Types.SearchTerm.fromString)
+                (Maybe.andThen Types.SearchTerm.fromString)
         )
         (QueryParser.enum "fts-sorting"
             (Dict.fromList [ ( "by-rank", FtsByRank ), ( "by-date", FtsByDate ) ])
@@ -57,9 +57,9 @@ parserParameters =
                 )
         )
         (QueryParser.custom "filter-by-title"
-            (List.map Data.Types.SearchTerm.fromString
+            (List.map Types.SearchTerm.fromString
                 >> Maybe.Extra.values
-                >> Data.Types.SearchTerm.setFromList
+                >> Types.SearchTerm.setFromList
             )
         )
         (QueryParser.int "offset"
@@ -110,7 +110,7 @@ toString route =
         (Maybe.Extra.values
             [ route.parameters.ftsTerm
                 |> Maybe.map
-                    (Data.Types.SearchTerm.toString
+                    (Types.SearchTerm.toString
                         >> Builder.string "fts-term"
                     )
             , buildParameterIfNotDefault
@@ -131,9 +131,9 @@ toString route =
                 route.parameters.filterByYear
             ]
             ++ (route.parameters.filterByTitle
-                    |> Data.Types.SearchTerm.setToList
+                    |> Types.SearchTerm.setToList
                     |> List.map
-                        (Data.Types.SearchTerm.toString
+                        (Types.SearchTerm.toString
                             >> Builder.string "filter-by-title"
                         )
                )

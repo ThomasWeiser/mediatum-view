@@ -7,11 +7,11 @@ module UI.Article.Generic exposing
     )
 
 import Data.Cache as Cache
-import Data.Types exposing (NodeId, NodeType(..))
 import Data.Utils exposing (nodeIdToString)
 import Html exposing (Html)
 import Icons
 import RemoteData exposing (RemoteData(..))
+import Types exposing (NodeId, NodeType(..))
 import Utils
 
 

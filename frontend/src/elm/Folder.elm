@@ -5,15 +5,15 @@ module Folder exposing
     , isRoot
     )
 
-import Data.Types exposing (Folder, FolderId, FolderType)
+import Types exposing (Folder, FolderId, FolderType)
 
 
 dummy : Folder
 dummy =
-    { id = Data.Types.folderIdFromInt -1
+    { id = Types.folderIdFromInt -1
     , parent = Nothing
     , name = ""
-    , type_ = Data.Types.FolderIsCollection
+    , type_ = Types.FolderIsCollection
     , numSubfolder = 0
     }
 

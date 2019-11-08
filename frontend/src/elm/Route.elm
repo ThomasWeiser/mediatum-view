@@ -8,9 +8,9 @@ module Route exposing
     , home
     )
 
-import Data.Types exposing (FtsSorting(..), NodeId)
-import Data.Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 import Range exposing (Range)
+import Types exposing (FtsSorting(..), NodeId)
+import Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 
 
 defaultLimit : Int
@@ -65,7 +65,7 @@ emptyParameters =
     { ftsTerm = Nothing
     , ftsSorting = defaultFtsSorting
     , filterByYear = Nothing
-    , filterByTitle = Data.Types.SearchTerm.emptySet
+    , filterByTitle = Types.SearchTerm.emptySet
     , offset = 0
     , limit = defaultLimit
     }

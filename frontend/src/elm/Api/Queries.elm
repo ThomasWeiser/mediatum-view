@@ -40,8 +40,6 @@ The `elm-graphql` package won't use the fragment notation.
 
 import Api.Fragments
 import Config
-import Data.Types exposing (..)
-import Data.Types.SearchTerm exposing (SearchTerm)
 import GenericNode exposing (GenericNode)
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
@@ -56,6 +54,8 @@ import Pagination.Relay.Page
 import Pagination.Relay.Pagination
 import Query.Attribute
 import Query.Filters
+import Types exposing (..)
+import Types.SearchTerm exposing (SearchTerm)
 
 
 {-| Get the root folders and their sub-folders.
@@ -267,7 +267,7 @@ ftsPage window folderId searchTerm ftsSorting filters =
         (\optionals ->
             { optionals
                 | folderId = Present (folderIdToInt folderId)
-                , text = Present (Data.Types.SearchTerm.toString searchTerm)
+                , text = Present (Types.SearchTerm.toString searchTerm)
                 , sorting =
                     Present
                         (case ftsSorting of
@@ -319,7 +319,7 @@ ftsFolderCounts folderId searchTerm filters =
         (\optionals ->
             { optionals
                 | folderId = Present (folderIdToInt folderId)
-                , text = Present (Data.Types.SearchTerm.toString searchTerm)
+                , text = Present (Types.SearchTerm.toString searchTerm)
                 , attributeTests =
                     filters
                         |> Query.Filters.toAttributeTests

@@ -11,7 +11,6 @@ module UI.Article exposing
 
 import Data.Cache as Cache
 import Data.Derive
-import Data.Types exposing (..)
 import Data.Utils
 import Html exposing (Html)
 import Html.Attributes
@@ -20,6 +19,7 @@ import Presentation exposing (Presentation(..))
 import RemoteData
 import Route
 import Route.Url
+import Types exposing (..)
 import UI.Article.Collection
 import UI.Article.Details
 import UI.Article.DocumentsPage
@@ -237,8 +237,8 @@ viewBreadcrumbs context maybeFolderId =
                                                 (\folder ->
                                                     Html.a
                                                         [ folder.id
-                                                            |> Data.Types.folderIdToInt
-                                                            |> Data.Types.nodeIdFromInt
+                                                            |> Types.folderIdToInt
+                                                            |> Types.nodeIdFromInt
                                                             |> Route.fromOneId
                                                             |> Route.Url.toString
                                                             |> Html.Attributes.href

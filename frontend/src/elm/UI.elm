@@ -12,7 +12,6 @@ module UI exposing
     )
 
 import Data.Cache as Cache
-import Data.Types exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -20,6 +19,7 @@ import Icons
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation(..))
 import Route exposing (Route)
+import Types exposing (Document)
 import UI.Article
 import UI.Controls
 import UI.Tree

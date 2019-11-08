@@ -11,7 +11,6 @@ module UI.Article.Details exposing
 import Api
 import Api.Mutations
 import Data.Cache as Cache
-import Data.Types exposing (Document, DocumentAttribute, DocumentId)
 import Document
 import Graphql.Extra
 import Html exposing (Html)
@@ -20,6 +19,7 @@ import Html.Events
 import Icons
 import Maybe.Extra
 import RemoteData
+import Types exposing (Document, DocumentAttribute, DocumentId)
 import Utils
 
 
@@ -172,7 +172,7 @@ view context model =
                     [ Html.text "Document with id "
                     , Html.text
                         (context.documentId
-                            |> Data.Types.documentIdToInt
+                            |> Types.documentIdToInt
                             |> String.fromInt
                         )
                     , Html.text " not available"

@@ -1,4 +1,4 @@
-module Data.Types.SearchTerm exposing
+module Types.SearchTerm exposing
     ( SearchTerm
     , SetOfSearchTerms
     , emptySet

@@ -10,13 +10,13 @@ module Api.Mutations exposing (updateDocumentAttribute)
 -}
 
 import Api.Fragments
-import Data.Types exposing (..)
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Maybe.Extra
 import Mediatum.Mutation
 import Mediatum.Object.UpdateDocumentAttributePayload
+import Types exposing (..)
 
 
 {-| Set an attribute of a document selected by a mediaTUM id.

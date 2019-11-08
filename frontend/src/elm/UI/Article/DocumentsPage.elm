@@ -12,7 +12,6 @@ module UI.Article.DocumentsPage exposing
 
 import Api
 import Data.Cache as Cache
-import Data.Types exposing (..)
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
@@ -23,6 +22,7 @@ import Regex
 import RemoteData
 import Route
 import Route.Url
+import Types exposing (..)
 
 
 type alias Context =
@@ -201,8 +201,8 @@ viewDocument number document =
             , Html.a
                 [ Html.Attributes.class "metadatatype"
                 , document.id
-                    |> Data.Types.documentIdToInt
-                    |> Data.Types.nodeIdFromInt
+                    |> Types.documentIdToInt
+                    |> Types.nodeIdFromInt
                     |> Route.fromOneId
                     |> Route.Url.toString
                     |> Html.Attributes.href

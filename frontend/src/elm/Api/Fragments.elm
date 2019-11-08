@@ -29,7 +29,6 @@ module Api.Fragments exposing
 
 -}
 
-import Data.Types exposing (..)
 import Data.Utils
 import Document
 import DocumentResult
@@ -53,6 +52,7 @@ import Mediatum.Object.Metadatatype
 import Mediatum.Object.PageInfo
 import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection
+import Types exposing (..)
 import Utils
 
 

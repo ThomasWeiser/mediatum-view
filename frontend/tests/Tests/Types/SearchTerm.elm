@@ -1,16 +1,16 @@
-module Tests.Data.Types.SearchTerm exposing (fuzzerSearchTerm, suite)
+module Tests.Types.SearchTerm exposing (fuzzerSearchTerm, suite)
 
-import Data.Types.SearchTerm as SearchTerm exposing (SearchTerm)
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer)
 import String.Extra
 import Test exposing (..)
 import TestUtils exposing (..)
+import Types.SearchTerm as SearchTerm exposing (SearchTerm)
 
 
 suite : Test
 suite =
-    describe "Data.Types.SearchTerm"
+    describe "Types.SearchTerm"
         [ testOrderingProperties "SearchTerm" fuzzerSearchTerm SearchTerm.ordering
         , fuzz Fuzz.string "Random strings" <|
             \inputString ->

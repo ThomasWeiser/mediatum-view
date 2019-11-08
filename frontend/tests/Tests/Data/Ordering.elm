@@ -1,12 +1,12 @@
 module Tests.Data.Ordering exposing (suite)
 
 import Data.Ordering exposing (..)
-import Data.Types exposing (..)
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Test exposing (..)
 import TestUtils exposing (..)
-import Tests.Data.Types exposing (..)
+import Tests.Types exposing (..)
+import Types exposing (..)
 
 
 suite : Test

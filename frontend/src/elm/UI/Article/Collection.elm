@@ -9,13 +9,13 @@ module UI.Article.Collection exposing
 
 import Api
 import Data.Cache as Cache
-import Data.Types exposing (FolderId)
 import Folder
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Icons
 import RemoteData
+import Types exposing (FolderId)
 
 
 type alias Context =

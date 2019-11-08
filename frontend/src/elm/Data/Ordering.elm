@@ -13,12 +13,12 @@ module Data.Ordering exposing
     , sorter
     )
 
-import Data.Types exposing (..)
-import Data.Types.SearchTerm as SearchTerm
 import Dict
 import Ordering exposing (..)
 import Range
 import Sort exposing (Sorter)
+import Types exposing (..)
+import Types.SearchTerm as SearchTerm
 import Utils
 
 

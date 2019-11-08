@@ -1,4 +1,4 @@
-module Tests.Data.Types exposing
+module Tests.Types exposing
     ( fuzzerDocumentId
     , fuzzerFilter
     , fuzzerFilters
@@ -15,16 +15,16 @@ module Tests.Data.Types exposing
     )
 
 import Basics.Extra
-import Data.Types exposing (..)
-import Data.Types.SearchTerm exposing (SearchTerm)
 import Dict
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer)
 import String.Extra
 import Test exposing (..)
 import TestUtils exposing (..)
-import Tests.Data.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Tests.Range
+import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
+import Types exposing (..)
+import Types.SearchTerm exposing (SearchTerm)
 
 
 fuzzerId : Fuzzer Int
