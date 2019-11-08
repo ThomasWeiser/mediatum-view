@@ -214,7 +214,6 @@ view context model =
                 ]
             , Html.map ArticleMsg <|
                 UI.Article.view
-                    model.tree
                     { cache = context.cache
                     , presentation = context.presentation
                     }

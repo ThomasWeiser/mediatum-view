@@ -7,7 +7,6 @@ module UI.Tree exposing
     , needs
     , update
     , view
-    , viewBreadcrumbs
     )
 
 import Data.Cache as Cache exposing (ApiData)
@@ -21,8 +20,6 @@ import Icons
 import Maybe.Extra
 import Presentation exposing (Presentation(..))
 import RemoteData
-import Route
-import Route.Url
 import Sort.Dict
 import Utils
 
@@ -202,39 +199,3 @@ viewFolderLine folder maybeCount selected expanded =
                         ]
                )
         )
-
-
-viewBreadcrumbs : Context -> Model -> Maybe FolderId -> Html msg
-viewBreadcrumbs context model maybeFolderId =
-    Html.span [] <|
-        case maybeFolderId of
-            Nothing ->
-                [ Html.text "(no specific path)" ]
-
-            Just folderId ->
-                Data.Derive.getPath context.cache folderId
-                    |> RemoteData.unwrap
-                        [ Html.text "..." ]
-                        (List.reverse
-                            >> List.map
-                                (\idPathSegment ->
-                                    Html.span []
-                                        [ Cache.get context.cache.folders idPathSegment
-                                            |> RemoteData.unwrap
-                                                (Html.text "...")
-                                                (\folder ->
-                                                    Html.a
-                                                        [ folder.id
-                                                            |> Data.Types.folderIdToInt
-                                                            |> Data.Types.nodeIdFromInt
-                                                            |> Route.fromOneId
-                                                            |> Route.Url.toString
-                                                            |> Html.Attributes.href
-                                                        ]
-                                                        [ Html.text folder.name ]
-                                                )
-                                        ]
-                                )
-                            >> List.intersperse
-                                (Html.span [] [ Html.text " > " ])
-                        )

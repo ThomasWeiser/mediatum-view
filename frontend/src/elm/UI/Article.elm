@@ -10,6 +10,7 @@ module UI.Article exposing
     )
 
 import Data.Cache as Cache
+import Data.Derive
 import Data.Types exposing (..)
 import Data.Utils
 import Html exposing (Html)
@@ -17,6 +18,8 @@ import Html.Attributes
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation(..))
 import RemoteData
+import Route
+import Route.Url
 import UI.Article.Collection
 import UI.Article.Details
 import UI.Article.DocumentsPage
@@ -197,21 +200,56 @@ update context msg model =
             ( model, Cmd.none, NoReturn )
 
 
-view : UI.Tree.Model -> Context -> Model -> Html Msg
-view tree context model =
+view : Context -> Model -> Html Msg
+view context model =
     Html.article
         [ Html.Attributes.class "article" ]
         [ Html.div
             [ Html.Attributes.class "breadcrumbs" ]
-            [ UI.Tree.viewBreadcrumbs
+            [ viewBreadcrumbs
                 { cache = context.cache
                 , presentation = context.presentation
                 }
-                tree
                 (Presentation.getFolderId context.cache context.presentation)
             ]
         , viewContent context model
         ]
+
+
+viewBreadcrumbs : Context -> Maybe FolderId -> Html msg
+viewBreadcrumbs context maybeFolderId =
+    Html.span [] <|
+        case maybeFolderId of
+            Nothing ->
+                [ Html.text "(no specific path)" ]
+
+            Just folderId ->
+                Data.Derive.getPath context.cache folderId
+                    |> RemoteData.unwrap
+                        [ Html.text "..." ]
+                        (List.reverse
+                            >> List.map
+                                (\idPathSegment ->
+                                    Html.span []
+                                        [ Cache.get context.cache.folders idPathSegment
+                                            |> RemoteData.unwrap
+                                                (Html.text "...")
+                                                (\folder ->
+                                                    Html.a
+                                                        [ folder.id
+                                                            |> Data.Types.folderIdToInt
+                                                            |> Data.Types.nodeIdFromInt
+                                                            |> Route.fromOneId
+                                                            |> Route.Url.toString
+                                                            |> Html.Attributes.href
+                                                        ]
+                                                        [ Html.text folder.name ]
+                                                )
+                                        ]
+                                )
+                            >> List.intersperse
+                                (Html.span [] [ Html.text " > " ])
+                        )
 
 
 viewContent : Context -> Model -> Html Msg
