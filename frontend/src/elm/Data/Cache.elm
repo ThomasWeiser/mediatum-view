@@ -34,9 +34,9 @@ import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.GenericNode as GenericNode exposing (GenericNode)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.NodeType exposing (NodeType(..))
-import Types.Ordering exposing (..)
 import Types.Selection as Selection exposing (SearchMethod(..), Selection)
 import Types.Window as Window exposing (Window)
+import Utils
 
 
 
@@ -98,12 +98,12 @@ errorToString error =
 initialModel : Model
 initialModel =
     { rootFolderIds = NotAsked
-    , folders = Sort.Dict.empty (sorter Id.ordering)
-    , subfolderIds = Sort.Dict.empty (sorter Id.ordering)
-    , nodeTypes = Sort.Dict.empty (sorter Id.ordering)
-    , documents = Sort.Dict.empty (sorter Id.ordering)
-    , documentsPages = Sort.Dict.empty (sorter orderingSelectionWindow)
-    , folderCounts = Sort.Dict.empty (sorter Selection.orderingSelection)
+    , folders = Sort.Dict.empty (Utils.sorter Id.ordering)
+    , subfolderIds = Sort.Dict.empty (Utils.sorter Id.ordering)
+    , nodeTypes = Sort.Dict.empty (Utils.sorter Id.ordering)
+    , documents = Sort.Dict.empty (Utils.sorter Id.ordering)
+    , documentsPages = Sort.Dict.empty (Utils.sorter orderingSelectionWindow)
+    , folderCounts = Sort.Dict.empty (Utils.sorter Selection.orderingSelection)
     }
 
 

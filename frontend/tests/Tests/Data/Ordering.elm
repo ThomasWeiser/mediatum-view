@@ -7,7 +7,6 @@ import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Types exposing (..)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.Ordering exposing (..)
 import Types.Selection as Selection
 import Types.Window as Window
 

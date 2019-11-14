@@ -6,7 +6,7 @@ module Types.FolderCounts exposing
 
 import Sort.Dict
 import Types.Id as Id exposing (FolderId)
-import Types.Ordering
+import Utils
 
 
 type alias FolderCounts =
@@ -16,11 +16,11 @@ type alias FolderCounts =
 init : FolderCounts
 init =
     Sort.Dict.empty
-        (Types.Ordering.sorter Id.ordering)
+        (Utils.sorter Id.ordering)
 
 
 fromList : List ( FolderId, Int ) -> FolderCounts
 fromList listOfPairs =
     Sort.Dict.fromList
-        (Types.Ordering.sorter Id.ordering)
+        (Utils.sorter Id.ordering)
         listOfPairs
