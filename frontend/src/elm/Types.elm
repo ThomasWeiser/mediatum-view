@@ -1,17 +1,10 @@
 module Types exposing
     ( DocumentResult
     , DocumentsPage
-    , Window
     , WindowPage
     )
 
 import Types.Document exposing (Document)
-
-
-type alias Window =
-    { offset : Int
-    , limit : Int
-    }
 
 
 type alias DocumentsPage =

@@ -36,6 +36,7 @@ import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.NodeType exposing (NodeType(..))
 import Types.Ordering exposing (..)
 import Types.Selection as Selection exposing (SearchMethod(..), Selection)
+import Types.Window as Window exposing (Window)
 
 
 
@@ -607,4 +608,4 @@ orderingSelectionWindow : Ordering ( Selection, Window )
 orderingSelectionWindow =
     Ordering.byFieldWith Selection.orderingSelection Tuple.first
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith orderingWindow Tuple.second)
+            (Ordering.byFieldWith Window.ordering Tuple.second)

@@ -14,6 +14,7 @@ import Types.Folder as Folder exposing (Folder)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.NodeType exposing (NodeType(..))
 import Types.Selection exposing (SearchMethod(..), Selection)
+import Types.Window exposing (Window)
 
 
 type Presentation

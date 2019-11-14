@@ -61,6 +61,7 @@ import Types.GenericNode as GenericNode exposing (GenericNode)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (Filter, Filters, FtsSorting(..))
+import Types.Window exposing (Window)
 
 
 {-| Get the root folders and their sub-folders.
