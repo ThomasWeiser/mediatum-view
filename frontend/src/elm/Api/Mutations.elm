@@ -17,7 +17,7 @@ import Maybe.Extra
 import Mediatum.Mutation
 import Mediatum.Object.UpdateDocumentAttributePayload
 import Types exposing (..)
-import Types.DocumentId as DocumentId exposing (DocumentId)
+import Types.Id as Id exposing (DocumentId)
 
 
 {-| Set an attribute of a document selected by a mediaTUM id.
@@ -49,7 +49,7 @@ updateDocumentAttribute documentId key value =
         (Mediatum.Mutation.updateDocumentAttribute
             { input =
                 { clientMutationId = Absent
-                , id = Present (DocumentId.toInt documentId)
+                , id = Present (Id.toInt documentId)
                 , key = Present key
                 , value = Present value
                 }

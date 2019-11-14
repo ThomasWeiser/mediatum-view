@@ -10,7 +10,7 @@ import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Route
 import Types exposing (FtsSorting(..))
-import Types.NodeId as NodeId
+import Types.Id as Id
 import Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 import Url exposing (Url)
 import Utils
@@ -62,7 +62,7 @@ suite =
                 Url.fromString
                     >> Maybe.andThen Route.Url.parseUrl
                     >> justAndThenAll
-                        [ .path >> Expect.equal (Route.OneId (NodeId.fromInt 123))
+                        [ .path >> Expect.equal (Route.OneId (Id.fromInt 123))
                         , .parameters >> .ftsTerm >> nothing
                         , .parameters >> .ftsSorting >> Expect.equal Route.defaultFtsSorting
                         , .parameters >> .filterByYear >> nothing
@@ -110,7 +110,7 @@ suite =
                 Url.fromString
                     >> Maybe.andThen Route.Url.parseUrl
                     >> justAndThenAll
-                        [ .path >> Expect.equal (Route.TwoIds (NodeId.fromInt 123) (NodeId.fromInt 456))
+                        [ .path >> Expect.equal (Route.TwoIds (Id.fromInt 123) (Id.fromInt 456))
                         , .parameters >> .ftsTerm >> expectJustSearchTerm "foo"
                         , Route.Url.toString >> Expect.equal "/123/456?fts-term=foo"
                         ]
@@ -164,7 +164,7 @@ suite =
                 Url.fromString
                     >> Maybe.andThen Route.Url.parseUrl
                     >> justAndThenAll
-                        [ .path >> Expect.equal (Route.OneId (NodeId.fromInt 789))
+                        [ .path >> Expect.equal (Route.OneId (Id.fromInt 789))
                         , .parameters >> .ftsTerm >> expectJustSearchTerm "foo bar"
                         , Route.Url.toString >> Expect.equal "/789?fts-term=foo%20bar"
                         ]
@@ -172,7 +172,7 @@ suite =
                 Url.fromString
                     >> Maybe.andThen Route.Url.parseUrl
                     >> justAndThenAll
-                        [ .path >> Expect.equal (Route.OneId (NodeId.fromInt 789))
+                        [ .path >> Expect.equal (Route.OneId (Id.fromInt 789))
                         , .parameters >> .ftsTerm >> nothing
                         , .parameters >> .filterByYear >> Expect.equal (Just (Range.FromTo 2001 2011))
                         , .parameters

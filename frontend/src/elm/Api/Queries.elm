@@ -55,10 +55,8 @@ import Pagination.Relay.Pagination
 import Query.Attribute
 import Query.Filters
 import Types exposing (..)
-import Types.DocumentId as DocumentId exposing (DocumentId)
 import Types.Folder as Folder exposing (Folder)
-import Types.FolderId as FolderId exposing (FolderId)
-import Types.NodeId as NodeId exposing (NodeId)
+import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 
 
@@ -106,7 +104,7 @@ subfolder folderIds =
     Mediatum.Query.allFolders
         (\optionals ->
             { optionals
-                | parentIds = List.map (FolderId.toInt >> Just) folderIds |> Present
+                | parentIds = List.map (Id.toInt >> Just) folderIds |> Present
             }
         )
         (Mediatum.Object.FoldersConnection.nodes Api.Fragments.folder)
@@ -146,7 +144,7 @@ genericNode nodeId =
     Mediatum.Query.genericNodeById
         (\optionals ->
             { optionals
-                | id = Present (NodeId.toInt nodeId)
+                | id = Present (Id.toInt nodeId)
             }
         )
         (SelectionSet.succeed constructor
@@ -189,7 +187,7 @@ folderDocumentsPage window folderId filters =
     Mediatum.Query.allDocumentsPage
         (\optionals ->
             { optionals
-                | folderId = Present (FolderId.toInt folderId)
+                | folderId = Present (Id.toInt folderId)
                 , attributeTests =
                     filters
                         |> Query.Filters.toAttributeTests
@@ -227,7 +225,7 @@ folderDocumentsFolderCounts folderId filters =
     Mediatum.Query.allDocumentsDocset
         (\optionals ->
             { optionals
-                | folderId = Present (FolderId.toInt folderId)
+                | folderId = Present (Id.toInt folderId)
                 , attributeTests =
                     filters
                         |> Query.Filters.toAttributeTests
@@ -270,7 +268,7 @@ ftsPage window folderId searchTerm ftsSorting filters =
     Mediatum.Query.ftsDocumentsPage
         (\optionals ->
             { optionals
-                | folderId = Present (FolderId.toInt folderId)
+                | folderId = Present (Id.toInt folderId)
                 , text = Present (Types.SearchTerm.toString searchTerm)
                 , sorting =
                     Present
@@ -322,7 +320,7 @@ ftsFolderCounts folderId searchTerm filters =
     Mediatum.Query.ftsDocumentsDocset
         (\optionals ->
             { optionals
-                | folderId = Present (FolderId.toInt folderId)
+                | folderId = Present (Id.toInt folderId)
                 , text = Present (Types.SearchTerm.toString searchTerm)
                 , attributeTests =
                     filters
@@ -403,7 +401,7 @@ documentDetails documentId =
     Mediatum.Query.documentById
         (\optionals ->
             { optionals
-                | id = Present (DocumentId.toInt documentId)
+                | id = Present (Id.toInt documentId)
             }
         )
         (Api.Fragments.documentByMask "nodebig")

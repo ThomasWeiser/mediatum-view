@@ -7,7 +7,7 @@ module Types.Folder exposing
     , isRoot
     )
 
-import Types.FolderId as FolderId exposing (FolderId)
+import Types.Id as Id exposing (FolderId)
 
 
 type alias Folder =
@@ -26,7 +26,7 @@ type Type
 
 dummy : Folder
 dummy =
-    { id = FolderId.fromInt -1
+    { id = Id.fromInt -1
     , parent = Nothing
     , name = ""
     , type_ = IsCollection

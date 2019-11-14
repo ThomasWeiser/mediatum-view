@@ -10,7 +10,7 @@ module Route exposing
 
 import Range exposing (Range)
 import Types exposing (FtsSorting(..))
-import Types.NodeId as NodeId exposing (NodeId)
+import Types.Id as Id exposing (NodeId)
 import Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 
 

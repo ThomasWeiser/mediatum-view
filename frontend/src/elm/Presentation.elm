@@ -10,10 +10,8 @@ import Query.Filters as Filters
 import RemoteData
 import Route exposing (Route)
 import Types exposing (..)
-import Types.DocumentId as DocumentId exposing (DocumentId)
 import Types.Folder as Folder exposing (Folder)
-import Types.FolderId as FolderId exposing (FolderId)
-import Types.NodeId as NodeId exposing (NodeId)
+import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 
 
 type Presentation
@@ -89,11 +87,11 @@ fromRoute cache route =
                     GenericPresentation (Just ( nodeId, Nothing ))
 
                 Just NodeIsDocument ->
-                    DocumentPresentation Nothing (nodeId |> NodeId.toInt |> DocumentId.fromInt)
+                    DocumentPresentation Nothing (nodeId |> Id.toInt |> Id.fromInt)
 
                 Just (NodeIsFolder folderType) ->
                     folderPresentation
-                        (nodeId |> NodeId.toInt |> FolderId.fromInt)
+                        (nodeId |> Id.toInt |> Id.fromInt)
                         folderType
 
         Route.TwoIds nodeIdOne nodeIdTwo ->
@@ -105,8 +103,8 @@ fromRoute cache route =
             of
                 Just ( NodeIsFolder folderType, NodeIsDocument ) ->
                     DocumentPresentation
-                        (Just (nodeIdOne |> NodeId.toInt |> FolderId.fromInt))
-                        (nodeIdTwo |> NodeId.toInt |> DocumentId.fromInt)
+                        (Just (nodeIdOne |> Id.toInt |> Id.fromInt))
+                        (nodeIdTwo |> Id.toInt |> Id.fromInt)
 
                 _ ->
                     GenericPresentation (Just ( nodeIdOne, Just nodeIdTwo ))

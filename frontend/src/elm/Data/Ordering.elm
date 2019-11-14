@@ -15,7 +15,7 @@ import Ordering exposing (..)
 import Range
 import Sort exposing (Sorter)
 import Types exposing (..)
-import Types.FolderId as FolderId exposing (FolderId)
+import Types.Id as Id exposing (FolderId)
 import Types.SearchTerm as SearchTerm
 import Utils
 
@@ -27,7 +27,7 @@ sorter ordering =
 
 orderingSelection : Ordering Selection
 orderingSelection =
-    Ordering.byFieldWith FolderId.ordering .scope
+    Ordering.byFieldWith Id.ordering .scope
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingSearchMethod .searchMethod)
         |> Ordering.breakTiesWith

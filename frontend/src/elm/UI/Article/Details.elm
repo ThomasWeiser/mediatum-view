@@ -20,7 +20,7 @@ import Icons
 import Maybe.Extra
 import RemoteData
 import Types exposing (Document, DocumentAttribute)
-import Types.DocumentId as DocumentId exposing (DocumentId)
+import Types.Id as Id exposing (DocumentId)
 import Utils
 
 
@@ -173,7 +173,7 @@ view context model =
                     [ Html.text "Document with id "
                     , Html.text
                         (context.documentId
-                            |> DocumentId.toInt
+                            |> Id.toInt
                             |> String.fromInt
                         )
                     , Html.text " not available"

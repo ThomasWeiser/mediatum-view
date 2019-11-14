@@ -17,10 +17,8 @@ module Types exposing
 import Dict
 import Range exposing (Range)
 import Sort.Dict
-import Types.DocumentId as DocumentId exposing (DocumentId)
 import Types.Folder as Folder exposing (Folder)
-import Types.FolderId as FolderId exposing (FolderId)
-import Types.NodeId as NodeId exposing (NodeId)
+import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 
 

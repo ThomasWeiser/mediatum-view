@@ -9,7 +9,7 @@ import Parser as ElmParser exposing ((|.), (|=))
 import Range
 import Route exposing (..)
 import Types exposing (FtsSorting(..))
-import Types.NodeId as NodeId
+import Types.Id as Id
 import Types.SearchTerm
 import Url exposing (Url)
 import Url.Builder as Builder
@@ -27,10 +27,10 @@ parser =
     Parser.map Route <|
         Parser.oneOf
             [ Parser.map NoId Parser.top <?> parserParameters
-            , Parser.map OneId (Parser.map NodeId.fromInt Parser.int) <?> parserParameters
+            , Parser.map OneId (Parser.map Id.fromInt Parser.int) <?> parserParameters
             , Parser.map TwoIds
-                (Parser.map NodeId.fromInt Parser.int
-                    </> Parser.map NodeId.fromInt Parser.int
+                (Parser.map Id.fromInt Parser.int
+                    </> Parser.map Id.fromInt Parser.int
                 )
                 <?> parserParameters
             ]
@@ -103,10 +103,10 @@ toString route =
                 []
 
             OneId id ->
-                [ id |> NodeId.toInt |> String.fromInt ]
+                [ id |> Id.toInt |> String.fromInt ]
 
             TwoIds id1 id2 ->
-                [ id1 |> NodeId.toInt |> String.fromInt, id2 |> NodeId.toInt |> String.fromInt ]
+                [ id1 |> Id.toInt |> String.fromInt, id2 |> Id.toInt |> String.fromInt ]
         )
         (Maybe.Extra.values
             [ route.parameters.ftsTerm

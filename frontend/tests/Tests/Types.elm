@@ -24,9 +24,7 @@ import TestUtils exposing (..)
 import Tests.Range
 import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types exposing (..)
-import Types.DocumentId as DocumentId exposing (DocumentId)
-import Types.FolderId as FolderId exposing (FolderId)
-import Types.NodeId as NodeId exposing (NodeId)
+import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 
 
@@ -42,17 +40,17 @@ fuzzerId =
 
 fuzzerFolderId : Fuzzer FolderId
 fuzzerFolderId =
-    Fuzz.map FolderId.fromInt fuzzerId
+    Fuzz.map Id.fromInt fuzzerId
 
 
 fuzzerNodeId : Fuzzer NodeId
 fuzzerNodeId =
-    Fuzz.map NodeId.fromInt fuzzerId
+    Fuzz.map Id.fromInt fuzzerId
 
 
 fuzzerDocumentId : Fuzzer DocumentId
 fuzzerDocumentId =
-    Fuzz.map DocumentId.fromInt fuzzerId
+    Fuzz.map Id.fromInt fuzzerId
 
 
 fuzzerSelection : Fuzzer Selection

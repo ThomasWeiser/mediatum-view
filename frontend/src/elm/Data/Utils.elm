@@ -8,7 +8,7 @@ import Data.Ordering
 import Dict
 import Sort.Dict
 import Types exposing (..)
-import Types.FolderId as FolderId exposing (FolderId)
+import Types.Id as Id exposing (FolderId)
 
 
 filtersNone : Filters
@@ -19,11 +19,11 @@ filtersNone =
 folderCountsInit : FolderCounts
 folderCountsInit =
     Sort.Dict.empty
-        (Data.Ordering.sorter FolderId.ordering)
+        (Data.Ordering.sorter Id.ordering)
 
 
 folderCountsFromList : List ( FolderId, Int ) -> FolderCounts
 folderCountsFromList listOfPairs =
     Sort.Dict.fromList
-        (Data.Ordering.sorter FolderId.ordering)
+        (Data.Ordering.sorter Id.ordering)
         listOfPairs

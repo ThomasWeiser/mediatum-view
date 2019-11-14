@@ -7,9 +7,7 @@ import Data.Cache as Cache
 import Query.Filters
 import Route exposing (Route)
 import Types exposing (..)
-import Types.DocumentId as DocumentId exposing (DocumentId)
-import Types.FolderId as FolderId exposing (FolderId)
-import Types.NodeId as NodeId exposing (NodeId)
+import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.SearchTerm exposing (SearchTerm)
 
 
@@ -56,15 +54,15 @@ alterRoute cache navigation route =
             { route
                 | path =
                     Route.TwoIds
-                        (folderId |> FolderId.toInt |> NodeId.fromInt)
-                        (documentId |> DocumentId.toInt |> NodeId.fromInt)
+                        (folderId |> Id.toInt |> Id.fromInt)
+                        (documentId |> Id.toInt |> Id.fromInt)
             }
 
         ShowListingWithFolder folderId ->
             { listingRoute
                 | path =
                     Route.OneId
-                        (folderId |> FolderId.toInt |> NodeId.fromInt)
+                        (folderId |> Id.toInt |> Id.fromInt)
             }
 
         ShowListingWithSearch maybeFtsTerm ftsSorting ->

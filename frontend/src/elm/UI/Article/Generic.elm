@@ -11,7 +11,7 @@ import Html exposing (Html)
 import Icons
 import RemoteData exposing (RemoteData(..))
 import Types exposing (NodeType(..))
-import Types.NodeId as NodeId exposing (NodeId)
+import Types.Id as Id exposing (NodeId)
 import Utils
 
 
@@ -58,7 +58,7 @@ view context model =
                                     if nodeType == NodeIsNeither then
                                         Just <|
                                             "Node "
-                                                ++ NodeId.toString nodeId
+                                                ++ Id.toString nodeId
                                                 ++ " is neither a folder nor a document"
 
                                     else
@@ -67,7 +67,7 @@ view context model =
                         |> RemoteData.map
                             (always <|
                                 "Going to show the folder or document "
-                                    ++ NodeId.toString nodeId
+                                    ++ Id.toString nodeId
                             )
 
                 Just ( nodeIdOne, Just nodeIdTwo ) ->
@@ -84,21 +84,21 @@ view context model =
                                         ( NodeIsFolder _, _ ) ->
                                             Just <|
                                                 "Node "
-                                                    ++ NodeId.toString nodeIdOne
+                                                    ++ Id.toString nodeIdOne
                                                     ++ " is not a document"
 
                                         ( _, _ ) ->
                                             Just <|
                                                 "Node "
-                                                    ++ NodeId.toString nodeIdOne
+                                                    ++ Id.toString nodeIdOne
                                                     ++ " is not a folder"
                             )
                         |> RemoteData.map
                             (always <|
                                 "Going to show document "
-                                    ++ NodeId.toString nodeIdOne
+                                    ++ Id.toString nodeIdOne
                                     ++ " in folder"
-                                    ++ NodeId.toString nodeIdTwo
+                                    ++ Id.toString nodeIdTwo
                             )
     in
     Html.div [] <|
