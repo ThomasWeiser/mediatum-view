@@ -20,6 +20,7 @@ import RemoteData
 import Route
 import Route.Url
 import Types exposing (..)
+import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.Id as Id exposing (FolderId, NodeId)
 import UI.Article.Collection
 import UI.Article.Details
@@ -125,7 +126,7 @@ folderCountsForQuery context =
 
         DocumentsPagePresentation selection window ->
             Cache.get context.cache.folderCounts selection
-                |> RemoteData.withDefault Data.Utils.folderCountsInit
+                |> RemoteData.withDefault FolderCounts.init
                 |> Just
 
 

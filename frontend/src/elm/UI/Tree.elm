@@ -19,8 +19,8 @@ import Maybe.Extra
 import Presentation exposing (Presentation(..))
 import RemoteData
 import Sort.Dict
-import Types exposing (FolderCounts)
 import Types.Folder as Folder exposing (Folder)
+import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.Id as Id exposing (FolderId)
 import Utils
 

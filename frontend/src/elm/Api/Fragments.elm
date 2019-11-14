@@ -53,6 +53,7 @@ import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection
 import Types exposing (..)
 import Types.Folder as Folder exposing (Folder)
+import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Utils
 
@@ -170,7 +171,7 @@ folderAndSubfolderCounts : SelectionSet FolderCounts Mediatum.Object.Docset
 folderAndSubfolderCounts =
     SelectionSet.succeed
         (\pair listOfPairs ->
-            Data.Utils.folderCountsFromList
+            FolderCounts.fromList
                 (pair :: listOfPairs)
         )
         |> SelectionSet.with

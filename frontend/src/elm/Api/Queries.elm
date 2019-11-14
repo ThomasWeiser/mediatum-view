@@ -56,6 +56,7 @@ import Query.Attribute
 import Query.Filters
 import Types exposing (..)
 import Types.Folder as Folder exposing (Folder)
+import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 

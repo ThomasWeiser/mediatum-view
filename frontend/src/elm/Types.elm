@@ -5,7 +5,6 @@ module Types exposing
     , DocumentsPage
     , Filter(..)
     , Filters
-    , FolderCounts
     , FtsSorting(..)
     , NodeType(..)
     , SearchMethod(..)
@@ -52,10 +51,6 @@ type alias Filters =
 type Filter
     = FilterYearWithin (Range Int)
     | FilterTitleFts SearchTerm
-
-
-type alias FolderCounts =
-    Sort.Dict.Dict FolderId Int
 
 
 type alias Window =
