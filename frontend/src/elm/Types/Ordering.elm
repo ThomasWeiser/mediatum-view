@@ -1,4 +1,4 @@
-module Data.Ordering exposing
+module Types.Ordering exposing
     ( orderingFilter
     , orderingFilters
     , orderingFtsSorting

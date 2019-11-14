@@ -1,6 +1,5 @@
 module Tests.Data.Ordering exposing (suite)
 
-import Data.Ordering exposing (..)
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Test exposing (..)
@@ -8,6 +7,7 @@ import TestUtils exposing (..)
 import Tests.Types exposing (..)
 import Types exposing (..)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
+import Types.Ordering exposing (..)
 
 
 suite : Test
