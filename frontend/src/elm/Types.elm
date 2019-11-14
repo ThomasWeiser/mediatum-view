@@ -1,21 +1,11 @@
 module Types exposing
     ( DocumentResult
     , DocumentsPage
-    , NodeType(..)
     , Window
     , WindowPage
     )
 
 import Types.Document exposing (Document)
-import Types.Folder as Folder exposing (Folder)
-import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.SearchTerm exposing (SearchTerm)
-
-
-type NodeType
-    = NodeIsFolder Folder.Type
-    | NodeIsDocument
-    | NodeIsNeither
 
 
 type alias Window =

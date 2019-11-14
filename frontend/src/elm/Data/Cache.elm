@@ -33,6 +33,7 @@ import Types.Document exposing (Document)
 import Types.Folder as Folder exposing (Folder)
 import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
+import Types.NodeType exposing (NodeType(..))
 import Types.Ordering exposing (..)
 import Types.Selection as Selection exposing (SearchMethod(..), Selection)
 

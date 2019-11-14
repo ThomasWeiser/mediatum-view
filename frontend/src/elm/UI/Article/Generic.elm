@@ -10,8 +10,8 @@ import Data.Cache as Cache
 import Html exposing (Html)
 import Icons
 import RemoteData exposing (RemoteData(..))
-import Types exposing (NodeType(..))
 import Types.Id as Id exposing (NodeId)
+import Types.NodeType exposing (NodeType(..))
 import Utils
 
 
