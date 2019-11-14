@@ -16,7 +16,6 @@ import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Maybe.Extra
 import Mediatum.Mutation
 import Mediatum.Object.UpdateDocumentAttributePayload
-import Types exposing (..)
 import Types.Document exposing (Document)
 import Types.Id as Id exposing (DocumentId)
 

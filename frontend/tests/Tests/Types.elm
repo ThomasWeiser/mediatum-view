@@ -23,7 +23,6 @@ import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Range
 import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
-import Types exposing (..)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (Filter(..), Filters, FtsSorting(..), SearchMethod(..), Selection)

@@ -53,8 +53,8 @@ import Pagination.Relay.Page
 import Pagination.Relay.Pagination
 import Query.Attribute
 import Query.Filters
-import Types exposing (..)
 import Types.Document exposing (Document)
+import Types.DocumentResultsPage exposing (DocumentsPage)
 import Types.Folder as Folder exposing (Folder)
 import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.GenericNode as GenericNode exposing (GenericNode)

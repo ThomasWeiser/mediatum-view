@@ -29,7 +29,6 @@ module Api.Fragments exposing
 
 -}
 
-import DocumentResult
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
@@ -49,8 +48,8 @@ import Mediatum.Object.Metadatatype
 import Mediatum.Object.PageInfo
 import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection
-import Types exposing (..)
 import Types.Document as Document exposing (Document)
+import Types.DocumentResultsPage exposing (DocumentResult, DocumentsPage, WindowPage)
 import Types.Folder as Folder exposing (Folder)
 import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.Id as Id exposing (DocumentId, FolderId)
@@ -268,7 +267,7 @@ _GraphQL notation:_
 -}
 documentResult : String -> SelectionSet DocumentResult Mediatum.Object.DocumentResult
 documentResult maskName =
-    SelectionSet.succeed DocumentResult.init
+    SelectionSet.succeed Types.DocumentResultsPage.initDocumentResult
         |> SelectionSet.with
             (Mediatum.Object.DocumentResult.number
                 |> SelectionSet.nonNullOrFail

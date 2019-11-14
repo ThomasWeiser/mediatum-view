@@ -1,10 +1,15 @@
-module Types exposing
+module Types.DocumentResultsPage exposing
     ( DocumentResult
     , DocumentsPage
     , WindowPage
+    , initDocumentResult
     )
 
 import Types.Document exposing (Document)
+
+
+
+-- TODO: Possibly reorganize these types
 
 
 type alias DocumentsPage =
@@ -22,4 +27,12 @@ type alias DocumentResult =
     { number : Int
     , distance : Float
     , document : Document
+    }
+
+
+initDocumentResult : Int -> Float -> Document -> DocumentResult
+initDocumentResult number distance document =
+    { number = number
+    , distance = distance
+    , document = document
     }

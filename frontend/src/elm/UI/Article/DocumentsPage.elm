@@ -22,8 +22,8 @@ import Regex
 import RemoteData
 import Route
 import Route.Url
-import Types exposing (..)
 import Types.Document as Document exposing (Document)
+import Types.DocumentResultsPage exposing (DocumentResult, DocumentsPage)
 import Types.Id as Id exposing (DocumentId)
 import Types.Selection exposing (Selection)
 import Types.Window exposing (Window)
