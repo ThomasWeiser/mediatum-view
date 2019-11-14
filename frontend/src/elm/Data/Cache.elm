@@ -23,7 +23,6 @@ module Data.Cache exposing
 import Api
 import Api.Queries
 import Basics.Extra
-import GenericNode exposing (GenericNode)
 import List.Nonempty
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
@@ -32,6 +31,7 @@ import Types exposing (..)
 import Types.Document exposing (Document)
 import Types.Folder as Folder exposing (Folder)
 import Types.FolderCounts as FolderCounts exposing (FolderCounts)
+import Types.GenericNode as GenericNode exposing (GenericNode)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.NodeType exposing (NodeType(..))
 import Types.Ordering exposing (..)

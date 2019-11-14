@@ -40,7 +40,6 @@ The `elm-graphql` package won't use the fragment notation.
 
 import Api.Fragments
 import Config
-import GenericNode exposing (GenericNode)
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
@@ -58,6 +57,7 @@ import Types exposing (..)
 import Types.Document exposing (Document)
 import Types.Folder as Folder exposing (Folder)
 import Types.FolderCounts as FolderCounts exposing (FolderCounts)
+import Types.GenericNode as GenericNode exposing (GenericNode)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (Filter, Filters, FtsSorting(..))

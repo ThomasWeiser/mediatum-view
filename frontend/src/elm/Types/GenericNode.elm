@@ -1,4 +1,4 @@
-module GenericNode exposing (GenericNode(..), toNodeType)
+module Types.GenericNode exposing (GenericNode(..), toNodeType)
 
 import List.Nonempty exposing (Nonempty)
 import Types.Document exposing (Document)
