@@ -23,6 +23,7 @@ import RemoteData
 import Route
 import Route.Url
 import Types exposing (..)
+import Types.Document as Document exposing (Document)
 import Types.Id as Id exposing (DocumentId)
 import Types.Selection exposing (Selection)
 
@@ -227,7 +228,7 @@ maxAttributeStringLength =
     80
 
 
-viewAttribute : DocumentAttribute -> Html msg
+viewAttribute : Document.Attribute -> Html msg
 viewAttribute attribute =
     let
         isField regexString =

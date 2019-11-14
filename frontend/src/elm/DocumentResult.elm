@@ -1,6 +1,7 @@
 module DocumentResult exposing (init)
 
-import Types exposing (Document, DocumentResult)
+import Types exposing (DocumentResult)
+import Types.Document exposing (Document)
 
 
 type alias DocumentResult =

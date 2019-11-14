@@ -11,7 +11,6 @@ module UI.Article.Details exposing
 import Api
 import Api.Mutations
 import Data.Cache as Cache
-import Document
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
@@ -19,7 +18,7 @@ import Html.Events
 import Icons
 import Maybe.Extra
 import RemoteData
-import Types exposing (Document, DocumentAttribute)
+import Types.Document as Document exposing (Document)
 import Types.Id as Id exposing (DocumentId)
 import Utils
 
@@ -200,7 +199,7 @@ viewDocument model document =
         ]
 
 
-viewAttribute : DocumentAttribute -> Html msg
+viewAttribute : Document.Attribute -> Html msg
 viewAttribute attribute =
     case attribute.value of
         Just value ->

@@ -19,6 +19,7 @@ import RemoteData
 import Route
 import Route.Url
 import Types exposing (..)
+import Types.Document exposing (Document)
 import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.Id as Id exposing (FolderId, NodeId)
 import UI.Article.Collection

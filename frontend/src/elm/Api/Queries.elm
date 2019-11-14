@@ -55,6 +55,7 @@ import Pagination.Relay.Pagination
 import Query.Attribute
 import Query.Filters
 import Types exposing (..)
+import Types.Document exposing (Document)
 import Types.Folder as Folder exposing (Folder)
 import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)

@@ -1,14 +1,31 @@
-module Document exposing
-    ( attributeValue
+module Types.Document exposing
+    ( Attribute
+    , Document
+    , attributeValue
     , init
     )
 
 import List.Extra
-import Types exposing (Document, DocumentAttribute)
 import Types.Id as Id exposing (DocumentId)
 
 
-init : DocumentId -> String -> String -> List DocumentAttribute -> Document
+type alias Document =
+    { id : DocumentId
+    , name : String
+    , metadatatypeName : String
+    , attributes : List Attribute
+    }
+
+
+type alias Attribute =
+    { field : String
+    , name : String
+    , width : Int
+    , value : Maybe String
+    }
+
+
+init : DocumentId -> String -> String -> List Attribute -> Document
 init id metadatatypeName name attributes =
     { id = id
     , name = name

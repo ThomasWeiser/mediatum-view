@@ -19,7 +19,7 @@ import Icons
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation(..))
 import Route exposing (Route)
-import Types exposing (Document)
+import Types.Document exposing (Document)
 import UI.Article
 import UI.Controls
 import UI.Tree

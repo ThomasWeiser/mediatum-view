@@ -29,7 +29,6 @@ module Api.Fragments exposing
 
 -}
 
-import Document
 import DocumentResult
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
@@ -51,6 +50,7 @@ import Mediatum.Object.PageInfo
 import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection
 import Types exposing (..)
+import Types.Document as Document exposing (Document)
 import Types.Folder as Folder exposing (Folder)
 import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.Id as Id exposing (DocumentId, FolderId)
@@ -334,7 +334,7 @@ documentByMask maskName =
 
 {-| Decode a JSON string returned from a query that denotes the mata-values of a document.
 -}
-mapJsonToAttributes : Maybe Mediatum.Scalar.Json -> List DocumentAttribute
+mapJsonToAttributes : Maybe Mediatum.Scalar.Json -> List Document.Attribute
 mapJsonToAttributes maybeJson =
     case maybeJson of
         Nothing ->
@@ -345,12 +345,12 @@ mapJsonToAttributes maybeJson =
                 Json.Decode.decodeString decoderAttributeList str
 
 
-decoderAttributeList : Decoder (List DocumentAttribute)
+decoderAttributeList : Decoder (List Document.Attribute)
 decoderAttributeList =
     Json.Decode.oneOf
         [ Json.Decode.null []
         , Json.Decode.list <|
-            Json.Decode.map4 DocumentAttribute
+            Json.Decode.map4 Document.Attribute
                 (Json.Decode.field "field" Json.Decode.string)
                 (Json.Decode.field "name" Json.Decode.string)
                 (Json.Decode.field "width" Json.Decode.int)
