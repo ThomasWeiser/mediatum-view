@@ -9,9 +9,9 @@ import Route.Url
 import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Route
-import Types exposing (FtsSorting(..))
 import Types.Id as Id
 import Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
+import Types.Selection exposing (FtsSorting(..))
 import Url exposing (Url)
 import Utils
 

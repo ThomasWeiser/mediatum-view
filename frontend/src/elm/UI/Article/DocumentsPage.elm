@@ -24,6 +24,7 @@ import Route
 import Route.Url
 import Types exposing (..)
 import Types.Id as Id exposing (DocumentId)
+import Types.Selection exposing (Selection)
 
 
 type alias Context =

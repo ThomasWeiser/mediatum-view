@@ -9,9 +9,9 @@ module Route exposing
     )
 
 import Range exposing (Range)
-import Types exposing (FtsSorting(..))
 import Types.Id as Id exposing (NodeId)
 import Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
+import Types.Selection exposing (FtsSorting(..))
 
 
 defaultLimit : Int

@@ -59,6 +59,7 @@ import Types.Folder as Folder exposing (Folder)
 import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
+import Types.Selection exposing (Filter, Filters, FtsSorting(..))
 
 
 {-| Get the root folders and their sub-folders.

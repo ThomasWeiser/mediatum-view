@@ -21,8 +21,8 @@ import Query.FilterEditor as FilterEditor
 import Query.Filters as Filters
 import Range
 import Route exposing (Route)
-import Types exposing (Filter(..), Filters, FtsSorting(..))
 import Types.SearchTerm
+import Types.Selection exposing (Filter(..), Filters, FtsSorting(..))
 import Utils
 
 

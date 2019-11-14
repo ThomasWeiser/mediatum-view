@@ -12,8 +12,8 @@ import Dict
 import Query.Attribute
 import Query.Filter as Filter
 import Route exposing (Route)
-import Types exposing (Filter(..), Filters)
 import Types.SearchTerm
+import Types.Selection exposing (Filter(..), Filters)
 import Utils
 
 

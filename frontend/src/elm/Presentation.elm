@@ -12,6 +12,7 @@ import Route exposing (Route)
 import Types exposing (..)
 import Types.Folder as Folder exposing (Folder)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
+import Types.Selection exposing (SearchMethod(..), Selection)
 
 
 type Presentation

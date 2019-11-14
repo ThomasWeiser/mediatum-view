@@ -8,9 +8,9 @@ import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
 import Range
 import Route exposing (..)
-import Types exposing (FtsSorting(..))
 import Types.Id as Id
 import Types.SearchTerm
+import Types.Selection exposing (FtsSorting(..))
 import Url exposing (Url)
 import Url.Builder as Builder
 import Url.Parser as Parser exposing ((</>), (<?>), Parser)

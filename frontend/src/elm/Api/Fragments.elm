@@ -29,7 +29,6 @@ module Api.Fragments exposing
 
 -}
 
-import Data.Utils
 import Document
 import DocumentResult
 import Graphql.OptionalArgument exposing (OptionalArgument(..))

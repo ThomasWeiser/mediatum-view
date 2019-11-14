@@ -11,7 +11,6 @@ module UI.Article exposing
 
 import Data.Cache as Cache
 import Data.Derive
-import Data.Utils
 import Html exposing (Html)
 import Html.Attributes
 import Navigation exposing (Navigation)

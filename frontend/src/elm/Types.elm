@@ -3,19 +3,11 @@ module Types exposing
     , DocumentAttribute
     , DocumentResult
     , DocumentsPage
-    , Filter(..)
-    , Filters
-    , FtsSorting(..)
     , NodeType(..)
-    , SearchMethod(..)
-    , Selection
     , Window
     , WindowPage
     )
 
-import Dict
-import Range exposing (Range)
-import Sort.Dict
 import Types.Folder as Folder exposing (Folder)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
@@ -25,32 +17,6 @@ type NodeType
     = NodeIsFolder Folder.Type
     | NodeIsDocument
     | NodeIsNeither
-
-
-type alias Selection =
-    { scope : FolderId
-    , searchMethod : SearchMethod
-    , filters : Filters
-    }
-
-
-type SearchMethod
-    = SelectByFolderListing
-    | SelectByFullTextSearch SearchTerm FtsSorting
-
-
-type FtsSorting
-    = FtsByRank
-    | FtsByDate
-
-
-type alias Filters =
-    Dict.Dict String Filter
-
-
-type Filter
-    = FilterYearWithin (Range Int)
-    | FilterTitleFts SearchTerm
 
 
 type alias Window =

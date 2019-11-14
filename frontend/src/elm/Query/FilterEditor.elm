@@ -14,7 +14,7 @@ import Html.Events
 import Query.Filter as Filter exposing (Controls(..))
 import Task
 import Time
-import Types exposing (Filter(..))
+import Types.Selection exposing (Filter(..))
 
 
 type Return

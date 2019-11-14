@@ -16,8 +16,8 @@ import Html.Attributes
 import Maybe.Extra
 import Query.Attribute
 import Range
-import Types exposing (Filter(..))
 import Types.SearchTerm
+import Types.Selection exposing (Filter(..))
 import Utils
 
 

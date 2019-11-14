@@ -14,6 +14,7 @@ module Data.Cache exposing
     , getRootFolder
     , initialModel
     , needsFromList
+    , orderingSelectionWindow
     , requestNeeds
     , update
     , updateWithModifiedDocument
@@ -24,6 +25,7 @@ import Api.Queries
 import Basics.Extra
 import GenericNode exposing (GenericNode)
 import List.Nonempty
+import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (..)
@@ -31,6 +33,7 @@ import Types.Folder as Folder exposing (Folder)
 import Types.FolderCounts as FolderCounts exposing (FolderCounts)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Ordering exposing (..)
+import Types.Selection as Selection exposing (SearchMethod(..), Selection)
 
 
 
@@ -97,7 +100,7 @@ initialModel =
     , nodeTypes = Sort.Dict.empty (sorter Id.ordering)
     , documents = Sort.Dict.empty (sorter Id.ordering)
     , documentsPages = Sort.Dict.empty (sorter orderingSelectionWindow)
-    , folderCounts = Sort.Dict.empty (sorter orderingSelection)
+    , folderCounts = Sort.Dict.empty (sorter Selection.orderingSelection)
     }
 
 
@@ -596,3 +599,10 @@ insertNodeType nodeId nodeType model =
         | nodeTypes =
             Sort.Dict.insert nodeId (Success nodeType) model.nodeTypes
     }
+
+
+orderingSelectionWindow : Ordering ( Selection, Window )
+orderingSelectionWindow =
+    Ordering.byFieldWith Selection.orderingSelection Tuple.first
+        |> Ordering.breakTiesWith
+            (Ordering.byFieldWith orderingWindow Tuple.second)

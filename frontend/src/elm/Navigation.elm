@@ -9,6 +9,7 @@ import Route exposing (Route)
 import Types exposing (..)
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.SearchTerm exposing (SearchTerm)
+import Types.Selection exposing (Filters, FtsSorting)
 
 
 type Navigation

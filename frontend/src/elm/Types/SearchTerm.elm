@@ -12,7 +12,7 @@ module Types.SearchTerm exposing
     )
 
 import List.Unique
-import Ordering exposing (..)
+import Ordering exposing (Ordering)
 import String.Extra
 
 
