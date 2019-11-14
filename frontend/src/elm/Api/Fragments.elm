@@ -32,7 +32,6 @@ module Api.Fragments exposing
 import Data.Utils
 import Document
 import DocumentResult
-import Folder
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
@@ -54,6 +53,7 @@ import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection
 import Types exposing (..)
 import Types.DocumentId as DocumentId exposing (DocumentId)
+import Types.Folder as Folder exposing (Folder)
 import Types.FolderId as FolderId exposing (FolderId)
 import Utils
 
@@ -91,7 +91,7 @@ folder =
             (Mediatum.Object.Folder.isCollection
                 |> SelectionSet.nonNullOrFail
                 |> SelectionSet.map
-                    (Utils.ifElse FolderIsCollection FolderIsDirectory)
+                    (Utils.ifElse Folder.IsCollection Folder.IsDirectory)
             )
         |> SelectionSet.with
             (Mediatum.Object.Folder.numSubfolder

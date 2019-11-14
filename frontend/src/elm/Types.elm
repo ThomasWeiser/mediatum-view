@@ -5,9 +5,7 @@ module Types exposing
     , DocumentsPage
     , Filter(..)
     , Filters
-    , Folder
     , FolderCounts
-    , FolderType(..)
     , FtsSorting(..)
     , NodeType(..)
     , SearchMethod(..)
@@ -20,29 +18,16 @@ import Dict
 import Range exposing (Range)
 import Sort.Dict
 import Types.DocumentId as DocumentId exposing (DocumentId)
+import Types.Folder as Folder exposing (Folder)
 import Types.FolderId as FolderId exposing (FolderId)
 import Types.NodeId as NodeId exposing (NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 
 
-type alias Folder =
-    { id : FolderId
-    , parent : Maybe FolderId
-    , name : String
-    , type_ : FolderType
-    , numSubfolder : Int
-    }
-
-
 type NodeType
-    = NodeIsFolder FolderType
+    = NodeIsFolder Folder.Type
     | NodeIsDocument
     | NodeIsNeither
-
-
-type FolderType
-    = FolderIsCollection
-    | FolderIsDirectory
 
 
 type alias Selection =

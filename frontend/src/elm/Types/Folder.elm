@@ -1,12 +1,27 @@
-module Folder exposing
-    ( dummy
+module Types.Folder exposing
+    ( Folder
+    , Type(..)
+    , dummy
     , hasSubfolder
     , init
     , isRoot
     )
 
-import Types exposing (Folder, FolderType)
 import Types.FolderId as FolderId exposing (FolderId)
+
+
+type alias Folder =
+    { id : FolderId
+    , parent : Maybe FolderId
+    , name : String
+    , type_ : Type
+    , numSubfolder : Int
+    }
+
+
+type Type
+    = IsCollection
+    | IsDirectory
 
 
 dummy : Folder
@@ -14,12 +29,12 @@ dummy =
     { id = FolderId.fromInt -1
     , parent = Nothing
     , name = ""
-    , type_ = Types.FolderIsCollection
+    , type_ = IsCollection
     , numSubfolder = 0
     }
 
 
-init : FolderId -> Maybe FolderId -> String -> FolderType -> Int -> Folder
+init : FolderId -> Maybe FolderId -> String -> Type -> Int -> Folder
 init id maybeParentId name folderType numSubfolder =
     { id = id
     , parent = maybeParentId

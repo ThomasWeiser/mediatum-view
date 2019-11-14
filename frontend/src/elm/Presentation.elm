@@ -11,6 +11,7 @@ import RemoteData
 import Route exposing (Route)
 import Types exposing (..)
 import Types.DocumentId as DocumentId exposing (DocumentId)
+import Types.Folder as Folder exposing (Folder)
 import Types.FolderId as FolderId exposing (FolderId)
 import Types.NodeId as NodeId exposing (NodeId)
 
@@ -47,10 +48,10 @@ fromRoute cache route =
             case searchMethodFromRoute route of
                 SelectByFolderListing ->
                     case folderType of
-                        FolderIsCollection ->
+                        Folder.IsCollection ->
                             CollectionPresentation folderId
 
-                        FolderIsDirectory ->
+                        Folder.IsDirectory ->
                             DocumentsPagePresentation
                                 { scope = folderId
                                 , searchMethod = SelectByFolderListing

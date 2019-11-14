@@ -7,14 +7,17 @@ import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Types exposing (..)
 import Types exposing (..)
+import Types.DocumentId as DocumentId
+import Types.FolderId as FolderId
+import Types.NodeId as NodeId
 
 
 suite : Test
 suite =
     describe "Data.Ordering"
-        [ testOrderingProperties "NodeId" fuzzerNodeId orderingNodeId
-        , testOrderingProperties "FolderId" fuzzerFolderId orderingFolderId
-        , testOrderingProperties "DocumentId" fuzzerDocumentId orderingDocumentId
+        [ testOrderingProperties "NodeId" fuzzerNodeId NodeId.ordering
+        , testOrderingProperties "FolderId" fuzzerFolderId FolderId.ordering
+        , testOrderingProperties "DocumentId" fuzzerDocumentId DocumentId.ordering
         , testOrderingProperties "Selection" fuzzerSelection orderingSelection
         , testOrderingProperties "SelectionWindow" fuzzerSelectionWindow orderingSelectionWindow
         , testOrderingProperties "SearchMethod" fuzzerSearchMethod orderingSearchMethod
