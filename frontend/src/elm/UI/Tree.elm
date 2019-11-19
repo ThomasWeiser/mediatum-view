@@ -9,8 +9,8 @@ module UI.Tree exposing
     , view
     )
 
-import Data.Cache as Cache exposing (ApiData)
-import Data.Derive
+import Cache exposing (ApiData)
+import Cache.Derive
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -54,7 +54,7 @@ initialModel =
 needs : Context -> Model -> Cache.Needs
 needs context model =
     getPresentationFolderId context
-        |> Data.Derive.getPathAsFarAsCached context.cache
+        |> Cache.Derive.getPathAsFarAsCached context.cache
         |> Cache.NeedSubfolders
 
 
@@ -137,7 +137,7 @@ viewFolderTree context model maybeFolderCounts id =
                 expanded =
                     Folder.isRoot folder
                         || (model.collapsedPresentationFolder /= Just id)
-                        && Data.Derive.isOnPath context.cache id presentationFolderId
+                        && Cache.Derive.isOnPath context.cache id presentationFolderId
             in
             Html.div []
                 [ Html.div

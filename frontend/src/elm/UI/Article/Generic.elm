@@ -6,8 +6,8 @@ module UI.Article.Generic exposing
     , view
     )
 
-import Data.Cache as Cache
-import Data.Derive
+import Cache
+import Cache.Derive
 import Html exposing (Html)
 import Icons
 import RemoteData exposing (RemoteData(..))
@@ -47,12 +47,12 @@ view context model =
             -- Find the reason why we have a GenericPresentation
             case context.nodeIds of
                 Nothing ->
-                    Data.Derive.getRootFolder context.cache
+                    Cache.Derive.getRootFolder context.cache
                         |> RemoteData.map (always "Going to show the root folder")
 
                 Just ( nodeId, Nothing ) ->
-                    Data.Derive.getNodeType context.cache nodeId
-                        |> Data.Derive.asDerivedData
+                    Cache.Derive.getNodeType context.cache nodeId
+                        |> Cache.Derive.asDerivedData
                         |> Utils.remoteDataCheck
                             (\nodeType ->
                                 Maybe.map Cache.CacheDataError <|
@@ -73,8 +73,8 @@ view context model =
 
                 Just ( nodeIdOne, Just nodeIdTwo ) ->
                     RemoteData.map2 Tuple.pair
-                        (Data.Derive.getNodeType context.cache nodeIdOne |> Data.Derive.asDerivedData)
-                        (Data.Derive.getNodeType context.cache nodeIdTwo |> Data.Derive.asDerivedData)
+                        (Cache.Derive.getNodeType context.cache nodeIdOne |> Cache.Derive.asDerivedData)
+                        (Cache.Derive.getNodeType context.cache nodeIdTwo |> Cache.Derive.asDerivedData)
                         |> Utils.remoteDataCheck
                             (\( nodeTypeOne, nodeTypeTwo ) ->
                                 Maybe.map Cache.CacheDataError <|

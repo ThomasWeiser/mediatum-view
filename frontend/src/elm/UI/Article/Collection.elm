@@ -8,7 +8,7 @@ module UI.Article.Collection exposing
     )
 
 import Api
-import Data.Cache as Cache
+import Cache
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes

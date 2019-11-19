@@ -9,8 +9,8 @@ module UI.Article exposing
     , view
     )
 
-import Data.Cache as Cache
-import Data.Derive
+import Cache
+import Cache.Derive
 import Html exposing (Html)
 import Html.Attributes
 import Navigation exposing (Navigation)
@@ -225,7 +225,7 @@ viewBreadcrumbs context maybeFolderId =
                 [ Html.text "(no specific path)" ]
 
             Just folderId ->
-                Data.Derive.getPath context.cache folderId
+                Cache.Derive.getPath context.cache folderId
                     |> RemoteData.unwrap
                         [ Html.text "..." ]
                         (List.reverse

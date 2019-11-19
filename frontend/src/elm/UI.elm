@@ -11,7 +11,7 @@ module UI exposing
     , view
     )
 
-import Data.Cache as Cache
+import Cache
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events

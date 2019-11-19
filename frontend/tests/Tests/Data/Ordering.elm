@@ -1,6 +1,6 @@
 module Tests.Data.Ordering exposing (suite)
 
-import Data.Cache as Cache
+import Cache
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Test exposing (..)

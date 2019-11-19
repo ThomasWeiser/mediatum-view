@@ -10,7 +10,7 @@ module UI.Article.Details exposing
 
 import Api
 import Api.Mutations
-import Data.Cache as Cache
+import Cache
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes

@@ -9,8 +9,8 @@ module App exposing
     , view
     )
 
+import Cache
 import Cmd.Extra
-import Data.Cache as Cache
 import Html exposing (Html)
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation(..))

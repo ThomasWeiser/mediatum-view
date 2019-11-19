@@ -1,4 +1,4 @@
-module Data.Derive exposing
+module Cache.Derive exposing
     ( DerivedData
     , asDerivedData
     , getAsDocumentId
@@ -11,7 +11,7 @@ module Data.Derive exposing
     , isOnPath
     )
 
-import Data.Cache as Cache exposing (ApiData, Error(..))
+import Cache exposing (ApiData, Error(..))
 import Maybe.Extra
 import RemoteData exposing (RemoteData(..))
 import Types.Folder as Folder exposing (Folder)

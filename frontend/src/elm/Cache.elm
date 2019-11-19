@@ -1,4 +1,4 @@
-module Data.Cache exposing
+module Cache exposing
     ( ApiData
     , Error(..)
     , Model

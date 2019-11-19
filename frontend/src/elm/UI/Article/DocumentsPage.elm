@@ -11,7 +11,7 @@ module UI.Article.DocumentsPage exposing
 -- import Pagination.Offset.Page as Page exposing (Page, PageResult)
 
 import Api
-import Data.Cache as Cache
+import Cache
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
