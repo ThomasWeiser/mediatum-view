@@ -1,6 +1,6 @@
 module Types.NodeType exposing (NodeType(..))
 
-import Types.Folder as Folder exposing (Folder)
+import Entities.Folder as Folder exposing (Folder)
 
 
 type NodeType

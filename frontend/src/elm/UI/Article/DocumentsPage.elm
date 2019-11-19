@@ -12,6 +12,8 @@ module UI.Article.DocumentsPage exposing
 
 import Api
 import Cache
+import Entities.Document as Document exposing (Document)
+import Entities.DocumentResultsPage exposing (DocumentResult, DocumentsPage)
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
@@ -22,8 +24,6 @@ import Regex
 import RemoteData
 import Route
 import Route.Url
-import Types.Document as Document exposing (Document)
-import Types.DocumentResultsPage exposing (DocumentResult, DocumentsPage)
 import Types.Id as Id exposing (DocumentId)
 import Types.Selection exposing (Selection)
 import Types.Window exposing (Window)

@@ -1,4 +1,4 @@
-module Types.Document exposing
+module Entities.Document exposing
     ( Attribute
     , Document
     , attributeValue

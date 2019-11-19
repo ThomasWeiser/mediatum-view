@@ -1,11 +1,11 @@
-module Types.DocumentResultsPage exposing
+module Entities.DocumentResultsPage exposing
     ( DocumentResult
     , DocumentsPage
     , WindowPage
     , initDocumentResult
     )
 
-import Types.Document exposing (Document)
+import Entities.Document exposing (Document)
 
 
 

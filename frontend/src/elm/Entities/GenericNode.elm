@@ -1,8 +1,8 @@
-module Types.GenericNode exposing (GenericNode(..), toNodeType)
+module Entities.GenericNode exposing (GenericNode(..), toNodeType)
 
+import Entities.Document exposing (Document)
+import Entities.Folder as Folder exposing (Folder)
 import List.Nonempty exposing (Nonempty)
-import Types.Document exposing (Document)
-import Types.Folder as Folder exposing (Folder)
 import Types.NodeType exposing (NodeType(..))
 
 

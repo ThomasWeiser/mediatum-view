@@ -12,9 +12,9 @@ module Cache.Derive exposing
     )
 
 import Cache exposing (ApiData, Error(..))
+import Entities.Folder as Folder exposing (Folder)
 import Maybe.Extra
 import RemoteData exposing (RemoteData(..))
-import Types.Folder as Folder exposing (Folder)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.NodeType exposing (NodeType(..))
 

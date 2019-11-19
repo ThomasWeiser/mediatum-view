@@ -6,11 +6,11 @@ module Presentation exposing
 
 import Cache
 import Cache.Derive
+import Entities.Folder as Folder exposing (Folder)
 import Maybe.Extra
 import Query.Filters as Filters
 import RemoteData
 import Route exposing (Route)
-import Types.Folder as Folder exposing (Folder)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.NodeType exposing (NodeType(..))
 import Types.Selection exposing (SearchMethod(..), Selection)

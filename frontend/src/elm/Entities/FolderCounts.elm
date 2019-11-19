@@ -1,4 +1,4 @@
-module Types.FolderCounts exposing
+module Entities.FolderCounts exposing
     ( FolderCounts
     , fromList
     , init

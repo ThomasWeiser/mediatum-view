@@ -11,6 +11,7 @@ module UI.Article.Details exposing
 import Api
 import Api.Mutations
 import Cache
+import Entities.Document as Document exposing (Document)
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
@@ -18,7 +19,6 @@ import Html.Events
 import Icons
 import Maybe.Extra
 import RemoteData
-import Types.Document as Document exposing (Document)
 import Types.Id as Id exposing (DocumentId)
 import Utils
 

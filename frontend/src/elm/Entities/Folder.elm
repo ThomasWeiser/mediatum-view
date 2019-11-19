@@ -1,4 +1,4 @@
-module Types.Folder exposing
+module Entities.Folder exposing
     ( Folder
     , Type(..)
     , dummy
