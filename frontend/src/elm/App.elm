@@ -119,7 +119,7 @@ requestNeeds model =
             needs model
 
         ( cacheModel, cacheCmd ) =
-            Cache.requestNeeds
+            Cache.require
                 currentNeeds
                 model.cache
     in

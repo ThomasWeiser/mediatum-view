@@ -9,7 +9,7 @@ module Cache exposing
     , initialModel
     , needsFromList
     , orderingSelectionWindow
-    , requestNeeds
+    , require
     , update
     , updateWithModifiedDocument
     )
@@ -203,8 +203,8 @@ status model needs =
                 |> statusFromRemoteData
 
 
-requestNeeds : Needs -> Model -> ( Model, Cmd Msg )
-requestNeeds needs model =
+require : Needs -> Model -> ( Model, Cmd Msg )
+require needs model =
     if status model needs /= NotRequested then
         ( model, Cmd.none )
 
@@ -216,10 +216,10 @@ requestNeeds needs model =
             NeedAnd needOne needTwo ->
                 let
                     ( modelOne, cmdOne ) =
-                        requestNeeds needOne model
+                        require needOne model
 
                     ( modelTwo, cmdTwo ) =
-                        requestNeeds needTwo modelOne
+                        require needTwo modelOne
                 in
                 ( modelTwo
                 , Cmd.batch [ cmdOne, cmdTwo ]
@@ -227,10 +227,10 @@ requestNeeds needs model =
 
             NeedAndThen needOne needTwo ->
                 if status model needOne == Fulfilled then
-                    requestNeeds needTwo model
+                    require needTwo model
 
                 else
-                    requestNeeds needOne model
+                    require needOne model
 
             NeedRootFolderIds ->
                 ( { model
@@ -415,7 +415,7 @@ update msg model =
                         ( model2, cmd ) =
                             model1
                                 |> insertAsFolders folders
-                                |> requestNeeds
+                                |> require
                                     (NeedSubfolders (List.map .id folders))
                     in
                     ( model2
