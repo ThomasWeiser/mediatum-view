@@ -15,6 +15,7 @@ import Cache exposing (ApiData, Error(..))
 import Entities.Folder as Folder exposing (Folder)
 import Maybe.Extra
 import RemoteData exposing (RemoteData(..))
+import Types.FolderDisplay exposing (FolderDisplay(..))
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.NodeType exposing (NodeType(..))
 
@@ -53,7 +54,7 @@ getAsDocumentId cache nodeId =
             Nothing
 
 
-getRootFolder : Cache.Model -> DerivedData ( FolderId, Folder.Type )
+getRootFolder : Cache.Model -> DerivedData ( FolderId, FolderDisplay )
 getRootFolder cache =
     cache.rootFolderIds
         |> RemoteData.mapError CacheApiError

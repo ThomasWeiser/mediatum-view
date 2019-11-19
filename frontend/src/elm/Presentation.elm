@@ -11,6 +11,7 @@ import Maybe.Extra
 import Query.Filters as Filters
 import RemoteData
 import Route exposing (Route)
+import Types.FolderDisplay exposing (FolderDisplay(..))
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.NodeType exposing (NodeType(..))
 import Types.Selection exposing (SearchMethod(..), Selection)
@@ -49,10 +50,10 @@ fromRoute cache route =
             case searchMethodFromRoute route of
                 SelectByFolderListing ->
                     case folderType of
-                        Folder.IsCollection ->
+                        DisplayAsCollection ->
                             CollectionPresentation folderId
 
-                        Folder.IsDirectory ->
+                        DisplayAsDirectory ->
                             DocumentsPagePresentation
                                 { scope = folderId
                                 , searchMethod = SelectByFolderListing

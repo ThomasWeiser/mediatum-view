@@ -1,9 +1,9 @@
 module Types.NodeType exposing (NodeType(..))
 
-import Entities.Folder as Folder exposing (Folder)
+import Types.FolderDisplay exposing (FolderDisplay)
 
 
 type NodeType
-    = NodeIsFolder Folder.Type
+    = NodeIsFolder FolderDisplay
     | NodeIsDocument
     | NodeIsNeither

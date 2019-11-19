@@ -52,6 +52,7 @@ import Mediatum.Object.Metadatatype
 import Mediatum.Object.PageInfo
 import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection
+import Types.FolderDisplay exposing (FolderDisplay(..))
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Utils
 
@@ -89,7 +90,7 @@ folder =
             (Mediatum.Object.Folder.isCollection
                 |> SelectionSet.nonNullOrFail
                 |> SelectionSet.map
-                    (Utils.ifElse Folder.IsCollection Folder.IsDirectory)
+                    (Utils.ifElse DisplayAsCollection DisplayAsDirectory)
             )
         |> SelectionSet.with
             (Mediatum.Object.Folder.numSubfolder

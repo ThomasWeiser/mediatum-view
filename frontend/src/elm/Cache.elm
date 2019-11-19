@@ -520,7 +520,7 @@ insertFoldersAsNodeTypes listOfNewFolders model =
         (\folder ->
             insertNodeType
                 (folder.id |> Id.toInt |> Id.fromInt)
-                (NodeIsFolder folder.type_)
+                (NodeIsFolder folder.display)
         )
         model
         listOfNewFolders

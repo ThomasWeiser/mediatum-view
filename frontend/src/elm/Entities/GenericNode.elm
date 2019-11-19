@@ -17,7 +17,7 @@ toNodeType genericNode =
     case genericNode of
         IsFolder lineage ->
             NodeIsFolder
-                (.type_ (List.Nonempty.head lineage))
+                (.display (List.Nonempty.head lineage))
 
         IsDocument _ ->
             NodeIsDocument
