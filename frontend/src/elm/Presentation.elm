@@ -5,6 +5,7 @@ module Presentation exposing
     )
 
 import Data.Cache as Cache
+import Data.Derive
 import Maybe.Extra
 import Query.Filters as Filters
 import RemoteData
@@ -29,7 +30,7 @@ getFolderId cache presentation =
         GenericPresentation maybeNodeIds ->
             maybeNodeIds
                 |> Maybe.andThen
-                    (Tuple.first >> Cache.getAsFolderId cache)
+                    (Tuple.first >> Data.Derive.getAsFolderId cache)
 
         DocumentPresentation maybeFolderId documentId ->
             maybeFolderId
@@ -69,7 +70,7 @@ fromRoute cache route =
     in
     case route.path of
         Route.NoId ->
-            Cache.getRootFolder cache
+            Data.Derive.getRootFolder cache
                 |> RemoteData.toMaybe
                 |> Maybe.Extra.unwrap
                     (GenericPresentation Nothing)
@@ -79,7 +80,7 @@ fromRoute cache route =
 
         Route.OneId nodeId ->
             case
-                Cache.getNodeType cache nodeId
+                Data.Derive.getNodeType cache nodeId
                     |> RemoteData.toMaybe
             of
                 Nothing ->
@@ -99,8 +100,8 @@ fromRoute cache route =
         Route.TwoIds nodeIdOne nodeIdTwo ->
             case
                 RemoteData.map2 Tuple.pair
-                    (Cache.getNodeType cache nodeIdOne)
-                    (Cache.getNodeType cache nodeIdTwo)
+                    (Data.Derive.getNodeType cache nodeIdOne)
+                    (Data.Derive.getNodeType cache nodeIdTwo)
                     |> RemoteData.toMaybe
             of
                 Just ( NodeIsFolder folderType, NodeIsDocument ) ->

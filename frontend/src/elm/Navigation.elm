@@ -4,6 +4,7 @@ module Navigation exposing
     )
 
 import Data.Cache as Cache
+import Data.Derive
 import Query.Filters
 import Route exposing (Route)
 import Types.Id as Id exposing (DocumentId, FolderId)
@@ -31,7 +32,7 @@ alterRoute cache navigation route =
                         Route.NoId
 
                     Route.OneId idOne ->
-                        if Cache.getAsFolderId cache idOne == Nothing then
+                        if Data.Derive.getAsFolderId cache idOne == Nothing then
                             Route.NoId
 
                         else
