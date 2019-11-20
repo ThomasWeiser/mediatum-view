@@ -13,7 +13,7 @@ module UI.Article.DocumentsPage exposing
 import Api
 import Cache
 import Entities.Document as Document exposing (Document)
-import Entities.DocumentResultsPage exposing (DocumentResult, DocumentsPage)
+import Entities.Results exposing (DocumentResult, DocumentsPage)
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes

@@ -2,6 +2,7 @@ module Types exposing
     ( FolderDisplay(..)
     , NodeType(..)
     , Window
+    , WindowPage
     , orderingWindow
     )
 
@@ -22,6 +23,13 @@ type NodeType
 type alias Window =
     { offset : Int
     , limit : Int
+    }
+
+
+type alias WindowPage itemModel =
+    { offset : Int
+    , hasNextPage : Bool
+    , content : List itemModel
     }
 
 

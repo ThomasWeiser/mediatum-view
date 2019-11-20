@@ -18,10 +18,10 @@ import Api
 import Api.Queries
 import Basics.Extra
 import Entities.Document exposing (Document)
-import Entities.DocumentResultsPage exposing (DocumentsPage)
 import Entities.Folder as Folder exposing (Folder)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
+import Entities.Results exposing (DocumentsPage)
 import List.Nonempty
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
