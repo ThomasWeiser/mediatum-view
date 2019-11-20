@@ -26,10 +26,9 @@ import List.Nonempty
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
+import Types exposing (NodeType(..), Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.NodeType exposing (NodeType(..))
 import Types.Selection as Selection exposing (SearchMethod(..), Selection)
-import Types.Window as Window exposing (Window)
 import Utils
 
 
@@ -538,4 +537,4 @@ orderingSelectionWindow : Ordering ( Selection, Window )
 orderingSelectionWindow =
     Ordering.byFieldWith Selection.orderingSelection Tuple.first
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith Window.ordering Tuple.second)
+            (Ordering.byFieldWith Types.orderingWindow Tuple.second)

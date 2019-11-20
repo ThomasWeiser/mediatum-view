@@ -24,9 +24,9 @@ import Regex
 import RemoteData
 import Route
 import Route.Url
+import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId)
 import Types.Selection exposing (Selection)
-import Types.Window exposing (Window)
 
 
 type alias Context =

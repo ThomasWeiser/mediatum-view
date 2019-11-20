@@ -11,11 +11,9 @@ import Maybe.Extra
 import Query.Filters as Filters
 import RemoteData
 import Route exposing (Route)
-import Types.FolderDisplay exposing (FolderDisplay(..))
+import Types exposing (FolderDisplay(..), NodeType(..), Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.NodeType exposing (NodeType(..))
 import Types.Selection exposing (SearchMethod(..), Selection)
-import Types.Window exposing (Window)
 
 
 type Presentation

@@ -6,7 +6,7 @@ module Entities.Folder exposing
     , isRoot
     )
 
-import Types.FolderDisplay exposing (FolderDisplay(..))
+import Types exposing (FolderDisplay(..))
 import Types.Id as Id exposing (FolderId)
 
 

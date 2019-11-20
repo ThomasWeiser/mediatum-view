@@ -21,7 +21,7 @@ import Maybe.Extra
 import Presentation exposing (Presentation(..))
 import RemoteData
 import Sort.Dict
-import Types.FolderDisplay exposing (FolderDisplay(..))
+import Types exposing (FolderDisplay(..))
 import Types.Id as Id exposing (FolderId)
 import Utils
 

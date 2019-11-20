@@ -58,10 +58,10 @@ import Pagination.Relay.Page
 import Pagination.Relay.Pagination
 import Query.Attribute
 import Query.Filters
+import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (Filter, Filters, FtsSorting(..))
-import Types.Window exposing (Window)
 
 
 {-| Get the root folders and their sub-folders.

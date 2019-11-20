@@ -3,7 +3,7 @@ module Entities.GenericNode exposing (GenericNode(..), toNodeType)
 import Entities.Document exposing (Document)
 import Entities.Folder as Folder exposing (Folder)
 import List.Nonempty exposing (Nonempty)
-import Types.NodeType exposing (NodeType(..))
+import Types exposing (NodeType(..))
 
 
 type GenericNode
