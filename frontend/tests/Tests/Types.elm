@@ -26,7 +26,7 @@ import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (Filter(..), Filters, FtsSorting(..), SelectMethod(..), Selection)
+import Types.Selection exposing (Filter(..), FtsSorting(..), SelectMethod(..), Selection, SetOfFilters)
 
 
 fuzzerId : Fuzzer Int
@@ -90,7 +90,7 @@ fuzzerFtsSorting =
         ]
 
 
-fuzzerFilters : Fuzzer Filters
+fuzzerFilters : Fuzzer SetOfFilters
 fuzzerFilters =
     fuzzerFilter
         |> shortList 3

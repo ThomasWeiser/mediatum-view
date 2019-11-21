@@ -1,9 +1,9 @@
 module Types.Selection exposing
     ( Filter(..)
-    , Filters
     , FtsSorting(..)
     , SelectMethod(..)
     , Selection
+    , SetOfFilters
     , filterHandle
     , filtersFromList
     , filtersNone
@@ -28,7 +28,7 @@ import Utils
 type alias Selection =
     { scope : FolderId
     , selectMethod : SelectMethod
-    , filters : Filters
+    , filters : SetOfFilters
     }
 
 
@@ -42,8 +42,8 @@ type FtsSorting
     | FtsByDate
 
 
-type Filters
-    = Filters (Dict.Dict String Filter)
+type SetOfFilters
+    = SetOfFilters (Dict.Dict String Filter)
 
 
 type Filter
@@ -51,32 +51,32 @@ type Filter
     | FilterTitleFts SearchTerm
 
 
-filtersNone : Filters
+filtersNone : SetOfFilters
 filtersNone =
-    Filters Dict.empty
+    SetOfFilters Dict.empty
 
 
-insertFilter : Filter -> Filters -> Filters
-insertFilter filter (Filters fs) =
-    Filters (Dict.insert (filterHandle filter) filter fs)
+insertFilter : Filter -> SetOfFilters -> SetOfFilters
+insertFilter filter (SetOfFilters fs) =
+    SetOfFilters (Dict.insert (filterHandle filter) filter fs)
 
 
-removeFilter : String -> Filters -> Filters
-removeFilter handle (Filters fs) =
-    Filters (Dict.remove handle fs)
+removeFilter : String -> SetOfFilters -> SetOfFilters
+removeFilter handle (SetOfFilters fs) =
+    SetOfFilters (Dict.remove handle fs)
 
 
-filtersToList : Filters -> List Filter
-filtersToList (Filters fs) =
+filtersToList : SetOfFilters -> List Filter
+filtersToList (SetOfFilters fs) =
     Dict.values fs
 
 
-filtersFromList : List Filter -> Filters
+filtersFromList : List Filter -> SetOfFilters
 filtersFromList listOfFilters =
     listOfFilters
         |> List.map (\filter -> ( filterHandle filter, filter ))
         |> Dict.fromList
-        |> Filters
+        |> SetOfFilters
 
 
 filterHandle : Filter -> String
@@ -129,11 +129,11 @@ orderingFtsSorting =
         [ FtsByRank, FtsByDate ]
 
 
-orderingFilters : Ordering Filters
+orderingFilters : Ordering SetOfFilters
 orderingFilters =
     Ordering.byFieldWith
         (Utils.lexicalOrder orderingStringFilter)
-        (\(Filters fs1) -> Dict.toList fs1)
+        (\(SetOfFilters fs1) -> Dict.toList fs1)
 
 
 orderingStringFilter : Ordering ( String, Filter )

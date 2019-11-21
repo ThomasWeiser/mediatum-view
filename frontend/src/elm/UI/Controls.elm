@@ -22,7 +22,7 @@ import Query.Filters as Filters
 import Range
 import Route exposing (Route)
 import Types.SearchTerm as SearchTerm
-import Types.Selection as Selection exposing (Filter(..), Filters, FtsSorting(..))
+import Types.Selection as Selection exposing (Filter(..), FtsSorting(..), SetOfFilters)
 import Utils
 
 
@@ -297,7 +297,7 @@ viewFilters context model =
         ]
 
 
-viewExistingFilters : Model -> Filters -> Html Msg
+viewExistingFilters : Model -> SetOfFilters -> Html Msg
 viewExistingFilters model filters =
     Html.span [] <|
         List.map

@@ -9,7 +9,7 @@ import Query.Filters
 import Route exposing (Route)
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (Filters, FtsSorting)
+import Types.Selection exposing (FtsSorting, SetOfFilters)
 
 
 type Navigation
@@ -17,7 +17,7 @@ type Navigation
     | ShowDocument FolderId DocumentId
     | ShowListingWithFolder FolderId
     | ShowListingWithSearch (Maybe SearchTerm) FtsSorting
-    | ShowListingWithFilters Filters
+    | ShowListingWithFilters SetOfFilters
     | SetOffset Int
     | SetLimit Int
 

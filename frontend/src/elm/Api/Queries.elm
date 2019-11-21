@@ -61,7 +61,7 @@ import Query.Filters
 import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (Filter, Filters, FtsSorting(..))
+import Types.Selection exposing (Filter, FtsSorting(..), SetOfFilters)
 
 
 {-| Get the root folders and their sub-folders.
@@ -185,7 +185,7 @@ _GraphQL notation:_
 folderDocumentsPage :
     Window
     -> FolderId
-    -> Filters
+    -> SetOfFilters
     -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
 folderDocumentsPage window folderId filters =
     Mediatum.Query.allDocumentsPage
@@ -223,7 +223,7 @@ _GraphQL notation:_
 -}
 folderDocumentsFolderCounts :
     FolderId
-    -> Filters
+    -> SetOfFilters
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
 folderDocumentsFolderCounts folderId filters =
     Mediatum.Query.allDocumentsDocset
@@ -266,7 +266,7 @@ ftsPage :
     -> FolderId
     -> SearchTerm
     -> FtsSorting
-    -> Filters
+    -> SetOfFilters
     -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
 ftsPage window folderId searchTerm ftsSorting filters =
     Mediatum.Query.ftsDocumentsPage
@@ -318,7 +318,7 @@ _GraphQL notation:_
 ftsFolderCounts :
     FolderId
     -> SearchTerm
-    -> Filters
+    -> SetOfFilters
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
 ftsFolderCounts folderId searchTerm filters =
     Mediatum.Query.ftsDocumentsDocset

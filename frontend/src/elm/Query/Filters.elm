@@ -9,17 +9,17 @@ import Query.Attribute
 import Query.Filter as Filter
 import Route exposing (Route)
 import Types.SearchTerm
-import Types.Selection as Selection exposing (Filter(..), Filters)
+import Types.Selection as Selection exposing (Filter(..), SetOfFilters)
 import Utils
 
 
-toAttributeTests : Filters -> List Query.Attribute.Test
+toAttributeTests : SetOfFilters -> List Query.Attribute.Test
 toAttributeTests filters =
     Selection.filtersToList filters
         |> List.map Filter.toAttributeTest
 
 
-fromRoute : Route -> Filters
+fromRoute : Route -> SetOfFilters
 fromRoute route =
     route.parameters.filterByTitle
         |> Types.SearchTerm.setToList
@@ -31,7 +31,7 @@ fromRoute route =
         |> Selection.filtersFromList
 
 
-alterRoute : Filters -> Route -> Route
+alterRoute : SetOfFilters -> Route -> Route
 alterRoute filters route =
     let
         listOfFilters =
