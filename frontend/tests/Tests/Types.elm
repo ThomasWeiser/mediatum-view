@@ -92,11 +92,9 @@ fuzzerFtsSorting =
 
 fuzzerFilters : Fuzzer Filters
 fuzzerFilters =
-    Fuzz.map Dict.fromList <|
-        shortList 3 <|
-            Fuzz.map2 Tuple.pair
-                Fuzz.string
-                fuzzerFilter
+    fuzzerFilter
+        |> shortList 3
+        |> Fuzz.map Types.Selection.filtersFromList
 
 
 fuzzerFilter : Fuzzer Filter

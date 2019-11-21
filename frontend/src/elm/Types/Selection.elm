@@ -5,6 +5,7 @@ module Types.Selection exposing
     , SelectMethod(..)
     , Selection
     , filterHandle
+    , filtersFromList
     , filtersNone
     , filtersToList
     , insertFilter
@@ -41,8 +42,8 @@ type FtsSorting
     | FtsByDate
 
 
-type alias Filters =
-    Dict.Dict String Filter
+type Filters
+    = Filters (Dict.Dict String Filter)
 
 
 type Filter
@@ -52,22 +53,30 @@ type Filter
 
 filtersNone : Filters
 filtersNone =
-    Dict.empty
+    Filters Dict.empty
 
 
 insertFilter : Filter -> Filters -> Filters
-insertFilter filter filters =
-    Dict.insert (filterHandle filter) filter filters
+insertFilter filter (Filters fs) =
+    Filters (Dict.insert (filterHandle filter) filter fs)
 
 
 removeFilter : String -> Filters -> Filters
-removeFilter handle filters =
-    Dict.remove handle filters
+removeFilter handle (Filters fs) =
+    Filters (Dict.remove handle fs)
 
 
 filtersToList : Filters -> List Filter
-filtersToList filters =
-    Dict.values filters
+filtersToList (Filters fs) =
+    Dict.values fs
+
+
+filtersFromList : List Filter -> Filters
+filtersFromList listOfFilters =
+    listOfFilters
+        |> List.map (\filter -> ( filterHandle filter, filter ))
+        |> Dict.fromList
+        |> Filters
 
 
 filterHandle : Filter -> String
@@ -124,7 +133,7 @@ orderingFilters : Ordering Filters
 orderingFilters =
     Ordering.byFieldWith
         (Utils.lexicalOrder orderingStringFilter)
-        Dict.toList
+        (\(Filters fs1) -> Dict.toList fs1)
 
 
 orderingStringFilter : Ordering ( String, Filter )

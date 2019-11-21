@@ -28,15 +28,14 @@ fromRoute route =
             (route.parameters.filterByYear
                 |> Maybe.map FilterYearWithin
             )
-        |> List.map (\filter -> ( Selection.filterHandle filter, filter ))
-        |> Dict.fromList
+        |> Selection.filtersFromList
 
 
 alterRoute : Filters -> Route -> Route
 alterRoute filters route =
     let
         listOfFilters =
-            Dict.values filters
+            Selection.filtersToList filters
 
         filterByYear =
             listOfFilters
