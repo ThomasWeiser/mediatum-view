@@ -89,11 +89,11 @@ fromRoute cache route =
                     GenericPresentation (Just ( nodeId, Nothing ))
 
                 Just NodeIsDocument ->
-                    DocumentPresentation Nothing (nodeId |> Id.toInt |> Id.fromInt)
+                    DocumentPresentation Nothing (nodeId |> Id.asDocumentId)
 
                 Just (NodeIsFolder folderType) ->
                     folderPresentation
-                        (nodeId |> Id.toInt |> Id.fromInt)
+                        (nodeId |> Id.asFolderId)
                         folderType
 
         Route.TwoIds nodeIdOne nodeIdTwo ->
@@ -105,8 +105,8 @@ fromRoute cache route =
             of
                 Just ( NodeIsFolder folderType, NodeIsDocument ) ->
                     DocumentPresentation
-                        (Just (nodeIdOne |> Id.toInt |> Id.fromInt))
-                        (nodeIdTwo |> Id.toInt |> Id.fromInt)
+                        (Just (nodeIdOne |> Id.asFolderId))
+                        (nodeIdTwo |> Id.asDocumentId)
 
                 _ ->
                     GenericPresentation (Just ( nodeIdOne, Just nodeIdTwo ))

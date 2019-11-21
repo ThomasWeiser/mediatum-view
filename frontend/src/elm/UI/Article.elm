@@ -238,8 +238,7 @@ viewBreadcrumbs context maybeFolderId =
                                                 (\folder ->
                                                     Html.a
                                                         [ folder.id
-                                                            |> Id.toInt
-                                                            |> Id.fromInt
+                                                            |> Id.asNodeId
                                                             |> Route.fromOneId
                                                             |> Route.Url.toString
                                                             |> Html.Attributes.href

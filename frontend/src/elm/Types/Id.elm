@@ -2,6 +2,9 @@ module Types.Id exposing
     ( DocumentId
     , FolderId
     , NodeId
+    , asDocumentId
+    , asFolderId
+    , asNodeId
     , fromInt
     , ordering
     , toInt
@@ -55,6 +58,21 @@ type alias FolderId =
 
 type alias DocumentId =
     Id Document
+
+
+asNodeId : Id a -> NodeId
+asNodeId (Id i) =
+    Id i
+
+
+asFolderId : NodeId -> FolderId
+asFolderId (Id i) =
+    Id i
+
+
+asDocumentId : NodeId -> DocumentId
+asDocumentId (Id i) =
+    Id i
 
 
 toInt : Id a -> Int

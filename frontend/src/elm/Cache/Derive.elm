@@ -37,7 +37,7 @@ getAsFolderId : Cache.Model -> NodeId -> Maybe FolderId
 getAsFolderId cache nodeId =
     case Cache.get cache.nodeTypes nodeId of
         Success (NodeIsFolder _) ->
-            nodeId |> Id.toInt |> Id.fromInt |> Just
+            nodeId |> Id.asFolderId |> Just
 
         _ ->
             Nothing
@@ -47,7 +47,7 @@ getAsDocumentId : Cache.Model -> NodeId -> Maybe DocumentId
 getAsDocumentId cache nodeId =
     case Cache.get cache.nodeTypes nodeId of
         Success NodeIsDocument ->
-            nodeId |> Id.toInt |> Id.fromInt |> Just
+            nodeId |> Id.asDocumentId |> Just
 
         _ ->
             Nothing
@@ -64,7 +64,7 @@ getRootFolder cache =
             )
         |> RemoteData.andThen
             (\folderId ->
-                Cache.get cache.nodeTypes (folderId |> Id.toInt |> Id.fromInt)
+                Cache.get cache.nodeTypes (folderId |> Id.asNodeId)
                     |> RemoteData.mapError CacheApiError
                     |> RemoteData.andThen
                         (\nodeType ->

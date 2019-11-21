@@ -55,15 +55,15 @@ alterRoute cache navigation route =
             { route
                 | path =
                     Route.TwoIds
-                        (folderId |> Id.toInt |> Id.fromInt)
-                        (documentId |> Id.toInt |> Id.fromInt)
+                        (folderId |> Id.asNodeId)
+                        (documentId |> Id.asNodeId)
             }
 
         ShowListingWithFolder folderId ->
             { listingRoute
                 | path =
                     Route.OneId
-                        (folderId |> Id.toInt |> Id.fromInt)
+                        (folderId |> Id.asNodeId)
             }
 
         ShowListingWithSearch maybeFtsTerm ftsSorting ->

@@ -103,10 +103,10 @@ toString route =
                 []
 
             OneId id ->
-                [ id |> Id.toInt |> String.fromInt ]
+                [ id |> Id.toString ]
 
             TwoIds id1 id2 ->
-                [ id1 |> Id.toInt |> String.fromInt, id2 |> Id.toInt |> String.fromInt ]
+                [ id1 |> Id.toString, id2 |> Id.toString ]
         )
         (Maybe.Extra.values
             [ route.parameters.ftsTerm

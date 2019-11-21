@@ -205,8 +205,7 @@ viewDocument number document =
             , Html.a
                 [ Html.Attributes.class "metadatatype"
                 , document.id
-                    |> Id.toInt
-                    |> Id.fromInt
+                    |> Id.asNodeId
                     |> Route.fromOneId
                     |> Route.Url.toString
                     |> Html.Attributes.href
