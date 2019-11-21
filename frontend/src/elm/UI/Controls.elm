@@ -22,7 +22,7 @@ import Query.Filters as Filters
 import Range
 import Route exposing (Route)
 import Types.SearchTerm as SearchTerm
-import Types.Selection as Selection exposing (Filter(..), FtsSorting(..), SetOfFilters)
+import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), SetOfFilters)
 import Utils
 
 
@@ -40,7 +40,7 @@ type Return
 type alias Model =
     { ftsTerm : String
     , ftsSorting : FtsSorting
-    , filterEditors : Dict String FilterEditor.Model
+    , filterEditors : Dict FilterHandle FilterEditor.Model
     }
 
 
@@ -52,7 +52,7 @@ type Msg
     | RemoveFilter Filter
     | Submit
     | SubmitExampleQuery
-    | FilterEditorMsg String FilterEditor.Msg
+    | FilterEditorMsg FilterHandle FilterEditor.Msg
 
 
 submitExampleQuery : Msg
@@ -108,14 +108,14 @@ update context msg model =
                 ( filterEditorModel, filterEditorCmd ) =
                     FilterEditor.init filterType.initControls
 
-                theFilterHandle =
-                    "new-" ++ filterType.name
+                newFilterHandle =
+                    Selection.newFilterHandle filterType.name
             in
             ( { model
                 | filterEditors =
-                    Dict.insert theFilterHandle filterEditorModel model.filterEditors
+                    Dict.insert newFilterHandle filterEditorModel model.filterEditors
               }
-            , filterEditorCmd |> Cmd.map (FilterEditorMsg theFilterHandle)
+            , filterEditorCmd |> Cmd.map (FilterEditorMsg newFilterHandle)
             , NoReturn
             )
 

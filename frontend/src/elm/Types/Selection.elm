@@ -1,5 +1,6 @@
 module Types.Selection exposing
     ( Filter(..)
+    , FilterHandle
     , FtsSorting(..)
     , SelectMethod(..)
     , Selection
@@ -9,6 +10,7 @@ module Types.Selection exposing
     , filtersNone
     , filtersToList
     , insertFilter
+    , newFilterHandle
     , orderingFilter
     , orderingFilters
     , orderingFtsSorting
@@ -43,12 +45,16 @@ type FtsSorting
 
 
 type SetOfFilters
-    = SetOfFilters (Dict.Dict String Filter)
+    = SetOfFilters (Dict.Dict FilterHandle Filter)
 
 
 type Filter
     = FilterYearWithin (Range Int)
     | FilterTitleFts SearchTerm
+
+
+type alias FilterHandle =
+    ( String, Float )
 
 
 filtersNone : SetOfFilters
@@ -61,7 +67,7 @@ insertFilter filter (SetOfFilters fs) =
     SetOfFilters (Dict.insert (filterHandle filter) filter fs)
 
 
-removeFilter : String -> SetOfFilters -> SetOfFilters
+removeFilter : FilterHandle -> SetOfFilters -> SetOfFilters
 removeFilter handle (SetOfFilters fs) =
     SetOfFilters (Dict.remove handle fs)
 
@@ -79,14 +85,24 @@ filtersFromList listOfFilters =
         |> SetOfFilters
 
 
-filterHandle : Filter -> String
+filterHandle : Filter -> FilterHandle
 filterHandle filter =
-    case filter of
+    ( case filter of
         FilterYearWithin _ ->
             "YearWithin"
 
         FilterTitleFts searchTerm ->
-            "TitleFts-" ++ SearchTerm.toString searchTerm
+            "TitleFts-"
+                ++ SearchTerm.toString searchTerm
+    , 0.0
+    )
+
+
+newFilterHandle : String -> FilterHandle
+newFilterHandle filterTypeName =
+    ( "new-" ++ filterTypeName
+    , 0.0
+    )
 
 
 orderingSelection : Ordering Selection
@@ -136,7 +152,7 @@ orderingFilters =
         (\(SetOfFilters fs1) -> Dict.toList fs1)
 
 
-orderingStringFilter : Ordering ( String, Filter )
+orderingStringFilter : Ordering ( FilterHandle, Filter )
 orderingStringFilter =
     Ordering.byField Tuple.first
         |> Ordering.breakTiesWith
