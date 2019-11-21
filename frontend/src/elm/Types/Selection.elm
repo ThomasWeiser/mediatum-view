@@ -4,12 +4,16 @@ module Types.Selection exposing
     , FtsSorting(..)
     , SelectMethod(..)
     , Selection
+    , filterHandle
     , filtersNone
+    , filtersToList
+    , insertFilter
     , orderingFilter
     , orderingFilters
     , orderingFtsSorting
     , orderingSearchMethod
     , orderingSelection
+    , removeFilter
     )
 
 import Dict
@@ -49,6 +53,31 @@ type Filter
 filtersNone : Filters
 filtersNone =
     Dict.empty
+
+
+insertFilter : Filter -> Filters -> Filters
+insertFilter filter filters =
+    Dict.insert (filterHandle filter) filter filters
+
+
+removeFilter : String -> Filters -> Filters
+removeFilter handle filters =
+    Dict.remove handle filters
+
+
+filtersToList : Filters -> List Filter
+filtersToList filters =
+    Dict.values filters
+
+
+filterHandle : Filter -> String
+filterHandle filter =
+    case filter of
+        FilterYearWithin _ ->
+            "YearWithin"
+
+        FilterTitleFts searchTerm ->
+            "TitleFts-" ++ SearchTerm.toString searchTerm
 
 
 orderingSelection : Ordering Selection

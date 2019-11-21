@@ -4,7 +4,6 @@ module Query.Filter exposing
     , controlsFromFilter
     , controlsToFilter
     , filterTypes
-    , handle
     , toAttributeTest
     , view
     , viewEdit
@@ -71,16 +70,6 @@ controlsToFilter controls =
             searchTerm
                 |> Types.SearchTerm.fromString
                 |> Maybe.map FilterTitleFts
-
-
-handle : Filter -> String
-handle filter =
-    case filter of
-        FilterYearWithin _ ->
-            "YearWithin"
-
-        FilterTitleFts searchTerm ->
-            "TitleFts-" ++ Types.SearchTerm.toString searchTerm
 
 
 toAttributeTest : Filter -> Query.Attribute.Test

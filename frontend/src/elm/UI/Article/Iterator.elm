@@ -56,7 +56,7 @@ initialModel context documentId =
                 , detailsQuery =
                     { folder = context.folder
                     , documentId = documentId
-                    , filters = Query.Filters.none
+                    , filters = Types.filterNone
                     }
                 }
     in
@@ -76,7 +76,7 @@ update context msg model =
                         , detailsQuery =
                             { folder = context.folder
                             , documentId = model.currentId
-                            , filters = Query.Filters.none
+                            , filters = Types.filterNone
                             }
                         }
                         subMsg
@@ -171,7 +171,7 @@ view context model =
             , detailsQuery =
                 { folder = context.folder
                 , documentId = model.currentId
-                , filters = Query.Filters.none
+                , filters = Types.filterNone
                 }
             }
             model.details

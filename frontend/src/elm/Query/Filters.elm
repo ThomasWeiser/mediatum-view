@@ -1,11 +1,7 @@
 module Query.Filters exposing
     ( alterRoute
     , fromRoute
-    , insert
-    , none
-    , remove
     , toAttributeTests
-    , toList
     )
 
 import Dict
@@ -13,33 +9,13 @@ import Query.Attribute
 import Query.Filter as Filter
 import Route exposing (Route)
 import Types.SearchTerm
-import Types.Selection exposing (Filter(..), Filters)
+import Types.Selection as Selection exposing (Filter(..), Filters)
 import Utils
-
-
-none : Filters
-none =
-    Dict.empty
-
-
-insert : Filter -> Filters -> Filters
-insert filter filters =
-    Dict.insert (Filter.handle filter) filter filters
-
-
-remove : String -> Filters -> Filters
-remove handle filters =
-    Dict.remove handle filters
-
-
-toList : Filters -> List Filter
-toList filters =
-    Dict.values filters
 
 
 toAttributeTests : Filters -> List Query.Attribute.Test
 toAttributeTests filters =
-    toList filters
+    Selection.filtersToList filters
         |> List.map Filter.toAttributeTest
 
 
@@ -52,7 +28,7 @@ fromRoute route =
             (route.parameters.filterByYear
                 |> Maybe.map FilterYearWithin
             )
-        |> List.map (\filter -> ( Filter.handle filter, filter ))
+        |> List.map (\filter -> ( Selection.filterHandle filter, filter ))
         |> Dict.fromList
 
 

@@ -21,8 +21,8 @@ import Query.FilterEditor as FilterEditor
 import Query.Filters as Filters
 import Range
 import Route exposing (Route)
-import Types.SearchTerm
-import Types.Selection exposing (Filter(..), Filters, FtsSorting(..))
+import Types.SearchTerm as SearchTerm
+import Types.Selection as Selection exposing (Filter(..), Filters, FtsSorting(..))
 import Utils
 
 
@@ -68,7 +68,7 @@ initialModel route =
                 ""
 
             Just seachTerm ->
-                Types.SearchTerm.toString seachTerm
+                SearchTerm.toString seachTerm
     , ftsSorting = route.parameters.ftsSorting
     , filterEditors = Dict.empty
     }
@@ -79,14 +79,14 @@ update context msg model =
     let
         removeFilter filterHandle =
             Filters.fromRoute context.route
-                |> Filters.remove filterHandle
+                |> Selection.removeFilter filterHandle
                 |> Navigation.ShowListingWithFilters
                 |> Navigate
 
         insertFilter oldFilterHandlefilter newFilter =
             Filters.fromRoute context.route
-                |> Filters.remove oldFilterHandlefilter
-                |> Filters.insert newFilter
+                |> Selection.removeFilter oldFilterHandlefilter
+                |> Selection.insertFilter newFilter
                 |> Navigation.ShowListingWithFilters
                 |> Navigate
     in
@@ -108,14 +108,14 @@ update context msg model =
                 ( filterEditorModel, filterEditorCmd ) =
                     FilterEditor.init filterType.initControls
 
-                filterHandle =
+                theFilterHandle =
                     "new-" ++ filterType.name
             in
             ( { model
                 | filterEditors =
-                    Dict.insert filterHandle filterEditorModel model.filterEditors
+                    Dict.insert theFilterHandle filterEditorModel model.filterEditors
               }
-            , filterEditorCmd |> Cmd.map (FilterEditorMsg filterHandle)
+            , filterEditorCmd |> Cmd.map (FilterEditorMsg theFilterHandle)
             , NoReturn
             )
 
@@ -125,7 +125,7 @@ update context msg model =
                     FilterEditor.init (Filter.controlsFromFilter filter)
 
                 filterHandle =
-                    Filter.handle filter
+                    Selection.filterHandle filter
             in
             ( { model
                 | filterEditors =
@@ -138,7 +138,7 @@ update context msg model =
         RemoveFilter filter ->
             ( model
             , Cmd.none
-            , removeFilter (Filter.handle filter)
+            , removeFilter (Selection.filterHandle filter)
             )
 
         Submit ->
@@ -146,7 +146,7 @@ update context msg model =
             , Cmd.none
             , Navigate
                 (Navigation.ShowListingWithSearch
-                    (Types.SearchTerm.fromString model.ftsTerm)
+                    (SearchTerm.fromString model.ftsTerm)
                     model.ftsSorting
                 )
             )
@@ -154,18 +154,18 @@ update context msg model =
         SubmitExampleQuery ->
             let
                 filters =
-                    Filters.none
-                        |> Filters.insert
+                    Selection.filtersNone
+                        |> Selection.insertFilter
                             (FilterYearWithin (Range.fromTo ( 2000, 2010 )))
-                        |> Filters.insert
+                        |> Selection.insertFilter
                             (FilterTitleFts
-                                (Types.SearchTerm.fromStringWithDefault "no-default-needed" "with")
+                                (SearchTerm.fromStringWithDefault "no-default-needed" "with")
                             )
             in
             ( model
             , Cmd.none
             , [ Navigation.ShowListingWithSearch
-                    (Types.SearchTerm.fromString "variable")
+                    (SearchTerm.fromString "variable")
                     context.route.parameters.ftsSorting
               , Navigation.ShowListingWithFilters
                     filters
@@ -305,12 +305,12 @@ viewExistingFilters model filters =
                 let
                     beingEdited =
                         Dict.member
-                            (Filter.handle filter)
+                            (Selection.filterHandle filter)
                             model.filterEditors
                 in
                 viewExistingFilter beingEdited filter
             )
-            (Filters.toList filters)
+            (Selection.filtersToList filters)
 
 
 viewExistingFilter : Bool -> Filter -> Html Msg
