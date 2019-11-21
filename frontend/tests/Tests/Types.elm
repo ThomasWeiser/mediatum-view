@@ -26,7 +26,7 @@ import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (Filter(..), Filters, FtsSorting(..), SearchMethod(..), Selection)
+import Types.Selection exposing (Filter(..), Filters, FtsSorting(..), SelectMethod(..), Selection)
 
 
 fuzzerId : Fuzzer Int
@@ -69,7 +69,7 @@ fuzzerSelectionWindow =
         fuzzerWindow
 
 
-fuzzerSearchMethod : Fuzzer SearchMethod
+fuzzerSearchMethod : Fuzzer SelectMethod
 fuzzerSearchMethod =
     Fuzz.frequency
         [ ( 1, Fuzz.constant SelectByFolderListing )

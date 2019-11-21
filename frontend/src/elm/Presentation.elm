@@ -13,7 +13,7 @@ import RemoteData
 import Route exposing (Route)
 import Types exposing (FolderDisplay(..), NodeType(..), Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.Selection exposing (SearchMethod(..), Selection)
+import Types.Selection exposing (SelectMethod(..), Selection)
 
 
 type Presentation
@@ -54,15 +54,15 @@ fromRoute cache route =
                         DisplayAsDirectory ->
                             DocumentsPagePresentation
                                 { scope = folderId
-                                , searchMethod = SelectByFolderListing
+                                , selectMethod = SelectByFolderListing
                                 , filters = Filters.fromRoute route
                                 }
                                 (windowFromRoute route)
 
-                searchMethod ->
+                selectMethod ->
                     DocumentsPagePresentation
                         { scope = folderId
-                        , searchMethod = searchMethod
+                        , selectMethod = selectMethod
                         , filters = Filters.fromRoute route
                         }
                         (windowFromRoute route)
@@ -119,7 +119,7 @@ windowFromRoute route =
     }
 
 
-searchMethodFromRoute : Route -> SearchMethod
+searchMethodFromRoute : Route -> SelectMethod
 searchMethodFromRoute route =
     case route.parameters.ftsTerm of
         Nothing ->

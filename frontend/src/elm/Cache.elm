@@ -28,7 +28,7 @@ import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (NodeType(..), Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.Selection as Selection exposing (SearchMethod(..), Selection)
+import Types.Selection as Selection exposing (SelectMethod(..), Selection)
 import Utils
 
 
@@ -294,7 +294,7 @@ require needs model =
                   }
                 , Api.sendQueryRequest
                     (ApiResponseDocumentsPage ( selection, window ))
-                    (case selection.searchMethod of
+                    (case selection.selectMethod of
                         SelectByFolderListing ->
                             Api.Queries.folderDocumentsPage
                                 window
@@ -318,7 +318,7 @@ require needs model =
                   }
                 , Api.sendQueryRequest
                     (ApiResponseFolderCounts selection)
-                    (case selection.searchMethod of
+                    (case selection.selectMethod of
                         SelectByFolderListing ->
                             Api.Queries.folderDocumentsFolderCounts
                                 selection.scope

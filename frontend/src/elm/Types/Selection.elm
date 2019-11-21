@@ -2,7 +2,7 @@ module Types.Selection exposing
     ( Filter(..)
     , Filters
     , FtsSorting(..)
-    , SearchMethod(..)
+    , SelectMethod(..)
     , Selection
     , filtersNone
     , orderingFilter
@@ -22,12 +22,12 @@ import Utils
 
 type alias Selection =
     { scope : FolderId
-    , searchMethod : SearchMethod
+    , selectMethod : SelectMethod
     , filters : Filters
     }
 
 
-type SearchMethod
+type SelectMethod
     = SelectByFolderListing
     | SelectByFullTextSearch SearchTerm FtsSorting
 
@@ -55,16 +55,16 @@ orderingSelection : Ordering Selection
 orderingSelection =
     Ordering.byFieldWith Id.ordering .scope
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith orderingSearchMethod .searchMethod)
+            (Ordering.byFieldWith orderingSearchMethod .selectMethod)
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingFilters .filters)
 
 
-orderingSearchMethod : Ordering SearchMethod
+orderingSearchMethod : Ordering SelectMethod
 orderingSearchMethod =
     Ordering.byRank
-        (\searchMethod ->
-            case searchMethod of
+        (\selectMethod ->
+            case selectMethod of
                 SelectByFolderListing ->
                     1
 
