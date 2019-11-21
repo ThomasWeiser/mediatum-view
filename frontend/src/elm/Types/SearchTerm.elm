@@ -28,10 +28,11 @@ type SearchTerm
 
 
 fromString : String -> Maybe SearchTerm
-fromString =
-    String.Extra.clean
-        >> String.Extra.nonEmpty
-        >> Maybe.map SearchTerm
+fromString string =
+    string
+        |> String.Extra.clean
+        |> String.Extra.nonEmpty
+        |> Maybe.map SearchTerm
 
 
 fromStringWithDefault : String -> String -> SearchTerm
@@ -41,8 +42,8 @@ fromStringWithDefault default string =
 
 
 toString : SearchTerm -> String
-toString (SearchTerm s) =
-    s
+toString (SearchTerm string) =
+    string
 
 
 ordering : Ordering SearchTerm
