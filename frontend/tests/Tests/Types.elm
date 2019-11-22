@@ -14,18 +14,14 @@ module Tests.Types exposing
     , fuzzerYear
     )
 
-import Basics.Extra
-import Dict
-import Expect exposing (Expectation)
+import Expect
 import Fuzz exposing (Fuzzer)
-import String.Extra
 import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Types.Range
 import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (Filter(..), FtsSorting(..), SelectMethod(..), Selection, SetOfFilters)
 
 

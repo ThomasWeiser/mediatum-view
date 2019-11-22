@@ -1,13 +1,13 @@
 module Tests.Data.Ordering exposing (suite)
 
 import Cache
-import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
+import Expect
+import Fuzz exposing (Fuzzer)
 import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Types exposing (..)
 import Types
-import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
+import Types.Id as Id
 import Types.Selection as Selection
 
 

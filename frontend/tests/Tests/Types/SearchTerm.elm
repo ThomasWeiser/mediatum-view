@@ -1,6 +1,6 @@
 module Tests.Types.SearchTerm exposing (fuzzerSearchTerm, suite)
 
-import Expect exposing (Expectation)
+import Expect
 import Fuzz exposing (Fuzzer)
 import String.Extra
 import Test exposing (..)

@@ -1,7 +1,7 @@
 module Tests.Tree exposing (suite)
 
-import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
+import Expect
+import Fuzz exposing (Fuzzer)
 import Test exposing (..)
 import UI.Tree
 

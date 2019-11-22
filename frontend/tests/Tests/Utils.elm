@@ -1,6 +1,6 @@
 module Tests.Utils exposing (suite)
 
-import Expect exposing (Expectation)
+import Expect
 import Fuzz exposing (Fuzzer)
 import List.Extra
 import Test exposing (..)

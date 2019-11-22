@@ -1,10 +1,7 @@
 module Tests.Route exposing (fuzzerRoute)
 
-import Fuzz exposing (Fuzzer, int, list, string)
-import List.Nonempty exposing (Nonempty)
+import Fuzz exposing (Fuzzer)
 import Route exposing (Route, RouteParameters, RoutePath(..))
-import Set
-import String.Extra
 import TestUtils exposing (..)
 import Tests.Types exposing (..)
 import Tests.Types.Range
