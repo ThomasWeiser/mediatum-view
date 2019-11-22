@@ -60,6 +60,14 @@ type alias DocumentId =
     Id Document
 
 
+dummyValueToAvoidElmAnalyseErrors : ( Folder -> Folder, Node -> Node, Document -> Document )
+dummyValueToAvoidElmAnalyseErrors =
+    ( EmptyTypeConstructor_Folder
+    , EmptyTypeConstructor_Node
+    , EmptyTypeConstructor_Document
+    )
+
+
 asNodeId : Id a -> NodeId
 asNodeId (Id i) =
     Id i
