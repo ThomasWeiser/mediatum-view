@@ -7,7 +7,7 @@ import Dict
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
 import Range
-import Route exposing (..)
+import Route exposing (Route, RouteParameters, RoutePath(..))
 import Types.Id as Id
 import Types.SearchTerm
 import Types.Selection exposing (FtsSorting(..))
@@ -45,7 +45,7 @@ parserParameters =
         )
         (QueryParser.enum "fts-sorting"
             (Dict.fromList [ ( "by-rank", FtsByRank ), ( "by-date", FtsByDate ) ])
-            |> queryParserWithDefault defaultFtsSorting
+            |> queryParserWithDefault Route.defaultFtsSorting
         )
         (QueryParser.string "filter-by-year"
             |> QueryParser.map
@@ -67,7 +67,7 @@ parserParameters =
             |> queryParserWithDefault 0
         )
         (QueryParser.int "limit"
-            |> queryParserWithDefault defaultLimit
+            |> queryParserWithDefault Route.defaultLimit
         )
 
 
@@ -116,7 +116,7 @@ toString route =
                     )
             , buildParameterIfNotDefault
                 (ftsSortingTostring >> Builder.string "fts-sorting")
-                defaultFtsSorting
+                Route.defaultFtsSorting
                 route.parameters.ftsSorting
             , Maybe.map
                 (\range ->
@@ -145,7 +145,7 @@ toString route =
                     route.parameters.offset
                 , buildParameterIfNotDefault
                     (Builder.int "limit")
-                    defaultLimit
+                    Route.defaultLimit
                     route.parameters.limit
                 ]
         )
