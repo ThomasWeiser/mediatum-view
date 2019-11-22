@@ -163,19 +163,15 @@ suite =
 
 findAdjacentAlternativeImplementation : (a -> Bool) -> List a -> Maybe ( Maybe a, a, Maybe a )
 findAdjacentAlternativeImplementation predicate list =
-    case List.Extra.findIndex predicate list of
-        Just i ->
-            case List.Extra.getAt i list of
-                Just el ->
-                    Just
-                        ( List.Extra.getAt (i - 1) list
-                        , el
-                        , List.Extra.getAt (i + 1) list
+    List.Extra.findIndex predicate list
+        |> Maybe.andThen
+            (\i ->
+                List.Extra.getAt i list
+                    |> Maybe.map
+                        (\el ->
+                            ( List.Extra.getAt (i - 1) list
+                            , el
+                            , List.Extra.getAt (i + 1) list
+                            )
                         )
-
-                Nothing ->
-                    {- Cannot happen -}
-                    Nothing
-
-        Nothing ->
-            Nothing
+            )
