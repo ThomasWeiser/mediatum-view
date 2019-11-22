@@ -1,4 +1,4 @@
-module Query.Attribute exposing
+module Api.Arguments.AttributeTest exposing
     ( Operation(..)
     , Test
     , testsAsGraphqlArgument

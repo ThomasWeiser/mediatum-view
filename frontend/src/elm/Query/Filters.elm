@@ -4,8 +4,8 @@ module Query.Filters exposing
     , toAttributeTests
     )
 
+import Api.Arguments.AttributeTest
 import Dict
-import Query.Attribute
 import Query.Filter as Filter
 import Route exposing (Route)
 import Types.SearchTerm
@@ -13,7 +13,7 @@ import Types.Selection as Selection exposing (Filter(..), SetOfFilters)
 import Utils
 
 
-toAttributeTests : SetOfFilters -> List Query.Attribute.Test
+toAttributeTests : SetOfFilters -> List Api.Arguments.AttributeTest.Test
 toAttributeTests filters =
     Selection.filtersToList filters
         |> List.map Filter.toAttributeTest

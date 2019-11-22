@@ -38,6 +38,7 @@ The `elm-graphql` package won't use the fragment notation.
 
 -}
 
+import Api.Arguments.AttributeTest
 import Api.Fragments
 import Config
 import Entities.Document exposing (Document)
@@ -56,7 +57,6 @@ import Mediatum.Query
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
-import Query.Attribute
 import Query.Filters
 import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
@@ -195,7 +195,7 @@ folderDocumentsPage window folderId filters =
                 , attributeTests =
                     filters
                         |> Query.Filters.toAttributeTests
-                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
                 , limit = Present window.limit
                 , offset = Present window.offset
@@ -233,7 +233,7 @@ folderDocumentsFolderCounts folderId filters =
                 , attributeTests =
                     filters
                         |> Query.Filters.toAttributeTests
-                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
             }
         )
@@ -286,7 +286,7 @@ ftsPage window folderId searchTerm ftsSorting filters =
                 , attributeTests =
                     filters
                         |> Query.Filters.toAttributeTests
-                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
                 , limit = Present window.limit
                 , offset = Present window.offset
@@ -329,7 +329,7 @@ ftsFolderCounts folderId searchTerm filters =
                 , attributeTests =
                     filters
                         |> Query.Filters.toAttributeTests
-                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
             }
         )

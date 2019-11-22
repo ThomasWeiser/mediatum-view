@@ -9,11 +9,11 @@ module Query.Filter exposing
     , viewFilterDescription
     )
 
+import Api.Arguments.AttributeTest
 import Basics.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
-import Query.Attribute
 import Range
 import Types.SearchTerm
 import Types.Selection exposing (Filter(..))
@@ -66,20 +66,20 @@ controlsToFilter controls =
                 |> Maybe.map FilterTitleFts
 
 
-toAttributeTest : Filter -> Query.Attribute.Test
+toAttributeTest : Filter -> Api.Arguments.AttributeTest.Test
 toAttributeTest filter =
     case filter of
         FilterYearWithin range ->
             { key = "year"
             , operation =
-                Query.Attribute.DateRange
+                Api.Arguments.AttributeTest.DateRange
                     (Range.unwrap "" String.fromInt range)
             }
 
         FilterTitleFts searchTerm ->
             { key = "title"
             , operation =
-                Query.Attribute.SimpleFts
+                Api.Arguments.AttributeTest.SimpleFts
                     (Types.SearchTerm.toString searchTerm)
             }
 
