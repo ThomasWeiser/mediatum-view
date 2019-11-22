@@ -9,7 +9,6 @@ module UI.Controls exposing
     , view
     )
 
-import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -21,6 +20,7 @@ import Query.FilterEditor as FilterEditor
 import Query.Filters as Filters
 import Range
 import Route exposing (Route)
+import Sort.Dict
 import Types.SearchTerm as SearchTerm
 import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), SetOfFilters)
 import Utils
@@ -40,7 +40,7 @@ type Return
 type alias Model =
     { ftsTerm : String
     , ftsSorting : FtsSorting
-    , filterEditors : Dict FilterHandle FilterEditor.Model
+    , filterEditors : Sort.Dict.Dict FilterHandle FilterEditor.Model
     }
 
 
@@ -70,7 +70,7 @@ initialModel route =
             Just seachTerm ->
                 SearchTerm.toString seachTerm
     , ftsSorting = route.parameters.ftsSorting
-    , filterEditors = Dict.empty
+    , filterEditors = Sort.Dict.empty (Utils.sorter Selection.orderingFilterHandle)
     }
 
 
@@ -113,7 +113,7 @@ update context msg model =
             in
             ( { model
                 | filterEditors =
-                    Dict.insert newFilterHandle filterEditorModel model.filterEditors
+                    Sort.Dict.insert newFilterHandle filterEditorModel model.filterEditors
               }
             , filterEditorCmd |> Cmd.map (FilterEditorMsg newFilterHandle)
             , NoReturn
@@ -129,7 +129,7 @@ update context msg model =
             in
             ( { model
                 | filterEditors =
-                    Dict.insert filterHandle filterEditorModel model.filterEditors
+                    Sort.Dict.insert filterHandle filterEditorModel model.filterEditors
               }
             , filterEditorCmd |> Cmd.map (FilterEditorMsg filterHandle)
             , NoReturn
@@ -175,7 +175,7 @@ update context msg model =
             )
 
         FilterEditorMsg filterHandle subMsg ->
-            case Dict.get filterHandle model.filterEditors of
+            case Sort.Dict.get filterHandle model.filterEditors of
                 Just filterEditor ->
                     let
                         ( subModel, subCmd, subReturn ) =
@@ -184,7 +184,7 @@ update context msg model =
                         modelWithEditorClosed =
                             { model
                                 | filterEditors =
-                                    Dict.remove filterHandle model.filterEditors
+                                    Sort.Dict.remove filterHandle model.filterEditors
                             }
 
                         cmd =
@@ -194,7 +194,7 @@ update context msg model =
                         FilterEditor.NoReturn ->
                             ( { model
                                 | filterEditors =
-                                    Dict.insert filterHandle subModel model.filterEditors
+                                    Sort.Dict.insert filterHandle subModel model.filterEditors
                               }
                             , cmd
                             , NoReturn
@@ -293,7 +293,7 @@ viewFilters context model =
                     FilterEditor.view filterEditor
                         |> Html.map (FilterEditorMsg filterHandle)
                 )
-                (Dict.toList model.filterEditors)
+                (Sort.Dict.toList model.filterEditors)
         ]
 
 
@@ -304,9 +304,9 @@ viewExistingFilters model filters =
             (\filter ->
                 let
                     beingEdited =
-                        Dict.member
-                            (Selection.filterHandle filter)
+                        Sort.Dict.memberOf
                             model.filterEditors
+                            (Selection.filterHandle filter)
                 in
                 viewExistingFilter beingEdited filter
             )
