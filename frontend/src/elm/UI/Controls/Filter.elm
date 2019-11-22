@@ -8,15 +8,13 @@ module UI.Controls.Filter exposing
     , viewFilterDescription
     )
 
-import Api.Arguments.AttributeTest
 import Basics.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
 import Range
-import Route exposing (Route)
 import Types.SearchTerm
-import Types.Selection as Selection exposing (Filter(..), SetOfFilters)
+import Types.Selection exposing (Filter(..))
 import Utils
 
 

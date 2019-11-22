@@ -5,8 +5,8 @@ module Navigation exposing
 
 import Cache
 import Cache.Derive
-import Filter
 import Route exposing (Route)
+import Route.Filter
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (FtsSorting, SetOfFilters)
@@ -76,7 +76,7 @@ alterRoute cache navigation route =
             }
 
         ShowListingWithFilters filters ->
-            Filter.alterRoute filters listingRoute
+            Route.Filter.alterRoute filters listingRoute
 
         SetOffset offset ->
             { route

@@ -39,6 +39,7 @@ The `elm-graphql` package won't use the fragment notation.
 -}
 
 import Api.Arguments.AttributeTest
+import Api.Arguments.Filter
 import Api.Fragments
 import Config
 import Entities.Document exposing (Document)
@@ -46,7 +47,6 @@ import Entities.Folder as Folder exposing (Folder)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
 import Entities.Results exposing (DocumentsPage)
-import Filter
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
@@ -194,7 +194,7 @@ folderDocumentsPage window folderId filters =
                 | folderId = Present (Id.toInt folderId)
                 , attributeTests =
                     filters
-                        |> Filter.filtersToAttributeTests
+                        |> Api.Arguments.Filter.filtersToAttributeTests
                         |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
                 , limit = Present window.limit
@@ -232,7 +232,7 @@ folderDocumentsFolderCounts folderId filters =
                 | folderId = Present (Id.toInt folderId)
                 , attributeTests =
                     filters
-                        |> Filter.filtersToAttributeTests
+                        |> Api.Arguments.Filter.filtersToAttributeTests
                         |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
             }
@@ -285,7 +285,7 @@ ftsPage window folderId searchTerm ftsSorting filters =
                         )
                 , attributeTests =
                     filters
-                        |> Filter.filtersToAttributeTests
+                        |> Api.Arguments.Filter.filtersToAttributeTests
                         |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
                 , limit = Present window.limit
@@ -328,7 +328,7 @@ ftsFolderCounts folderId searchTerm filters =
                 , text = Present (Types.SearchTerm.toString searchTerm)
                 , attributeTests =
                     filters
-                        |> Filter.filtersToAttributeTests
+                        |> Api.Arguments.Filter.filtersToAttributeTests
                         |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
             }

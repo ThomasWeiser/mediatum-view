@@ -1,15 +1,8 @@
-module Filter exposing
+module Route.Filter exposing
     ( alterRoute
-    , filtersToAttributeTests
     , fromRoute
     )
 
-import Api.Arguments.AttributeTest
-import Basics.Extra
-import Html exposing (Html)
-import Html.Attributes
-import Maybe.Extra
-import Range
 import Route exposing (Route)
 import Types.SearchTerm
 import Types.Selection as Selection exposing (Filter(..), SetOfFilters)
@@ -69,27 +62,3 @@ alterRoute filters route =
                 , filterByTitle = filterByTitle
             }
     }
-
-
-filtersToAttributeTests : SetOfFilters -> List Api.Arguments.AttributeTest.Test
-filtersToAttributeTests filters =
-    Selection.filtersToList filters
-        |> List.map filterToAttributeTest
-
-
-filterToAttributeTest : Filter -> Api.Arguments.AttributeTest.Test
-filterToAttributeTest filter =
-    case filter of
-        FilterYearWithin range ->
-            { key = "year"
-            , operation =
-                Api.Arguments.AttributeTest.DateRange
-                    (Range.unwrap "" String.fromInt range)
-            }
-
-        FilterTitleFts searchTerm ->
-            { key = "title"
-            , operation =
-                Api.Arguments.AttributeTest.SimpleFts
-                    (Types.SearchTerm.toString searchTerm)
-            }
