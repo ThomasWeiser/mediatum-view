@@ -1,9 +1,11 @@
 module Cache exposing
     ( ApiData
+    , ApiError
     , Error(..)
     , Model
     , Msg(..)
     , Needs(..)
+    , apiErrorToString
     , errorToString
     , get
     , initialModel
@@ -34,6 +36,10 @@ import Utils
 
 type alias ApiData a =
     RemoteData Api.Error a
+
+
+type alias ApiError =
+    Api.Error
 
 
 type Error
@@ -72,6 +78,11 @@ errorToString error =
 
         CacheDataError str ->
             str
+
+
+apiErrorToString : ApiError -> String
+apiErrorToString apiError =
+    Api.errorToString apiError
 
 
 initialModel : Model
