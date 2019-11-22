@@ -46,6 +46,7 @@ import Entities.Folder as Folder exposing (Folder)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
 import Entities.Results exposing (DocumentsPage)
+import Filter
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
@@ -57,7 +58,6 @@ import Mediatum.Query
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
-import Query.Filters
 import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
@@ -194,7 +194,7 @@ folderDocumentsPage window folderId filters =
                 | folderId = Present (Id.toInt folderId)
                 , attributeTests =
                     filters
-                        |> Query.Filters.toAttributeTests
+                        |> Filter.filtersToAttributeTests
                         |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
                 , limit = Present window.limit
@@ -232,7 +232,7 @@ folderDocumentsFolderCounts folderId filters =
                 | folderId = Present (Id.toInt folderId)
                 , attributeTests =
                     filters
-                        |> Query.Filters.toAttributeTests
+                        |> Filter.filtersToAttributeTests
                         |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
             }
@@ -285,7 +285,7 @@ ftsPage window folderId searchTerm ftsSorting filters =
                         )
                 , attributeTests =
                     filters
-                        |> Query.Filters.toAttributeTests
+                        |> Filter.filtersToAttributeTests
                         |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
                 , limit = Present window.limit
@@ -328,7 +328,7 @@ ftsFolderCounts folderId searchTerm filters =
                 , text = Present (Types.SearchTerm.toString searchTerm)
                 , attributeTests =
                     filters
-                        |> Query.Filters.toAttributeTests
+                        |> Filter.filtersToAttributeTests
                         |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
             }

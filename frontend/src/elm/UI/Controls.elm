@@ -9,14 +9,13 @@ module UI.Controls exposing
     , view
     )
 
+import Filter
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Icons
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation)
-import Query.Filter as Filter
-import Query.Filters as Filters
 import Range
 import Route exposing (Route)
 import Sort.Dict
@@ -78,13 +77,13 @@ update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     let
         removeFilter filterHandle =
-            Filters.fromRoute context.route
+            Filter.fromRoute context.route
                 |> Selection.removeFilter filterHandle
                 |> Navigation.ShowListingWithFilters
                 |> Navigate
 
         insertFilter oldFilterHandlefilter newFilter =
-            Filters.fromRoute context.route
+            Filter.fromRoute context.route
                 |> Selection.removeFilter oldFilterHandlefilter
                 |> Selection.insertFilter newFilter
                 |> Navigation.ShowListingWithFilters
@@ -286,7 +285,7 @@ viewFilters context model =
                 Filter.filterTypes
         , viewExistingFilters
             model
-            (Filters.fromRoute context.route)
+            (Filter.fromRoute context.route)
         , Html.span [] <|
             List.map
                 (\( filterHandle, filterEditor ) ->

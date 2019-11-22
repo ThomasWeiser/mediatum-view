@@ -7,8 +7,8 @@ module Presentation exposing
 import Cache
 import Cache.Derive
 import Entities.Folder as Folder exposing (Folder)
+import Filter
 import Maybe.Extra
-import Query.Filters as Filters
 import RemoteData
 import Route exposing (Route)
 import Types exposing (FolderDisplay(..), NodeType(..), Window)
@@ -55,7 +55,7 @@ fromRoute cache route =
                             DocumentsPagePresentation
                                 { scope = folderId
                                 , selectMethod = SelectByFolderListing
-                                , filters = Filters.fromRoute route
+                                , filters = Filter.fromRoute route
                                 }
                                 (windowFromRoute route)
 
@@ -63,7 +63,7 @@ fromRoute cache route =
                     DocumentsPagePresentation
                         { scope = folderId
                         , selectMethod = selectMethod
-                        , filters = Filters.fromRoute route
+                        , filters = Filter.fromRoute route
                         }
                         (windowFromRoute route)
     in

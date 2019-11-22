@@ -8,10 +8,10 @@ module UI.Controls.FilterEditor exposing
     )
 
 import Browser.Dom
+import Filter exposing (Controls(..))
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Query.Filter as Filter exposing (Controls(..))
 import Task
 import Time
 import Types.Selection exposing (Filter(..))

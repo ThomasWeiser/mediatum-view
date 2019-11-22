@@ -5,7 +5,7 @@ module Navigation exposing
 
 import Cache
 import Cache.Derive
-import Query.Filters
+import Filter
 import Route exposing (Route)
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.SearchTerm exposing (SearchTerm)
@@ -76,7 +76,7 @@ alterRoute cache navigation route =
             }
 
         ShowListingWithFilters filters ->
-            Query.Filters.alterRoute filters listingRoute
+            Filter.alterRoute filters listingRoute
 
         SetOffset offset ->
             { route

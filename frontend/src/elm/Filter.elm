@@ -1,10 +1,12 @@
-module Query.Filter exposing
+module Filter exposing
     ( Controls(..)
     , FilterType
+    , alterRoute
     , controlsFromFilter
     , controlsToFilter
     , filterTypes
-    , toAttributeTest
+    , filtersToAttributeTests
+    , fromRoute
     , viewEditControls
     , viewFilterDescription
     )
@@ -15,8 +17,9 @@ import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
 import Range
+import Route exposing (Route)
 import Types.SearchTerm
-import Types.Selection exposing (Filter(..))
+import Types.Selection as Selection exposing (Filter(..), SetOfFilters)
 import Utils
 
 
@@ -42,6 +45,85 @@ filterTypes =
     ]
 
 
+fromRoute : Route -> SetOfFilters
+fromRoute route =
+    route.parameters.filterByTitle
+        |> Types.SearchTerm.setToList
+        |> List.map FilterTitleFts
+        |> Utils.prependMaybe
+            (route.parameters.filterByYear
+                |> Maybe.map FilterYearWithin
+            )
+        |> Selection.filtersFromList
+
+
+alterRoute : SetOfFilters -> Route -> Route
+alterRoute filters route =
+    let
+        listOfFilters =
+            Selection.filtersToList filters
+
+        filterByYear =
+            listOfFilters
+                |> Utils.findMap
+                    (\filter ->
+                        case filter of
+                            FilterYearWithin range ->
+                                Just range
+
+                            _ ->
+                                Nothing
+                    )
+
+        filterByTitle =
+            listOfFilters
+                |> List.filterMap
+                    (\filter ->
+                        case filter of
+                            FilterTitleFts titleSearchTerm ->
+                                Just titleSearchTerm
+
+                            _ ->
+                                Nothing
+                    )
+                |> Types.SearchTerm.setFromList
+
+        parameters =
+            route.parameters
+    in
+    { route
+        | parameters =
+            { parameters
+                | filterByYear = filterByYear
+                , filterByTitle = filterByTitle
+            }
+    }
+
+
+filtersToAttributeTests : SetOfFilters -> List Api.Arguments.AttributeTest.Test
+filtersToAttributeTests filters =
+    Selection.filtersToList filters
+        |> List.map filterToAttributeTest
+
+
+filterToAttributeTest : Filter -> Api.Arguments.AttributeTest.Test
+filterToAttributeTest filter =
+    case filter of
+        FilterYearWithin range ->
+            { key = "year"
+            , operation =
+                Api.Arguments.AttributeTest.DateRange
+                    (Range.unwrap "" String.fromInt range)
+            }
+
+        FilterTitleFts searchTerm ->
+            { key = "title"
+            , operation =
+                Api.Arguments.AttributeTest.SimpleFts
+                    (Types.SearchTerm.toString searchTerm)
+            }
+
+
 controlsFromFilter : Filter -> Controls
 controlsFromFilter filter =
     case filter of
@@ -64,24 +146,6 @@ controlsToFilter controls =
             searchTerm
                 |> Types.SearchTerm.fromString
                 |> Maybe.map FilterTitleFts
-
-
-toAttributeTest : Filter -> Api.Arguments.AttributeTest.Test
-toAttributeTest filter =
-    case filter of
-        FilterYearWithin range ->
-            { key = "year"
-            , operation =
-                Api.Arguments.AttributeTest.DateRange
-                    (Range.unwrap "" String.fromInt range)
-            }
-
-        FilterTitleFts searchTerm ->
-            { key = "title"
-            , operation =
-                Api.Arguments.AttributeTest.SimpleFts
-                    (Types.SearchTerm.toString searchTerm)
-            }
 
 
 viewFilterDescription : Filter -> List (Html msg)
