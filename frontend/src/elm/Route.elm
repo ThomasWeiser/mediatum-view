@@ -5,10 +5,11 @@ module Route exposing
     , defaultFtsSorting
     , defaultLimit
     , fromOneId
-    , home
+    , initDocumentInFolder
+    , initHome
     )
 
-import Types.Id exposing (NodeId)
+import Types.Id exposing (DocumentId, FolderId, NodeId)
 import Types.Range exposing (Range)
 import Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 import Types.Selection exposing (FtsSorting(..))
@@ -54,8 +55,15 @@ fromOneId nodeId =
     }
 
 
-home : Route
-home =
+initDocumentInFolder : FolderId -> DocumentId -> Route
+initDocumentInFolder folderId documentId =
+    { path = TwoIds (Types.Id.asNodeId folderId) (Types.Id.asNodeId documentId)
+    , parameters = emptyParameters
+    }
+
+
+initHome : Route
+initHome =
     { path = NoId
     , parameters = emptyParameters
     }

@@ -172,41 +172,42 @@ view context model =
                 viewApiError error
 
             RemoteData.Success documentsPage ->
-                viewDocumentsPage documentsPage
+                viewDocumentsPage context documentsPage
         ]
 
 
-viewDocumentsPage : DocumentsPage -> Html Msg
-viewDocumentsPage documentsPage =
+viewDocumentsPage : Context -> DocumentsPage -> Html Msg
+viewDocumentsPage context documentsPage =
     Html.div []
         [ -- viewNumberOfResults page,
           Html.div []
             (List.map
-                viewDocumentResult
+                (viewDocumentResult context)
                 documentsPage.content
             )
         , viewPaginationButtons documentsPage
         ]
 
 
-viewDocumentResult : DocumentResult -> Html Msg
-viewDocumentResult documentResult =
+viewDocumentResult : Context -> DocumentResult -> Html Msg
+viewDocumentResult context documentResult =
     viewDocument
+        context
         documentResult.number
         documentResult.document
 
 
-viewDocument : Int -> Document -> Html Msg
-viewDocument number document =
+viewDocument : Context -> Int -> Document -> Html Msg
+viewDocument context number document =
     Html.div [ Html.Attributes.class "document" ]
         [ Html.div [ Html.Attributes.class "metadatatype" ]
             [ Html.span [ Html.Attributes.class "result-number" ]
                 [ Html.text <| String.fromInt number ++ ". " ]
             , Html.a
                 [ Html.Attributes.class "metadatatype"
-                , document.id
-                    |> Id.asNodeId
-                    |> Route.fromOneId
+                , Route.initDocumentInFolder
+                    context.selection.scope
+                    document.id
                     |> Route.Url.toString
                     |> Html.Attributes.href
                 ]

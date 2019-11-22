@@ -41,7 +41,7 @@ type Msg
 
 init : Route -> ( Model, Cmd Msg )
 init route =
-    { route = Route.home
+    { route = Route.initHome
     , cache = Cache.initialModel
     , presentation = GenericPresentation Nothing
     , ui = UI.init

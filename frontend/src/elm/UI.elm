@@ -54,7 +54,7 @@ type Msg
 init : Model
 init =
     { tree = UI.Tree.initialModel
-    , controls = UI.Controls.initialModel Route.home
+    , controls = UI.Controls.initialModel Route.initHome
     , article =
         UI.Article.initialModel
             { cache = Cache.initialModel
