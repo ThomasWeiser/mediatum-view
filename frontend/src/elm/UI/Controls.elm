@@ -16,13 +16,13 @@ import Icons
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation)
 import Query.Filter as Filter
-import Query.FilterEditor as FilterEditor
 import Query.Filters as Filters
 import Range
 import Route exposing (Route)
 import Sort.Dict
 import Types.SearchTerm as SearchTerm
 import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), SetOfFilters)
+import UI.Controls.FilterEditor as FilterEditor
 import Utils
 
 

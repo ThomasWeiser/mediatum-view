@@ -1,4 +1,4 @@
-module Query.FilterEditor exposing
+module UI.Controls.FilterEditor exposing
     ( Model
     , Msg
     , Return(..)
