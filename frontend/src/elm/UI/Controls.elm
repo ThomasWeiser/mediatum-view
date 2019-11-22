@@ -325,7 +325,7 @@ viewExistingFilter beingEdited filter =
             , Html.Events.onClick (EditFilter filter)
             , Html.Attributes.class "filter-button"
             ]
-            (Filter.view filter)
+            (Filter.viewFilterDescription filter)
         , Html.button
             [ Html.Attributes.type_ "button"
             , Html.Attributes.disabled beingEdited

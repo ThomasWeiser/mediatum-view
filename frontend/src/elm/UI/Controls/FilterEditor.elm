@@ -112,7 +112,7 @@ view model =
         [ Html.Events.onSubmit Submit
         , Html.Attributes.class "filter-form input-group"
         ]
-        [ Filter.viewEdit
+        [ Filter.viewEditControls
             model.focusId
             model.controls
             |> Html.map Change

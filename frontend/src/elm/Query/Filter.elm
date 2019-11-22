@@ -5,8 +5,8 @@ module Query.Filter exposing
     , controlsToFilter
     , filterTypes
     , toAttributeTest
-    , view
-    , viewEdit
+    , viewEditControls
+    , viewFilterDescription
     )
 
 import Basics.Extra
@@ -84,8 +84,8 @@ toAttributeTest filter =
             }
 
 
-view : Filter -> List (Html msg)
-view filter =
+viewFilterDescription : Filter -> List (Html msg)
+viewFilterDescription filter =
     case filter of
         FilterYearWithin (Range.From fromYear) ->
             [ Html.text "Years from "
@@ -116,8 +116,8 @@ view filter =
             ]
 
 
-viewEdit : String -> Controls -> Html Controls
-viewEdit focusId controls =
+viewEditControls : String -> Controls -> Html Controls
+viewEditControls focusId controls =
     case controls of
         ControlsYearWithin from to ->
             Html.span
