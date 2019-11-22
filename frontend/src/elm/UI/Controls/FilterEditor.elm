@@ -41,9 +41,7 @@ type Msg
 init : Controls -> ( Model, Cmd Msg )
 init controls =
     ( { controls = controls
-      , focusId =
-            -- TODO
-            "filter-editor-provisional-focus-id"
+      , focusId = ""
       }
     , Task.perform
         (\posix ->

@@ -181,8 +181,8 @@ update context msg model =
             )
 
         _ ->
-            -- Message doesn't match model; shouldn't never happen
-            -- Or model doesn't match presentation; TODO: Can this happen?
+            -- Message doesn't match model; should never happen.
+            -- Or model doesn't match presentation; should never happen.
             ( model, Cmd.none, NoReturn )
 
 
@@ -273,5 +273,5 @@ viewContent context model =
                 |> Html.map DetailsMsg
 
         _ ->
-            -- Model doesn't match query-context; TODO: Can this happen?
+            -- Model doesn't match query-context; should never happen.
             Html.text ""
