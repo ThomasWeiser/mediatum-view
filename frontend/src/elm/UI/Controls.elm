@@ -21,6 +21,7 @@ import Route exposing (Route)
 import Sort.Dict
 import Types.SearchTerm as SearchTerm
 import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), SetOfFilters)
+import UI.Controls.Filter
 import UI.Controls.FilterEditor as FilterEditor
 import Utils
 
@@ -46,7 +47,7 @@ type alias Model =
 type Msg
     = SetSearchTerm String
     | SetSorting FtsSorting
-    | AddFilter Filter.FilterType
+    | AddFilter UI.Controls.Filter.FilterType
     | EditFilter Filter
     | RemoveFilter Filter
     | Submit
@@ -121,7 +122,7 @@ update context msg model =
         EditFilter filter ->
             let
                 ( filterEditorModel, filterEditorCmd ) =
-                    FilterEditor.init (Filter.controlsFromFilter filter)
+                    FilterEditor.init (UI.Controls.Filter.controlsFromFilter filter)
 
                 filterHandle =
                     Selection.filterHandle filter
@@ -282,7 +283,7 @@ viewFilters context model =
                             [ Html.text <| filterType.name ++ "..." ]
                         ]
                 )
-                Filter.filterTypes
+                UI.Controls.Filter.filterTypes
         , viewExistingFilters
             model
             (Filter.fromRoute context.route)
@@ -324,7 +325,7 @@ viewExistingFilter beingEdited filter =
             , Html.Events.onClick (EditFilter filter)
             , Html.Attributes.class "filter-button"
             ]
-            (Filter.viewFilterDescription filter)
+            (UI.Controls.Filter.viewFilterDescription filter)
         , Html.button
             [ Html.Attributes.type_ "button"
             , Html.Attributes.disabled beingEdited

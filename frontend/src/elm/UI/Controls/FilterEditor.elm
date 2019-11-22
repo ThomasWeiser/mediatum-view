@@ -8,13 +8,13 @@ module UI.Controls.FilterEditor exposing
     )
 
 import Browser.Dom
-import Filter exposing (Controls(..))
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Task
 import Time
 import Types.Selection exposing (Filter(..))
+import UI.Controls.Filter exposing (Controls(..))
 
 
 type Return
@@ -73,7 +73,7 @@ update msg model =
         Submit ->
             ( model
             , Cmd.none
-            , case Filter.controlsToFilter model.controls of
+            , case UI.Controls.Filter.controlsToFilter model.controls of
                 Nothing ->
                     Removed
 
@@ -112,7 +112,7 @@ view model =
         [ Html.Events.onSubmit Submit
         , Html.Attributes.class "filter-form input-group"
         ]
-        [ Filter.viewEditControls
+        [ UI.Controls.Filter.viewEditControls
             model.focusId
             model.controls
             |> Html.map Change
