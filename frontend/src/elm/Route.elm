@@ -4,7 +4,6 @@ module Route exposing
     , RoutePath(..)
     , defaultFtsSorting
     , defaultLimit
-    , fromOneId
     , initDocumentInFolder
     , initHome
     )
@@ -44,14 +43,6 @@ type alias RouteParameters =
     , filterByTitle : SetOfSearchTerms
     , offset : Int
     , limit : Int
-    }
-
-
-fromOneId : NodeId -> Route
-fromOneId nodeId =
-    -- TODO: Only for adopting legacy code. To be removed later.
-    { path = OneId nodeId
-    , parameters = emptyParameters
     }
 
 

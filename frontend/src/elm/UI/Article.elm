@@ -18,7 +18,7 @@ import Html.Attributes
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation(..))
 import RemoteData
-import Route
+import Route exposing (Route)
 import Route.Url
 import Types.Id as Id exposing (FolderId)
 import UI.Article.Collection
@@ -30,6 +30,7 @@ import Utils
 
 type alias Context =
     { cache : Cache.Model
+    , route : Route
     , presentation : Presentation
     }
 
@@ -207,9 +208,7 @@ view context model =
         [ Html.div
             [ Html.Attributes.class "breadcrumbs" ]
             [ viewBreadcrumbs
-                { cache = context.cache
-                , presentation = context.presentation
-                }
+                context
                 (Presentation.getFolderId context.cache context.presentation)
             ]
         , viewContent context model
@@ -236,9 +235,10 @@ viewBreadcrumbs context maybeFolderId =
                                                 (Html.text "...")
                                                 (\folder ->
                                                     Html.a
-                                                        [ folder.id
-                                                            |> Id.asNodeId
-                                                            |> Route.fromOneId
+                                                        [ context.route
+                                                            |> Navigation.alterRoute
+                                                                context.cache
+                                                                (Navigation.SetFolder folder.id)
                                                             |> Route.Url.toString
                                                             |> Html.Attributes.href
                                                         ]

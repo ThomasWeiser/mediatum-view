@@ -18,6 +18,7 @@ type Navigation
     | ShowListingWithFolder FolderId
     | ShowListingWithSearch (Maybe SearchTerm) FtsSorting
     | ShowListingWithFilters SetOfFilters
+    | SetFolder FolderId
     | SetOffset Int
     | SetLimit Int
 
@@ -77,6 +78,32 @@ alterRoute cache navigation route =
 
         ShowListingWithFilters filters ->
             Route.Filter.alterRoute filters listingRoute
+
+        SetFolder folderId ->
+            { path =
+                case route.path of
+                    Route.NoId ->
+                        Route.OneId
+                            (folderId |> Id.asNodeId)
+
+                    Route.OneId idOne ->
+                        case Cache.Derive.getAsDocumentId cache idOne of
+                            Nothing ->
+                                Route.OneId
+                                    (folderId |> Id.asNodeId)
+
+                            Just documentId ->
+                                Route.TwoIds
+                                    (folderId |> Id.asNodeId)
+                                    (documentId |> Id.asNodeId)
+
+                    Route.TwoIds idOne idTwo ->
+                        Route.TwoIds
+                            (folderId |> Id.asNodeId)
+                            idTwo
+            , parameters =
+                parameters
+            }
 
         SetOffset offset ->
             { route

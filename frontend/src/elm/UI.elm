@@ -58,6 +58,7 @@ init =
     , article =
         UI.Article.initialModel
             { cache = Cache.initialModel
+            , route = Route.initHome
             , presentation = GenericPresentation Nothing
             }
     }
@@ -74,6 +75,7 @@ needs context model =
         )
         (UI.Article.needs
             { cache = context.cache
+            , route = context.route
             , presentation = context.presentation
             }
         )
@@ -93,6 +95,7 @@ adjust context model =
         | article =
             UI.Article.initialModel
                 { cache = context.cache
+                , route = context.route
                 , presentation = context.presentation
                 }
     }
@@ -146,6 +149,7 @@ update context msg model =
                 ( subModel, subCmd, subReturn ) =
                     UI.Article.update
                         { cache = context.cache
+                        , route = context.route
                         , presentation = context.presentation
                         }
                         subMsg
@@ -208,6 +212,7 @@ view context model =
                         model.tree
                         (UI.Article.folderCountsForQuery
                             { cache = context.cache
+                            , route = context.route
                             , presentation = context.presentation
                             }
                         )
@@ -215,6 +220,7 @@ view context model =
             , Html.map ArticleMsg <|
                 UI.Article.view
                     { cache = context.cache
+                    , route = context.route
                     , presentation = context.presentation
                     }
                     model.article
