@@ -86,6 +86,10 @@ toAttributeTest filter =
 
 viewFilterDescription : Filter -> List (Html msg)
 viewFilterDescription filter =
+    let
+        quote text =
+            Html.i [] [ Html.text text ]
+    in
     case filter of
         FilterYearWithin (Range.From fromYear) ->
             [ Html.text "Years from "
@@ -163,8 +167,3 @@ viewEditControls focusId controls =
                     ]
                     []
                 ]
-
-
-quote : String -> Html msg
-quote text =
-    Html.i [] [ Html.text text ]
