@@ -1,4 +1,4 @@
-module Tests.Tree exposing (suite)
+module Tests.UI.Tree exposing (suite)
 
 import Expect
 import Fuzz exposing (Fuzzer)

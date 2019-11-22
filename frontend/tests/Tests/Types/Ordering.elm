@@ -1,4 +1,4 @@
-module Tests.Data.Ordering exposing (suite)
+module Tests.Types.Ordering exposing (suite)
 
 import Cache
 import Expect
