@@ -14,10 +14,10 @@ import Html.Attributes
 import Html.Events
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation)
-import Range
 import Route exposing (Route)
 import Route.Filter
 import Sort.Dict
+import Types.Range as Range
 import Types.SearchTerm as SearchTerm
 import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), SetOfFilters)
 import UI.Controls.Filter

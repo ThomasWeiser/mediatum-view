@@ -12,7 +12,7 @@ import Basics.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
-import Range
+import Types.Range as Range
 import Types.SearchTerm
 import Types.Selection exposing (Filter(..))
 import Utils

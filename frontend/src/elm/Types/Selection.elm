@@ -21,9 +21,9 @@ module Types.Selection exposing
     )
 
 import Ordering exposing (Ordering)
-import Range exposing (Range)
 import Sort.Dict
 import Types.Id as Id exposing (FolderId)
+import Types.Range as Range exposing (Range)
 import Types.SearchTerm as SearchTerm exposing (SearchTerm)
 import Utils
 

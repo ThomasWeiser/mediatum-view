@@ -1,11 +1,11 @@
-module Tests.Range exposing (fuzzerRange, suite)
+module Tests.Types.Range exposing (fuzzerRange, suite)
 
 import Basics.Extra
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
-import Range exposing (Range)
 import Test exposing (..)
 import TestUtils exposing (..)
+import Types.Range as Range exposing (Range)
 
 
 suite : Test

@@ -1,4 +1,4 @@
-module Range exposing
+module Types.Range exposing
     ( Range(..)
     , compare
     , fromMaybe

@@ -21,7 +21,7 @@ import Fuzz exposing (Fuzzer)
 import String.Extra
 import Test exposing (..)
 import TestUtils exposing (..)
-import Tests.Range
+import Tests.Types.Range
 import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
@@ -102,7 +102,7 @@ fuzzerFilter =
     Fuzz.oneOf
         [ Fuzz.map
             FilterYearWithin
-            (Tests.Range.fuzzerRange fuzzerYear)
+            (Tests.Types.Range.fuzzerRange fuzzerYear)
         , Fuzz.map
             FilterTitleFts
             fuzzerSearchTerm

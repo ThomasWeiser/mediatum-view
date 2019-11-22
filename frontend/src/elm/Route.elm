@@ -8,8 +8,8 @@ module Route exposing
     , home
     )
 
-import Range exposing (Range)
 import Types.Id as Id exposing (NodeId)
+import Types.Range exposing (Range)
 import Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 import Types.Selection exposing (FtsSorting(..))
 

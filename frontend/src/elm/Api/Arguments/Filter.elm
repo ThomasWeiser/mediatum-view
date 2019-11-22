@@ -1,7 +1,7 @@
 module Api.Arguments.Filter exposing (filtersToAttributeTests)
 
 import Api.Arguments.AttributeTest
-import Range
+import Types.Range as Range
 import Types.SearchTerm
 import Types.Selection exposing (Filter(..), SetOfFilters)
 

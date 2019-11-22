@@ -6,8 +6,8 @@ import Route exposing (Route, RouteParameters, RoutePath(..))
 import Set
 import String.Extra
 import TestUtils exposing (..)
-import Tests.Range
 import Tests.Types exposing (..)
+import Tests.Types.Range
 import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types.SearchTerm
 import Types.Selection exposing (FtsSorting(..))
@@ -30,7 +30,7 @@ fuzzerRoute =
             |> Fuzz.andMap
                 (Fuzz.oneOf [ Fuzz.constant FtsByRank, Fuzz.constant FtsByDate ])
             |> Fuzz.andMap
-                (Tests.Range.fuzzerRange fuzzerYear
+                (Tests.Types.Range.fuzzerRange fuzzerYear
                     |> Fuzz.maybe
                 )
             |> Fuzz.andMap

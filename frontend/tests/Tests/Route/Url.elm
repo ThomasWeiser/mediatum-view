@@ -3,13 +3,13 @@ module Tests.Route.Url exposing (suite)
 import Expect exposing (Expectation)
 import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
-import Range
 import Route exposing (Route, RouteParameters, RoutePath(..))
 import Route.Url
 import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Route
 import Types.Id as Id
+import Types.Range as Range
 import Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 import Types.Selection exposing (FtsSorting(..))
 import Url exposing (Url)
