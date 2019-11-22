@@ -9,11 +9,11 @@ module UI.Article.Collection exposing
 
 import Api
 import Cache
-import Entities.Folder as Folder exposing (Folder)
+import Entities.Folder as Folder
 import Html exposing (Html)
 import Html.Attributes
 import RemoteData
-import Types.Id as Id exposing (FolderId)
+import Types.Id exposing (FolderId)
 import UI.Icons
 import Utils.Graphql
 

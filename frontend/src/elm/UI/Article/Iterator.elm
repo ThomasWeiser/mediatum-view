@@ -14,7 +14,6 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Maybe.Extra
-import Query.Filters
 import Types exposing (Document, DocumentId, Folder)
 import Utils
 

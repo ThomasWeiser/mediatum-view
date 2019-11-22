@@ -6,7 +6,7 @@ module Entities.Document exposing
     )
 
 import List.Extra
-import Types.Id as Id exposing (DocumentId)
+import Types.Id exposing (DocumentId)
 
 
 type alias Document =

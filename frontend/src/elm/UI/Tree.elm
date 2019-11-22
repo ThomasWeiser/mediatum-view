@@ -9,19 +9,18 @@ module UI.Tree exposing
     , view
     )
 
-import Cache exposing (ApiData)
+import Cache
 import Cache.Derive
 import Entities.Folder as Folder exposing (Folder)
-import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
+import Entities.FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Maybe.Extra
 import Presentation exposing (Presentation(..))
 import RemoteData
 import Sort.Dict
 import Types exposing (FolderDisplay(..))
-import Types.Id as Id exposing (FolderId)
+import Types.Id exposing (FolderId)
 import UI.Icons
 import Utils
 

@@ -53,7 +53,7 @@ import Mediatum.Object.PageInfo
 import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection
 import Types exposing (FolderDisplay(..), WindowPage)
-import Types.Id as Id exposing (DocumentId, FolderId)
+import Types.Id as Id exposing (FolderId)
 import Utils
 
 

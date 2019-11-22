@@ -43,8 +43,8 @@ import Api.Arguments.Filter
 import Api.Fragments
 import Config
 import Entities.Document exposing (Document)
-import Entities.Folder as Folder exposing (Folder)
-import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
+import Entities.Folder exposing (Folder)
+import Entities.FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
 import Entities.Results exposing (DocumentsPage)
 import Graphql.Operation
@@ -61,7 +61,7 @@ import Pagination.Relay.Pagination
 import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (Filter, FtsSorting(..), SetOfFilters)
+import Types.Selection exposing (FtsSorting(..), SetOfFilters)
 
 
 {-| Get the root folders and their sub-folders.

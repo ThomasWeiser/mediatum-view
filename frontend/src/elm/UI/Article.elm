@@ -20,12 +20,11 @@ import Presentation exposing (Presentation(..))
 import RemoteData
 import Route
 import Route.Url
-import Types.Id as Id exposing (FolderId, NodeId)
+import Types.Id as Id exposing (FolderId)
 import UI.Article.Collection
 import UI.Article.Details
 import UI.Article.Generic
 import UI.Article.Listing
-import UI.Tree
 import Utils
 
 

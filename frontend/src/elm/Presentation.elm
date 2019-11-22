@@ -6,7 +6,6 @@ module Presentation exposing
 
 import Cache
 import Cache.Derive
-import Entities.Folder as Folder exposing (Folder)
 import Maybe.Extra
 import RemoteData
 import Route exposing (Route)
