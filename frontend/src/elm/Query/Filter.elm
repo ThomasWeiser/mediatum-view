@@ -33,19 +33,13 @@ type Controls
 
 filterTypes : List FilterType
 filterTypes =
-    [ { name = "Year", initControls = initControlsYearWithin }
-    , { name = "Title", initControls = initControlsTitleFts }
+    [ { name = "Year"
+      , initControls = ControlsYearWithin Nothing Nothing
+      }
+    , { name = "Title"
+      , initControls = ControlsTitleFts ""
+      }
     ]
-
-
-initControlsYearWithin : Controls
-initControlsYearWithin =
-    ControlsYearWithin Nothing Nothing
-
-
-initControlsTitleFts : Controls
-initControlsTitleFts =
-    ControlsTitleFts ""
 
 
 controlsFromFilter : Filter -> Controls
