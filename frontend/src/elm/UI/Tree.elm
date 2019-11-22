@@ -9,7 +9,7 @@ module UI.Tree exposing
     , view
     )
 
-import Cache
+import Cache exposing (ApiData)
 import Cache.Derive
 import Entities.Folder as Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
@@ -17,7 +17,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Presentation exposing (Presentation(..))
-import RemoteData
+import RemoteData exposing (RemoteData)
 import Sort.Dict
 import Types exposing (FolderDisplay(..))
 import Types.Id exposing (FolderId)
@@ -94,52 +94,59 @@ getPresentationFolderId context =
 view : Context -> Model -> Maybe FolderCounts -> Html Msg
 view context model maybeFolderCounts =
     Html.div []
-        [ case context.cache.rootFolderIds of
-            RemoteData.Success rootIds ->
-                viewListOfFolders context model maybeFolderCounts rootIds
-
-            -- TODO: RemoteData.Failure error ->
-            noSuccess ->
-                Html.text (Debug.toString noSuccess)
+        [ viewListOfFolders
+            context
+            model
+            maybeFolderCounts
+            context.cache.rootFolderIds
         ]
 
 
-viewListOfFolders : Context -> Model -> Maybe FolderCounts -> List FolderId -> Html Msg
-viewListOfFolders context model maybeFolderCounts folderIds =
+viewListOfFolders : Context -> Model -> Maybe FolderCounts -> ApiData (List FolderId) -> Html Msg
+viewListOfFolders context model maybeFolderCounts apiDataFolderIds =
     Html.ul [ Html.Attributes.class "folder-list" ] <|
-        List.map
-            (\id ->
-                Html.li []
-                    [ viewFolderTree context model maybeFolderCounts id ]
-            )
-            folderIds
+        case apiDataFolderIds of
+            RemoteData.NotAsked ->
+                [ Html.li [] [ Html.text "..." ] ]
 
+            RemoteData.Loading ->
+                [ Html.li [] [ Html.text "..." ] ]
 
-viewListOfFoldersLoading : Html Msg
-viewListOfFoldersLoading =
-    -- TODO: Currenty unused. Need a more general solution for showing RemoteData.Loading states.
-    Html.ul [ Html.Attributes.class "folder-list" ]
-        [ Html.li [] [ Html.text "..." ]
-        ]
+            RemoteData.Success folderIds ->
+                List.map
+                    (\id ->
+                        Html.li []
+                            [ viewFolderTree context model maybeFolderCounts id ]
+                    )
+                    folderIds
+
+            RemoteData.Failure apiError ->
+                [ Html.li [] [ Html.text (Cache.apiErrorToString apiError) ] ]
 
 
 viewFolderTree : Context -> Model -> Maybe FolderCounts -> FolderId -> Html Msg
 viewFolderTree context model maybeFolderCounts id =
-    case Cache.get context.cache.folders id of
-        RemoteData.Success folder ->
-            let
-                presentationFolderId =
-                    getPresentationFolderId context
+    Html.div [] <|
+        case Cache.get context.cache.folders id of
+            RemoteData.NotAsked ->
+                [ Html.text "..." ]
 
-                isSelectedFolder =
-                    presentationFolderId == Just id
+            RemoteData.Loading ->
+                [ Html.text "..." ]
 
-                expanded =
-                    Folder.isRoot folder
-                        || (model.collapsedPresentationFolder /= Just id)
-                        && Cache.Derive.isOnPath context.cache id presentationFolderId
-            in
-            Html.div []
+            RemoteData.Success folder ->
+                let
+                    presentationFolderId =
+                        getPresentationFolderId context
+
+                    isSelectedFolder =
+                        presentationFolderId == Just id
+
+                    expanded =
+                        Folder.isRoot folder
+                            || (model.collapsedPresentationFolder /= Just id)
+                            && Cache.Derive.isOnPath context.cache id presentationFolderId
+                in
                 [ Html.div
                     [ Html.Events.onClick (Select id) ]
                     [ viewFolderLine
@@ -151,19 +158,18 @@ viewFolderTree context model maybeFolderCounts id =
                         expanded
                     ]
                 , if expanded then
-                    case Cache.get context.cache.subfolderIds id of
-                        RemoteData.Success subfolderIds ->
-                            viewListOfFolders context model maybeFolderCounts subfolderIds
-
-                        noSuccess ->
-                            Html.text (Debug.toString noSuccess)
+                    viewListOfFolders
+                        context
+                        model
+                        maybeFolderCounts
+                        (Cache.get context.cache.subfolderIds id)
 
                   else
                     Html.text ""
                 ]
 
-        noSuccess ->
-            Html.text (Debug.toString noSuccess)
+            RemoteData.Failure apiError ->
+                [ Html.text (Cache.apiErrorToString apiError) ]
 
 
 viewFolderLine : Folder -> Maybe Int -> Bool -> Bool -> Html msg
