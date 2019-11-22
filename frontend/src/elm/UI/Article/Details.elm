@@ -12,7 +12,6 @@ import Api
 import Api.Mutations
 import Cache
 import Entities.Document as Document exposing (Document)
-import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -21,6 +20,7 @@ import RemoteData
 import Types.Id as Id exposing (DocumentId)
 import UI.Icons
 import Utils
+import Utils.Graphql
 
 
 type alias Context =
@@ -210,7 +210,7 @@ viewAttribute attribute =
 
 viewApiError : Api.Error -> Html msg
 viewApiError error =
-    viewError (Graphql.Extra.errorToString error)
+    viewError (Utils.Graphql.errorToString error)
 
 
 viewEditAttribute : Model -> Document -> Html Msg

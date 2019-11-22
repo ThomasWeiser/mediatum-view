@@ -10,12 +10,12 @@ module UI.Article.Collection exposing
 import Api
 import Cache
 import Entities.Folder as Folder exposing (Folder)
-import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
 import RemoteData
 import Types.Id as Id exposing (FolderId)
 import UI.Icons
+import Utils.Graphql
 
 
 type alias Context =
@@ -71,7 +71,7 @@ view context model =
 
 viewApiError : Api.Error -> Html msg
 viewApiError error =
-    viewError (Graphql.Extra.errorToString error)
+    viewError (Utils.Graphql.errorToString error)
 
 
 viewError : String -> Html msg

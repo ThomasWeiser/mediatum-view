@@ -14,7 +14,6 @@ import Api
 import Cache
 import Entities.Document as Document exposing (Document)
 import Entities.Results exposing (DocumentResult, DocumentsPage)
-import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -27,6 +26,7 @@ import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId)
 import Types.Selection exposing (Selection)
 import UI.Icons
+import Utils.Graphql
 
 
 type alias Context =
@@ -307,4 +307,4 @@ viewApiError : Api.Error -> Html msg
 viewApiError error =
     Html.div
         [ Html.Attributes.class "error" ]
-        [ Html.text (Graphql.Extra.errorToString error) ]
+        [ Html.text (Utils.Graphql.errorToString error) ]

@@ -1,4 +1,4 @@
-module Graphql.Extra exposing (StrippedError, stripError, errorToString)
+module Utils.Graphql exposing (StrippedError, stripError, errorToString)
 
 {-| Provide a simplified error type for GraphQL operations.
 
