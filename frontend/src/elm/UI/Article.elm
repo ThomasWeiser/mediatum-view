@@ -78,34 +78,19 @@ initialModel context =
 
 needs : Context -> Cache.Needs
 needs context =
+    -- No need to declare NeedGenericNode here.
+    -- We already declare these needs in App.needs when looking at the route.
     case context.presentation of
         GenericPresentation maybeNodeIds ->
-            -- TODO: Do we want to declare the NeedGenericNode here?
-            --       Currently we already declare these needs in App.needs.
-            case maybeNodeIds of
-                Nothing ->
-                    Cache.NeedNothing
-
-                Just ( nodeIdOne, maybeNodeIdTwo ) ->
-                    Cache.NeedAnd
-                        (Cache.NeedGenericNode nodeIdOne)
-                        (case maybeNodeIdTwo of
-                            Nothing ->
-                                Cache.NeedNothing
-
-                            Just nodeIdTwo ->
-                                Cache.NeedGenericNode nodeIdTwo
-                        )
+            Cache.NeedNothing
 
         DocumentPresentation maybeFolderId documentId ->
             Cache.NeedDocument documentId
 
         CollectionPresentation folderId ->
-            -- TODO: Should there be a need for a folder?
             Cache.NeedNothing
 
         ListingPresentation selection window ->
-            -- TODO: We currently don't observe the needs of an Iterator
             Cache.NeedAndThen
                 (Cache.NeedDocumentsPage selection window)
                 (Cache.NeedFolderCounts selection)
