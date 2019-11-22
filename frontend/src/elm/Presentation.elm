@@ -20,7 +20,7 @@ type Presentation
     = GenericPresentation (Maybe ( NodeId, Maybe NodeId ))
     | CollectionPresentation FolderId
     | DocumentPresentation (Maybe FolderId) DocumentId
-    | DocumentsPagePresentation Selection Window
+    | ListingPresentation Selection Window
 
 
 getFolderId : Cache.Model -> Presentation -> Maybe FolderId
@@ -37,7 +37,7 @@ getFolderId cache presentation =
         CollectionPresentation folderId ->
             Just folderId
 
-        DocumentsPagePresentation selection window ->
+        ListingPresentation selection window ->
             Just selection.scope
 
 
@@ -52,7 +52,7 @@ fromRoute cache route =
                             CollectionPresentation folderId
 
                         DisplayAsDirectory ->
-                            DocumentsPagePresentation
+                            ListingPresentation
                                 { scope = folderId
                                 , selectMethod = SelectByFolderListing
                                 , filters = Route.Filter.fromRoute route
@@ -60,7 +60,7 @@ fromRoute cache route =
                                 (windowFromRoute route)
 
                 selectMethod ->
-                    DocumentsPagePresentation
+                    ListingPresentation
                         { scope = folderId
                         , selectMethod = selectMethod
                         , filters = Route.Filter.fromRoute route

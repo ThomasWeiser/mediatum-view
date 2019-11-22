@@ -1,4 +1,4 @@
-module UI.Article.DocumentsPage exposing
+module UI.Article.Listing exposing
     ( Model
     , Msg
     , Return(..)

@@ -23,8 +23,8 @@ import Route.Url
 import Types.Id as Id exposing (FolderId, NodeId)
 import UI.Article.Collection
 import UI.Article.Details
-import UI.Article.DocumentsPage
 import UI.Article.Generic
+import UI.Article.Listing
 import UI.Tree
 import Utils
 
@@ -49,14 +49,14 @@ type alias Model =
 type Content
     = GenericModel UI.Article.Generic.Model
     | CollectionModel UI.Article.Collection.Model
-    | DocumentsPageModel UI.Article.DocumentsPage.Model
+    | ListingModel UI.Article.Listing.Model
     | DetailsModel UI.Article.Details.Model
 
 
 type Msg
     = GenericMsg UI.Article.Generic.Msg
     | CollectionMsg UI.Article.Collection.Msg
-    | DocumentsPageMsg UI.Article.DocumentsPage.Msg
+    | ListingMsg UI.Article.Listing.Msg
     | DetailsMsg UI.Article.Details.Msg
 
 
@@ -72,8 +72,8 @@ initialModel context =
         CollectionPresentation folderId ->
             { content = CollectionModel UI.Article.Collection.initialModel }
 
-        DocumentsPagePresentation selection window ->
-            { content = DocumentsPageModel UI.Article.DocumentsPage.initialModel }
+        ListingPresentation selection window ->
+            { content = ListingModel UI.Article.Listing.initialModel }
 
 
 needs : Context -> Cache.Needs
@@ -104,7 +104,7 @@ needs context =
             -- TODO: Should there be a need for a folder?
             Cache.NeedNothing
 
-        DocumentsPagePresentation selection window ->
+        ListingPresentation selection window ->
             -- TODO: We currently don't observe the needs of an Iterator
             Cache.NeedAndThen
                 (Cache.NeedDocumentsPage selection window)
@@ -123,7 +123,7 @@ folderCountsForQuery context =
         CollectionPresentation folderId ->
             Nothing
 
-        DocumentsPagePresentation selection window ->
+        ListingPresentation selection window ->
             Cache.get context.cache.folderCounts selection
                 |> RemoteData.withDefault FolderCounts.init
                 |> Just
@@ -152,10 +152,10 @@ update context msg model =
             , NoReturn
             )
 
-        ( DocumentsPageMsg subMsg, DocumentsPageModel subModel, DocumentsPagePresentation selection window ) ->
+        ( ListingMsg subMsg, ListingModel subModel, ListingPresentation selection window ) ->
             let
                 ( subModel1, subCmd, subReturn ) =
-                    UI.Article.DocumentsPage.update
+                    UI.Article.Listing.update
                         { cache = context.cache
                         , selection = selection
                         , window = window
@@ -163,15 +163,15 @@ update context msg model =
                         subMsg
                         subModel
             in
-            ( { model | content = DocumentsPageModel subModel1 }
-            , Cmd.map DocumentsPageMsg subCmd
+            ( { model | content = ListingModel subModel1 }
+            , Cmd.map ListingMsg subCmd
             )
                 |> Utils.tupleAddThird
                     (case subReturn of
-                        UI.Article.DocumentsPage.NoReturn ->
+                        UI.Article.Listing.NoReturn ->
                             NoReturn
 
-                        UI.Article.DocumentsPage.Navigate navigation ->
+                        UI.Article.Listing.Navigate navigation ->
                             Navigate navigation
                     )
 
@@ -271,14 +271,14 @@ viewContent context model =
                 subModel
                 |> Html.map CollectionMsg
 
-        ( DocumentsPageModel subModel, DocumentsPagePresentation selection window ) ->
-            UI.Article.DocumentsPage.view
+        ( ListingModel subModel, ListingPresentation selection window ) ->
+            UI.Article.Listing.view
                 { cache = context.cache
                 , selection = selection
                 , window = window
                 }
                 subModel
-                |> Html.map DocumentsPageMsg
+                |> Html.map ListingMsg
 
         ( DetailsModel subModel, DocumentPresentation maybeFolderId documentId ) ->
             UI.Article.Details.view
