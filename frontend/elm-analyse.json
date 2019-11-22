@@ -1,0 +1,10 @@
+{
+  "checks": {
+    "SingleFieldRecord": false,
+    "TriggerWords": false,
+    "UnusedPatternVariable": false
+  },
+  "excludedPaths": [
+    "gen"
+  ]
+}
