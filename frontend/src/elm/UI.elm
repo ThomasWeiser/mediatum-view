@@ -16,12 +16,12 @@ import Entities.Document exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Icons
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation(..))
 import Route exposing (Route)
 import UI.Article
 import UI.Controls
+import UI.Icons
 import UI.Tree
 
 
@@ -168,7 +168,7 @@ update context msg model =
 view : Context -> Model -> Html Msg
 view context model =
     Html.div [ Html.Attributes.class "page-container" ]
-        [ Icons.definitions
+        [ UI.Icons.definitions
         , Html.header []
             [ Html.h2 []
                 [ Html.div []

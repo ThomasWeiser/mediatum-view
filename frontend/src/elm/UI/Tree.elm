@@ -16,13 +16,13 @@ import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Icons
 import Maybe.Extra
 import Presentation exposing (Presentation(..))
 import RemoteData
 import Sort.Dict
 import Types exposing (FolderDisplay(..))
 import Types.Id as Id exposing (FolderId)
+import UI.Icons
 import Utils
 
 
@@ -181,10 +181,10 @@ viewFolderLine folder maybeCount selected expanded =
             ]
         ]
         ([ if Folder.hasSubfolder folder then
-            Icons.expando
+            UI.Icons.expando
 
            else
-            Icons.leaf
+            UI.Icons.leaf
          , Html.span
             [ Html.Attributes.class "folder-name" ]
             [ Html.text folder.name ]

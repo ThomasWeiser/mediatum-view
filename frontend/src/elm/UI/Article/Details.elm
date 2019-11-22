@@ -16,10 +16,10 @@ import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Icons
 import Maybe.Extra
 import RemoteData
 import Types.Id as Id exposing (DocumentId)
+import UI.Icons
 import Utils
 
 
@@ -156,10 +156,10 @@ view context model =
           of
             RemoteData.NotAsked ->
                 -- Should never happen
-                Icons.spinner
+                UI.Icons.spinner
 
             RemoteData.Loading ->
-                Icons.spinner
+                UI.Icons.spinner
 
             RemoteData.Failure error ->
                 viewApiError error
@@ -258,7 +258,7 @@ viewEditAttribute model document =
                         Html.text <| "Attribute key: " ++ model.editAttributeKey
 
                     Pending ->
-                        Icons.spinner
+                        UI.Icons.spinner
 
                     CannotUpdateKey key ->
                         viewError <| "Cannot update key \"" ++ key ++ "\". It's not present in the JSON attributes of the document's node"

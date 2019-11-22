@@ -9,10 +9,10 @@ module UI.Article.Generic exposing
 import Cache
 import Cache.Derive
 import Html exposing (Html)
-import Icons
 import RemoteData exposing (RemoteData(..))
 import Types exposing (NodeType(..))
 import Types.Id as Id exposing (NodeId)
+import UI.Icons
 import Utils
 
 
@@ -105,10 +105,10 @@ view context model =
     Html.div [] <|
         case remoteDataMessage of
             NotAsked ->
-                [ Icons.spinner ]
+                [ UI.Icons.spinner ]
 
             Loading ->
-                [ Icons.spinner ]
+                [ UI.Icons.spinner ]
 
             Success notification ->
                 [ Html.text notification ]

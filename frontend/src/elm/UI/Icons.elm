@@ -1,4 +1,4 @@
-module Icons exposing
+module UI.Icons exposing
     ( definitions
     , expando
     , leaf

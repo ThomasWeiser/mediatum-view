@@ -13,9 +13,9 @@ import Entities.Folder as Folder exposing (Folder)
 import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
-import Icons
 import RemoteData
 import Types.Id as Id exposing (FolderId)
+import UI.Icons
 
 
 type alias Context =
@@ -48,10 +48,10 @@ view context model =
         [ case Cache.get context.cache.folders context.folderId of
             RemoteData.NotAsked ->
                 -- Should never happen
-                Icons.spinner
+                UI.Icons.spinner
 
             RemoteData.Loading ->
-                Icons.spinner
+                UI.Icons.spinner
 
             RemoteData.Failure error ->
                 viewApiError error

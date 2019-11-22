@@ -12,7 +12,6 @@ module UI.Controls exposing
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Icons
 import Navigation exposing (Navigation)
 import Presentation exposing (Presentation)
 import Range
@@ -23,6 +22,7 @@ import Types.SearchTerm as SearchTerm
 import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), SetOfFilters)
 import UI.Controls.Filter
 import UI.Controls.FilterEditor as FilterEditor
+import UI.Icons
 import Utils
 
 
@@ -252,7 +252,7 @@ viewSearch context model =
                     ]
                 , Html.Events.onClick (SetSorting FtsByRank)
                 ]
-                [ Icons.search, Html.text " By Rank" ]
+                [ UI.Icons.search, Html.text " By Rank" ]
             , Html.button
                 [ Html.Attributes.type_ "submit"
                 , Html.Attributes.classList
@@ -262,7 +262,7 @@ viewSearch context model =
                     ]
                 , Html.Events.onClick (SetSorting FtsByDate)
                 ]
-                [ Icons.search, Html.text " By Date" ]
+                [ UI.Icons.search, Html.text " By Date" ]
             ]
         ]
 

@@ -18,7 +18,6 @@ import Graphql.Extra
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Icons
 import Navigation exposing (Navigation)
 import Regex
 import RemoteData
@@ -27,6 +26,7 @@ import Route.Url
 import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId)
 import Types.Selection exposing (Selection)
+import UI.Icons
 
 
 type alias Context =
@@ -163,10 +163,10 @@ view context model =
           of
             RemoteData.NotAsked ->
                 -- Should never happen
-                Icons.spinner
+                UI.Icons.spinner
 
             RemoteData.Loading ->
-                Icons.spinner
+                UI.Icons.spinner
 
             RemoteData.Failure error ->
                 viewApiError error
