@@ -66,30 +66,32 @@ updateRoute route model =
             }
 
         model3 =
-            adjustUI model2
+            adjustPresentation model2
     in
     model3
 
 
-adjustUI : Model -> Model
-adjustUI =
-    (\model ->
-        { model
-            | presentation =
+adjustPresentation : Model -> Model
+adjustPresentation model =
+    let
+        presentation =
+            Presentation.fromRoute
+                model.cache
                 model.route
-                    |> Debug.log "adjustUI route"
-                    |> Presentation.fromRoute model.cache
-                    |> Debug.log "adjustUI presentation"
+    in
+    -- This function will be called each time the cache gets a message.
+    -- Let's call UI.updateOnChangedPresentation only if the presentation has really changed.
+    if presentation == model.presentation then
+        model
+
+    else
+        { model
+            | presentation = presentation
+            , ui =
+                UI.updateOnChangedPresentation
+                    presentation
+                    model.ui
         }
-    )
-        >> (\model ->
-                { model
-                    | ui =
-                        UI.adjustArticle
-                            (uiContext model)
-                            model.ui
-                }
-           )
 
 
 needs : Model -> Cache.Needs
@@ -159,7 +161,7 @@ updateSubModel msg model =
                     , Cmd.map CacheMsg subCmd
                     )
             in
-            ( model1 |> adjustUI
+            ( model1 |> adjustPresentation
             , cmd1
             , Nothing
             )

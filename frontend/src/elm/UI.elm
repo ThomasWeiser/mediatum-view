@@ -3,10 +3,10 @@ module UI exposing
     , Model
     , Msg
     , Return(..)
-    , adjustArticle
     , init
     , needs
     , update
+    , updateOnChangedPresentation
     , updateOnChangedRoute
     , view
     )
@@ -81,11 +81,11 @@ updateOnChangedRoute context model =
     }
 
 
-adjustArticle : Context -> Model -> Model
-adjustArticle context model =
+updateOnChangedPresentation : Presentation -> Model -> Model
+updateOnChangedPresentation presentation model =
     { model
         | article =
-            UI.Article.initialModel context.presentation
+            UI.Article.initialModel presentation
     }
 
 
