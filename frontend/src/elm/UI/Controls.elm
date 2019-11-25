@@ -13,7 +13,6 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Navigation exposing (Navigation)
-import Presentation exposing (Presentation)
 import Route exposing (Route)
 import Route.Filter
 import Sort.Dict
@@ -27,9 +26,7 @@ import Utils
 
 
 type alias Context =
-    { route : Route
-    , presentation : Presentation
-    }
+    { route : Route }
 
 
 type Return

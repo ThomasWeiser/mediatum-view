@@ -115,9 +115,7 @@ update context msg model =
             let
                 ( subModel, subCmd, subReturn ) =
                     UI.Controls.update
-                        { route = context.route
-                        , presentation = context.presentation
-                        }
+                        { route = context.route }
                         subMsg
                         model.controls
             in
@@ -183,9 +181,7 @@ view context model =
                     ]
                 ]
             , UI.Controls.view
-                { route = context.route
-                , presentation = context.presentation
-                }
+                { route = context.route }
                 model.controls
                 |> Html.map ControlsMsg
             ]
