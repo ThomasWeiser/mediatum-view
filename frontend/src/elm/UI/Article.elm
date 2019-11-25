@@ -78,11 +78,22 @@ initialModel presentation =
 
 needs : Presentation -> Cache.Needs
 needs presentation =
-    -- No need to declare NeedGenericNode here.
-    -- We already declare these needs in App.needs when looking at the route.
     case presentation of
         GenericPresentation maybeNodeIds ->
-            Cache.NeedNothing
+            case maybeNodeIds of
+                Nothing ->
+                    Cache.NeedNothing
+
+                Just ( nodeIdOne, maybeNodeIdTwo ) ->
+                    Cache.NeedAnd
+                        (Cache.NeedGenericNode nodeIdOne)
+                        (case maybeNodeIdTwo of
+                            Nothing ->
+                                Cache.NeedNothing
+
+                            Just nodeIdTwo ->
+                                Cache.NeedGenericNode nodeIdTwo
+                        )
 
         DocumentPresentation maybeFolderId documentId ->
             Cache.NeedDocument documentId

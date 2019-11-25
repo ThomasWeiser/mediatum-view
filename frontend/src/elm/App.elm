@@ -97,20 +97,7 @@ needs model =
     Debug.log "app needs" <|
         Cache.needsFromList
             [ Cache.NeedRootFolderIds
-            , case model.route.path of
-                Route.NoId ->
-                    Cache.NeedNothing
-
-                Route.OneId nodeId ->
-                    Cache.NeedGenericNode nodeId
-
-                Route.TwoIds nodeIdOne nodeIdTwo ->
-                    Cache.NeedAnd
-                        (Cache.NeedGenericNode nodeIdOne)
-                        (Cache.NeedGenericNode nodeIdTwo)
-            , UI.needs
-                (uiContext model)
-                model.ui
+            , UI.needs (uiContext model) model.ui
             ]
 
 
