@@ -56,11 +56,7 @@ init =
     { tree = UI.Tree.initialModel
     , controls = UI.Controls.initialModel Route.initHome
     , article =
-        UI.Article.initialModel
-            { cache = Cache.initialModel
-            , route = Route.initHome
-            , presentation = GenericPresentation Nothing
-            }
+        UI.Article.initialModel (GenericPresentation Nothing)
     }
 
 
@@ -73,12 +69,7 @@ needs context model =
             }
             model.tree
         )
-        (UI.Article.needs
-            { cache = context.cache
-            , route = context.route
-            , presentation = context.presentation
-            }
-        )
+        (UI.Article.needs context.presentation)
 
 
 updateOnChangedRoute : Context -> Model -> Model
@@ -93,11 +84,7 @@ adjustArticle : Context -> Model -> Model
 adjustArticle context model =
     { model
         | article =
-            UI.Article.initialModel
-                { cache = context.cache
-                , route = context.route
-                , presentation = context.presentation
-                }
+            UI.Article.initialModel context.presentation
     }
 
 

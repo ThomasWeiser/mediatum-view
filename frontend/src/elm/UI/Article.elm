@@ -60,9 +60,9 @@ type Msg
     | DetailsMsg UI.Article.Details.Msg
 
 
-initialModel : Context -> Model
-initialModel context =
-    case context.presentation of
+initialModel : Presentation -> Model
+initialModel presentation =
+    case presentation of
         GenericPresentation maybeNodeIds ->
             { content = GenericModel UI.Article.Generic.initialModel }
 
@@ -76,11 +76,11 @@ initialModel context =
             { content = ListingModel UI.Article.Listing.initialModel }
 
 
-needs : Context -> Cache.Needs
-needs context =
+needs : Presentation -> Cache.Needs
+needs presentation =
     -- No need to declare NeedGenericNode here.
     -- We already declare these needs in App.needs when looking at the route.
-    case context.presentation of
+    case presentation of
         GenericPresentation maybeNodeIds ->
             Cache.NeedNothing
 
