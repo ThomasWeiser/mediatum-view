@@ -22,8 +22,8 @@ main =
         , update = update
         , subscriptions = always Sub.none
         , view = view
-        , onUrlRequest = UrlRequest << Debug.log "onUrlRequest"
-        , onUrlChange = UrlChanged << Debug.log "onUrlChange"
+        , onUrlRequest = UrlRequest -- << Debug.log "onUrlRequest"
+        , onUrlChange = UrlChanged -- << Debug.log "onUrlChange"
         }
 
 

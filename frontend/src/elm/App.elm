@@ -96,8 +96,7 @@ adjustPresentation model =
 
 needs : Model -> Cache.Needs
 needs model =
-    Debug.log "app needs" <|
-        UI.needs (uiContext model) model.ui
+    UI.needs (uiContext model) model.ui
 
 
 requestNeeds : Model -> ( Model, Cmd Msg )
