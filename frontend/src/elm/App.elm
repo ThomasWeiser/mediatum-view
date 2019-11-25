@@ -72,22 +72,24 @@ updateRoute route model =
 
 
 adjust : Model -> Model
-adjust model =
-    let
-        presentation =
-            model.route
-                |> Debug.log "adjust route"
-                |> Presentation.fromRoute model.cache
-                |> Debug.log "adjust presentation"
-                |> identity
-    in
-    { model
-        | presentation = presentation
-        , ui =
-            UI.adjust
-                (uiContext model)
-                model.ui
-    }
+adjust =
+    (\model ->
+        { model
+            | presentation =
+                model.route
+                    |> Debug.log "adjust route"
+                    |> Presentation.fromRoute model.cache
+                    |> Debug.log "adjust presentation"
+        }
+    )
+        >> (\model ->
+                { model
+                    | ui =
+                        UI.adjust
+                            (uiContext model)
+                            model.ui
+                }
+           )
 
 
 needs : Model -> Cache.Needs
