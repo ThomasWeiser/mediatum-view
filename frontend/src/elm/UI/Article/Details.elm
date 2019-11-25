@@ -20,7 +20,7 @@ import RemoteData
 import Types.Id as Id exposing (DocumentId)
 import UI.Icons
 import Utils
-import Utils.Graphql
+import Utils.Html
 
 
 type alias Context =
@@ -162,7 +162,7 @@ view context model =
                 UI.Icons.spinner
 
             RemoteData.Failure error ->
-                viewApiError error
+                Utils.Html.viewApiError error
 
             RemoteData.Success (Just document) ->
                 viewDocument model document
@@ -206,11 +206,6 @@ viewAttribute attribute =
 
         Nothing ->
             Html.text ""
-
-
-viewApiError : Api.Error -> Html msg
-viewApiError error =
-    viewError (Utils.Graphql.errorToString error)
 
 
 viewEditAttribute : Model -> Document -> Html Msg
@@ -261,17 +256,10 @@ viewEditAttribute model document =
                         UI.Icons.spinner
 
                     CannotUpdateKey key ->
-                        viewError <| "Cannot update key \"" ++ key ++ "\". It's not present in the JSON attributes of the document's node"
+                        Utils.Html.viewError <| "Cannot update key \"" ++ key ++ "\". It's not present in the JSON attributes of the document's node"
 
                     MutationError error ->
-                        viewApiError error
+                        Utils.Html.viewApiError error
                 ]
             ]
         ]
-
-
-viewError : String -> Html msg
-viewError defect =
-    Html.div
-        [ Html.Attributes.class "error" ]
-        [ Html.text defect ]

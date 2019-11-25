@@ -10,7 +10,6 @@ module UI.Article.Listing exposing
 -- import Article.Iterator as Iterator
 -- import Pagination.Offset.Page as Page exposing (Page, PageResult)
 
-import Api
 import Cache
 import Entities.Document as Document exposing (Document)
 import Entities.Results exposing (DocumentResult, DocumentsPage)
@@ -26,7 +25,7 @@ import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId)
 import Types.Selection exposing (Selection)
 import UI.Icons
-import Utils.Graphql
+import Utils.Html
 
 
 type alias Context =
@@ -169,7 +168,7 @@ view context model =
                 UI.Icons.spinner
 
             RemoteData.Failure error ->
-                viewApiError error
+                Utils.Html.viewApiError error
 
             RemoteData.Success documentsPage ->
                 viewDocumentsPage context documentsPage
@@ -302,10 +301,3 @@ viewPaginationButtons documentsPage =
             (PickPosition Next)
             documentsPage.hasNextPage
         ]
-
-
-viewApiError : Api.Error -> Html msg
-viewApiError error =
-    Html.div
-        [ Html.Attributes.class "error" ]
-        [ Html.text (Utils.Graphql.errorToString error) ]

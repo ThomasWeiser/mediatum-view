@@ -14,6 +14,7 @@ import Types exposing (NodeType(..))
 import Types.Id as Id exposing (NodeId)
 import UI.Icons
 import Utils
+import Utils.Html
 
 
 type alias Context =
@@ -114,6 +115,4 @@ view context model =
                 [ Html.text notification ]
 
             Failure cacheError ->
-                [ Html.div [] [ Html.text "Oops, something went wrong here ..." ]
-                , Html.small [] [ Html.text (Cache.errorToString cacheError) ]
-                ]
+                [ Utils.Html.viewCacheError cacheError ]

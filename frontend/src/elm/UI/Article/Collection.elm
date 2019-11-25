@@ -7,15 +7,13 @@ module UI.Article.Collection exposing
     , view
     )
 
-import Api
 import Cache
 import Entities.Folder as Folder
 import Html exposing (Html)
-import Html.Attributes
 import RemoteData
 import Types.Id exposing (FolderId)
 import UI.Icons
-import Utils.Graphql
+import Utils.Html
 
 
 type alias Context =
@@ -54,7 +52,7 @@ view context model =
                 UI.Icons.spinner
 
             RemoteData.Failure error ->
-                viewApiError error
+                Utils.Html.viewApiError error
 
             RemoteData.Success folder ->
                 Html.h3 [] <|
@@ -67,15 +65,3 @@ view context model =
                         , Html.text "\""
                         ]
         ]
-
-
-viewApiError : Api.Error -> Html msg
-viewApiError error =
-    viewError (Utils.Graphql.errorToString error)
-
-
-viewError : String -> Html msg
-viewError defect =
-    Html.div
-        [ Html.Attributes.class "error" ]
-        [ Html.text defect ]

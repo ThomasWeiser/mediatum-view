@@ -23,6 +23,7 @@ import Types exposing (FolderDisplay(..))
 import Types.Id exposing (FolderId)
 import UI.Icons
 import Utils
+import Utils.Html
 
 
 type alias Context =
@@ -121,7 +122,7 @@ viewListOfFolders context model maybeFolderCounts apiDataFolderIds =
                     folderIds
 
             RemoteData.Failure apiError ->
-                [ Html.li [] [ Html.text (Cache.apiErrorToString apiError) ] ]
+                [ Html.li [] [ Utils.Html.viewApiError apiError ] ]
 
 
 viewFolderTree : Context -> Model -> Maybe FolderCounts -> FolderId -> Html Msg
@@ -169,7 +170,7 @@ viewFolderTree context model maybeFolderCounts id =
                 ]
 
             RemoteData.Failure apiError ->
-                [ Html.text (Cache.apiErrorToString apiError) ]
+                [ Utils.Html.viewApiError apiError ]
 
 
 viewFolderLine : Folder -> Maybe Int -> Bool -> Bool -> Html msg
