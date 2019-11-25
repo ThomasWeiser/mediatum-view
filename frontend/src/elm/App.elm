@@ -66,26 +66,26 @@ updateRoute route model =
             }
 
         model3 =
-            adjust model2
+            adjustUI model2
     in
     model3
 
 
-adjust : Model -> Model
-adjust =
+adjustUI : Model -> Model
+adjustUI =
     (\model ->
         { model
             | presentation =
                 model.route
-                    |> Debug.log "adjust route"
+                    |> Debug.log "adjustUI route"
                     |> Presentation.fromRoute model.cache
-                    |> Debug.log "adjust presentation"
+                    |> Debug.log "adjustUI presentation"
         }
     )
         >> (\model ->
                 { model
                     | ui =
-                        UI.adjust
+                        UI.adjustArticle
                             (uiContext model)
                             model.ui
                 }
@@ -175,7 +175,7 @@ updateSubModel msg model =
                     , Cmd.map CacheMsg subCmd
                     )
             in
-            ( model1 |> adjust
+            ( model1 |> adjustUI
             , cmd1
             , Nothing
             )

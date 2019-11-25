@@ -3,7 +3,7 @@ module UI exposing
     , Model
     , Msg
     , Return(..)
-    , adjust
+    , adjustArticle
     , init
     , needs
     , update
@@ -89,8 +89,8 @@ updateOnChangedRoute context model =
     }
 
 
-adjust : Context -> Model -> Model
-adjust context model =
+adjustArticle : Context -> Model -> Model
+adjustArticle context model =
     { model
         | article =
             UI.Article.initialModel
