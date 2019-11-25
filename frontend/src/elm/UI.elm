@@ -62,14 +62,15 @@ init =
 
 needs : Context -> Model -> Cache.Needs
 needs context model =
-    Cache.NeedAnd
-        (UI.Tree.needs
+    Cache.needsFromList
+        [ Cache.NeedRootFolderIds
+        , UI.Tree.needs
             { cache = context.cache
             , presentation = context.presentation
             }
             model.tree
-        )
-        (UI.Article.needs context.presentation)
+        , UI.Article.needs context.presentation
+        ]
 
 
 updateOnChangedRoute : Context -> Model -> Model

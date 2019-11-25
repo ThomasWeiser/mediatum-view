@@ -95,10 +95,7 @@ adjustUI =
 needs : Model -> Cache.Needs
 needs model =
     Debug.log "app needs" <|
-        Cache.needsFromList
-            [ Cache.NeedRootFolderIds
-            , UI.needs (uiContext model) model.ui
-            ]
+        UI.needs (uiContext model) model.ui
 
 
 requestNeeds : Model -> ( Model, Cmd Msg )
