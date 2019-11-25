@@ -189,7 +189,7 @@ view context model =
                         [ Html.text "WIP" ]
                     , Html.img
                         [ Html.Attributes.alt "TUM Logo"
-                        , Html.Attributes.src "logo_tum.png"
+                        , Html.Attributes.src "/logo_tum.png"
                         , Html.Attributes.style "float" "right"
                         ]
                         []
