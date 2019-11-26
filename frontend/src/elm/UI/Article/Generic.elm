@@ -56,7 +56,7 @@ view context model =
                         |> Cache.Derive.asDerivedData
                         |> Utils.remoteDataCheck
                             (\nodeType ->
-                                Maybe.map Cache.CacheDataError <|
+                                Maybe.map Cache.Derive.CacheDerivationError <|
                                     if nodeType == NodeIsNeither then
                                         Just <|
                                             "Node "
@@ -78,7 +78,7 @@ view context model =
                         (Cache.Derive.getNodeType context.cache nodeIdTwo |> Cache.Derive.asDerivedData)
                         |> Utils.remoteDataCheck
                             (\( nodeTypeOne, nodeTypeTwo ) ->
-                                Maybe.map Cache.CacheDataError <|
+                                Maybe.map Cache.Derive.CacheDerivationError <|
                                     case ( nodeTypeOne, nodeTypeTwo ) of
                                         ( NodeIsFolder _, NodeIsDocument ) ->
                                             Nothing

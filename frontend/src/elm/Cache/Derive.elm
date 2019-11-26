@@ -1,6 +1,8 @@
 module Cache.Derive exposing
     ( DerivedData
+    , Error(..)
     , asDerivedData
+    , errorToString
     , getAsDocumentId
     , getAsFolderId
     , getNodeType
@@ -11,7 +13,7 @@ module Cache.Derive exposing
     , isOnPath
     )
 
-import Cache exposing (ApiData, Error(..))
+import Cache exposing (ApiData)
 import Maybe.Extra
 import RemoteData exposing (RemoteData(..))
 import Types exposing (FolderDisplay(..), NodeType(..))
@@ -20,6 +22,21 @@ import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 
 type alias DerivedData a =
     RemoteData Error a
+
+
+type Error
+    = CacheApiError Cache.ApiError
+    | CacheDerivationError String
+
+
+errorToString : Error -> String
+errorToString error =
+    case error of
+        CacheApiError apiError ->
+            Cache.apiErrorToString apiError
+
+        CacheDerivationError str ->
+            str
 
 
 asDerivedData : ApiData a -> DerivedData a
@@ -59,7 +76,7 @@ getRootFolder cache =
         |> RemoteData.andThen
             (\listOfFolderIds ->
                 List.head listOfFolderIds
-                    |> RemoteData.fromMaybe (CacheDataError "List of root folders is empty")
+                    |> RemoteData.fromMaybe (CacheDerivationError "List of root folders is empty")
             )
         |> RemoteData.andThen
             (\folderId ->
@@ -72,7 +89,7 @@ getRootFolder cache =
                                     Success ( folderId, folderType )
 
                                 _ ->
-                                    Failure (CacheDataError "Root node is not a folder")
+                                    Failure (CacheDerivationError "Root node is not a folder")
                         )
             )
 
