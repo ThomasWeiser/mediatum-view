@@ -19,7 +19,7 @@ suite =
         , testOrderingProperties "DocumentId" fuzzerDocumentId Id.ordering
         , testOrderingProperties "Selection" fuzzerSelection Selection.orderingSelection
         , testOrderingProperties "SelectionWindow" fuzzerSelectionWindow Cache.orderingSelectionWindow
-        , testOrderingProperties "SearchMethod" fuzzerSearchMethod Selection.orderingSearchMethod
+        , testOrderingProperties "SearchMethod" fuzzerSearchMethod Selection.orderingSelectMethod
         , testOrderingProperties "FtsSorting" fuzzerFtsSorting Selection.orderingFtsSorting
         , testOrderingProperties "Filters" fuzzerFilters Selection.orderingFilters
         , testOrderingProperties "Filter" fuzzerFilter Selection.orderingFilter

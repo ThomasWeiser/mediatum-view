@@ -15,7 +15,7 @@ module Types.Selection exposing
     , orderingFilterHandle
     , orderingFilters
     , orderingFtsSorting
-    , orderingSearchMethod
+    , orderingSelectMethod
     , orderingSelection
     , removeFilter
     )
@@ -107,13 +107,13 @@ orderingSelection : Ordering Selection
 orderingSelection =
     Ordering.byFieldWith Id.ordering .scope
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith orderingSearchMethod .selectMethod)
+            (Ordering.byFieldWith orderingSelectMethod .selectMethod)
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingFilters .filters)
 
 
-orderingSearchMethod : Ordering SelectMethod
-orderingSearchMethod =
+orderingSelectMethod : Ordering SelectMethod
+orderingSelectMethod =
     Ordering.byRank
         (\selectMethod ->
             case selectMethod of
