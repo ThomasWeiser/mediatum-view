@@ -9,6 +9,9 @@ module App exposing
     , view
     )
 
+{-| Top-level module managing the interaction of the `Route`, the `Cache` and the `UI` components.
+-}
+
 import Cache
 import Cmd.Extra
 import Html exposing (Html)
@@ -29,7 +32,7 @@ type alias Model =
     , presentation : Presentation
     , ui : UI.Model
 
-    -- TODO: We store the Needs here only for debugging
+    -- TODO: We store the `Needs` here only for debugging
     , needs : Cache.Needs
     }
 
@@ -80,7 +83,7 @@ adjustPresentation model =
                 model.route
     in
     -- This function will be called each time the cache gets a message.
-    -- Let's call UI.updateOnChangedPresentation only if the presentation has really changed.
+    -- Let's call `UI.updateOnChangedPresentation` only if the presentation has really changed.
     if presentation == model.presentation then
         model
 
