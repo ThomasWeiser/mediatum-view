@@ -16,6 +16,19 @@ module Cache exposing
     , updateWithModifiedDocument
     )
 
+{-| Manage fetching and caching all API data.
+
+All data to be requested from the API is fetched and exposed through this module.
+
+Consuming modules declare their data needs as a value of type `Needs`.
+They can read the actual data from the tables in the `Model`.
+
+Reading the tables will result in a `RemoteData` value.
+So the consuming modules will have to deal with the possible cases a `RemoteData` can have
+(`NotAsked`, `Loading`, `Failure`, `Success`).
+
+-}
+
 import Api
 import Api.Queries
 import Basics.Extra
@@ -35,7 +48,7 @@ import Utils
 
 
 type alias ApiData a =
-    RemoteData Api.Error a
+    RemoteData ApiError a
 
 
 type alias ApiError =
@@ -47,6 +60,13 @@ type Error
     | CacheDataError String
 
 
+{-| Represents all data for which fetching from the API has been at least started.
+Consuming modules read from these tables to fulfill their data needs.
+
+The `Model` consists of several lookup-tables that each map from a key type (representing query parameters)
+to an `ApiData` type that contains (in case of a `RemoteData.Success`) the wanted content data.
+
+-}
 type alias Model =
     { rootFolderIds : ApiData (List FolderId)
     , folders : Sort.Dict.Dict FolderId (ApiData Folder)
@@ -58,6 +78,8 @@ type alias Model =
     }
 
 
+{-| A data-consuming module declares its wishes for data to be fetched by means of this type.
+-}
 type Needs
     = NeedNothing
     | NeedAnd Needs Needs
@@ -107,6 +129,11 @@ needsFromList listOfNeeds =
         listOfNeeds
 
 
+{-| Read an entry from a table.
+
+If the given key is not yet present in the table return `RemoteData.NotAsked`.
+
+-}
 get : Sort.Dict.Dict k (ApiData v) -> k -> ApiData v
 get dict key =
     Sort.Dict.get key dict
@@ -213,6 +240,11 @@ status model needs =
                 |> statusFromRemoteData
 
 
+{-| Check which of the needed data has not yet been requested.
+
+Submit API requests to get that data and mark the corresponding Model entries as `RemoteData.Loading`.
+
+-}
 require : Needs -> Model -> ( Model, Cmd Msg )
 require needs model =
     if status model needs /= NotRequested then
@@ -352,6 +384,8 @@ updateWithModifiedDocument document model =
     }
 
 
+{-| Digest all responses from the API layer and update the data in the `Model` accordingly.
+-}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
