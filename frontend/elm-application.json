@@ -1,0 +1,8 @@
+{
+    "name": "ThomasWeiser/mediatum-view",
+    "summary": "Alternative API and client for mediaTUM ",
+    "version": "1.0.0",
+    "exposed-modules": [
+        "Cache"
+    ]
+}
