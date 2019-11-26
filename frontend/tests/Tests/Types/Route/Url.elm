@@ -1,7 +1,6 @@
 module Tests.Types.Route.Url exposing (suite)
 
 import Expect exposing (Expectation)
-import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 import Test exposing (..)
 import TestUtils exposing (..)
