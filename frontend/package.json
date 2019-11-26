@@ -10,6 +10,7 @@
     "build": "npm run generate && npm run compile",
     "start": "ncp src/assets dist && elm-live -u -e node_modules/.bin/elm -d dist src/elm/Main.elm -x /graphql -y http://localhost:5000 -- --output=dist/app.js --debug",
     "format": "elm-format --yes src/elm tests",
+    "doc-preview": "elm-doc-preview --port 8001 --no-browser .",
     "clean": "rimraf gen elm-stuff"
   },
   "repository": {
@@ -34,6 +35,7 @@
   "homepage": "https://github.com/ThomasWeiser/mediatum-view#readme",
   "devDependencies": {
     "@dillonkearns/elm-graphql": "^3.6.2",
+    "elm-doc-preview": "^3.0.4",
     "elm-format": "^0.8.2",
     "elm-live": "^3.4.1",
     "elm-test": "^0.19.1",
