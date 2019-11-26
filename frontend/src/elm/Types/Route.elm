@@ -1,4 +1,4 @@
-module Route exposing
+module Types.Route exposing
     ( Route
     , RouteParameters
     , RoutePath(..)

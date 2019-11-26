@@ -12,11 +12,11 @@ module UI.Controls exposing
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Navigation exposing (Navigation)
-import Route exposing (Route)
-import Route.Filter
 import Sort.Dict
+import Types.Navigation as Navigation exposing (Navigation)
 import Types.Range as Range
+import Types.Route as Route exposing (Route)
+import Types.Route.Filter
 import Types.SearchTerm as SearchTerm
 import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), SetOfFilters)
 import UI.Controls.Filter
@@ -75,13 +75,13 @@ update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     let
         removeFilter filterHandle =
-            Route.Filter.fromRoute context.route
+            Types.Route.Filter.fromRoute context.route
                 |> Selection.removeFilter filterHandle
                 |> Navigation.ShowListingWithFilters
                 |> Navigate
 
         insertFilter oldFilterHandlefilter newFilter =
-            Route.Filter.fromRoute context.route
+            Types.Route.Filter.fromRoute context.route
                 |> Selection.removeFilter oldFilterHandlefilter
                 |> Selection.insertFilter newFilter
                 |> Navigation.ShowListingWithFilters
@@ -283,7 +283,7 @@ viewFilters context model =
                 UI.Controls.Filter.filterTypes
         , viewExistingFilters
             model
-            (Route.Filter.fromRoute context.route)
+            (Types.Route.Filter.fromRoute context.route)
         , Html.span [] <|
             List.map
                 (\( filterHandle, filterEditor ) ->

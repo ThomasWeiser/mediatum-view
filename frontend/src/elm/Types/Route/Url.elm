@@ -1,4 +1,4 @@
-module Route.Url exposing
+module Types.Route.Url exposing
     ( parseUrl
     , toString
     )
@@ -6,9 +6,9 @@ module Route.Url exposing
 import Dict
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
-import Route exposing (Route, RouteParameters, RoutePath(..))
 import Types.Id as Id
 import Types.Range as Range
+import Types.Route as Route exposing (Route, RouteParameters, RoutePath(..))
 import Types.SearchTerm
 import Types.Selection exposing (FtsSorting(..))
 import Url exposing (Url)

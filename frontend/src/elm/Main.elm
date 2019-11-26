@@ -4,8 +4,8 @@ import App
 import Browser
 import Browser.Navigation
 import Html
-import Route
-import Route.Url
+import Types.Route as Route
+import Types.Route.Url
 import Url exposing (Url)
 
 
@@ -37,7 +37,7 @@ init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url navigationKey =
     let
         ( appModel, appCmd ) =
-            Route.Url.parseUrl url
+            Types.Route.Url.parseUrl url
                 |> Maybe.withDefault Route.initHome
                 |> App.init
     in
@@ -68,7 +68,7 @@ update msg model =
         UrlChanged url ->
             let
                 route =
-                    Route.Url.parseUrl url
+                    Types.Route.Url.parseUrl url
                         |> Maybe.withDefault Route.initHome
 
                 ( subModel, subCmd ) =
@@ -100,7 +100,7 @@ update msg model =
                     App.ReflectRoute route ->
                         Browser.Navigation.pushUrl
                             model.navigationKey
-                            (Route.Url.toString route)
+                            (Types.Route.Url.toString route)
 
                     App.NoReturn ->
                         Cmd.none

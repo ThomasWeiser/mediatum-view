@@ -16,13 +16,13 @@ import Entities.Results exposing (DocumentResult, DocumentsPage)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Navigation exposing (Navigation)
 import Regex
 import RemoteData
-import Route
-import Route.Url
 import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId)
+import Types.Navigation as Navigation exposing (Navigation)
+import Types.Route as Route
+import Types.Route.Url
 import Types.Selection exposing (Selection)
 import UI.Icons
 import Utils.Html
@@ -207,7 +207,7 @@ viewDocument context number document =
                 , Route.initDocumentInFolder
                     context.selection.scope
                     document.id
-                    |> Route.Url.toString
+                    |> Types.Route.Url.toString
                     |> Html.Attributes.href
                 ]
                 [ Html.text document.metadatatypeName ]

@@ -15,12 +15,12 @@ import Entities.Document exposing (Document)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
-import Navigation exposing (Navigation)
-import Presentation exposing (Presentation(..))
 import RemoteData
-import Route exposing (Route)
-import Route.Url
 import Types.Id as Id exposing (FolderId)
+import Types.Navigation as Navigation exposing (Navigation)
+import Types.Presentation as Presentation exposing (Presentation(..))
+import Types.Route as Route exposing (Route)
+import Types.Route.Url
 import UI.Article.Collection
 import UI.Article.Details
 import UI.Article.Generic
@@ -235,7 +235,7 @@ viewBreadcrumbs context maybeFolderId =
                                                             |> Navigation.alterRoute
                                                                 context.cache
                                                                 (Navigation.SetFolder folder.id)
-                                                            |> Route.Url.toString
+                                                            |> Types.Route.Url.toString
                                                             |> Html.Attributes.href
                                                         ]
                                                         [ Html.text folder.name ]

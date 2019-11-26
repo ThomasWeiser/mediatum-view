@@ -16,9 +16,9 @@ import Entities.Document exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Navigation exposing (Navigation)
-import Presentation exposing (Presentation(..))
-import Route exposing (Route)
+import Types.Navigation as Navigation exposing (Navigation)
+import Types.Presentation exposing (Presentation(..))
+import Types.Route as Route exposing (Route)
 import UI.Article
 import UI.Controls
 import UI.Icons

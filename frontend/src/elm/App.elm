@@ -12,9 +12,9 @@ module App exposing
 import Cache
 import Cmd.Extra
 import Html exposing (Html)
-import Navigation exposing (Navigation)
-import Presentation exposing (Presentation(..))
-import Route exposing (Route)
+import Types.Navigation as Navigation exposing (Navigation)
+import Types.Presentation as Presentation exposing (Presentation(..))
+import Types.Route as Route exposing (Route)
 import UI
 
 

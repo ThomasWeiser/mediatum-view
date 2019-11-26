@@ -1,9 +1,9 @@
-module Route.Filter exposing
+module Types.Route.Filter exposing
     ( alterRoute
     , fromRoute
     )
 
-import Route exposing (Route)
+import Types.Route exposing (Route)
 import Types.SearchTerm
 import Types.Selection as Selection exposing (Filter(..), SetOfFilters)
 import Utils

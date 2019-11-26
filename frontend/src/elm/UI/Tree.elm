@@ -16,11 +16,11 @@ import Entities.FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Presentation exposing (Presentation(..))
 import RemoteData exposing (RemoteData)
 import Sort.Dict
 import Types exposing (FolderDisplay(..))
 import Types.Id exposing (FolderId)
+import Types.Presentation as Presentation exposing (Presentation(..))
 import UI.Icons
 import Utils
 import Utils.Html

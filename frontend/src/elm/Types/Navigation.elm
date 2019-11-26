@@ -1,13 +1,13 @@
-module Navigation exposing
+module Types.Navigation exposing
     ( Navigation(..)
     , alterRoute
     )
 
 import Cache
 import Cache.Derive
-import Route exposing (Route)
-import Route.Filter
 import Types.Id as Id exposing (DocumentId, FolderId)
+import Types.Route as Route exposing (Route)
+import Types.Route.Filter
 import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (FtsSorting, SetOfFilters)
 
@@ -77,7 +77,7 @@ alterRoute cache navigation route =
             }
 
         ShowListingWithFilters filters ->
-            Route.Filter.alterRoute filters listingRoute
+            Types.Route.Filter.alterRoute filters listingRoute
 
         SetFolder folderId ->
             { path =
