@@ -1,29 +1,52 @@
 module Cache exposing
-    ( ApiData
-    , ApiError
-    , Model
-    , Msg(..)
-    , Needs(..)
-    , apiErrorToString
-    , get
-    , initialModel
-    , needsFromList
-    , orderingSelectionWindow
-    , require
-    , update
+    ( ApiData, Model, get
+    , Needs(..), needsFromList, require
     , updateWithModifiedDocument
+    , ApiError, apiErrorToString
+    , Msg(..), initialModel, update
+    , orderingSelectionWindow
     )
 
-{-| Manage fetching and caching all API data.
+{-| Manage fetching and caching of all API data.
 
-All data to be requested from the API is fetched and exposed through this module.
+All data needed from the API is fetched and exposed through this module.
 
 Consuming modules declare their data needs as a value of type `Needs`.
 They can read the actual data from the tables in the `Model`.
 
 Reading the tables will result in a `RemoteData` value.
-So the consuming modules will have to deal with the possible cases a `RemoteData` can have
+So the consuming modules will have to deal with the possible states a `RemoteData` can show
 (`NotAsked`, `Loading`, `Failure`, `Success`).
+
+
+# Cached Data
+
+@docs ApiData, Model, get
+
+
+# Declaring required data
+
+@docs Needs, needsFromList, require
+
+
+# Modifying data locally (preliminary)
+
+@docs updateWithModifiedDocument
+
+
+# Error handling
+
+@docs ApiError, apiErrorToString
+
+
+# Elm architecture standard functions
+
+@docs Msg, initialModel, update
+
+
+# Internal functions exposed for testing only
+
+@docs orderingSelectionWindow
 
 -}
 
@@ -45,10 +68,18 @@ import Types.Selection as Selection exposing (SelectMethod(..), Selection)
 import Utils
 
 
+{-| A specialization of `RemoteData e a` where the error type `e` is defined by `ApiError`.
+
+Any `RemoteData` used in this module uses this error type and is therefore an `ApiData`.
+
+-}
 type alias ApiData a =
     RemoteData ApiError a
 
 
+{-| The type of errors that may be reported in an `ApiData.Failure`.
+It's the same as `Api.Error`.
+-}
 type alias ApiError =
     Api.Error
 
@@ -56,7 +87,9 @@ type alias ApiError =
 {-| Represents all data for which fetching from the API has been at least started.
 Consuming modules read from these tables to fulfill their data needs.
 
-The `Model` consists of several lookup-tables that each map from a key type (representing query parameters)
+For each entity or relation in the local data schema there is a field in the `Model`.
+
+Most fields are lookup-tables that map from a key type (representing query parameters)
 to an `ApiData` type that contains (in case of a `RemoteData.Success`) the wanted content data.
 
 -}
@@ -85,11 +118,15 @@ type Needs
     | NeedFolderCounts Selection
 
 
+{-| Describe an `ApiError` as text (aimed for debugging)
+-}
 apiErrorToString : ApiError -> String
 apiErrorToString apiError =
     Api.errorToString apiError
 
 
+{-| Initial cache model without any entry
+-}
 initialModel : Model
 initialModel =
     { rootFolderIds = NotAsked
@@ -102,6 +139,8 @@ initialModel =
     }
 
 
+{-| Aggregate a list of needs
+-}
 needsFromList : List Needs -> Needs
 needsFromList listOfNeeds =
     List.foldr
@@ -112,7 +151,7 @@ needsFromList listOfNeeds =
         listOfNeeds
 
 
-{-| Read an entry from a table.
+{-| Read an entry from a lookup-table of the `Model`.
 
 If the given key is not yet present in the table return `RemoteData.NotAsked`.
 
@@ -123,6 +162,11 @@ get dict key =
         |> Maybe.withDefault NotAsked
 
 
+{-| The messages that the `update` function may process in response to an executed `Cmd`.
+
+Currently all messages transport some API response.
+
+-}
 type Msg
     = ApiResponseToplevelFolder (Api.Response (List ( Folder, List Folder )))
     | ApiResponseSubfolder (List FolderId) (Api.Response (List Folder))
@@ -224,9 +268,7 @@ status model needs =
 
 
 {-| Check which of the needed data has not yet been requested.
-
 Submit API requests to get that data and mark the corresponding Model entries as `RemoteData.Loading`.
-
 -}
 require : Needs -> Model -> ( Model, Cmd Msg )
 require needs model =
@@ -359,6 +401,8 @@ require needs model =
                 )
 
 
+{-| Insert or update a document into the table `Model.documents`.
+-}
 updateWithModifiedDocument : Document -> Model -> Model
 updateWithModifiedDocument document model =
     { model
@@ -367,7 +411,7 @@ updateWithModifiedDocument document model =
     }
 
 
-{-| Digest all responses from the API layer and update the data in the `Model` accordingly.
+{-| Digest a Msg (i.e. a response from the API layer) and update the data in the `Model` accordingly.
 -}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -561,6 +605,8 @@ insertNodeType nodeId nodeType model =
     }
 
 
+{-| Ordering on the tuple type `( Selection, Window )`
+-}
 orderingSelectionWindow : Ordering ( Selection, Window )
 orderingSelectionWindow =
     Ordering.byFieldWith Selection.orderingSelection Tuple.first
