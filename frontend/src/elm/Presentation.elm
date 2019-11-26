@@ -44,7 +44,7 @@ fromRoute : Cache.Model -> Route -> Presentation
 fromRoute cache route =
     let
         folderPresentation folderId folderType =
-            case searchMethodFromRoute route of
+            case selectMethodOfRoute of
                 SelectByFolderListing ->
                     case folderType of
                         DisplayAsCollection ->
@@ -56,7 +56,7 @@ fromRoute cache route =
                                 , selectMethod = SelectByFolderListing
                                 , filters = Route.Filter.fromRoute route
                                 }
-                                (windowFromRoute route)
+                                windowOfRoute
 
                 selectMethod ->
                     ListingPresentation
@@ -64,7 +64,22 @@ fromRoute cache route =
                         , selectMethod = selectMethod
                         , filters = Route.Filter.fromRoute route
                         }
-                        (windowFromRoute route)
+                        windowOfRoute
+
+        windowOfRoute =
+            { offset = route.parameters.offset
+            , limit = route.parameters.limit
+            }
+
+        selectMethodOfRoute =
+            case route.parameters.ftsTerm of
+                Nothing ->
+                    SelectByFolderListing
+
+                Just ftsTerm ->
+                    SelectByFullTextSearch
+                        ftsTerm
+                        route.parameters.ftsSorting
     in
     case route.path of
         Route.NoId ->
@@ -109,22 +124,3 @@ fromRoute cache route =
 
                 _ ->
                     GenericPresentation (Just ( nodeIdOne, Just nodeIdTwo ))
-
-
-windowFromRoute : Route -> Window
-windowFromRoute route =
-    { offset = route.parameters.offset
-    , limit = route.parameters.limit
-    }
-
-
-searchMethodFromRoute : Route -> SelectMethod
-searchMethodFromRoute route =
-    case route.parameters.ftsTerm of
-        Nothing ->
-            SelectByFolderListing
-
-        Just ftsTerm ->
-            SelectByFullTextSearch
-                ftsTerm
-                route.parameters.ftsSorting
