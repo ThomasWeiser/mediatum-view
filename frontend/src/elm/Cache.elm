@@ -1,12 +1,10 @@
 module Cache exposing
     ( ApiData
     , ApiError
-    , Error(..)
     , Model
     , Msg(..)
     , Needs(..)
     , apiErrorToString
-    , errorToString
     , get
     , initialModel
     , needsFromList
@@ -55,11 +53,6 @@ type alias ApiError =
     Api.Error
 
 
-type Error
-    = CacheApiError Api.Error
-    | CacheDataError String
-
-
 {-| Represents all data for which fetching from the API has been at least started.
 Consuming modules read from these tables to fulfill their data needs.
 
@@ -90,16 +83,6 @@ type Needs
     | NeedDocument DocumentId
     | NeedDocumentsPage Selection Window
     | NeedFolderCounts Selection
-
-
-errorToString : Error -> String
-errorToString error =
-    case error of
-        CacheApiError apiError ->
-            Api.errorToString apiError
-
-        CacheDataError str ->
-            str
 
 
 apiErrorToString : ApiError -> String
