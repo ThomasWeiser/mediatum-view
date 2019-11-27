@@ -6,6 +6,8 @@
         "Main",
         "App",
         "Cache",
+        "UI",
+        "Config",
         "Types.DebugInfo"
     ]
 }

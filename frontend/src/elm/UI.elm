@@ -1,15 +1,14 @@
 module UI exposing
-    ( Context
-    , Model
-    , Msg
-    , Return(..)
-    , init
-    , needs
-    , update
-    , updateOnChangedPresentation
-    , updateOnChangedRoute
-    , view
+    ( Context, Return(..), Model, Msg
+    , init, needs, update, updateOnChangedPresentation, updateOnChangedRoute, view
     )
+
+{-| Top-level module for all visible user-interface components.
+
+@docs Context, Return, Model, Msg
+@docs init, needs, update, updateOnChangedPresentation, updateOnChangedRoute, view
+
+-}
 
 import Cache
 import Entities.Document exposing (Document)
@@ -25,6 +24,8 @@ import UI.Icons
 import UI.Tree
 
 
+{-| Context data provided by the parent module [`App`](App). Used by several functions here.
+-}
 type alias Context =
     { cache : Cache.Model
     , route : Route
@@ -32,12 +33,26 @@ type alias Context =
     }
 
 
+{-| Return value of the [`update`](#update) function.
+
+Mainly used to report navigational requests.
+
+-}
 type Return
     = NoReturn
     | Navigate Navigation
     | UpdateCacheWithModifiedDocument Document
 
 
+{-| The model comprises the models of the sub-components.
+
+In our app architecture the UI model contains as little state as possible.
+
+Most navigational state is represented in the route.
+All content data is represented in the cache.
+Only temporary or subordinate interaction state is represented in the UI model.
+
+-}
 type alias Model =
     { tree : UI.Tree.Model
     , controls : UI.Controls.Model
@@ -45,21 +60,26 @@ type alias Model =
     }
 
 
+{-| Standard message type, wrapping the messages of the sub-components.
+-}
 type Msg
     = TreeMsg UI.Tree.Msg
     | ControlsMsg UI.Controls.Msg
     | ArticleMsg UI.Article.Msg
 
 
+{-| Initial model
+-}
 init : Model
 init =
     { tree = UI.Tree.initialModel
     , controls = UI.Controls.initialModel Route.initHome
-    , article =
-        UI.Article.initialModel (GenericPresentation Nothing)
+    , article = UI.Article.initialModel (GenericPresentation Nothing)
     }
 
 
+{-| Report the current needs of the UI, gathering the needs of the sub-components.
+-}
 needs : Context -> Model -> Cache.Needs
 needs context model =
     Cache.needsFromList
@@ -73,6 +93,8 @@ needs context model =
         ]
 
 
+{-| Update the Controls and the Tree to adapt to a changed route.
+-}
 updateOnChangedRoute : Context -> Model -> Model
 updateOnChangedRoute context model =
     { model
@@ -81,6 +103,8 @@ updateOnChangedRoute context model =
     }
 
 
+{-| Update the Article to adapt to a changed presentation.
+-}
 updateOnChangedPresentation : Presentation -> Model -> Model
 updateOnChangedPresentation presentation model =
     { model
@@ -89,6 +113,8 @@ updateOnChangedPresentation presentation model =
     }
 
 
+{-| Standard update function
+-}
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
@@ -155,6 +181,8 @@ update context msg model =
             )
 
 
+{-| Put together the views of the sub-components into a Html page body.
+-}
 view : Context -> Model -> Html Msg
 view context model =
     Html.div [ Html.Attributes.class "page-container" ]
