@@ -14,7 +14,7 @@ All data needed from the API is fetched and exposed through this module.
 Consuming modules declare their data needs as a value of type `Needs`.
 They can read the actual data from the tables in the `Model`.
 
-Reading the tables will result in a `RemoteData` value.
+Reading the tables will result in a [`RemoteData`](/packages/krisajenkins/remotedata/6.0.1/RemoteData) value.
 So the consuming modules will have to deal with the possible states a `RemoteData` can show
 (`NotAsked`, `Loading`, `Failure`, `Success`).
 
@@ -68,7 +68,8 @@ import Types.Selection as Selection exposing (SelectMethod(..), Selection)
 import Utils
 
 
-{-| A specialization of `RemoteData e a` where the error type `e` is defined by `ApiError`.
+{-| A specialization of [`RemoteData e a`](/packages/krisajenkins/remotedata/6.0.1/RemoteData#RemoteData)
+where the error type `e` is defined by `ApiError`.
 
 Any `RemoteData` used in this module uses this error type and is therefore an `ApiData`.
 
