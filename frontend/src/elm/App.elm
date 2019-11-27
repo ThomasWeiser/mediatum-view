@@ -15,6 +15,7 @@ module App exposing
 import Cache
 import Cmd.Extra
 import Html exposing (Html)
+import Types.DebugInfo exposing (DebugInfo, debugInfo)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation as Presentation exposing (Presentation(..))
 import Types.Route as Route exposing (Route)
@@ -33,7 +34,7 @@ type alias Model =
     , ui : UI.Model
 
     -- TODO: We store the `Needs` here only for debugging
-    , needs : Cache.Needs
+    , debugInfo : { needs : DebugInfo Cache.Needs }
     }
 
 
@@ -48,7 +49,7 @@ init route =
     , cache = Cache.initialModel
     , presentation = GenericPresentation Nothing
     , ui = UI.init
-    , needs = Cache.NeedNothing
+    , debugInfo = { needs = debugInfo Cache.NeedNothing }
     }
         |> requestNeeds
         |> Cmd.Extra.andThen (updateRoute route >> Cmd.Extra.withNoCmd)
@@ -114,7 +115,7 @@ requestNeeds model =
                 model.cache
     in
     ( { model
-        | needs = currentNeeds
+        | debugInfo = { needs = debugInfo currentNeeds }
         , cache = cacheModel
       }
     , Cmd.map CacheMsg cacheCmd
