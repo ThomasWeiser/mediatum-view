@@ -10,6 +10,16 @@ module App exposing
     )
 
 {-| Top-level module managing the interaction of the `Route`, the `Cache` and the `UI` components.
+
+@docs Model
+@docs Msg
+@docs Return
+@docs init
+@docs requestNeeds
+@docs update
+@docs updateRoute
+@docs view
+
 -}
 
 import Cache
@@ -22,11 +32,24 @@ import Types.Route as Route exposing (Route)
 import UI
 
 
+{-| Return value of the [`update`](#update) function.
+
+Internal route changes are reported to the [`Main`](Main) module this way.
+
+-}
 type Return
     = NoReturn
     | ReflectRoute Route
 
 
+{-| The model of the app comprises the page's [`Route`](Types-Route), the content data currently in the [`Cache`](Cache) and the [`UI`](UI) state.
+
+The [`Presentation`](Types-Presentation) is another representation of the route that uses some knowledge from the cache.
+Although not strictly necessary we store it in the model too as this leads to simpler code.
+
+Finally there is some [`DebugInfo`](Types-DebugInfo) here for inspection by the Elm debugger.
+
+-}
 type alias Model =
     { route : Route
     , cache : Cache.Model
@@ -38,11 +61,15 @@ type alias Model =
     }
 
 
+{-| `Msg` wraps the messages from the two sub-components [`Cache`](Cache) and [`UI`](UI).
+-}
 type Msg
     = CacheMsg Cache.Msg
     | UIMsg UI.Msg
 
 
+{-| Initialize the model with the given route and request the corresponding needs.
+-}
 init : Route -> ( Model, Cmd Msg )
 init route =
     { route = Route.initHome
@@ -55,6 +82,8 @@ init route =
         |> Cmd.Extra.andThen (updateRoute route >> Cmd.Extra.withNoCmd)
 
 
+{-| Store a changed route and update the UI accordingly.
+-}
 updateRoute : Route -> Model -> Model
 updateRoute route model =
     let
@@ -75,6 +104,8 @@ updateRoute route model =
     model3
 
 
+{-| Derive the current presentation from the route using contextual knowledge from the cache and update the UI accordingly.
+-}
 adjustPresentation : Model -> Model
 adjustPresentation model =
     let
@@ -98,16 +129,13 @@ adjustPresentation model =
         }
 
 
-needs : Model -> Cache.Needs
-needs model =
-    UI.needs (uiContext model) model.ui
-
-
+{-| Gather the needs from the UI and signal them to the cache.
+-}
 requestNeeds : Model -> ( Model, Cmd Msg )
 requestNeeds model =
     let
         currentNeeds =
-            needs model
+            UI.needs (uiContext model) model.ui
 
         ( cacheModel, cacheCmd ) =
             Cache.require
@@ -122,6 +150,8 @@ requestNeeds model =
     )
 
 
+{-| Standard update function
+-}
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     let
@@ -201,6 +231,8 @@ updateSubModel msg model =
             )
 
 
+{-| Standard view function
+-}
 view : Model -> Html Msg
 view model =
     UI.view
