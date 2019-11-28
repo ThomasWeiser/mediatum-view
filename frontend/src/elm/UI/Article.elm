@@ -1,5 +1,6 @@
 module UI.Article exposing
-    ( Return(..)
+    ( Context
+    , Return(..)
     , Model
     , Msg
     , initialModel
@@ -11,6 +12,7 @@ module UI.Article exposing
 
 {-|
 
+@docs Context
 @docs Return
 @docs Model
 @docs Msg
@@ -41,6 +43,7 @@ import UI.Article.Listing
 import Utils
 
 
+{-| -}
 type alias Context =
     { cache : Cache.Model
     , route : Route
