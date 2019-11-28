@@ -6,7 +6,10 @@ module Main exposing (main)
 
   - Hosting the module [`App`](App).
 
-  - Mananging URL changes by means of [`onUrlRequest`](/packages/elm/browser/1.0.1/Browser#application), [`onUrlChange`](/packages/elm/browser/1.0.1/Browser#application) and [`pushUrl`](/packages/elm/browser/latest/Browser-Navigation#pushUrl).
+  - Mananging URL changes by means of:
+      - [`onUrlRequest`](/packages/elm/browser/1.0.1/Browser#application) (when the user clicks a link)
+      - [`onUrlChange`](/packages/elm/browser/1.0.1/Browser#application) (when the browser actually changes the URL)
+      - [`pushUrl`](/packages/elm/browser/latest/Browser-Navigation#pushUrl) (make the browser change the URL and add a new entry to the browser history)
 
 @docs main
 
