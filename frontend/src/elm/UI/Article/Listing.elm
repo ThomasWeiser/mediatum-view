@@ -1,5 +1,6 @@
 module UI.Article.Listing exposing
-    ( Return(..)
+    ( Context
+    , Return(..)
     , Model
     , Msg
     , initialModel
@@ -9,6 +10,7 @@ module UI.Article.Listing exposing
 
 {-|
 
+@docs Context
 @docs Return
 @docs Model
 @docs Msg
@@ -39,6 +41,7 @@ import UI.Icons
 import Utils.Html
 
 
+{-| -}
 type alias Context =
     { cache : Cache.Model
     , selection : Selection

@@ -1,5 +1,6 @@
 module UI.Article.Generic exposing
-    ( Model
+    ( Context
+    , Model
     , Msg
     , initialModel
     , update
@@ -8,6 +9,7 @@ module UI.Article.Generic exposing
 
 {-|
 
+@docs Context
 @docs Model
 @docs Msg
 @docs initialModel
@@ -27,6 +29,7 @@ import Utils
 import Utils.Html
 
 
+{-| -}
 type alias Context =
     { cache : Cache.Model
     , nodeIds : Maybe ( NodeId, Maybe NodeId )

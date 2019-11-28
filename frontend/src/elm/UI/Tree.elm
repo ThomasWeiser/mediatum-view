@@ -1,5 +1,6 @@
 module UI.Tree exposing
-    ( Return(..)
+    ( Context
+    , Return(..)
     , Model
     , Msg
     , initialModel
@@ -11,6 +12,7 @@ module UI.Tree exposing
 
 {-|
 
+@docs Context
 @docs Return
 @docs Model
 @docs Msg
@@ -40,6 +42,7 @@ import Utils
 import Utils.Html
 
 
+{-| -}
 type alias Context =
     { cache : Cache.Model
     , presentation : Presentation
