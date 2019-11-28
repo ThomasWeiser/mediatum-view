@@ -1,12 +1,24 @@
 module UI.Article.Iterator exposing
     ( Context
+    , Return(..)
     , Model
     , Msg
-    , Return(..)
     , initialModel
     , update
     , view
     )
+
+{-|
+
+@docs Context
+@docs Return
+@docs Model
+@docs Msg
+@docs initialModel
+@docs update
+@docs view
+
+-}
 
 import Article.Details as Details
 import Cache
@@ -18,6 +30,7 @@ import Types exposing (Document, DocumentId, Folder)
 import Utils
 
 
+{-| -}
 type alias Context item =
     { cache : Cache.Model
     , folder : Folder
@@ -26,6 +39,7 @@ type alias Context item =
     }
 
 
+{-| -}
 type Return
     = NoReturn
     | ShowDocument DocumentId
@@ -33,12 +47,14 @@ type Return
     | UpdateCacheWithModifiedDocument Document
 
 
+{-| -}
 type alias Model =
     { currentId : DocumentId
     , details : Details.Model
     }
 
 
+{-| -}
 type Msg
     = DetailsMsg Details.Msg
     | Show
@@ -46,6 +62,7 @@ type Msg
     | Select DocumentId
 
 
+{-| -}
 initialModel : Context item -> DocumentId -> Model
 initialModel context documentId =
     let
@@ -64,6 +81,7 @@ initialModel context documentId =
     }
 
 
+{-| -}
 update : Context item -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
@@ -104,6 +122,7 @@ update context msg model =
             )
 
 
+{-| -}
 view : Context item -> Model -> Html Msg
 view context model =
     let

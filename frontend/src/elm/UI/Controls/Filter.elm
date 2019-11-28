@@ -1,12 +1,24 @@
 module UI.Controls.Filter exposing
-    ( Controls(..)
-    , FilterType
+    ( FilterType
+    , Controls(..)
+    , filterTypes
     , controlsFromFilter
     , controlsToFilter
-    , filterTypes
-    , viewEditControls
     , viewFilterDescription
+    , viewEditControls
     )
+
+{-|
+
+@docs FilterType
+@docs Controls
+@docs filterTypes
+@docs controlsFromFilter
+@docs controlsToFilter
+@docs viewFilterDescription
+@docs viewEditControls
+
+-}
 
 import Basics.Extra
 import Html exposing (Html)
@@ -18,17 +30,20 @@ import Types.Selection exposing (Filter(..))
 import Utils
 
 
+{-| -}
 type alias FilterType =
     { name : String
     , initControls : Controls
     }
 
 
+{-| -}
 type Controls
     = ControlsYearWithin (Maybe Int) (Maybe Int)
     | ControlsTitleFts String
 
 
+{-| -}
 filterTypes : List FilterType
 filterTypes =
     [ { name = "Year"
@@ -40,6 +55,7 @@ filterTypes =
     ]
 
 
+{-| -}
 controlsFromFilter : Filter -> Controls
 controlsFromFilter filter =
     case filter of
@@ -51,6 +67,7 @@ controlsFromFilter filter =
             ControlsTitleFts (Types.SearchTerm.toString searchTerm)
 
 
+{-| -}
 controlsToFilter : Controls -> Maybe Filter
 controlsToFilter controls =
     case controls of
@@ -64,6 +81,7 @@ controlsToFilter controls =
                 |> Maybe.map FilterTitleFts
 
 
+{-| -}
 viewFilterDescription : Filter -> List (Html msg)
 viewFilterDescription filter =
     let
@@ -100,6 +118,7 @@ viewFilterDescription filter =
             ]
 
 
+{-| -}
 viewEditControls : String -> Controls -> Html Controls
 viewEditControls focusId controls =
     case controls of

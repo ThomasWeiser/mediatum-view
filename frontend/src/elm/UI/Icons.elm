@@ -6,13 +6,34 @@ module UI.Icons exposing
     , spinner
     )
 
+{-|
+
+@docs definitions
+@docs expando
+@docs leaf
+@docs search
+@docs spinner
+
+-}
+
 import Html exposing (Html)
 import Svg exposing (Svg)
 import Svg.Attributes
 
 
+{-| -}
 definitions : Html msg
 definitions =
+    let
+        symbolWithPath : String -> String -> Svg msg
+        symbolWithPath name path =
+            Svg.symbol
+                [ Svg.Attributes.id ("icon-" ++ name)
+                , Svg.Attributes.viewBox "0 0 32 32"
+                ]
+                [ Svg.path [ Svg.Attributes.d path ] []
+                ]
+    in
     Svg.svg
         [ Svg.Attributes.display "none" ]
         [ Svg.defs
@@ -24,29 +45,22 @@ definitions =
         ]
 
 
+{-| -}
 expando : Html msg
 expando =
     icon "expando"
 
 
+{-| -}
 leaf : Html msg
 leaf =
     icon "leaf"
 
 
+{-| -}
 search : Html msg
 search =
     icon "search"
-
-
-symbolWithPath : String -> String -> Svg msg
-symbolWithPath name path =
-    Svg.symbol
-        [ Svg.Attributes.id ("icon-" ++ name)
-        , Svg.Attributes.viewBox "0 0 32 32"
-        ]
-        [ Svg.path [ Svg.Attributes.d path ] []
-        ]
 
 
 icon : String -> Html msg
@@ -56,6 +70,7 @@ icon name =
         [ Svg.use [ Svg.Attributes.xlinkHref ("#icon-" ++ name) ] [] ]
 
 
+{-| -}
 spinner : Html msg
 spinner =
     let

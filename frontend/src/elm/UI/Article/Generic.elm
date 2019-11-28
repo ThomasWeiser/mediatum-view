@@ -6,6 +6,16 @@ module UI.Article.Generic exposing
     , view
     )
 
+{-|
+
+@docs Model
+@docs Msg
+@docs initialModel
+@docs update
+@docs view
+
+-}
+
 import Cache
 import Cache.Derive
 import Html exposing (Html)
@@ -23,24 +33,29 @@ type alias Context =
     }
 
 
+{-| -}
 type alias Model =
     ()
 
 
+{-| -}
 type alias Msg =
     Never
 
 
+{-| -}
 initialModel : Model
 initialModel =
     ()
 
 
+{-| -}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     ( model, Cmd.none )
 
 
+{-| -}
 view : Context -> Model -> Html Msg
 view context model =
     let

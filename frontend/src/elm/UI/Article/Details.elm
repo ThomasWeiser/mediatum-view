@@ -1,12 +1,24 @@
 module UI.Article.Details exposing
     ( Context
+    , Return(..)
     , Model
     , Msg
-    , Return(..)
     , initialModel
     , update
     , view
     )
+
+{-|
+
+@docs Context
+@docs Return
+@docs Model
+@docs Msg
+@docs initialModel
+@docs update
+@docs view
+
+-}
 
 import Api
 import Api.Mutations
@@ -23,17 +35,20 @@ import Utils
 import Utils.Html
 
 
+{-| -}
 type alias Context =
     { cache : Cache.Model
     , documentId : DocumentId
     }
 
 
+{-| -}
 type Return
     = NoReturn
     | UpdateCacheWithModifiedDocument Document
 
 
+{-| -}
 type alias Model =
     { editAttributeKey : String
     , editAttributeValue : String
@@ -48,6 +63,7 @@ type MutationState
     | MutationError Api.Error
 
 
+{-| -}
 type Msg
     = ApiMutationResponse DocumentId String (Api.Response (Maybe Document))
     | SetAttributeKey String
@@ -55,6 +71,7 @@ type Msg
     | SubmitMutation DocumentId
 
 
+{-| -}
 initialModel : Model
 initialModel =
     { editAttributeKey = ""
@@ -63,6 +80,7 @@ initialModel =
     }
 
 
+{-| -}
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
@@ -146,6 +164,7 @@ initEditAttributeValue context model =
             model
 
 
+{-| -}
 view : Context -> Model -> Html Msg
 view context model =
     Html.div [ Html.Attributes.class "details" ]

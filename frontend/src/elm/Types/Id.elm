@@ -1,15 +1,42 @@
 module Types.Id exposing
-    ( DocumentId
+    ( NodeId
     , FolderId
-    , NodeId
-    , asDocumentId
-    , asFolderId
+    , DocumentId
     , asNodeId
-    , fromInt
-    , ordering
+    , asFolderId
+    , asDocumentId
     , toInt
+    , fromInt
     , toString
+    , ordering
     )
+
+{-|
+
+@docs NodeId
+@docs FolderId
+@docs DocumentId
+
+
+#
+
+@docs asNodeId
+@docs asFolderId
+@docs asDocumentId
+
+
+#
+
+@docs toInt
+@docs fromInt
+@docs toString
+
+
+#
+
+@docs ordering
+
+-}
 
 import Ordering exposing (Ordering)
 
@@ -48,14 +75,17 @@ type Document
 -}
 
 
+{-| -}
 type alias NodeId =
     Id Node
 
 
+{-| -}
 type alias FolderId =
     Id Folder
 
 
+{-| -}
 type alias DocumentId =
     Id Document
 
@@ -68,36 +98,43 @@ dummyValueToAvoidElmAnalyseErrors =
     )
 
 
+{-| -}
 asNodeId : Id a -> NodeId
 asNodeId (Id i) =
     Id i
 
 
+{-| -}
 asFolderId : NodeId -> FolderId
 asFolderId (Id i) =
     Id i
 
 
+{-| -}
 asDocumentId : NodeId -> DocumentId
 asDocumentId (Id i) =
     Id i
 
 
+{-| -}
 toInt : Id a -> Int
 toInt (Id id) =
     id
 
 
+{-| -}
 fromInt : Int -> Id a
 fromInt id =
     Id id
 
 
+{-| -}
 toString : Id a -> String
 toString nodeId =
     nodeId |> toInt |> String.fromInt
 
 
+{-| -}
 ordering : Ordering (Id a)
 ordering (Id id1) (Id id2) =
     compare id1 id2

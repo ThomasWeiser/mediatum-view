@@ -1,15 +1,26 @@
 module Entities.Folder exposing
     ( Folder
     , dummy
-    , hasSubfolder
     , init
     , isRoot
+    , hasSubfolder
     )
+
+{-|
+
+@docs Folder
+@docs dummy
+@docs init
+@docs isRoot
+@docs hasSubfolder
+
+-}
 
 import Types exposing (FolderDisplay(..))
 import Types.Id as Id exposing (FolderId)
 
 
+{-| -}
 type alias Folder =
     { id : FolderId
     , parent : Maybe FolderId
@@ -19,6 +30,7 @@ type alias Folder =
     }
 
 
+{-| -}
 dummy : Folder
 dummy =
     { id = Id.fromInt -1
@@ -27,6 +39,13 @@ dummy =
     , display = DisplayAsCollection
     , numSubfolder = 0
     }
+
+
+{-| -}
+
+
+
+-- TODO: Remove
 
 
 init : FolderId -> Maybe FolderId -> String -> FolderDisplay -> Int -> Folder
@@ -39,11 +58,13 @@ init id maybeParentId name display numSubfolder =
     }
 
 
+{-| -}
 isRoot : Folder -> Bool
 isRoot folder =
     folder.parent == Nothing
 
 
+{-| -}
 hasSubfolder : Folder -> Bool
 hasSubfolder folder =
     folder.numSubfolder > 0

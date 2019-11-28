@@ -1,17 +1,25 @@
 module Api.Arguments.Filter exposing (filtersToAttributeTests)
 
+{-|
+
+@docs filtersToAttributeTests
+
+-}
+
 import Api.Arguments.AttributeTest
 import Types.Range as Range
 import Types.SearchTerm
 import Types.Selection exposing (Filter(..), SetOfFilters)
 
 
+{-| -}
 filtersToAttributeTests : SetOfFilters -> List Api.Arguments.AttributeTest.Test
 filtersToAttributeTests filters =
     Types.Selection.filtersToList filters
         |> List.map filterToAttributeTest
 
 
+{-| -}
 filterToAttributeTest : Filter -> Api.Arguments.AttributeTest.Test
 filterToAttributeTest filter =
     case filter of

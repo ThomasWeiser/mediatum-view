@@ -1,11 +1,22 @@
 module UI.Controls.FilterEditor exposing
-    ( Model
+    ( Return(..)
+    , Model
     , Msg
-    , Return(..)
     , init
     , update
     , view
     )
+
+{-|
+
+@docs Return
+@docs Model
+@docs Msg
+@docs init
+@docs update
+@docs view
+
+-}
 
 import Browser.Dom
 import Html exposing (Html)
@@ -17,6 +28,7 @@ import Types.Selection exposing (Filter(..))
 import UI.Controls.Filter exposing (Controls(..))
 
 
+{-| -}
 type Return
     = NoReturn
     | Saved Filter
@@ -24,12 +36,14 @@ type Return
     | Canceled
 
 
+{-| -}
 type alias Model =
     { controls : Controls
     , focusId : String
     }
 
 
+{-| -}
 type Msg
     = NoOp
     | Change Controls
@@ -38,6 +52,7 @@ type Msg
     | Focus String Int
 
 
+{-| -}
 init : Controls -> ( Model, Cmd Msg )
 init controls =
     ( { controls = controls
@@ -53,6 +68,7 @@ init controls =
     )
 
 
+{-| -}
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     case msg of
@@ -104,6 +120,7 @@ update msg model =
             )
 
 
+{-| -}
 view : Model -> Html Msg
 view model =
     Html.form

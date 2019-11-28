@@ -1,8 +1,16 @@
 module Types.Presentation exposing
     ( Presentation(..)
-    , fromRoute
     , getFolderId
+    , fromRoute
     )
+
+{-|
+
+@docs Presentation
+@docs getFolderId
+@docs fromRoute
+
+-}
 
 import Cache
 import Cache.Derive
@@ -15,6 +23,7 @@ import Types.Route.Filter
 import Types.Selection exposing (SelectMethod(..), Selection)
 
 
+{-| -}
 type Presentation
     = GenericPresentation (Maybe ( NodeId, Maybe NodeId ))
     | CollectionPresentation FolderId
@@ -22,6 +31,7 @@ type Presentation
     | ListingPresentation Selection Window
 
 
+{-| -}
 getFolderId : Cache.Model -> Presentation -> Maybe FolderId
 getFolderId cache presentation =
     case presentation of
@@ -40,6 +50,7 @@ getFolderId cache presentation =
             Just selection.scope
 
 
+{-| -}
 fromRoute : Cache.Model -> Route -> Presentation
 fromRoute cache route =
     let

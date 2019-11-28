@@ -1,20 +1,24 @@
-module Api.Arguments.AttributeTest exposing
-    ( Operation(..)
-    , Test
-    , testsAsGraphqlArgument
-    )
+module Api.Arguments.AttributeTest exposing (Test, Operation(..), testsAsGraphqlArgument)
+
+{-|
+
+@docs Test, Operation, testsAsGraphqlArgument
+
+-}
 
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Mediatum.Enum.AttributeTestOperator as Operator
 import Mediatum.InputObject exposing (AttributeTestInput)
 
 
+{-| -}
 type alias Test =
     { key : String
     , operation : Operation
     }
 
 
+{-| -}
 type Operation
     = Equality String
     | ILike String (Maybe String)
@@ -22,6 +26,7 @@ type Operation
     | DateRange ( String, String )
 
 
+{-| -}
 testsAsGraphqlArgument : List Test -> List (Maybe AttributeTestInput)
 testsAsGraphqlArgument tests =
     List.map
