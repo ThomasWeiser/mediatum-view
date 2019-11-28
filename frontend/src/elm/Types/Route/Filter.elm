@@ -3,7 +3,7 @@ module Types.Route.Filter exposing
     , fromRoute
     )
 
-{-|
+{-| Conversion functions between a `SetOfFilters` and the filter parameters of a `Route`.
 
 @docs alterRoute
 @docs fromRoute

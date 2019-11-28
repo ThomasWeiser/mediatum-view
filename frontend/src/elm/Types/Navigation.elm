@@ -3,7 +3,7 @@ module Types.Navigation exposing
     , alterRoute
     )
 
-{-|
+{-| A navigation is an instruction to alter a given route in response to some user interaction.
 
 @docs Navigation
 @docs alterRoute
@@ -31,7 +31,11 @@ type Navigation
     | SetLimit Int
 
 
-{-| -}
+{-| Modify the route accordingly.
+
+In some cases this uses knowledge about node types from the cache.
+
+-}
 alterRoute : Cache.Model -> Navigation -> Route -> Route
 alterRoute cache navigation route =
     let

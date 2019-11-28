@@ -1,6 +1,6 @@
 module Types.DebugInfo exposing (DebugInfo, debugInfo)
 
-{-| We want to store values in the model only for inspection by the Elm debugger.
+{-| We want to store some values in the model only for inspection by the Elm debugger.
 
 This module defines a wrapper type that prevents any other usage of such model fields.
 

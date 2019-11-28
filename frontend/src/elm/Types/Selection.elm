@@ -20,7 +20,7 @@ module Types.Selection exposing
     , orderingFilterHandle
     )
 
-{-|
+{-| A `Selection` is a specification of the possible parameters that are used when querying a set of documents.
 
 @docs Selection
 @docs SelectMethod
@@ -36,6 +36,11 @@ module Types.Selection exposing
 @docs filtersFromList
 @docs filterHandle
 @docs newFilterHandle
+
+
+# Orderings
+
+Define orderings on these types so we can use them as keys in `Sort.Dict`.
 
 @docs orderingSelection
 @docs orderingSelectMethod
@@ -62,7 +67,8 @@ type alias Selection =
     }
 
 
-{-| -}
+{-| Do we want a full-text search or do we want to list a directory of documents?
+-}
 type SelectMethod
     = SelectByFolderListing
     | SelectByFullTextSearch SearchTerm FtsSorting
@@ -74,7 +80,8 @@ type FtsSorting
     | FtsByDate
 
 
-{-| -}
+{-| A `SetOfFilters` may contain one single `FilterYearWithin` and zero or more `FilterTitleFts` as long as the search terms a unqiue.
+-}
 type SetOfFilters
     = SetOfFilters (Sort.Dict.Dict FilterHandle Filter)
 
@@ -85,7 +92,8 @@ type Filter
     | FilterTitleFts SearchTerm
 
 
-{-| -}
+{-| A `FilterHandle` is a wrapped string used to reference a filter instance in the UI as well as in a `SetOfFilters`.
+-}
 type FilterHandle
     = FilterHandle String
 
@@ -136,7 +144,8 @@ filterHandle filter =
                     ++ SearchTerm.toString searchTerm
 
 
-{-| -}
+{-| Used for newly created filter editors.
+-}
 newFilterHandle : String -> FilterHandle
 newFilterHandle filterTypeName =
     FilterHandle ("new-" ++ filterTypeName)
