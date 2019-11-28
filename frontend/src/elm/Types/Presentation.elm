@@ -4,7 +4,18 @@ module Types.Presentation exposing
     , fromRoute
     )
 
-{-|
+{-| In addition to the route, further knowledge about the types of the given nodes
+may be necessary to choose which kind of article should be display in the UI.
+
+Example:
+
+  - The route `/1234` may refer to a collection, a folder (displayed as a listing of itsdocuments) or a single document.
+  - The route `/1234/5678` will probably refer to a document within a folder. Then again one of the given ids may not exist in the database. In this case we want to display a special article with an appropriate erro message.
+
+A [`Presentation`](#Presentation) describes the kind as well as the specific parameters of the article to be displayed
+for the given route under the current knowledge about the relevant node types.
+
+Each variant of the type corresponds to a sub-component of [`UI.Article`](UI-Article).
 
 @docs Presentation
 @docs getFolderId

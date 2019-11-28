@@ -105,7 +105,7 @@ type alias Model =
     }
 
 
-{-| A data-consuming module declares its wishes for data to be fetched by means of this type.
+{-| A data-consuming module declares its wishes for API data by means of this type.
 -}
 type Needs
     = NeedNothing

@@ -32,9 +32,9 @@ import Ordering exposing (Ordering)
 import String.Extra
 
 
-{-| A search term is a string that is
+{-| A search term is a string with some guarantees:
 
-  - non-empty
+  - is non-empty
   - has no whitespace at either end
   - has no repeated whitespace within the string
 
@@ -43,7 +43,11 @@ type SearchTerm
     = SearchTerm String
 
 
-{-| -}
+{-| Construct a `SearchTerm` by removing unnecessary whitespace from the given string.
+
+Returns `Nothing` if the result would be the empty.
+
+-}
 fromString : String -> Maybe SearchTerm
 fromString string =
     string
@@ -52,7 +56,8 @@ fromString string =
         |> Maybe.map SearchTerm
 
 
-{-| -}
+{-| Construction function that cannot fail. Used for hard-coded test cases.
+-}
 fromStringWithDefault : String -> String -> SearchTerm
 fromStringWithDefault default string =
     fromString string
@@ -65,13 +70,15 @@ toString (SearchTerm string) =
     string
 
 
-{-| -}
+{-| Define an ordering on the type so we can use it as a key in a `Sort.Dict`.
+-}
 ordering : Ordering SearchTerm
 ordering =
     Ordering.byField toString
 
 
-{-| -}
+{-| A set of unique search terms
+-}
 type SetOfSearchTerms
     = SetOfSearchTerms (List.Unique.UniqueList SearchTerm)
 

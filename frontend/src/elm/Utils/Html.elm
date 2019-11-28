@@ -4,7 +4,7 @@ module Utils.Html exposing
     , viewError
     )
 
-{-|
+{-| Display errors messages using a standardized layout.
 
 @docs viewApiError
 @docs viewCacheError

@@ -9,7 +9,11 @@ module Types.Range exposing
     , isWithin
     )
 
-{-|
+{-| A simple abstraction for ranges over a comparable type.
+
+Currently used when expressing filters on publication years.
+
+A range may either specify start and end values, or only the start value or only the end value.
 
 @docs Range
 
@@ -32,7 +36,8 @@ type Range comparable
     | FromTo comparable comparable
 
 
-{-| -}
+{-| Make sure the start value is not greater than the end value.
+-}
 normalize : Range comparable -> Range comparable
 normalize r =
     case r of
@@ -109,7 +114,8 @@ unwrap default mapping r =
             ( mapping f, mapping t )
 
 
-{-| -}
+{-| Define some sensible ordering on ranges.
+-}
 compare : Range comparable -> Range comparable -> Order
 compare rL rR =
     case ( rL, rR ) of

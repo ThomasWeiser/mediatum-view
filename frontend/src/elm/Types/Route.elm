@@ -8,7 +8,9 @@ module Types.Route exposing
     , initDocumentInFolder
     )
 
-{-|
+{-| For each correctly formed URL there is a unique representation in terms of the type [`Route`](#Route).
+
+Parsing and stringifying is defined in [`Types.Route.Url`](Types-Route-Url).
 
 @docs defaultLimit
 @docs defaultFtsSorting
@@ -73,7 +75,8 @@ initHome =
     }
 
 
-{-| -}
+{-| A route to a document within a folder without any further parameters.
+-}
 initDocumentInFolder : FolderId -> DocumentId -> Route
 initDocumentInFolder folderId documentId =
     { path = TwoIds (Types.Id.asNodeId folderId) (Types.Id.asNodeId documentId)
