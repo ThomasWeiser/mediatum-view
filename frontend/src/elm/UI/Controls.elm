@@ -1,13 +1,26 @@
 module UI.Controls exposing
     ( Context
+    , Return(..)
     , Model
     , Msg
-    , Return(..)
-    , initialModel
     , submitExampleQuery
+    , initialModel
     , update
     , view
     )
+
+{-|
+
+@docs Context
+@docs Return
+@docs Model
+@docs Msg
+@docs submitExampleQuery
+@docs initialModel
+@docs update
+@docs view
+
+-}
 
 import Html exposing (Html)
 import Html.Attributes
@@ -25,15 +38,18 @@ import UI.Icons
 import Utils
 
 
+{-| -}
 type alias Context =
     { route : Route }
 
 
+{-| -}
 type Return
     = NoReturn
     | Navigate Navigation
 
 
+{-| -}
 type alias Model =
     { ftsTerm : String
     , ftsSorting : FtsSorting
@@ -41,6 +57,7 @@ type alias Model =
     }
 
 
+{-| -}
 type Msg
     = SetSearchTerm String
     | SetSorting FtsSorting
@@ -52,11 +69,13 @@ type Msg
     | FilterEditorMsg FilterHandle FilterEditor.Msg
 
 
+{-| -}
 submitExampleQuery : Msg
 submitExampleQuery =
     SubmitExampleQuery
 
 
+{-| -}
 initialModel : Route -> Model
 initialModel route =
     { ftsTerm =
@@ -71,6 +90,7 @@ initialModel route =
     }
 
 
+{-| -}
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     let
@@ -219,6 +239,7 @@ update context msg model =
                     ( model, Cmd.none, NoReturn )
 
 
+{-| -}
 view : Context -> Model -> Html Msg
 view context model =
     Html.div []

@@ -1,18 +1,44 @@
 module Pagination.Offset.Page exposing
     ( Page
-    , PageResult
-    , Position(..)
     , entries
-    , initialPageResult
     , isFirstPage
-    , loadingPageResult
-    , positionToOffset
+    , PageResult
+    , initialPageResult
     , updatePageResultFromResult
+    , loadingPageResult
+    , Position(..)
+    , positionToOffset
     )
+
+{-|
+
+
+#
+
+@docs Page
+@docs entries
+@docs isFirstPage
+
+
+#
+
+@docs PageResult
+@docs initialPageResult
+@docs updatePageResultFromResult
+@docs loadingPageResult
+
+
+#
+
+@docs Position
+@docs positionToOffset
+
+-}
 
 import Api
 
 
+{-| -}
 type alias Page itemModel =
     { offset : Int
     , hasNextPage : Bool
@@ -20,22 +46,19 @@ type alias Page itemModel =
     }
 
 
-type Position
-    = First
-    | Previous
-    | Next
-
-
+{-| -}
 entries : Page itemModel -> List itemModel
 entries page =
     page.content
 
 
+{-| -}
 isFirstPage : Page itemModel -> Bool
 isFirstPage page =
     page.offset == 0
 
 
+{-| -}
 type alias PageResult itemModel =
     { loading : Bool
     , error : Maybe Api.Error
@@ -43,6 +66,7 @@ type alias PageResult itemModel =
     }
 
 
+{-| -}
 initialPageResult : PageResult itemModel
 initialPageResult =
     { loading = False
@@ -51,6 +75,7 @@ initialPageResult =
     }
 
 
+{-| -}
 updatePageResultFromResult :
     Result Api.Error (Page itemModel)
     -> PageResult itemModel
@@ -64,11 +89,20 @@ updatePageResultFromResult result pageResult =
             { loading = False, error = Nothing, page = Just content }
 
 
+{-| -}
 loadingPageResult : PageResult itemModel -> PageResult itemModel
 loadingPageResult pageResult =
     { pageResult | loading = True }
 
 
+{-| -}
+type Position
+    = First
+    | Previous
+    | Next
+
+
+{-| -}
 positionToOffset :
     Int
     -> Maybe (Page nodeType)

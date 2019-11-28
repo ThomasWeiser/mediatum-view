@@ -1,17 +1,35 @@
 module Cache.Derive exposing
     ( DerivedData
     , Error(..)
-    , asDerivedData
     , errorToString
-    , getAsDocumentId
-    , getAsFolderId
+    , asDerivedData
     , getNodeType
+    , getAsFolderId
+    , getAsDocumentId
+    , getRootFolder
     , getParentId
     , getPath
     , getPathAsFarAsCached
-    , getRootFolder
     , isOnPath
     )
+
+{-|
+
+@docs DerivedData
+@docs Error
+
+@docs errorToString
+@docs asDerivedData
+@docs getNodeType
+@docs getAsFolderId
+@docs getAsDocumentId
+@docs getRootFolder
+@docs getParentId
+@docs getPath
+@docs getPathAsFarAsCached
+@docs isOnPath
+
+-}
 
 import Cache exposing (ApiData)
 import Maybe.Extra
@@ -20,15 +38,18 @@ import Types exposing (FolderDisplay(..), NodeType(..))
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 
 
+{-| -}
 type alias DerivedData a =
     RemoteData Error a
 
 
+{-| -}
 type Error
     = CacheApiError Cache.ApiError
     | CacheDerivationError String
 
 
+{-| -}
 errorToString : Error -> String
 errorToString error =
     case error of
@@ -39,16 +60,20 @@ errorToString error =
             str
 
 
+{-| Lift an ApiData into a DerivedData. Used to extend the error type.
+-}
 asDerivedData : ApiData a -> DerivedData a
 asDerivedData =
     RemoteData.mapError CacheApiError
 
 
+{-| -}
 getNodeType : Cache.Model -> NodeId -> ApiData NodeType
 getNodeType cache nodeId =
     Cache.get cache.nodeTypes nodeId
 
 
+{-| -}
 getAsFolderId : Cache.Model -> NodeId -> Maybe FolderId
 getAsFolderId cache nodeId =
     case Cache.get cache.nodeTypes nodeId of
@@ -59,6 +84,7 @@ getAsFolderId cache nodeId =
             Nothing
 
 
+{-| -}
 getAsDocumentId : Cache.Model -> NodeId -> Maybe DocumentId
 getAsDocumentId cache nodeId =
     case Cache.get cache.nodeTypes nodeId of
@@ -69,6 +95,7 @@ getAsDocumentId cache nodeId =
             Nothing
 
 
+{-| -}
 getRootFolder : Cache.Model -> DerivedData ( FolderId, FolderDisplay )
 getRootFolder cache =
     cache.rootFolderIds
@@ -94,12 +121,14 @@ getRootFolder cache =
             )
 
 
+{-| -}
 getParentId : Cache.Model -> FolderId -> ApiData (Maybe FolderId)
 getParentId cache id =
     Cache.get cache.folders id
         |> RemoteData.map .parent
 
 
+{-| -}
 getPath : Cache.Model -> FolderId -> ApiData (List FolderId)
 getPath cache id =
     getParentId cache id
@@ -112,6 +141,7 @@ getPath cache id =
             )
 
 
+{-| -}
 getPathAsFarAsCached : Cache.Model -> Maybe FolderId -> List FolderId
 getPathAsFarAsCached cache =
     Maybe.Extra.unwrap
@@ -126,6 +156,7 @@ getPathAsFarAsCached cache =
         )
 
 
+{-| -}
 isOnPath : Cache.Model -> FolderId -> Maybe FolderId -> Bool
 isOnPath cache requestedId =
     Maybe.Extra.unwrap

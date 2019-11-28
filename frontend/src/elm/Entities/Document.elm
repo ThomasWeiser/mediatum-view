@@ -1,14 +1,20 @@
 module Entities.Document exposing
-    ( Attribute
-    , Document
-    , attributeValue
-    , init
+    ( Document, Attribute
+    , init, attributeValue
     )
+
+{-|
+
+@docs Document, Attribute
+@docs init, attributeValue
+
+-}
 
 import List.Extra
 import Types.Id exposing (DocumentId)
 
 
+{-| -}
 type alias Document =
     { id : DocumentId
     , name : String
@@ -17,6 +23,7 @@ type alias Document =
     }
 
 
+{-| -}
 type alias Attribute =
     { field : String
     , name : String
@@ -25,6 +32,7 @@ type alias Attribute =
     }
 
 
+{-| -}
 init : DocumentId -> String -> String -> List Attribute -> Document
 init id metadatatypeName name attributes =
     { id = id
@@ -34,6 +42,7 @@ init id metadatatypeName name attributes =
     }
 
 
+{-| -}
 attributeValue : String -> Document -> Maybe String
 attributeValue key document =
     List.Extra.find

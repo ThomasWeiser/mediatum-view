@@ -1,13 +1,26 @@
 module UI.Article exposing
-    ( Model
+    ( Return(..)
+    , Model
     , Msg
-    , Return(..)
-    , folderCountsForQuery
     , initialModel
     , needs
+    , folderCountsForQuery
     , update
     , view
     )
+
+{-|
+
+@docs Return
+@docs Model
+@docs Msg
+@docs initialModel
+@docs needs
+@docs folderCountsForQuery
+@docs update
+@docs view
+
+-}
 
 import Cache
 import Cache.Derive
@@ -35,12 +48,14 @@ type alias Context =
     }
 
 
+{-| -}
 type Return
     = NoReturn
     | Navigate Navigation
     | UpdateCacheWithModifiedDocument Document
 
 
+{-| -}
 type alias Model =
     { content : Content
     }
@@ -53,6 +68,7 @@ type Content
     | DetailsModel UI.Article.Details.Model
 
 
+{-| -}
 type Msg
     = GenericMsg UI.Article.Generic.Msg
     | CollectionMsg UI.Article.Collection.Msg
@@ -60,6 +76,7 @@ type Msg
     | DetailsMsg UI.Article.Details.Msg
 
 
+{-| -}
 initialModel : Presentation -> Model
 initialModel presentation =
     case presentation of
@@ -76,6 +93,7 @@ initialModel presentation =
             { content = ListingModel UI.Article.Listing.initialModel }
 
 
+{-| -}
 needs : Presentation -> Cache.Needs
 needs presentation =
     case presentation of
@@ -107,6 +125,7 @@ needs presentation =
                 (Cache.NeedFolderCounts selection)
 
 
+{-| -}
 folderCountsForQuery : Context -> Maybe FolderCounts
 folderCountsForQuery context =
     case context.presentation of
@@ -125,6 +144,7 @@ folderCountsForQuery context =
                 |> Just
 
 
+{-| -}
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case ( msg, model.content, context.presentation ) of
@@ -197,6 +217,7 @@ update context msg model =
             ( model, Cmd.none, NoReturn )
 
 
+{-| -}
 view : Context -> Model -> Html Msg
 view context model =
     Html.article

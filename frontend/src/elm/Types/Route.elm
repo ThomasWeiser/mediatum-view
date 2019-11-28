@@ -1,12 +1,26 @@
 module Types.Route exposing
-    ( Route
-    , RouteParameters
-    , RoutePath(..)
+    ( defaultLimit
     , defaultFtsSorting
-    , defaultLimit
-    , initDocumentInFolder
+    , Route
+    , RoutePath(..)
+    , RouteParameters
     , initHome
+    , initDocumentInFolder
     )
+
+{-|
+
+@docs defaultLimit
+@docs defaultFtsSorting
+
+@docs Route
+@docs RoutePath
+@docs RouteParameters
+
+@docs initHome
+@docs initDocumentInFolder
+
+-}
 
 import Types.Id exposing (DocumentId, FolderId, NodeId)
 import Types.Range exposing (Range)
@@ -14,28 +28,33 @@ import Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
 import Types.Selection exposing (FtsSorting(..))
 
 
+{-| -}
 defaultLimit : Int
 defaultLimit =
     10
 
 
+{-| -}
 defaultFtsSorting : FtsSorting
 defaultFtsSorting =
     FtsByRank
 
 
+{-| -}
 type alias Route =
     { path : RoutePath
     , parameters : RouteParameters
     }
 
 
+{-| -}
 type RoutePath
     = NoId
     | OneId NodeId
     | TwoIds NodeId NodeId
 
 
+{-| -}
 type alias RouteParameters =
     { ftsTerm : Maybe SearchTerm
     , ftsSorting : FtsSorting
@@ -46,16 +65,18 @@ type alias RouteParameters =
     }
 
 
-initDocumentInFolder : FolderId -> DocumentId -> Route
-initDocumentInFolder folderId documentId =
-    { path = TwoIds (Types.Id.asNodeId folderId) (Types.Id.asNodeId documentId)
+{-| -}
+initHome : Route
+initHome =
+    { path = NoId
     , parameters = emptyParameters
     }
 
 
-initHome : Route
-initHome =
-    { path = NoId
+{-| -}
+initDocumentInFolder : FolderId -> DocumentId -> Route
+initDocumentInFolder folderId documentId =
+    { path = TwoIds (Types.Id.asNodeId folderId) (Types.Id.asNodeId documentId)
     , parameters = emptyParameters
     }
 

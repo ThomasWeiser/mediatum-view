@@ -1,21 +1,38 @@
 module Types.Range exposing
     ( Range(..)
-    , compare
-    , fromMaybe
-    , fromTo
-    , isWithin
     , normalize
+    , fromTo
+    , fromMaybe
     , toMaybe
     , unwrap
+    , compare
+    , isWithin
     )
 
+{-|
 
+@docs Range
+
+@docs normalize
+@docs fromTo
+@docs fromMaybe
+@docs toMaybe
+@docs unwrap
+
+@docs compare
+@docs isWithin
+
+-}
+
+
+{-| -}
 type Range comparable
     = From comparable
     | To comparable
     | FromTo comparable comparable
 
 
+{-| -}
 normalize : Range comparable -> Range comparable
 normalize r =
     case r of
@@ -33,6 +50,7 @@ normalize r =
                 FromTo t f
 
 
+{-| -}
 fromTo : ( comparable, comparable ) -> Range comparable
 fromTo ( f, t ) =
     if f <= t then
@@ -42,6 +60,7 @@ fromTo ( f, t ) =
         FromTo t f
 
 
+{-| -}
 fromMaybe : ( Maybe comparable, Maybe comparable ) -> Maybe (Range comparable)
 fromMaybe ( mf, mt ) =
     case ( mf, mt ) of
@@ -62,6 +81,7 @@ fromMaybe ( mf, mt ) =
                 Just (FromTo t f)
 
 
+{-| -}
 toMaybe : Range comparable -> ( Maybe comparable, Maybe comparable )
 toMaybe r =
     case r of
@@ -75,6 +95,7 @@ toMaybe r =
             ( Just f, Just t )
 
 
+{-| -}
 unwrap : a -> (comparable -> a) -> Range comparable -> ( a, a )
 unwrap default mapping r =
     case r of
@@ -88,6 +109,7 @@ unwrap default mapping r =
             ( mapping f, mapping t )
 
 
+{-| -}
 compare : Range comparable -> Range comparable -> Order
 compare rL rR =
     case ( rL, rR ) of
@@ -129,6 +151,7 @@ ifEq secondaryOrder primaryOrder =
             primaryOrder
 
 
+{-| -}
 isWithin : Range comparable -> comparable -> Bool
 isWithin r v =
     case r of

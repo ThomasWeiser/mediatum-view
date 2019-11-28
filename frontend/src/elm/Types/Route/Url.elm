@@ -3,6 +3,13 @@ module Types.Route.Url exposing
     , toString
     )
 
+{-|
+
+@docs parseUrl
+@docs toString
+
+-}
+
 import Dict
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
@@ -17,6 +24,7 @@ import Url.Parser as Parser exposing ((</>), (<?>), Parser)
 import Url.Parser.Query as QueryParser
 
 
+{-| -}
 parseUrl : Url -> Maybe Route
 parseUrl url =
     Parser.parse parser url
@@ -95,6 +103,7 @@ elmParserYearRange =
         |. ElmParser.end
 
 
+{-| -}
 toString : Route -> String
 toString route =
     Builder.absolute

@@ -1,24 +1,50 @@
 module Types.Selection exposing
-    ( Filter(..)
-    , FilterHandle
-    , FtsSorting(..)
+    ( Selection
     , SelectMethod(..)
-    , Selection
+    , FtsSorting(..)
     , SetOfFilters
-    , filterHandle
-    , filtersFromList
+    , Filter(..)
+    , FilterHandle
     , filtersNone
-    , filtersToList
     , insertFilter
+    , removeFilter
+    , filtersToList
+    , filtersFromList
+    , filterHandle
     , newFilterHandle
+    , orderingSelection
+    , orderingSelectMethod
+    , orderingFtsSorting
+    , orderingFilters
     , orderingFilter
     , orderingFilterHandle
-    , orderingFilters
-    , orderingFtsSorting
-    , orderingSelectMethod
-    , orderingSelection
-    , removeFilter
     )
+
+{-|
+
+@docs Selection
+@docs SelectMethod
+@docs FtsSorting
+@docs SetOfFilters
+@docs Filter
+@docs FilterHandle
+
+@docs filtersNone
+@docs insertFilter
+@docs removeFilter
+@docs filtersToList
+@docs filtersFromList
+@docs filterHandle
+@docs newFilterHandle
+
+@docs orderingSelection
+@docs orderingSelectMethod
+@docs orderingFtsSorting
+@docs orderingFilters
+@docs orderingFilter
+@docs orderingFilterHandle
+
+-}
 
 import Ordering exposing (Ordering)
 import Sort.Dict
@@ -28,6 +54,7 @@ import Types.SearchTerm as SearchTerm exposing (SearchTerm)
 import Utils
 
 
+{-| -}
 type alias Selection =
     { scope : FolderId
     , selectMethod : SelectMethod
@@ -35,49 +62,59 @@ type alias Selection =
     }
 
 
+{-| -}
 type SelectMethod
     = SelectByFolderListing
     | SelectByFullTextSearch SearchTerm FtsSorting
 
 
+{-| -}
 type FtsSorting
     = FtsByRank
     | FtsByDate
 
 
+{-| -}
 type SetOfFilters
     = SetOfFilters (Sort.Dict.Dict FilterHandle Filter)
 
 
+{-| -}
 type Filter
     = FilterYearWithin (Range Int)
     | FilterTitleFts SearchTerm
 
 
+{-| -}
 type FilterHandle
     = FilterHandle String
 
 
+{-| -}
 filtersNone : SetOfFilters
 filtersNone =
     SetOfFilters (Sort.Dict.empty (Utils.sorter orderingFilterHandle))
 
 
+{-| -}
 insertFilter : Filter -> SetOfFilters -> SetOfFilters
 insertFilter filter (SetOfFilters fs) =
     SetOfFilters (Sort.Dict.insert (filterHandle filter) filter fs)
 
 
+{-| -}
 removeFilter : FilterHandle -> SetOfFilters -> SetOfFilters
 removeFilter handle (SetOfFilters fs) =
     SetOfFilters (Sort.Dict.remove handle fs)
 
 
+{-| -}
 filtersToList : SetOfFilters -> List Filter
 filtersToList (SetOfFilters fs) =
     Sort.Dict.values fs
 
 
+{-| -}
 filtersFromList : List Filter -> SetOfFilters
 filtersFromList listOfFilters =
     listOfFilters
@@ -86,6 +123,7 @@ filtersFromList listOfFilters =
         |> SetOfFilters
 
 
+{-| -}
 filterHandle : Filter -> FilterHandle
 filterHandle filter =
     FilterHandle <|
@@ -98,11 +136,13 @@ filterHandle filter =
                     ++ SearchTerm.toString searchTerm
 
 
+{-| -}
 newFilterHandle : String -> FilterHandle
 newFilterHandle filterTypeName =
     FilterHandle ("new-" ++ filterTypeName)
 
 
+{-| -}
 orderingSelection : Ordering Selection
 orderingSelection =
     Ordering.byFieldWith Id.ordering .scope
@@ -112,6 +152,7 @@ orderingSelection =
             (Ordering.byFieldWith orderingFilters .filters)
 
 
+{-| -}
 orderingSelectMethod : Ordering SelectMethod
 orderingSelectMethod =
     Ordering.byRank
@@ -137,12 +178,14 @@ orderingSelectMethod =
         )
 
 
+{-| -}
 orderingFtsSorting : Ordering FtsSorting
 orderingFtsSorting =
     Ordering.explicit
         [ FtsByRank, FtsByDate ]
 
 
+{-| -}
 orderingFilters : Ordering SetOfFilters
 orderingFilters =
     Ordering.byFieldWith
@@ -157,11 +200,13 @@ orderingTupleOfFilterHandleAndFilter =
             (Ordering.byFieldWith orderingFilter Tuple.second)
 
 
+{-| -}
 orderingFilterHandle : Ordering FilterHandle
 orderingFilterHandle (FilterHandle h1) (FilterHandle h2) =
     compare h1 h2
 
 
+{-| -}
 orderingFilter : Ordering Filter
 orderingFilter =
     Ordering.byRank

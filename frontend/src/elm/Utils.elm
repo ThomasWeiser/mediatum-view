@@ -1,19 +1,61 @@
 module Utils exposing
-    ( findAdjacent
-    , findMap
-    , ifElse
-    , lexicalOrder
-    , noBreakSpace
-    , onChange
+    ( ifElse
+    , when
+    , tupleAddThird
+    , tupleRemoveThird
     , prependIf
     , prependMaybe
+    , findMap
+    , findAdjacent
+    , lexicalOrder
     , remoteDataCheck
     , remoteDataMapFallible
     , sorter
-    , tupleAddThird
-    , tupleRemoveThird
-    , when
+    , noBreakSpace
+    , onChange
     )
+
+{-| -- TODO Groups (List, RemoteData, etc)
+
+
+# Bool
+
+@docs ifElse
+@docs when
+
+
+# Tuple
+
+@docs tupleAddThird
+@docs tupleRemoveThird
+
+
+# List
+
+@docs prependIf
+@docs prependMaybe
+@docs findMap
+@docs findAdjacent
+@docs lexicalOrder
+
+
+# RemoteData
+
+@docs remoteDataCheck
+@docs remoteDataMapFallible
+
+
+# Ordering
+
+@docs sorter
+
+
+# Html
+
+@docs noBreakSpace
+@docs onChange
+
+-}
 
 import Char
 import Html
@@ -22,11 +64,6 @@ import Json.Decode
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData)
 import Sort exposing (Sorter)
-
-
-noBreakSpace : String
-noBreakSpace =
-    String.fromChar (Char.fromCode 160)
 
 
 {-| Return the first argument if the given boolean is `True`. Otherwise, return the second argument.
@@ -40,16 +77,19 @@ ifElse ifTrue ifFalse bool =
         ifFalse
 
 
+{-| -}
 when : (a -> a) -> Bool -> a -> a
 when fn =
     ifElse fn identity
 
 
+{-| -}
 tupleAddThird : c -> ( a, b ) -> ( a, b, c )
 tupleAddThird c ( a, b ) =
     ( a, b, c )
 
 
+{-| -}
 tupleRemoveThird : ( a, b, c ) -> ( a, b )
 tupleRemoveThird ( a, b, _ ) =
     ( a, b )
@@ -128,10 +168,7 @@ findAdjacent predicate list =
                 walk head1 tail1
 
 
-onChange : (String -> msg) -> Html.Attribute msg
-onChange tagger =
-    Html.Events.on "change"
-        (Json.Decode.map tagger Html.Events.targetValue)
+{-| -}
 
 
 
@@ -162,16 +199,7 @@ lexicalOrder compareElements listL listR =
                     lexicalOrder compareElements tailL tailR
 
 
-remoteDataMapFallible : (a -> Result e a) -> RemoteData e a -> RemoteData e a
-remoteDataMapFallible mapping remoteData =
-    case remoteData of
-        RemoteData.Success value ->
-            mapping value |> RemoteData.fromResult
-
-        _ ->
-            remoteData
-
-
+{-| -}
 remoteDataCheck : (a -> Maybe e) -> RemoteData e a -> RemoteData e a
 remoteDataCheck check remoteData =
     case remoteData of
@@ -187,6 +215,31 @@ remoteDataCheck check remoteData =
             remoteData
 
 
+{-| -}
+remoteDataMapFallible : (a -> Result e a) -> RemoteData e a -> RemoteData e a
+remoteDataMapFallible mapping remoteData =
+    case remoteData of
+        RemoteData.Success value ->
+            mapping value |> RemoteData.fromResult
+
+        _ ->
+            remoteData
+
+
+{-| -}
 sorter : Ordering a -> Sorter a
 sorter ordering =
     Sort.custom ordering
+
+
+{-| -}
+noBreakSpace : String
+noBreakSpace =
+    String.fromChar (Char.fromCode 160)
+
+
+{-| -}
+onChange : (String -> msg) -> Html.Attribute msg
+onChange tagger =
+    Html.Events.on "change"
+        (Json.Decode.map tagger Html.Events.targetValue)
