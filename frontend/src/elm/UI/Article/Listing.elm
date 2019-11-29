@@ -25,7 +25,7 @@ module UI.Article.Listing exposing
 
 import Cache
 import Entities.Document as Document exposing (Document)
-import Entities.Results exposing (DocumentResult, DocumentsPage)
+import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events

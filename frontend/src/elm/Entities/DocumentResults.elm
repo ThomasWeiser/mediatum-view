@@ -1,4 +1,4 @@
-module Entities.Results exposing
+module Entities.DocumentResults exposing
     ( DocumentResult
     , DocumentsPage
     )
