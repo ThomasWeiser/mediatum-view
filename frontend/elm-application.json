@@ -17,7 +17,7 @@
         "Entities.Folder",
         "Entities.FolderCounts",
         "Entities.GenericNode",
-        "Entities.Results",
+        "Entities.DocumentResults",
         "Main",
         "Pagination.Offset.Page",
         "Pagination.Relay.Connection",
