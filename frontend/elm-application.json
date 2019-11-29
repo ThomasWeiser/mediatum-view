@@ -26,6 +26,7 @@
         "Types.DebugInfo",
         "Types.Id",
         "Types.Navigation",
+        "Types.Needs",
         "Types.Presentation",
         "Types.Range",
         "Types.Route.Filter",
