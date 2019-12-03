@@ -15,6 +15,7 @@ import Cmd.Extra
 import Html exposing (Html)
 import Types.DebugInfo exposing (DebugInfo, debugInfo)
 import Types.Navigation as Navigation exposing (Navigation)
+import Types.Needs
 import Types.Presentation as Presentation exposing (Presentation(..))
 import Types.Route as Route exposing (Route)
 import UI
@@ -64,7 +65,7 @@ init route =
     , cache = Cache.initialModel
     , presentation = GenericPresentation Nothing
     , ui = UI.init
-    , debugInfo = { needs = debugInfo Cache.NeedNothing }
+    , debugInfo = { needs = debugInfo Types.Needs.none }
     }
         |> requestNeeds
         |> Cmd.Extra.andThen (updateRoute route >> Cmd.Extra.withNoCmd)
@@ -126,12 +127,13 @@ requestNeeds model =
             UI.needs (uiContext model) model.ui
 
         ( cacheModel, cacheCmd ) =
-            Cache.require
+            Cache.targetNeeds
                 currentNeeds
                 model.cache
     in
     ( { model
-        | debugInfo = { needs = debugInfo currentNeeds }
+        | debugInfo =
+            { needs = debugInfo (Types.Needs.flatten currentNeeds) }
         , cache = cacheModel
       }
     , Cmd.map CacheMsg cacheCmd

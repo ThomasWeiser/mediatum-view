@@ -33,6 +33,7 @@ import Html.Attributes
 import RemoteData
 import Types.Id as Id exposing (FolderId)
 import Types.Navigation as Navigation exposing (Navigation)
+import Types.Needs
 import Types.Presentation as Presentation exposing (Presentation(..))
 import Types.Route as Route exposing (Route)
 import Types.Route.Url
@@ -103,29 +104,26 @@ needs presentation =
         GenericPresentation maybeNodeIds ->
             case maybeNodeIds of
                 Nothing ->
-                    Cache.NeedNothing
+                    Types.Needs.none
 
                 Just ( nodeIdOne, maybeNodeIdTwo ) ->
-                    Cache.NeedAnd
-                        (Cache.NeedGenericNode nodeIdOne)
-                        (case maybeNodeIdTwo of
-                            Nothing ->
-                                Cache.NeedNothing
-
-                            Just nodeIdTwo ->
-                                Cache.NeedGenericNode nodeIdTwo
-                        )
+                    [ nodeIdOne ]
+                        |> Utils.prependMaybe maybeNodeIdTwo
+                        |> List.map Cache.NeedGenericNode
+                        |> List.map Types.Needs.atomic
+                        |> Types.Needs.batch
 
         DocumentPresentation maybeFolderId documentId ->
             Cache.NeedDocument documentId
+                |> Types.Needs.atomic
 
         CollectionPresentation folderId ->
-            Cache.NeedNothing
+            Types.Needs.none
 
         ListingPresentation selection window ->
-            Cache.NeedAndThen
-                (Cache.NeedDocumentsPage selection window)
-                (Cache.NeedFolderCounts selection)
+            Types.Needs.sequence
+                (Types.Needs.atomic <| Cache.NeedDocumentsPage selection window)
+                (Types.Needs.atomic <| Cache.NeedFolderCounts selection)
 
 
 {-| -}

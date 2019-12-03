@@ -1,6 +1,6 @@
 module Cache exposing
     ( ApiData, Model, get
-    , Needs(..), needsFromList, require
+    , Need(..), Needs, targetNeeds
     , updateWithModifiedDocument
     , ApiError, apiErrorToString
     , Msg(..), initialModel, update
@@ -26,7 +26,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Declaring required data
 
-@docs Needs, needsFromList, require
+@docs Need, Needs, targetNeeds
 
 
 # Modifying data locally (preliminary)
@@ -64,6 +64,7 @@ import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (NodeType(..), Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
+import Types.Needs as Needs
 import Types.Selection as Selection exposing (SelectMethod(..), Selection)
 import Utils
 
@@ -107,16 +108,19 @@ type alias Model =
 
 {-| A data-consuming module declares its wishes for API data by means of this type.
 -}
-type Needs
-    = NeedNothing
-    | NeedAnd Needs Needs
-    | NeedAndThen Needs Needs
-    | NeedRootFolderIds
+type Need
+    = NeedRootFolderIds
     | NeedSubfolders (List FolderId)
     | NeedGenericNode NodeId
     | NeedDocument DocumentId
     | NeedDocumentsPage Selection Window
     | NeedFolderCounts Selection
+
+
+{-| A collection of these needs.
+-}
+type alias Needs =
+    Needs.Needs Need
 
 
 {-| Describe an `ApiError` as text (aimed for debugging)
@@ -138,18 +142,6 @@ initialModel =
     , documentsPages = Sort.Dict.empty (Utils.sorter orderingSelectionWindow)
     , folderCounts = Sort.Dict.empty (Utils.sorter Selection.orderingSelection)
     }
-
-
-{-| Aggregate a list of needs
--}
-needsFromList : List Needs -> Needs
-needsFromList listOfNeeds =
-    List.foldr
-        (\need accu ->
-            NeedAnd need accu
-        )
-        NeedNothing
-        listOfNeeds
 
 
 {-| Read an entry from a lookup-table of the `Model`.
@@ -177,229 +169,158 @@ type Msg
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
 
 
-type Status
-    = NotRequested
-    | Fulfilled
-    | OnGoing
-
-
-statusFromRemoteData : RemoteData e a -> Status
-statusFromRemoteData remoteData =
-    case remoteData of
-        NotAsked ->
-            NotRequested
-
-        Loading ->
-            OnGoing
-
-        Failure _ ->
-            OnGoing
-
-        Success _ ->
-            Fulfilled
-
-
-status : Model -> Needs -> Status
-status model needs =
-    case needs of
-        NeedNothing ->
-            Fulfilled
-
-        NeedAnd needOne needTwo ->
-            let
-                statusOne =
-                    status model needOne
-
-                statusTwo =
-                    status model needTwo
-            in
-            if statusOne == NotRequested || statusTwo == NotRequested then
-                NotRequested
-
-            else if statusOne == OnGoing || statusTwo == OnGoing then
-                OnGoing
-
-            else
-                Fulfilled
-
-        NeedAndThen needOne needTwo ->
-            let
-                statusOne =
-                    status model needOne
-            in
-            if statusOne /= Fulfilled then
-                statusOne
-
-            else
-                status model needTwo
-
-        NeedRootFolderIds ->
-            model.rootFolderIds
-                |> statusFromRemoteData
-
-        NeedSubfolders parentIds ->
-            let
-                listOfRemoteData =
-                    List.map (get model.subfolderIds) parentIds
-            in
-            if List.any RemoteData.isNotAsked listOfRemoteData then
-                NotRequested
-
-            else if List.all RemoteData.isSuccess listOfRemoteData then
-                Fulfilled
-
-            else
-                OnGoing
-
-        NeedGenericNode nodeId ->
-            get model.nodeTypes nodeId
-                |> statusFromRemoteData
-
-        NeedDocument documentId ->
-            get model.documents documentId
-                |> statusFromRemoteData
-
-        NeedDocumentsPage selection window ->
-            get model.documentsPages ( selection, window )
-                |> statusFromRemoteData
-
-        NeedFolderCounts selection ->
-            get model.folderCounts selection
-                |> statusFromRemoteData
-
-
 {-| Check which of the needed data has not yet been requested.
 Submit API requests to get that data and mark the corresponding Model entries as `RemoteData.Loading`.
 -}
-require : Needs -> Model -> ( Model, Cmd Msg )
-require needs model =
-    if status model needs /= NotRequested then
-        ( model, Cmd.none )
+targetNeeds : Needs -> Model -> ( Model, Cmd Msg )
+targetNeeds needs model =
+    Needs.target
+        (statusOfNeed model)
+        requestNeed
+        needs
+        model
 
-    else
-        case needs of
-            NeedNothing ->
+
+{-| Check the status of an atomic need.
+-}
+statusOfNeed : Model -> Need -> Needs.Status
+statusOfNeed model need =
+    case need of
+        NeedRootFolderIds ->
+            model.rootFolderIds
+                |> Needs.statusFromRemoteData
+
+        NeedSubfolders parentIds ->
+            Needs.statusFromListOfRemoteData
+                (List.map (get model.subfolderIds) parentIds)
+
+        NeedGenericNode nodeId ->
+            get model.nodeTypes nodeId
+                |> Needs.statusFromRemoteData
+
+        NeedDocument documentId ->
+            get model.documents documentId
+                |> Needs.statusFromRemoteData
+
+        NeedDocumentsPage selection window ->
+            get model.documentsPages ( selection, window )
+                |> Needs.statusFromRemoteData
+
+        NeedFolderCounts selection ->
+            get model.folderCounts selection
+                |> Needs.statusFromRemoteData
+
+
+{-| Submit API requests to satisfy an atomic need.
+
+Will be called only for needs that are known not to be in progress or fulfilled yet.
+
+Also mark the corresponding Model entries as `RemoteData.Loading`.
+
+-}
+requestNeed : Need -> Model -> ( Model, Cmd Msg )
+requestNeed need model =
+    case need of
+        NeedRootFolderIds ->
+            ( { model
+                | rootFolderIds = Loading
+              }
+            , Api.sendQueryRequest
+                ApiResponseToplevelFolder
+                Api.Queries.toplevelFolder
+            )
+
+        NeedSubfolders parentIds ->
+            let
+                parentIdsWithUnknownChildren =
+                    List.filter
+                        (\parentId ->
+                            get model.subfolderIds parentId == NotAsked
+                        )
+                        parentIds
+            in
+            if List.isEmpty parentIdsWithUnknownChildren then
                 ( model, Cmd.none )
 
-            NeedAnd needOne needTwo ->
-                let
-                    ( modelOne, cmdOne ) =
-                        require needOne model
-
-                    ( modelTwo, cmdTwo ) =
-                        require needTwo modelOne
-                in
-                ( modelTwo
-                , Cmd.batch [ cmdOne, cmdTwo ]
-                )
-
-            NeedAndThen needOne needTwo ->
-                if status model needOne == Fulfilled then
-                    require needTwo model
-
-                else
-                    require needOne model
-
-            NeedRootFolderIds ->
+            else
                 ( { model
-                    | rootFolderIds = Loading
-                  }
-                , Api.sendQueryRequest
-                    ApiResponseToplevelFolder
-                    Api.Queries.toplevelFolder
-                )
-
-            NeedSubfolders parentIds ->
-                let
-                    parentIdsWithUnknownChildren =
-                        List.filter
-                            (\parentId ->
-                                get model.subfolderIds parentId == NotAsked
+                    | subfolderIds =
+                        List.foldl
+                            (\parentId subfolderIds ->
+                                Sort.Dict.insert parentId Loading subfolderIds
                             )
-                            parentIds
-                in
-                if List.isEmpty parentIdsWithUnknownChildren then
-                    ( model, Cmd.none )
-
-                else
-                    ( { model
-                        | subfolderIds =
-                            List.foldl
-                                (\parentId subfolderIds ->
-                                    Sort.Dict.insert parentId Loading subfolderIds
-                                )
-                                model.subfolderIds
-                                parentIdsWithUnknownChildren
-                      }
-                    , Api.sendQueryRequest
-                        (ApiResponseSubfolder parentIdsWithUnknownChildren)
-                        (Api.Queries.subfolder parentIdsWithUnknownChildren)
-                    )
-
-            NeedGenericNode nodeId ->
-                ( { model
-                    | nodeTypes =
-                        Sort.Dict.insert nodeId Loading model.nodeTypes
+                            model.subfolderIds
+                            parentIdsWithUnknownChildren
                   }
                 , Api.sendQueryRequest
-                    (ApiResponseGenericNode nodeId)
-                    (Api.Queries.genericNode nodeId)
+                    (ApiResponseSubfolder parentIdsWithUnknownChildren)
+                    (Api.Queries.subfolder parentIdsWithUnknownChildren)
                 )
 
-            NeedDocument documentId ->
-                ( { model
-                    | documents =
-                        Sort.Dict.insert documentId Loading model.documents
-                  }
-                , Api.sendQueryRequest
-                    (ApiResponseDocument documentId)
-                    (Api.Queries.documentDetails documentId)
+        NeedGenericNode nodeId ->
+            ( { model
+                | nodeTypes =
+                    Sort.Dict.insert nodeId Loading model.nodeTypes
+              }
+            , Api.sendQueryRequest
+                (ApiResponseGenericNode nodeId)
+                (Api.Queries.genericNode nodeId)
+            )
+
+        NeedDocument documentId ->
+            ( { model
+                | documents =
+                    Sort.Dict.insert documentId Loading model.documents
+              }
+            , Api.sendQueryRequest
+                (ApiResponseDocument documentId)
+                (Api.Queries.documentDetails documentId)
+            )
+
+        NeedDocumentsPage selection window ->
+            ( { model
+                | documentsPages =
+                    Sort.Dict.insert ( selection, window ) Loading model.documentsPages
+              }
+            , Api.sendQueryRequest
+                (ApiResponseDocumentsPage ( selection, window ))
+                (case selection.selectMethod of
+                    SelectByFolderListing ->
+                        Api.Queries.folderDocumentsPage
+                            window
+                            selection.scope
+                            selection.filters
+
+                    SelectByFullTextSearch searchTerm ftsSorting ->
+                        Api.Queries.ftsPage
+                            window
+                            selection.scope
+                            searchTerm
+                            ftsSorting
+                            selection.filters
                 )
+            )
 
-            NeedDocumentsPage selection window ->
-                ( { model
-                    | documentsPages =
-                        Sort.Dict.insert ( selection, window ) Loading model.documentsPages
-                  }
-                , Api.sendQueryRequest
-                    (ApiResponseDocumentsPage ( selection, window ))
-                    (case selection.selectMethod of
-                        SelectByFolderListing ->
-                            Api.Queries.folderDocumentsPage
-                                window
-                                selection.scope
-                                selection.filters
+        NeedFolderCounts selection ->
+            ( { model
+                | folderCounts =
+                    Sort.Dict.insert selection Loading model.folderCounts
+              }
+            , Api.sendQueryRequest
+                (ApiResponseFolderCounts selection)
+                (case selection.selectMethod of
+                    SelectByFolderListing ->
+                        Api.Queries.folderDocumentsFolderCounts
+                            selection.scope
+                            selection.filters
 
-                        SelectByFullTextSearch searchTerm ftsSorting ->
-                            Api.Queries.ftsPage
-                                window
-                                selection.scope
-                                searchTerm
-                                ftsSorting
-                                selection.filters
-                    )
+                    SelectByFullTextSearch searchTerm ftsSorting ->
+                        Api.Queries.ftsFolderCounts
+                            selection.scope
+                            searchTerm
+                            selection.filters
                 )
-
-            NeedFolderCounts selection ->
-                ( { model
-                    | folderCounts =
-                        Sort.Dict.insert selection Loading model.folderCounts
-                  }
-                , Api.sendQueryRequest
-                    (ApiResponseFolderCounts selection)
-                    (case selection.selectMethod of
-                        SelectByFolderListing ->
-                            Api.Queries.folderDocumentsFolderCounts
-                                selection.scope
-                                selection.filters
-
-                        SelectByFullTextSearch searchTerm ftsSorting ->
-                            Api.Queries.ftsFolderCounts
-                                selection.scope
-                                searchTerm
-                                selection.filters
-                    )
-                )
+            )
 
 
 {-| Insert or update a document into the table `Model.documents`.
@@ -487,8 +408,8 @@ update msg model =
                         ( model2, cmd ) =
                             model1
                                 |> insertAsFolders folders
-                                |> require
-                                    (NeedSubfolders (List.map .id folders))
+                                |> targetNeeds
+                                    (Needs.atomic (NeedSubfolders (List.map .id folders)))
                     in
                     ( model2
                     , cmd

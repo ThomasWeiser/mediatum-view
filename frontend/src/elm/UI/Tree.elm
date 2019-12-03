@@ -36,6 +36,7 @@ import RemoteData exposing (RemoteData)
 import Sort.Dict
 import Types exposing (FolderDisplay(..))
 import Types.Id exposing (FolderId)
+import Types.Needs
 import Types.Presentation as Presentation exposing (Presentation(..))
 import UI.Icons
 import Utils
@@ -79,6 +80,7 @@ needs context model =
     getPresentationFolderId context
         |> Cache.Derive.getPathAsFarAsCached context.cache
         |> Cache.NeedSubfolders
+        |> Types.Needs.atomic
 
 
 {-| -}

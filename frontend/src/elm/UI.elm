@@ -16,6 +16,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Types.Navigation as Navigation exposing (Navigation)
+import Types.Needs
 import Types.Presentation exposing (Presentation(..))
 import Types.Route as Route exposing (Route)
 import UI.Article
@@ -82,8 +83,8 @@ init =
 -}
 needs : Context -> Model -> Cache.Needs
 needs context model =
-    Cache.needsFromList
-        [ Cache.NeedRootFolderIds
+    Types.Needs.batch
+        [ Types.Needs.atomic Cache.NeedRootFolderIds
         , UI.Tree.needs
             { cache = context.cache
             , presentation = context.presentation
