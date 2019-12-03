@@ -127,7 +127,7 @@ requestNeeds model =
             UI.needs (uiContext model) model.ui
 
         ( cacheModel, cacheCmd ) =
-            Cache.require
+            Cache.targetNeeds
                 currentNeeds
                 model.cache
     in

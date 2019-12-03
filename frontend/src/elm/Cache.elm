@@ -1,6 +1,6 @@
 module Cache exposing
     ( ApiData, Model, get
-    , Need(..), Needs, require
+    , Need(..), Needs, targetNeeds
     , updateWithModifiedDocument
     , ApiError, apiErrorToString
     , Msg(..), initialModel, update
@@ -26,7 +26,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Declaring required data
 
-@docs Need, Needs, require
+@docs Need, Needs, targetNeeds
 
 
 # Modifying data locally (preliminary)
@@ -172,9 +172,9 @@ type Msg
 {-| Check which of the needed data has not yet been requested.
 Submit API requests to get that data and mark the corresponding Model entries as `RemoteData.Loading`.
 -}
-require : Needs -> Model -> ( Model, Cmd Msg )
-require needs model =
-    Needs.requireNeeds
+targetNeeds : Needs -> Model -> ( Model, Cmd Msg )
+targetNeeds needs model =
+    Needs.target
         (statusOfNeed model)
         requestNeed
         needs
@@ -408,7 +408,7 @@ update msg model =
                         ( model2, cmd ) =
                             model1
                                 |> insertAsFolders folders
-                                |> require
+                                |> targetNeeds
                                     (Needs.atomic (NeedSubfolders (List.map .id folders)))
                     in
                     ( model2
