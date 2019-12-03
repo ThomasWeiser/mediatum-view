@@ -1,16 +1,30 @@
 module Pagination.Relay.Connection exposing
     ( Connection
     , Edge
-    , GraphqlObjects
     , PageInfo
-    , connection
+    , GraphqlObjects
     , nodes
+    , connection
     , pageInfo
     )
+
+{-|
+
+@docs Connection
+@docs Edge
+@docs PageInfo
+@docs GraphqlObjects
+
+@docs nodes
+@docs connection
+@docs pageInfo
+
+-}
 
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 
 
+{-| -}
 type alias Connection cursorScalar nodeType =
     { pageInfo : PageInfo
     , edges : List (Edge cursorScalar nodeType)
@@ -18,18 +32,21 @@ type alias Connection cursorScalar nodeType =
     }
 
 
+{-| -}
 type alias Edge cursorScalar nodeType =
     { cursor : cursorScalar
     , node : nodeType
     }
 
 
+{-| -}
 type alias PageInfo =
     { hasNextPage : Bool
     , hasPreviousPage : Bool
     }
 
 
+{-| -}
 type alias GraphqlObjects graphqlObjectsRecord connectionObject edgeObject nodeObject pageInfoObject cursorScalar nodeType =
     { graphqlObjectsRecord
         | pageInfo :
@@ -44,11 +61,13 @@ type alias GraphqlObjects graphqlObjectsRecord connectionObject edgeObject nodeO
     }
 
 
+{-| -}
 nodes : Connection cursorModel nodeType -> List nodeType
 nodes model =
     List.map .node model.edges
 
 
+{-| -}
 connection :
     GraphqlObjects graphqlObjectsRecord connectionObject edgeObject nodeObject pageInfoObject cursorScalar nodeType
     -> SelectionSet nodeType nodeObject
@@ -70,6 +89,7 @@ edge graphqlObjects nodeSelectionSet =
         |> SelectionSet.with (graphqlObjects.node nodeSelectionSet)
 
 
+{-| -}
 pageInfo :
     GraphqlObjects graphqlObjectsRecord connectionObject edgeObject nodeObject pageInfoObject cursorScalar nodeType
     -> SelectionSet PageInfo pageInfoObject

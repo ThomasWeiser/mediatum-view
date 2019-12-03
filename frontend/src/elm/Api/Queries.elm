@@ -43,10 +43,10 @@ import Api.Arguments.Filter
 import Api.Fragments
 import Config
 import Entities.Document exposing (Document)
+import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
-import Entities.Results exposing (DocumentsPage)
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)

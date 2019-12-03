@@ -20,6 +20,11 @@ The available queries and mutations are located in the modules
 
 @docs sendQueryRequest, sendMutationRequest
 
+
+# Error handling
+
+@docs errorToString
+
 -}
 
 import Config
@@ -41,6 +46,7 @@ type alias Error =
     Utils.Graphql.StrippedError
 
 
+{-| -}
 errorToString : Error -> String
 errorToString error =
     Utils.Graphql.errorToString error

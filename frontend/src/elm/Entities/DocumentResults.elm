@@ -1,12 +1,20 @@
-module Entities.Results exposing
+module Entities.DocumentResults exposing
     ( DocumentResult
     , DocumentsPage
     )
+
+{-|
+
+@docs DocumentResult
+@docs DocumentsPage
+
+-}
 
 import Entities.Document exposing (Document)
 import Types exposing (WindowPage)
 
 
+{-| -}
 type alias DocumentResult =
     { number : Int
     , distance : Float
@@ -14,5 +22,6 @@ type alias DocumentResult =
     }
 
 
+{-| -}
 type alias DocumentsPage =
     WindowPage DocumentResult

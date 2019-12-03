@@ -1,13 +1,29 @@
 module UI.Tree exposing
-    ( Model
-    , Msg
+    ( Context
     , Return(..)
-    , expandPresentationFolder
+    , Model
+    , Msg
     , initialModel
     , needs
+    , expandPresentationFolder
     , update
     , view
     )
+
+{-|
+
+@docs Context
+@docs Return
+@docs Model
+@docs Msg
+
+@docs initialModel
+@docs needs
+@docs expandPresentationFolder
+@docs update
+@docs view
+
+-}
 
 import Cache exposing (ApiData)
 import Cache.Derive
@@ -26,32 +42,38 @@ import Utils
 import Utils.Html
 
 
+{-| -}
 type alias Context =
     { cache : Cache.Model
     , presentation : Presentation
     }
 
 
+{-| -}
 type Return
     = NoReturn
     | UserSelection FolderId
 
 
+{-| -}
 type alias Model =
     { collapsedPresentationFolder : Maybe FolderId
     }
 
 
+{-| -}
 type Msg
     = Select FolderId
 
 
+{-| -}
 initialModel : Model
 initialModel =
     { collapsedPresentationFolder = Nothing
     }
 
 
+{-| -}
 needs : Context -> Model -> Cache.Needs
 needs context model =
     getPresentationFolderId context
@@ -59,6 +81,7 @@ needs context model =
         |> Cache.NeedSubfolders
 
 
+{-| -}
 expandPresentationFolder : Model -> Model
 expandPresentationFolder model =
     { model
@@ -66,6 +89,7 @@ expandPresentationFolder model =
     }
 
 
+{-| -}
 update : Context -> Msg -> Model -> ( Model, Return )
 update context msg model =
     case msg of
@@ -92,6 +116,7 @@ getPresentationFolderId context =
     Presentation.getFolderId context.cache context.presentation
 
 
+{-| -}
 view : Context -> Model -> Maybe FolderCounts -> Html Msg
 view context model maybeFolderCounts =
     Html.div []

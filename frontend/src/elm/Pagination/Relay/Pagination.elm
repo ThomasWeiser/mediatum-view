@@ -3,11 +3,19 @@ module Pagination.Relay.Pagination exposing
     , paginationArguments
     )
 
+{-|
+
+@docs Position
+@docs paginationArguments
+
+-}
+
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import List.Extra
 import Pagination.Relay.Connection exposing (Connection)
 
 
+{-| -}
 type Position
     = First
     | Last
@@ -24,6 +32,7 @@ type alias PaginationArguments optionals cursorModel =
     }
 
 
+{-| -}
 paginationArguments :
     Int
     -> Maybe (Connection cursorModel nodeType)

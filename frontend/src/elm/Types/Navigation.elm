@@ -3,6 +3,13 @@ module Types.Navigation exposing
     , alterRoute
     )
 
+{-| A navigation is an instruction to alter a given route in response to some user interaction.
+
+@docs Navigation
+@docs alterRoute
+
+-}
+
 import Cache
 import Cache.Derive
 import Types.Id as Id exposing (DocumentId, FolderId)
@@ -12,6 +19,7 @@ import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (FtsSorting, SetOfFilters)
 
 
+{-| -}
 type Navigation
     = ListOfNavigations (List Navigation)
     | ShowDocument FolderId DocumentId
@@ -23,6 +31,11 @@ type Navigation
     | SetLimit Int
 
 
+{-| Modify the route accordingly.
+
+In some cases this uses knowledge about node types from the cache.
+
+-}
 alterRoute : Cache.Model -> Navigation -> Route -> Route
 alterRoute cache navigation route =
     let

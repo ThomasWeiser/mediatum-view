@@ -4,22 +4,33 @@ module Utils.Html exposing
     , viewError
     )
 
-import Api
+{-| Display errors messages using a standardized layout.
+
+@docs viewApiError
+@docs viewCacheError
+@docs viewError
+
+-}
+
 import Cache
+import Cache.Derive
 import Html exposing (Html)
 import Html.Attributes
 
 
-viewApiError : Api.Error -> Html msg
+{-| -}
+viewApiError : Cache.ApiError -> Html msg
 viewApiError error =
-    viewError (Api.errorToString error)
+    viewError (Cache.apiErrorToString error)
 
 
-viewCacheError : Cache.Error -> Html msg
+{-| -}
+viewCacheError : Cache.Derive.Error -> Html msg
 viewCacheError error =
-    viewError (Cache.errorToString error)
+    viewError (Cache.Derive.errorToString error)
 
 
+{-| -}
 viewError : String -> Html msg
 viewError defect =
     Html.div

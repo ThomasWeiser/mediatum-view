@@ -1,19 +1,61 @@
 module Utils exposing
-    ( findAdjacent
-    , findMap
-    , ifElse
-    , lexicalOrder
-    , noBreakSpace
-    , onChange
+    ( ifElse
+    , when
+    , tupleAddThird
+    , tupleRemoveThird
     , prependIf
     , prependMaybe
+    , findMap
+    , findAdjacent
+    , lexicalOrder
     , remoteDataCheck
     , remoteDataMapFallible
     , sorter
-    , tupleAddThird
-    , tupleRemoveThird
-    , when
+    , noBreakSpace
+    , onChange
     )
+
+{-| -- TODO Groups (List, RemoteData, etc)
+
+
+# Bool
+
+@docs ifElse
+@docs when
+
+
+# Tuple
+
+@docs tupleAddThird
+@docs tupleRemoveThird
+
+
+# List
+
+@docs prependIf
+@docs prependMaybe
+@docs findMap
+@docs findAdjacent
+@docs lexicalOrder
+
+
+# RemoteData
+
+@docs remoteDataCheck
+@docs remoteDataMapFallible
+
+
+# Ordering
+
+@docs sorter
+
+
+# Html
+
+@docs noBreakSpace
+@docs onChange
+
+-}
 
 import Char
 import Html
@@ -22,11 +64,6 @@ import Json.Decode
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData)
 import Sort exposing (Sorter)
-
-
-noBreakSpace : String
-noBreakSpace =
-    String.fromChar (Char.fromCode 160)
 
 
 {-| Return the first argument if the given boolean is `True`. Otherwise, return the second argument.
@@ -40,16 +77,20 @@ ifElse ifTrue ifFalse bool =
         ifFalse
 
 
+{-| Conditionally apply a function
+-}
 when : (a -> a) -> Bool -> a -> a
 when fn =
     ifElse fn identity
 
 
+{-| -}
 tupleAddThird : c -> ( a, b ) -> ( a, b, c )
 tupleAddThird c ( a, b ) =
     ( a, b, c )
 
 
+{-| -}
 tupleRemoveThird : ( a, b, c ) -> ( a, b )
 tupleRemoveThird ( a, b, _ ) =
     ( a, b )
@@ -97,8 +138,12 @@ findMap mapping list =
 
 
 {-| Find the first element that satisfies a predicate
-and return the element with its direct neighbours,
-using `Maybe` for the neighbours as well as the return value at whole.
+and return the element with its direct neighbours.
+
+The type of the return value uses a `Maybe` for the neighbours
+(they may not exist if the matched element at the start or at the end of the list)
+as well as a `Maybe` for the return value at whole (no element may satisfy the predicate).
+
 -}
 findAdjacent : (a -> Bool) -> List a -> Maybe ( Maybe a, a, Maybe a )
 findAdjacent predicate list =
@@ -128,10 +173,8 @@ findAdjacent predicate list =
                 walk head1 tail1
 
 
-onChange : (String -> msg) -> Html.Attribute msg
-onChange tagger =
-    Html.Events.on "change"
-        (Json.Decode.map tagger Html.Events.targetValue)
+{-| Lift an ordering on the element type to a list of that type.
+-}
 
 
 
@@ -162,16 +205,8 @@ lexicalOrder compareElements listL listR =
                     lexicalOrder compareElements tailL tailR
 
 
-remoteDataMapFallible : (a -> Result e a) -> RemoteData e a -> RemoteData e a
-remoteDataMapFallible mapping remoteData =
-    case remoteData of
-        RemoteData.Success value ->
-            mapping value |> RemoteData.fromResult
-
-        _ ->
-            remoteData
-
-
+{-| Check the success-value of a `RemoteData` and conditionally turn it into a failure-value.
+-}
 remoteDataCheck : (a -> Maybe e) -> RemoteData e a -> RemoteData e a
 remoteDataCheck check remoteData =
     case remoteData of
@@ -187,6 +222,51 @@ remoteDataCheck check remoteData =
             remoteData
 
 
+{-| Map the success-value of a `RemoteData` or replace it with a failure-value.
+-}
+remoteDataMapFallible : (a -> Result e a) -> RemoteData e a -> RemoteData e a
+remoteDataMapFallible mapping remoteData =
+    case remoteData of
+        RemoteData.Success value ->
+            mapping value |> RemoteData.fromResult
+
+        _ ->
+            remoteData
+
+
+{-| Create a custom `Sorter` by defining how to order two values.
+
+Used for [`Sort.Dict`](/packages/rtfeldman/elm-sorter-experiment/latest/Sort-Dict).
+
+-}
 sorter : Ordering a -> Sorter a
 sorter ordering =
     Sort.custom ordering
+
+
+{-| A string containing a no ["no-break space"](https://en.wikipedia.org/wiki/Non-breaking_space).
+
+Can be used within an otherwise empty `<div>` element in order to prevent collapsing the rendered space.
+
+-}
+noBreakSpace : String
+noBreakSpace =
+    String.fromChar (Char.fromCode 160)
+
+
+{-| Detect `change` events for things like text fields.
+
+Currently not defined in `elm/htmll` version 1.0.0.
+
+[From MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/change_event):
+
+> "The `change` event is fired for `<input>`, `<select>`, and `<textarea>` elements
+> when an alteration to the element's value is committed by the user.
+> Unlike the `input` event, the `change` event is not necessarily fired
+> for each alteration to an element's value."
+
+-}
+onChange : (String -> msg) -> Html.Attribute msg
+onChange tagger =
+    Html.Events.on "change"
+        (Json.Decode.map tagger Html.Events.targetValue)

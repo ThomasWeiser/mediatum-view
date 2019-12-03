@@ -1,15 +1,45 @@
 module Types.Id exposing
-    ( DocumentId
+    ( NodeId
     , FolderId
-    , NodeId
-    , asDocumentId
-    , asFolderId
+    , DocumentId
     , asNodeId
-    , fromInt
-    , ordering
+    , asFolderId
+    , asDocumentId
     , toInt
+    , fromInt
     , toString
+    , ordering
     )
+
+{-|
+
+
+# Types for node identifiers
+
+@docs NodeId
+@docs FolderId
+@docs DocumentId
+
+
+# Converting from one node id type into another
+
+@docs asNodeId
+@docs asFolderId
+@docs asDocumentId
+
+
+# Converting to/from unwrapped types
+
+@docs toInt
+@docs fromInt
+@docs toString
+
+
+# Miscellaneous
+
+@docs ordering
+
+-}
 
 import Ordering exposing (Ordering)
 
@@ -48,14 +78,23 @@ type Document
 -}
 
 
+{-| A number used as a node identifier.
+
+We don't know or don't specify whether this node represents a folder, a document or some other node type.
+
+-}
 type alias NodeId =
     Id Node
 
 
+{-| A number used as a folder identifier.
+-}
 type alias FolderId =
     Id Folder
 
 
+{-| A number used as a document identifier.
+-}
 type alias DocumentId =
     Id Document
 
@@ -68,36 +107,50 @@ dummyValueToAvoidElmAnalyseErrors =
     )
 
 
+{-| Convert any id type into a `NodeId`.
+-}
 asNodeId : Id a -> NodeId
 asNodeId (Id i) =
     Id i
 
 
+{-| Convert a `NodeId` into `FolderId`. Only use this if you know that this node is a folder.
+-}
 asFolderId : NodeId -> FolderId
 asFolderId (Id i) =
     Id i
 
 
+{-| Convert a `NodeId` into `DocumentId`. Only use this if you know that this node is a document.
+-}
 asDocumentId : NodeId -> DocumentId
 asDocumentId (Id i) =
     Id i
 
 
+{-| Get the node number
+-}
 toInt : Id a -> Int
 toInt (Id id) =
     id
 
 
+{-| Construct an id from an number
+-}
 fromInt : Int -> Id a
 fromInt id =
     Id id
 
 
+{-| Get the node number as a string
+-}
 toString : Id a -> String
 toString nodeId =
     nodeId |> toInt |> String.fromInt
 
 
+{-| Define an ordering on the type so we can use it as a key in a `Sort.Dict`.
+-}
 ordering : Ordering (Id a)
 ordering (Id id1) (Id id2) =
     compare id1 id2

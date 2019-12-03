@@ -3,12 +3,20 @@ module Types.Route.Filter exposing
     , fromRoute
     )
 
+{-| Conversion functions between a `SetOfFilters` and the filter parameters of a `Route`.
+
+@docs alterRoute
+@docs fromRoute
+
+-}
+
 import Types.Route exposing (Route)
 import Types.SearchTerm
 import Types.Selection as Selection exposing (Filter(..), SetOfFilters)
 import Utils
 
 
+{-| -}
 fromRoute : Route -> SetOfFilters
 fromRoute route =
     route.parameters.filterByTitle
@@ -21,6 +29,7 @@ fromRoute route =
         |> Selection.filtersFromList
 
 
+{-| -}
 alterRoute : SetOfFilters -> Route -> Route
 alterRoute filters route =
     let

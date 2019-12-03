@@ -1,26 +1,44 @@
 module Pagination.Relay.Page exposing
     ( Page
-    , PageResult
     , entries
+    , PageResult
     , initialPageResult
-    , loadingPageResult
     , updatePageResultFromResult
+    , loadingPageResult
     )
+
+{-|
+
+@docs Page
+@docs entries
+
+
+#
+
+@docs PageResult
+@docs initialPageResult
+@docs updatePageResultFromResult
+@docs loadingPageResult
+
+-}
 
 import Api
 import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection exposing (Connection)
 
 
+{-| -}
 type alias Page itemModel =
     Connection Mediatum.Scalar.Cursor itemModel
 
 
+{-| -}
 entries : Page itemModel -> List itemModel
 entries page =
     Connection.nodes page
 
 
+{-| -}
 type alias PageResult itemModel =
     { loading : Bool
     , error : Maybe Api.Error
@@ -28,6 +46,7 @@ type alias PageResult itemModel =
     }
 
 
+{-| -}
 initialPageResult : PageResult itemModel
 initialPageResult =
     { loading = False
@@ -36,6 +55,7 @@ initialPageResult =
     }
 
 
+{-| -}
 updatePageResultFromResult :
     Result Api.Error (Page itemModel)
     -> PageResult itemModel
@@ -49,6 +69,7 @@ updatePageResultFromResult result pageResult =
             { loading = False, error = Nothing, page = Just content }
 
 
+{-| -}
 loadingPageResult : PageResult itemModel -> PageResult itemModel
 loadingPageResult pageResult =
     { pageResult | loading = True }

@@ -1,29 +1,63 @@
 module Cache exposing
-    ( ApiData
-    , ApiError
-    , Error(..)
-    , Model
-    , Msg(..)
-    , Needs(..)
-    , apiErrorToString
-    , errorToString
-    , get
-    , initialModel
-    , needsFromList
-    , orderingSelectionWindow
-    , require
-    , update
+    ( ApiData, Model, get
+    , Needs(..), needsFromList, require
     , updateWithModifiedDocument
+    , ApiError, apiErrorToString
+    , Msg(..), initialModel, update
+    , orderingSelectionWindow
     )
+
+{-| Manage fetching and caching of all API data.
+
+All data needed from the API is fetched and exposed through this module.
+
+Consuming modules declare their data needs as a value of type `Needs`.
+They can read the actual data from the tables in the `Model`.
+
+Reading the tables will result in a [`RemoteData`](/packages/krisajenkins/remotedata/6.0.1/RemoteData) value.
+So the consuming modules will have to deal with the possible states a `RemoteData` can show
+(`NotAsked`, `Loading`, `Failure`, `Success`).
+
+
+# Cached Data
+
+@docs ApiData, Model, get
+
+
+# Declaring required data
+
+@docs Needs, needsFromList, require
+
+
+# Modifying data locally (preliminary)
+
+@docs updateWithModifiedDocument
+
+
+# Error handling
+
+@docs ApiError, apiErrorToString
+
+
+# Elm architecture standard functions
+
+@docs Msg, initialModel, update
+
+
+# Internal functions exposed for testing only
+
+@docs orderingSelectionWindow
+
+-}
 
 import Api
 import Api.Queries
 import Basics.Extra
 import Entities.Document exposing (Document)
+import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
-import Entities.Results exposing (DocumentsPage)
 import List.Nonempty
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
@@ -34,19 +68,32 @@ import Types.Selection as Selection exposing (SelectMethod(..), Selection)
 import Utils
 
 
+{-| A specialization of [`RemoteData e a`](/packages/krisajenkins/remotedata/6.0.1/RemoteData#RemoteData)
+where the error type `e` is defined by `ApiError`.
+
+Any `RemoteData` used in this module uses this error type and is therefore an `ApiData`.
+
+-}
 type alias ApiData a =
-    RemoteData Api.Error a
+    RemoteData ApiError a
 
 
+{-| The type of errors that may be reported in an `ApiData.Failure`.
+It's the same as `Api.Error`.
+-}
 type alias ApiError =
     Api.Error
 
 
-type Error
-    = CacheApiError Api.Error
-    | CacheDataError String
+{-| Represents all data for which fetching from the API has been at least started.
+Consuming modules read from these tables to fulfill their data needs.
 
+For each entity or relation in the local data schema there is a field in the `Model`.
 
+Most fields are lookup-tables that map from a key type (representing query parameters)
+to an `ApiData` type that contains (in case of a `RemoteData.Success`) the wanted content data.
+
+-}
 type alias Model =
     { rootFolderIds : ApiData (List FolderId)
     , folders : Sort.Dict.Dict FolderId (ApiData Folder)
@@ -58,6 +105,8 @@ type alias Model =
     }
 
 
+{-| A data-consuming module declares its wishes for API data by means of this type.
+-}
 type Needs
     = NeedNothing
     | NeedAnd Needs Needs
@@ -70,21 +119,15 @@ type Needs
     | NeedFolderCounts Selection
 
 
-errorToString : Error -> String
-errorToString error =
-    case error of
-        CacheApiError apiError ->
-            Api.errorToString apiError
-
-        CacheDataError str ->
-            str
-
-
+{-| Describe an `ApiError` as text (aimed for debugging)
+-}
 apiErrorToString : ApiError -> String
 apiErrorToString apiError =
     Api.errorToString apiError
 
 
+{-| Initial cache model without any entry
+-}
 initialModel : Model
 initialModel =
     { rootFolderIds = NotAsked
@@ -97,6 +140,8 @@ initialModel =
     }
 
 
+{-| Aggregate a list of needs
+-}
 needsFromList : List Needs -> Needs
 needsFromList listOfNeeds =
     List.foldr
@@ -107,12 +152,22 @@ needsFromList listOfNeeds =
         listOfNeeds
 
 
+{-| Read an entry from a lookup-table of the `Model`.
+
+If the given key is not yet present in the table return `RemoteData.NotAsked`.
+
+-}
 get : Sort.Dict.Dict k (ApiData v) -> k -> ApiData v
 get dict key =
     Sort.Dict.get key dict
         |> Maybe.withDefault NotAsked
 
 
+{-| The messages that the `update` function may process in response to an executed `Cmd`.
+
+Currently all messages transport some API response.
+
+-}
 type Msg
     = ApiResponseToplevelFolder (Api.Response (List ( Folder, List Folder )))
     | ApiResponseSubfolder (List FolderId) (Api.Response (List Folder))
@@ -213,6 +268,9 @@ status model needs =
                 |> statusFromRemoteData
 
 
+{-| Check which of the needed data has not yet been requested.
+Submit API requests to get that data and mark the corresponding Model entries as `RemoteData.Loading`.
+-}
 require : Needs -> Model -> ( Model, Cmd Msg )
 require needs model =
     if status model needs /= NotRequested then
@@ -344,6 +402,8 @@ require needs model =
                 )
 
 
+{-| Insert or update a document into the table `Model.documents`.
+-}
 updateWithModifiedDocument : Document -> Model -> Model
 updateWithModifiedDocument document model =
     { model
@@ -352,6 +412,8 @@ updateWithModifiedDocument document model =
     }
 
 
+{-| Digest a Msg (i.e. a response from the API layer) and update the data in the `Model` accordingly.
+-}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -544,6 +606,8 @@ insertNodeType nodeId nodeType model =
     }
 
 
+{-| Ordering on the tuple type `( Selection, Window )`
+-}
 orderingSelectionWindow : Ordering ( Selection, Window )
 orderingSelectionWindow =
     Ordering.byFieldWith Selection.orderingSelection Tuple.first

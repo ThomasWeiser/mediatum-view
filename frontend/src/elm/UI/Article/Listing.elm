@@ -1,18 +1,31 @@
 module UI.Article.Listing exposing
-    ( Model
-    , Msg
+    ( Context
     , Return(..)
+    , Model
+    , Msg
     , initialModel
     , update
     , view
     )
+
+{-|
+
+@docs Context
+@docs Return
+@docs Model
+@docs Msg
+@docs initialModel
+@docs update
+@docs view
+
+-}
 
 -- import Article.Iterator as Iterator
 -- import Pagination.Offset.Page as Page exposing (Page, PageResult)
 
 import Cache
 import Entities.Document as Document exposing (Document)
-import Entities.Results exposing (DocumentResult, DocumentsPage)
+import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -28,6 +41,7 @@ import UI.Icons
 import Utils.Html
 
 
+{-| -}
 type alias Context =
     { cache : Cache.Model
     , selection : Selection
@@ -35,16 +49,19 @@ type alias Context =
     }
 
 
+{-| -}
 type Return
     = NoReturn
     | Navigate Navigation
 
 
+{-| -}
 type alias Model =
     { -- , iterator : Maybe Iterator.Model
     }
 
 
+{-| -}
 type Msg
     = SelectDocument DocumentId
     | PickPosition PaginationPosition
@@ -72,12 +89,14 @@ type PaginationPosition
 -}
 
 
+{-| -}
 initialModel : Model
 initialModel =
     { -- , iterator = Nothing
     }
 
 
+{-| -}
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
@@ -150,6 +169,7 @@ update context msg model =
 -}
 
 
+{-| -}
 view : Context -> Model -> Html Msg
 view context model =
     Html.div [] <|

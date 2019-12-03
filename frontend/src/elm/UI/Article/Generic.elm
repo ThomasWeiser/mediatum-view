@@ -1,10 +1,22 @@
 module UI.Article.Generic exposing
-    ( Model
+    ( Context
+    , Model
     , Msg
     , initialModel
     , update
     , view
     )
+
+{-|
+
+@docs Context
+@docs Model
+@docs Msg
+@docs initialModel
+@docs update
+@docs view
+
+-}
 
 import Cache
 import Cache.Derive
@@ -17,30 +29,36 @@ import Utils
 import Utils.Html
 
 
+{-| -}
 type alias Context =
     { cache : Cache.Model
     , nodeIds : Maybe ( NodeId, Maybe NodeId )
     }
 
 
+{-| -}
 type alias Model =
     ()
 
 
+{-| -}
 type alias Msg =
     Never
 
 
+{-| -}
 initialModel : Model
 initialModel =
     ()
 
 
+{-| -}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     ( model, Cmd.none )
 
 
+{-| -}
 view : Context -> Model -> Html Msg
 view context model =
     let
@@ -56,7 +74,7 @@ view context model =
                         |> Cache.Derive.asDerivedData
                         |> Utils.remoteDataCheck
                             (\nodeType ->
-                                Maybe.map Cache.CacheDataError <|
+                                Maybe.map Cache.Derive.CacheDerivationError <|
                                     if nodeType == NodeIsNeither then
                                         Just <|
                                             "Node "
@@ -78,7 +96,7 @@ view context model =
                         (Cache.Derive.getNodeType context.cache nodeIdTwo |> Cache.Derive.asDerivedData)
                         |> Utils.remoteDataCheck
                             (\( nodeTypeOne, nodeTypeTwo ) ->
-                                Maybe.map Cache.CacheDataError <|
+                                Maybe.map Cache.Derive.CacheDerivationError <|
                                     case ( nodeTypeOne, nodeTypeTwo ) of
                                         ( NodeIsFolder _, NodeIsDocument ) ->
                                             Nothing

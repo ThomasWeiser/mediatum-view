@@ -1,5 +1,20 @@
 module Main exposing (main)
 
+{-| The `Main` module is responsible for:
+
+  - Initializing the app as a [`Browser.application`](/packages/elm/browser/1.0.1/Browser#application) that takes full control over the browser page.
+
+  - Hosting the module [`App`](App).
+
+  - Mananging URL changes by means of:
+      - [`onUrlRequest`](/packages/elm/browser/1.0.1/Browser#application) (when the user clicks a link)
+      - [`onUrlChange`](/packages/elm/browser/1.0.1/Browser#application) (when the browser actually changes the URL)
+      - [`pushUrl`](/packages/elm/browser/latest/Browser-Navigation#pushUrl) (make the browser change the URL and add a new entry to the browser history)
+
+@docs main
+
+-}
+
 import App
 import Browser
 import Browser.Navigation
@@ -15,6 +30,8 @@ type alias Model =
     }
 
 
+{-| Define the application ingredients.
+-}
 main : Program () Model Msg
 main =
     Browser.application
