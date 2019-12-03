@@ -1,14 +1,14 @@
-module Tests.App exposing (suite)
+module Tests.UI.Tree exposing (suite)
 
-import App
 import Expect
 import Fuzz exposing (Fuzzer)
 import Test exposing (..)
+import UI.Tree
 
 
 suite : Test
 suite =
-    describe "App"
+    describe "Tree"
         [ test "dummy test, always passes"
             (always Expect.pass)
         ]

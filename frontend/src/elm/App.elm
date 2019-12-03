@@ -9,26 +9,13 @@ module App exposing
     , view
     )
 
-import Api
-import Api.Queries
-import Article
+import Cache
 import Cmd.Extra
-import Controls
-import Data.Cache as Cache
-import Data.Types exposing (NodeId)
 import Html exposing (Html)
-import Html.Attributes
-import Html.Events
-import Icons
-import List.Nonempty exposing (Nonempty)
-import Maybe.Extra
-import Navigation exposing (Navigation)
-import Presentation exposing (Presentation(..))
-import Query.Filters
-import RemoteData
-import Route exposing (Route)
-import Tree
-import Utils
+import Types.Navigation as Navigation exposing (Navigation)
+import Types.Presentation as Presentation exposing (Presentation(..))
+import Types.Route as Route exposing (Route)
+import UI
 
 
 type Return
@@ -40,9 +27,7 @@ type alias Model =
     { route : Route
     , cache : Cache.Model
     , presentation : Presentation
-    , tree : Tree.Model
-    , controls : Controls.Model
-    , article : Article.Model
+    , ui : UI.Model
 
     -- TODO: We store the Needs here only for debugging
     , needs : Cache.Needs
@@ -51,23 +36,15 @@ type alias Model =
 
 type Msg
     = CacheMsg Cache.Msg
-    | TreeMsg Tree.Msg
-    | ControlsMsg Controls.Msg
-    | ArticleMsg Article.Msg
+    | UIMsg UI.Msg
 
 
 init : Route -> ( Model, Cmd Msg )
 init route =
-    { route = Route.home
+    { route = Route.initHome
     , cache = Cache.initialModel
     , presentation = GenericPresentation Nothing
-    , tree = Tree.initialModel
-    , controls = Controls.initialModel Route.home
-    , article =
-        Article.initialModel
-            { cache = Cache.initialModel
-            , presentation = GenericPresentation Nothing
-            }
+    , ui = UI.init
     , needs = Cache.NeedNothing
     }
         |> requestNeeds
@@ -78,66 +55,48 @@ updateRoute : Route -> Model -> Model
 updateRoute route model =
     let
         model1 =
-            { model
-                | route = route
-                , controls = Controls.initialModel route
-            }
+            { model | route = route }
 
         model2 =
-            adjust model1
+            { model1
+                | ui =
+                    UI.updateOnChangedRoute
+                        (uiContext model1)
+                        model1.ui
+            }
 
         model3 =
-            { model2
-                | tree = Tree.expandPresentationFolder model2.tree
-            }
+            adjustPresentation model2
     in
     model3
 
 
-adjust : Model -> Model
-adjust model =
+adjustPresentation : Model -> Model
+adjustPresentation model =
     let
         presentation =
-            model.route
-                |> Debug.log "adjust route"
-                |> Presentation.fromRoute model.cache
-                |> Debug.log "adjust presentation"
-                |> identity
+            Presentation.fromRoute
+                model.cache
+                model.route
     in
-    { model
-        | presentation = presentation
-        , article =
-            Article.initialModel
-                { cache = model.cache, presentation = presentation }
-    }
+    -- This function will be called each time the cache gets a message.
+    -- Let's call UI.updateOnChangedPresentation only if the presentation has really changed.
+    if presentation == model.presentation then
+        model
+
+    else
+        { model
+            | presentation = presentation
+            , ui =
+                UI.updateOnChangedPresentation
+                    presentation
+                    model.ui
+        }
 
 
 needs : Model -> Cache.Needs
 needs model =
-    Debug.log "app needs" <|
-        Cache.needsFromList
-            [ Cache.NeedRootFolderIds
-            , case model.route.path of
-                Route.NoId ->
-                    Cache.NeedNothing
-
-                Route.OneId nodeId ->
-                    Cache.NeedGenericNode nodeId
-
-                Route.TwoIds nodeIdOne nodeIdTwo ->
-                    Cache.NeedAnd
-                        (Cache.NeedGenericNode nodeIdOne)
-                        (Cache.NeedGenericNode nodeIdOne)
-            , Tree.needs
-                { cache = model.cache
-                , presentation = model.presentation
-                }
-                model.tree
-            , Article.needs
-                { cache = model.cache
-                , presentation = model.presentation
-                }
-            ]
+    UI.needs (uiContext model) model.ui
 
 
 requestNeeds : Model -> ( Model, Cmd Msg )
@@ -147,7 +106,7 @@ requestNeeds model =
             needs model
 
         ( cacheModel, cacheCmd ) =
-            Cache.requestNeeds
+            Cache.require
                 currentNeeds
                 model.cache
     in
@@ -201,73 +160,31 @@ updateSubModel msg model =
                     , Cmd.map CacheMsg subCmd
                     )
             in
-            ( model1 |> adjust
+            ( model1 |> adjustPresentation
             , cmd1
             , Nothing
             )
 
-        TreeMsg subMsg ->
-            let
-                ( subModel, subReturn ) =
-                    Tree.update
-                        { cache = model.cache
-                        , presentation = model.presentation
-                        }
-                        subMsg
-                        model.tree
-            in
-            ( { model | tree = subModel }
-            , Cmd.none
-            , case subReturn of
-                Tree.UserSelection selectedFolder ->
-                    Just (Navigation.ShowListingWithFolder selectedFolder)
-
-                Tree.NoReturn ->
-                    Nothing
-            )
-
-        ControlsMsg subMsg ->
+        UIMsg subMsg ->
             let
                 ( subModel, subCmd, subReturn ) =
-                    Controls.update
-                        { route = model.route
-                        , presentation = model.presentation
-                        }
+                    UI.update
+                        (uiContext model)
                         subMsg
-                        model.controls
-            in
-            ( { model | controls = subModel }
-            , Cmd.map ControlsMsg subCmd
-            , case subReturn of
-                Controls.NoReturn ->
-                    Nothing
-
-                Controls.Navigate navigation ->
-                    Just navigation
-            )
-
-        ArticleMsg subMsg ->
-            let
-                ( subModel, subCmd, subReturn ) =
-                    Article.update
-                        { cache = model.cache
-                        , presentation = model.presentation
-                        }
-                        subMsg
-                        model.article
+                        model.ui
 
                 model1 =
-                    { model | article = subModel }
+                    { model | ui = subModel }
 
                 ( model2, maybeNavigation ) =
                     case subReturn of
-                        Article.NoReturn ->
+                        UI.NoReturn ->
                             ( model1, Nothing )
 
-                        Article.Navigate navigation ->
+                        UI.Navigate navigation ->
                             ( model1, Just navigation )
 
-                        Article.UpdateCacheWithModifiedDocument document ->
+                        UI.UpdateCacheWithModifiedDocument document ->
                             ( { model1
                                 | cache = Cache.updateWithModifiedDocument document model1.cache
                               }
@@ -275,64 +192,22 @@ updateSubModel msg model =
                             )
             in
             ( model2
-            , Cmd.map ArticleMsg subCmd
+            , Cmd.map UIMsg subCmd
             , maybeNavigation
             )
 
 
 view : Model -> Html Msg
 view model =
-    Html.div [ Html.Attributes.class "page-container" ]
-        [ Icons.definitions
-        , Html.header []
-            [ Html.h2 []
-                [ Html.div []
-                    [ Html.a
-                        [ Html.Attributes.class "title"
-                        , Html.Attributes.href "/"
-                        ]
-                        [ Html.text "mediaTUM view" ]
-                    , Html.span
-                        [ Html.Attributes.class "subtitle"
-                        , Html.Attributes.title "You may click here to start an example query."
-                        , Html.Events.onClick (ControlsMsg Controls.submitExampleQuery)
-                        ]
-                        [ Html.text "WIP" ]
-                    , Html.img
-                        [ Html.Attributes.alt "TUM Logo"
-                        , Html.Attributes.src "logo_tum.png"
-                        , Html.Attributes.style "float" "right"
-                        ]
-                        []
-                    ]
-                ]
-            , Controls.view
-                { route = model.route
-                , presentation = model.presentation
-                }
-                model.controls
-                |> Html.map ControlsMsg
-            ]
-        , Html.main_ []
-            [ Html.aside []
-                [ Html.map TreeMsg <|
-                    Tree.view
-                        { cache = model.cache
-                        , presentation = model.presentation
-                        }
-                        model.tree
-                        (Article.folderCountsForQuery
-                            { cache = model.cache
-                            , presentation = model.presentation
-                            }
-                        )
-                ]
-            , Html.map ArticleMsg <|
-                Article.view
-                    model.tree
-                    { cache = model.cache
-                    , presentation = model.presentation
-                    }
-                    model.article
-            ]
-        ]
+    UI.view
+        (uiContext model)
+        model.ui
+        |> Html.map UIMsg
+
+
+uiContext : Model -> UI.Context
+uiContext model =
+    { cache = model.cache
+    , route = model.route
+    , presentation = model.presentation
+    }

@@ -3,11 +3,9 @@ module Main exposing (main)
 import App
 import Browser
 import Browser.Navigation
-import Html exposing (Html)
-import Html.Attributes
-import Html.Events
-import Route
-import Route.Url
+import Html
+import Types.Route as Route
+import Types.Route.Url
 import Url exposing (Url)
 
 
@@ -24,14 +22,13 @@ main =
         , update = update
         , subscriptions = always Sub.none
         , view = view
-        , onUrlRequest = UrlRequest << Debug.log "onUrlRequest"
-        , onUrlChange = UrlChanged << Debug.log "onUrlChange"
+        , onUrlRequest = UrlRequest -- << Debug.log "onUrlRequest"
+        , onUrlChange = UrlChanged -- << Debug.log "onUrlChange"
         }
 
 
 type Msg
-    = NoOp
-    | UrlRequest Browser.UrlRequest
+    = UrlRequest Browser.UrlRequest
     | UrlChanged Url.Url
     | AppMsg App.Msg
 
@@ -40,8 +37,8 @@ init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url navigationKey =
     let
         ( appModel, appCmd ) =
-            Route.Url.parseUrl url
-                |> Maybe.withDefault Route.home
+            Types.Route.Url.parseUrl url
+                |> Maybe.withDefault Route.initHome
                 |> App.init
     in
     ( { navigationKey = navigationKey
@@ -54,9 +51,6 @@ init flags url navigationKey =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         UrlRequest urlRequest ->
             case urlRequest of
                 Browser.Internal url ->
@@ -74,8 +68,8 @@ update msg model =
         UrlChanged url ->
             let
                 route =
-                    Route.Url.parseUrl url
-                        |> Maybe.withDefault Route.home
+                    Types.Route.Url.parseUrl url
+                        |> Maybe.withDefault Route.initHome
 
                 ( subModel, subCmd ) =
                     model.app
@@ -106,7 +100,7 @@ update msg model =
                     App.ReflectRoute route ->
                         Browser.Navigation.pushUrl
                             model.navigationKey
-                            (Route.Url.toString route)
+                            (Types.Route.Url.toString route)
 
                     App.NoReturn ->
                         Cmd.none

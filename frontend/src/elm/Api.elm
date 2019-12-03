@@ -23,10 +23,10 @@ The available queries and mutations are located in the modules
 -}
 
 import Config
-import Graphql.Extra
 import Graphql.Http
 import Graphql.Operation
 import Graphql.SelectionSet exposing (SelectionSet)
+import Utils.Graphql
 
 
 {-| A query specific Result type.
@@ -38,12 +38,12 @@ type alias Response decodesTo =
 {-| Represents an error from running a GraphQL request.
 -}
 type alias Error =
-    Graphql.Extra.StrippedError
+    Utils.Graphql.StrippedError
 
 
 errorToString : Error -> String
 errorToString error =
-    Graphql.Extra.errorToString error
+    Utils.Graphql.errorToString error
 
 
 {-| Create a GraphQL query.
@@ -77,7 +77,7 @@ sendQueryRequest tagger selectionSet =
     selectionSet
         |> Graphql.Http.queryRequest Config.apiUrl
         |> Graphql.Http.send
-            (Result.mapError Graphql.Extra.stripError >> tagger)
+            (Result.mapError Utils.Graphql.stripError >> tagger)
 
 
 {-| Create a GraphQL mutation.
@@ -93,4 +93,4 @@ sendMutationRequest tagger selectionSet =
     selectionSet
         |> Graphql.Http.mutationRequest Config.apiUrl
         |> Graphql.Http.send
-            (Result.mapError Graphql.Extra.stripError >> tagger)
+            (Result.mapError Utils.Graphql.stripError >> tagger)

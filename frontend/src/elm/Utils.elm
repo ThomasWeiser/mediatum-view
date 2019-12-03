@@ -9,6 +9,7 @@ module Utils exposing
     , prependMaybe
     , remoteDataCheck
     , remoteDataMapFallible
+    , sorter
     , tupleAddThird
     , tupleRemoveThird
     , when
@@ -18,7 +19,9 @@ import Char
 import Html
 import Html.Events
 import Json.Decode
+import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData)
+import Sort exposing (Sorter)
 
 
 noBreakSpace : String
@@ -48,7 +51,7 @@ tupleAddThird c ( a, b ) =
 
 
 tupleRemoveThird : ( a, b, c ) -> ( a, b )
-tupleRemoveThird ( a, b, c ) =
+tupleRemoveThird ( a, b, _ ) =
     ( a, b )
 
 
@@ -182,3 +185,8 @@ remoteDataCheck check remoteData =
 
         _ ->
             remoteData
+
+
+sorter : Ordering a -> Sorter a
+sorter ordering =
+    Sort.custom ordering

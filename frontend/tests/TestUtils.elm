@@ -14,7 +14,6 @@ module TestUtils exposing
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer)
-import List.Extra
 import Test exposing (Test)
 
 

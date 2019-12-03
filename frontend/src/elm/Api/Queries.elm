@@ -38,13 +38,15 @@ The `elm-graphql` package won't use the fragment notation.
 
 -}
 
+import Api.Arguments.AttributeTest
+import Api.Arguments.Filter
 import Api.Fragments
 import Config
-import Data.Types exposing (..)
-import Data.Types.SearchTerm exposing (SearchTerm)
-import Document
-import Folder
-import GenericNode exposing (GenericNode)
+import Entities.Document exposing (Document)
+import Entities.Folder exposing (Folder)
+import Entities.FolderCounts exposing (FolderCounts)
+import Entities.GenericNode as GenericNode exposing (GenericNode)
+import Entities.Results exposing (DocumentsPage)
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
@@ -53,12 +55,13 @@ import Mediatum.Enum.FtsSorting
 import Mediatum.Object.FoldersConnection
 import Mediatum.Object.GenericNode
 import Mediatum.Query
-import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
-import Query.Attribute
-import Query.Filters
+import Types exposing (Window)
+import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
+import Types.SearchTerm exposing (SearchTerm)
+import Types.Selection exposing (FtsSorting(..), SetOfFilters)
 
 
 {-| Get the root folders and their sub-folders.
@@ -105,7 +108,7 @@ subfolder folderIds =
     Mediatum.Query.allFolders
         (\optionals ->
             { optionals
-                | parentIds = List.map (folderIdToInt >> Just) folderIds |> Present
+                | parentIds = List.map (Id.toInt >> Just) folderIds |> Present
             }
         )
         (Mediatum.Object.FoldersConnection.nodes Api.Fragments.folder)
@@ -145,7 +148,7 @@ genericNode nodeId =
     Mediatum.Query.genericNodeById
         (\optionals ->
             { optionals
-                | id = Present (nodeIdToInt nodeId)
+                | id = Present (Id.toInt nodeId)
             }
         )
         (SelectionSet.succeed constructor
@@ -182,17 +185,17 @@ _GraphQL notation:_
 folderDocumentsPage :
     Window
     -> FolderId
-    -> Filters
+    -> SetOfFilters
     -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
 folderDocumentsPage window folderId filters =
     Mediatum.Query.allDocumentsPage
         (\optionals ->
             { optionals
-                | folderId = Present (folderIdToInt folderId)
+                | folderId = Present (Id.toInt folderId)
                 , attributeTests =
                     filters
-                        |> Query.Filters.toAttributeTests
-                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Api.Arguments.Filter.filtersToAttributeTests
+                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
                 , limit = Present window.limit
                 , offset = Present window.offset
@@ -220,17 +223,17 @@ _GraphQL notation:_
 -}
 folderDocumentsFolderCounts :
     FolderId
-    -> Filters
+    -> SetOfFilters
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
 folderDocumentsFolderCounts folderId filters =
     Mediatum.Query.allDocumentsDocset
         (\optionals ->
             { optionals
-                | folderId = Present (folderIdToInt folderId)
+                | folderId = Present (Id.toInt folderId)
                 , attributeTests =
                     filters
-                        |> Query.Filters.toAttributeTests
-                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Api.Arguments.Filter.filtersToAttributeTests
+                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
             }
         )
@@ -263,14 +266,14 @@ ftsPage :
     -> FolderId
     -> SearchTerm
     -> FtsSorting
-    -> Filters
+    -> SetOfFilters
     -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
 ftsPage window folderId searchTerm ftsSorting filters =
     Mediatum.Query.ftsDocumentsPage
         (\optionals ->
             { optionals
-                | folderId = Present (folderIdToInt folderId)
-                , text = Present (Data.Types.SearchTerm.toString searchTerm)
+                | folderId = Present (Id.toInt folderId)
+                , text = Present (Types.SearchTerm.toString searchTerm)
                 , sorting =
                     Present
                         (case ftsSorting of
@@ -282,8 +285,8 @@ ftsPage window folderId searchTerm ftsSorting filters =
                         )
                 , attributeTests =
                     filters
-                        |> Query.Filters.toAttributeTests
-                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Api.Arguments.Filter.filtersToAttributeTests
+                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
                 , limit = Present window.limit
                 , offset = Present window.offset
@@ -315,19 +318,18 @@ _GraphQL notation:_
 ftsFolderCounts :
     FolderId
     -> SearchTerm
-    -> FtsSorting
-    -> Filters
+    -> SetOfFilters
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-ftsFolderCounts folderId searchTerm ftsSorting filters =
+ftsFolderCounts folderId searchTerm filters =
     Mediatum.Query.ftsDocumentsDocset
         (\optionals ->
             { optionals
-                | folderId = Present (folderIdToInt folderId)
-                , text = Present (Data.Types.SearchTerm.toString searchTerm)
+                | folderId = Present (Id.toInt folderId)
+                , text = Present (Types.SearchTerm.toString searchTerm)
                 , attributeTests =
                     filters
-                        |> Query.Filters.toAttributeTests
-                        |> Query.Attribute.testsAsGraphqlArgument
+                        |> Api.Arguments.Filter.filtersToAttributeTests
+                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                         |> Present
             }
         )
@@ -403,7 +405,7 @@ documentDetails documentId =
     Mediatum.Query.documentById
         (\optionals ->
             { optionals
-                | id = Present (documentIdToInt documentId)
+                | id = Present (Id.toInt documentId)
             }
         )
         (Api.Fragments.documentByMask "nodebig")

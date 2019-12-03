@@ -29,11 +29,10 @@ module Api.Fragments exposing
 
 -}
 
-import Data.Types exposing (..)
-import Data.Utils
-import Document
-import DocumentResult
-import Folder
+import Entities.Document as Document exposing (Document)
+import Entities.Folder as Folder exposing (Folder)
+import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
+import Entities.Results exposing (DocumentResult, DocumentsPage)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
@@ -52,8 +51,9 @@ import Mediatum.Object.FoldersConnection
 import Mediatum.Object.Metadatatype
 import Mediatum.Object.PageInfo
 import Mediatum.Scalar
-import Pagination.Offset.Page
 import Pagination.Relay.Connection as Connection
+import Types exposing (FolderDisplay(..), WindowPage)
+import Types.Id as Id exposing (FolderId)
 import Utils
 
 
@@ -76,11 +76,11 @@ folder =
         |> SelectionSet.with
             (Mediatum.Object.Folder.id
                 |> SelectionSet.nonNullOrFail
-                |> SelectionSet.map folderIdFromInt
+                |> SelectionSet.map Id.fromInt
             )
         |> SelectionSet.with
             (Mediatum.Object.Folder.parentId
-                |> SelectionSet.map (Maybe.map folderIdFromInt)
+                |> SelectionSet.map (Maybe.map Id.fromInt)
             )
         |> SelectionSet.with
             (Mediatum.Object.Folder.name
@@ -90,7 +90,7 @@ folder =
             (Mediatum.Object.Folder.isCollection
                 |> SelectionSet.nonNullOrFail
                 |> SelectionSet.map
-                    (Utils.ifElse FolderIsCollection FolderIsDirectory)
+                    (Utils.ifElse DisplayAsCollection DisplayAsDirectory)
             )
         |> SelectionSet.with
             (Mediatum.Object.Folder.numSubfolder
@@ -170,7 +170,7 @@ folderAndSubfolderCounts : SelectionSet FolderCounts Mediatum.Object.Docset
 folderAndSubfolderCounts =
     SelectionSet.succeed
         (\pair listOfPairs ->
-            Data.Utils.folderCountsFromList
+            FolderCounts.fromList
                 (pair :: listOfPairs)
         )
         |> SelectionSet.with
@@ -206,7 +206,7 @@ folderCount =
         |> SelectionSet.with
             (Mediatum.Object.FolderCount.folderId
                 |> SelectionSet.nonNullOrFail
-                |> SelectionSet.map folderIdFromInt
+                |> SelectionSet.map Id.fromInt
             )
         |> SelectionSet.with
             (Mediatum.Object.FolderCount.count
@@ -268,7 +268,7 @@ _GraphQL notation:_
 -}
 documentResult : String -> SelectionSet DocumentResult Mediatum.Object.DocumentResult
 documentResult maskName =
-    SelectionSet.succeed DocumentResult.init
+    SelectionSet.succeed Entities.Results.DocumentResult
         |> SelectionSet.with
             (Mediatum.Object.DocumentResult.number
                 |> SelectionSet.nonNullOrFail
@@ -305,7 +305,7 @@ documentByMask maskName =
         |> SelectionSet.with
             (Mediatum.Object.Document.id
                 |> SelectionSet.nonNullOrFail
-                |> SelectionSet.map documentIdFromInt
+                |> SelectionSet.map Id.fromInt
             )
         |> SelectionSet.with
             (Mediatum.Object.Document.metadatatype
@@ -334,7 +334,7 @@ documentByMask maskName =
 
 {-| Decode a JSON string returned from a query that denotes the mata-values of a document.
 -}
-mapJsonToAttributes : Maybe Mediatum.Scalar.Json -> List DocumentAttribute
+mapJsonToAttributes : Maybe Mediatum.Scalar.Json -> List Document.Attribute
 mapJsonToAttributes maybeJson =
     case maybeJson of
         Nothing ->
@@ -345,12 +345,12 @@ mapJsonToAttributes maybeJson =
                 Json.Decode.decodeString decoderAttributeList str
 
 
-decoderAttributeList : Decoder (List DocumentAttribute)
+decoderAttributeList : Decoder (List Document.Attribute)
 decoderAttributeList =
     Json.Decode.oneOf
         [ Json.Decode.null []
         , Json.Decode.list <|
-            Json.Decode.map4 DocumentAttribute
+            Json.Decode.map4 Document.Attribute
                 (Json.Decode.field "field" Json.Decode.string)
                 (Json.Decode.field "name" Json.Decode.string)
                 (Json.Decode.field "width" Json.Decode.int)
