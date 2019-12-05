@@ -11,10 +11,17 @@ module Entities.DocumentResults exposing
 -}
 
 import Entities.Document exposing (Document)
-import Types exposing (WindowPage)
+import Types
 
 
-{-| -}
+{-| A document within a list of results.
+
+In addition to the document itself a result contains:
+
+  - the position within the list,
+  - a measure (`distance`) of how relevant the document is in relation to the search query.
+
+-}
 type alias DocumentResult =
     { number : Int
     , distance : Float
@@ -22,6 +29,7 @@ type alias DocumentResult =
     }
 
 
-{-| -}
+{-| A [page](Types#WindowPage) of document results
+-}
 type alias DocumentsPage =
-    WindowPage DocumentResult
+    Types.WindowPage DocumentResult

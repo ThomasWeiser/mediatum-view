@@ -13,11 +13,17 @@ module Types.SearchTerm exposing
 
 {-|
 
+
+# Search term
+
 @docs SearchTerm
 @docs fromString
 @docs fromStringWithDefault
 @docs toString
 @docs ordering
+
+
+# Set of search terms
 
 @docs SetOfSearchTerms
 @docs emptySet
@@ -45,7 +51,7 @@ type SearchTerm
 
 {-| Construct a `SearchTerm` by removing unnecessary whitespace from the given string.
 
-Returns `Nothing` if the result would be the empty.
+Returns `Nothing` if the result would be empty.
 
 -}
 fromString : String -> Maybe SearchTerm

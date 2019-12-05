@@ -6,7 +6,9 @@ module Entities.Folder exposing
     , hasSubfolder
     )
 
-{-|
+{-| A folder is either a collection or a directory.
+
+Folders are arranged in a hierarchy, with collections at the top and directories at the bottom.
 
 @docs Folder
 @docs dummy

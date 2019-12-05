@@ -17,7 +17,11 @@ import Types.Id as Id exposing (FolderId)
 import Utils
 
 
-{-| -}
+{-| For a given search query the API can give the number of results in the selected folder and in all of its all subfolders.
+
+This type represents such a distribution of counts of documents.
+
+-}
 type alias FolderCounts =
     Sort.Dict.Dict FolderId Int
 

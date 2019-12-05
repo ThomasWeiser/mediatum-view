@@ -9,7 +9,7 @@ module Types.Range exposing
     , isWithin
     )
 
-{-| A simple abstraction for ranges over a comparable type.
+{-| A simple abstraction for ranges over some comparable type.
 
 Currently used when expressing filters on publication years.
 

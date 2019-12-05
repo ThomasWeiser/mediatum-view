@@ -3,7 +3,7 @@ module Entities.Document exposing
     , init, attributeValue
     )
 
-{-|
+{-| The metadata of a document and its attributes
 
 @docs Document, Attribute
 @docs init, attributeValue
@@ -42,7 +42,8 @@ init id metadatatypeName name attributes =
     }
 
 
-{-| -}
+{-| Lookup an attribute value by field.
+-}
 attributeValue : String -> Document -> Maybe String
 attributeValue key document =
     List.Extra.find
