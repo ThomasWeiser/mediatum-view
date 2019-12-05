@@ -24,7 +24,7 @@ module UI.Article exposing
 
 -}
 
-import Cache
+import Cache exposing (Cache)
 import Cache.Derive
 import Entities.Document exposing (Document)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
@@ -46,7 +46,7 @@ import Utils
 
 {-| -}
 type alias Context =
-    { cache : Cache.Model
+    { cache : Cache
     , route : Route
     , presentation : Presentation
     }

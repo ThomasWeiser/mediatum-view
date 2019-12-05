@@ -23,7 +23,7 @@ module UI.Article.Listing exposing
 -- import Article.Iterator as Iterator
 -- import Pagination.Offset.Page as Page exposing (Page, PageResult)
 
-import Cache
+import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import Html exposing (Html)
@@ -43,7 +43,7 @@ import Utils.Html
 
 {-| -}
 type alias Context =
-    { cache : Cache.Model
+    { cache : Cache
     , selection : Selection
     , window : Window
     }

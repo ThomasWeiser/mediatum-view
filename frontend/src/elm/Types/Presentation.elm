@@ -23,7 +23,7 @@ Each variant of the type corresponds to a sub-component of [`UI.Article`](UI-Art
 
 -}
 
-import Cache
+import Cache exposing (Cache)
 import Cache.Derive
 import Maybe.Extra
 import RemoteData
@@ -43,7 +43,7 @@ type Presentation
 
 
 {-| -}
-getFolderId : Cache.Model -> Presentation -> Maybe FolderId
+getFolderId : Cache -> Presentation -> Maybe FolderId
 getFolderId cache presentation =
     case presentation of
         GenericPresentation maybeNodeIds ->
@@ -62,7 +62,7 @@ getFolderId cache presentation =
 
 
 {-| -}
-fromRoute : Cache.Model -> Route -> Presentation
+fromRoute : Cache -> Route -> Presentation
 fromRoute cache route =
     let
         folderPresentation folderId folderType =

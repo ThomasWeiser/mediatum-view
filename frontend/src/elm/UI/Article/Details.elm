@@ -22,7 +22,7 @@ module UI.Article.Details exposing
 
 import Api
 import Api.Mutations
-import Cache
+import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
@@ -37,7 +37,7 @@ import Utils.Html
 
 {-| -}
 type alias Context =
-    { cache : Cache.Model
+    { cache : Cache
     , documentId : DocumentId
     }
 

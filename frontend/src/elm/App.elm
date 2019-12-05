@@ -10,7 +10,7 @@ module App exposing
 
 -}
 
-import Cache
+import Cache exposing (Cache)
 import Cmd.Extra
 import Html exposing (Html)
 import Types.DebugInfo exposing (DebugInfo, debugInfo)
@@ -41,7 +41,7 @@ Finally there is some [`DebugInfo`](Types-DebugInfo) here for inspection by the 
 -}
 type alias Model =
     { route : Route
-    , cache : Cache.Model
+    , cache : Cache
     , presentation : Presentation
     , ui : UI.Model
 
@@ -62,7 +62,7 @@ type Msg
 init : Route -> ( Model, Cmd Msg )
 init route =
     { route = Route.initHome
-    , cache = Cache.initialModel
+    , cache = Cache.init
     , presentation = GenericPresentation Nothing
     , ui = UI.init
     , debugInfo = { needs = debugInfo Types.Needs.none }

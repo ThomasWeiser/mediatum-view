@@ -25,7 +25,7 @@ module UI.Tree exposing
 
 -}
 
-import Cache exposing (ApiData)
+import Cache exposing (ApiData, Cache)
 import Cache.Derive
 import Entities.Folder as Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
@@ -45,7 +45,7 @@ import Utils.Html
 
 {-| -}
 type alias Context =
-    { cache : Cache.Model
+    { cache : Cache
     , presentation : Presentation
     }
 

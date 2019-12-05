@@ -10,7 +10,7 @@ module Types.Navigation exposing
 
 -}
 
-import Cache
+import Cache exposing (Cache)
 import Cache.Derive
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.Route as Route exposing (Route)
@@ -36,7 +36,7 @@ type Navigation
 In some cases this uses knowledge about node types from the cache.
 
 -}
-alterRoute : Cache.Model -> Navigation -> Route -> Route
+alterRoute : Cache -> Navigation -> Route -> Route
 alterRoute cache navigation route =
     let
         listingRoute =

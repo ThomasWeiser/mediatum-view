@@ -32,7 +32,7 @@ import Utils
 
 {-| -}
 type alias Context item =
-    { cache : Cache.Model
+    { cache : Cache
     , folder : Folder
     , itemList : List item
     , itemId : item -> DocumentId
