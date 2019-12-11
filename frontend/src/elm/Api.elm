@@ -5,7 +5,7 @@ module Api exposing
     )
 
 {-| This module and its sub-modules are responsible
-for communicating to the GraphQL API of mediaTUM's backend.
+for communicating with the GraphQL API of mediaTUM's backend.
 
 The available queries and mutations are located in the modules
 `Api.Queries` and `Api.Mutations`.
@@ -34,7 +34,7 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Utils.Graphql
 
 
-{-| A query specific Result type.
+{-| A query-specific Result type with the fixed error type [`Api.Error`](#Error)
 -}
 type alias Response decodesTo =
     Result Error decodesTo
@@ -60,7 +60,7 @@ or an Error.
 
 The query itself is given as a `Graphql.SelectionSet.SelectionSet`,
 see [elm-graphql](https://package.elm-lang.org/packages/dillonkearns/elm-graphql/latest/Graphql-SelectionSet).
-There are functions in this module to produce these selection sets for all
+There are functions in [`Api.Queries`](Api-Queries) to produce these selection sets for all
 relevant queries of the application.
 
     type Msg

@@ -86,7 +86,8 @@ type alias ApiError =
     Api.Error
 
 
-{-| Represents all data for which fetching from the API has been at least started.
+{-| Represents all known data (in whatever state it may be: `Loading`, `Failure` or `Success`).
+
 Consuming modules read from these tables to fulfill their data needs.
 
 For each entity or relation in the local data schema there is a field in the `Cache` record.

@@ -15,7 +15,7 @@ module Utils exposing
     , onChange
     )
 
-{-| -- TODO Groups (List, RemoteData, etc)
+{-|
 
 
 # Bool

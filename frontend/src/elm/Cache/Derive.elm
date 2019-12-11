@@ -13,13 +13,20 @@ module Cache.Derive exposing
     , isOnPath
     )
 
-{-|
+{-| Functions for getting/deriving some special data from the base tables in the cache.
+
+
+# General types / Error handling
 
 @docs DerivedData
 @docs Error
 
 @docs errorToString
 @docs asDerivedData
+
+
+# Derivation functions
+
 @docs getNodeType
 @docs getAsFolderId
 @docs getAsDocumentId
@@ -38,12 +45,18 @@ import Types exposing (FolderDisplay(..), NodeType(..))
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 
 
-{-| -}
+{-| A specialization of [`RemoteData e a`](/packages/krisajenkins/remotedata/6.0.1/RemoteData#RemoteData)
+where the error type `e` is defined by [`Cache.Derive.Error`](#Error).
+
+Functions of this module that may result in a `CacheDerivationError` return data wrapped in this type.
+
+-}
 type alias DerivedData a =
     RemoteData Error a
 
 
-{-| -}
+{-| An error on getting derived data may be either an ApiError or some logical error within the base data.
+-}
 type Error
     = CacheApiError Cache.ApiError
     | CacheDerivationError String
