@@ -26,7 +26,7 @@ Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Ro
 
 import Types.Id exposing (DocumentId, FolderId, NodeId)
 import Types.Range exposing (Range)
-import Types.SearchTerm exposing (SearchTerm, SetOfSearchTerms)
+import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (FtsSorting(..))
 
 
@@ -61,7 +61,7 @@ type alias RouteParameters =
     { ftsTerm : Maybe SearchTerm
     , ftsSorting : FtsSorting
     , filterByYear : Maybe (Range Int)
-    , filterByTitle : SetOfSearchTerms
+    , filterByTitle : Maybe SearchTerm
     , offset : Int
     , limit : Int
     }
@@ -89,7 +89,7 @@ emptyParameters =
     { ftsTerm = Nothing
     , ftsSorting = defaultFtsSorting
     , filterByYear = Nothing
-    , filterByTitle = Types.SearchTerm.emptySet
+    , filterByTitle = Nothing
     , offset = 0
     , limit = defaultLimit
     }

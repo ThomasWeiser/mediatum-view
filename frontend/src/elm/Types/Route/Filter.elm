@@ -10,8 +10,8 @@ module Types.Route.Filter exposing
 
 -}
 
+import Maybe.Extra
 import Types.Route exposing (Route)
-import Types.SearchTerm
 import Types.Selection as Selection exposing (Filter(..), SetOfFilters)
 import Utils
 
@@ -19,13 +19,10 @@ import Utils
 {-| -}
 fromRoute : Route -> SetOfFilters
 fromRoute route =
-    route.parameters.filterByTitle
-        |> Types.SearchTerm.setToList
-        |> List.map FilterTitleFts
-        |> Utils.prependMaybe
-            (route.parameters.filterByYear
-                |> Maybe.map FilterYearWithin
-            )
+    [ route.parameters.filterByYear |> Maybe.map FilterYearWithin
+    , route.parameters.filterByTitle |> Maybe.map FilterTitleFts
+    ]
+        |> Maybe.Extra.values
         |> Selection.filtersFromList
 
 
@@ -50,7 +47,7 @@ alterRoute filters route =
 
         filterByTitle =
             listOfFilters
-                |> List.filterMap
+                |> Utils.findMap
                     (\filter ->
                         case filter of
                             FilterTitleFts titleSearchTerm ->
@@ -59,7 +56,6 @@ alterRoute filters route =
                             _ ->
                                 Nothing
                     )
-                |> Types.SearchTerm.setFromList
 
         parameters =
             route.parameters

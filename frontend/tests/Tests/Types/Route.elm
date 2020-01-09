@@ -31,8 +31,8 @@ fuzzerRoute =
                     |> Fuzz.maybe
                 )
             |> Fuzz.andMap
-                (TestUtils.shortList 4 fuzzerSearchTerm
-                    |> Fuzz.map Types.SearchTerm.setFromList
+                (fuzzerSearchTerm
+                    |> Fuzz.maybe
                 )
             |> Fuzz.andMap
                 fuzzerOffset
