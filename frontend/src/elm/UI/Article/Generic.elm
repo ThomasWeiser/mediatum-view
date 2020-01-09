@@ -18,7 +18,7 @@ module UI.Article.Generic exposing
 
 -}
 
-import Cache
+import Cache exposing (Cache)
 import Cache.Derive
 import Html exposing (Html)
 import RemoteData exposing (RemoteData(..))
@@ -31,7 +31,7 @@ import Utils.Html
 
 {-| -}
 type alias Context =
-    { cache : Cache.Model
+    { cache : Cache
     , nodeIds : Maybe ( NodeId, Maybe NodeId )
     }
 

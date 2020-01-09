@@ -1,6 +1,11 @@
 module Utils.Graphql exposing (StrippedError, stripError, errorToString)
 
-{-| Provide a simplified error type for GraphQL operations.
+{-|
+
+
+# Error Representation
+
+Provide a simplified error type for GraphQL operations.
 
 The package `dillonkearns/elm-graphql` provides its own
 [error type](https://package.elm-lang.org/packages/dillonkearns/elm-graphql/latest/Graphql-Http#Error)
@@ -9,9 +14,6 @@ which is paramterized on the type that the query should decode to.
 
 For ease of use we define our own error type, which strips out this type parameterization and
 the respective sub-fields. This simplified uniform error reporting.
-
-
-# Error Representation
 
 @docs StrippedError, stripError, errorToString
 

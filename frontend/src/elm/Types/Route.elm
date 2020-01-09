@@ -8,9 +8,9 @@ module Types.Route exposing
     , initDocumentInFolder
     )
 
-{-| For each correctly formed URL there is a unique representation in terms of the type [`Route`](#Route).
+{-| Each correctly formed URL corresponds to a unique value of type [`Route`](#Route).
 
-Parsing and stringifying is defined in [`Types.Route.Url`](Types-Route-Url).
+Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Route-Url).
 
 @docs defaultLimit
 @docs defaultFtsSorting

@@ -18,7 +18,7 @@ module UI.Article.Collection exposing
 
 -}
 
-import Cache
+import Cache exposing (Cache)
 import Entities.Folder as Folder
 import Html exposing (Html)
 import RemoteData
@@ -29,7 +29,7 @@ import Utils.Html
 
 {-| -}
 type alias Context =
-    { cache : Cache.Model
+    { cache : Cache
     , folderId : FolderId
     }
 

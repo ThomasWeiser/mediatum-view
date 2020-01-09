@@ -114,14 +114,14 @@ asNodeId (Id i) =
     Id i
 
 
-{-| Convert a `NodeId` into `FolderId`. Only use this if you know that this node is a folder.
+{-| Convert a `NodeId` into a `FolderId`. Only use this if you know that this node is a folder.
 -}
 asFolderId : NodeId -> FolderId
 asFolderId (Id i) =
     Id i
 
 
-{-| Convert a `NodeId` into `DocumentId`. Only use this if you know that this node is a document.
+{-| Convert a `NodeId` into a `DocumentId`. Only use this if you know that this node is a document.
 -}
 asDocumentId : NodeId -> DocumentId
 asDocumentId (Id i) =
@@ -135,7 +135,7 @@ toInt (Id id) =
     id
 
 
-{-| Construct an id from an number
+{-| Construct an id from a number
 -}
 fromInt : Int -> Id a
 fromInt id =

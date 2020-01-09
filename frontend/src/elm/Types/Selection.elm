@@ -20,7 +20,7 @@ module Types.Selection exposing
     , orderingFilterHandle
     )
 
-{-| A `Selection` is a specification of the possible parameters that are used when querying a set of documents.
+{-| A `Selection` is a specification of the possible parameters when querying a set of documents.
 
 @docs Selection
 @docs SelectMethod

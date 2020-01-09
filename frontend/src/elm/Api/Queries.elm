@@ -7,14 +7,14 @@ module Api.Queries exposing
 
 {-| Definitions of all specific GraphQL queries needed in the application.
 
-Please note:
 For documenting the individual query functions we show the equivalent GraphQL notation.
 
+Please note:
 Many of these functions will refer to other SelectionSet-returning functions
 for nested subqueries.
 We will use the GraphQL fragment notation for denoting this embedding.
 In reality it's just function calling.
-The `elm-graphql` package won't use the fragment notation.
+(The `elm-graphql` package won't use the fragment notation.)
 
 
 # Folder Queries
@@ -164,7 +164,7 @@ genericNode nodeId =
         |> SelectionSet.nonNullOrFail
 
 
-{-| Get all documents of a folder with offet-based pagination.
+{-| Get all documents of a folder with offset-based pagination.
 
 A list of filters may be used to restrict the documents to be returned.
 
@@ -241,7 +241,7 @@ folderDocumentsFolderCounts folderId filters =
         |> SelectionSet.nonNullOrFail
 
 
-{-| Get documents using a full-text search with offet-based pagination.
+{-| Get documents using a full-text search with offset-based pagination.
 
 A list of filters may be used to restrict the documents to be found.
 

@@ -1,6 +1,12 @@
 module Api.Arguments.AttributeTest exposing (Test, Operation(..), testsAsGraphqlArgument)
 
-{-|
+{-| When using filters in a [`Selection`](Types-Selection) these filter
+are translated into certain tests on attributes of the documents.
+
+This module defines types to express these attribute tests
+used to pass them as a parameter to the [query functions](Api-Queries).
+
+Used internally in the `Api.*` modules.
 
 @docs Test, Operation, testsAsGraphqlArgument
 

@@ -13,13 +13,20 @@ module Cache.Derive exposing
     , isOnPath
     )
 
-{-|
+{-| Functions for getting/deriving some special data from the base tables in the cache.
+
+
+# General types / Error handling
 
 @docs DerivedData
 @docs Error
 
 @docs errorToString
 @docs asDerivedData
+
+
+# Derivation functions
+
 @docs getNodeType
 @docs getAsFolderId
 @docs getAsDocumentId
@@ -31,19 +38,25 @@ module Cache.Derive exposing
 
 -}
 
-import Cache exposing (ApiData)
+import Cache exposing (ApiData, Cache)
 import Maybe.Extra
 import RemoteData exposing (RemoteData(..))
 import Types exposing (FolderDisplay(..), NodeType(..))
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 
 
-{-| -}
+{-| A specialization of [`RemoteData e a`](/packages/krisajenkins/remotedata/6.0.1/RemoteData#RemoteData)
+where the error type `e` is defined by [`Cache.Derive.Error`](#Error).
+
+Functions of this module that may result in a `CacheDerivationError` return data wrapped in this type.
+
+-}
 type alias DerivedData a =
     RemoteData Error a
 
 
-{-| -}
+{-| An error on getting derived data may be either an ApiError or some logical error within the base data.
+-}
 type Error
     = CacheApiError Cache.ApiError
     | CacheDerivationError String
@@ -68,13 +81,13 @@ asDerivedData =
 
 
 {-| -}
-getNodeType : Cache.Model -> NodeId -> ApiData NodeType
+getNodeType : Cache -> NodeId -> ApiData NodeType
 getNodeType cache nodeId =
     Cache.get cache.nodeTypes nodeId
 
 
 {-| -}
-getAsFolderId : Cache.Model -> NodeId -> Maybe FolderId
+getAsFolderId : Cache -> NodeId -> Maybe FolderId
 getAsFolderId cache nodeId =
     case Cache.get cache.nodeTypes nodeId of
         Success (NodeIsFolder _) ->
@@ -85,7 +98,7 @@ getAsFolderId cache nodeId =
 
 
 {-| -}
-getAsDocumentId : Cache.Model -> NodeId -> Maybe DocumentId
+getAsDocumentId : Cache -> NodeId -> Maybe DocumentId
 getAsDocumentId cache nodeId =
     case Cache.get cache.nodeTypes nodeId of
         Success NodeIsDocument ->
@@ -96,7 +109,7 @@ getAsDocumentId cache nodeId =
 
 
 {-| -}
-getRootFolder : Cache.Model -> DerivedData ( FolderId, FolderDisplay )
+getRootFolder : Cache -> DerivedData ( FolderId, FolderDisplay )
 getRootFolder cache =
     cache.rootFolderIds
         |> RemoteData.mapError CacheApiError
@@ -122,14 +135,14 @@ getRootFolder cache =
 
 
 {-| -}
-getParentId : Cache.Model -> FolderId -> ApiData (Maybe FolderId)
+getParentId : Cache -> FolderId -> ApiData (Maybe FolderId)
 getParentId cache id =
     Cache.get cache.folders id
         |> RemoteData.map .parent
 
 
 {-| -}
-getPath : Cache.Model -> FolderId -> ApiData (List FolderId)
+getPath : Cache -> FolderId -> ApiData (List FolderId)
 getPath cache id =
     getParentId cache id
         |> RemoteData.andThen
@@ -142,7 +155,7 @@ getPath cache id =
 
 
 {-| -}
-getPathAsFarAsCached : Cache.Model -> Maybe FolderId -> List FolderId
+getPathAsFarAsCached : Cache -> Maybe FolderId -> List FolderId
 getPathAsFarAsCached cache =
     Maybe.Extra.unwrap
         []
@@ -157,7 +170,7 @@ getPathAsFarAsCached cache =
 
 
 {-| -}
-isOnPath : Cache.Model -> FolderId -> Maybe FolderId -> Bool
+isOnPath : Cache -> FolderId -> Maybe FolderId -> Bool
 isOnPath cache requestedId =
     Maybe.Extra.unwrap
         False

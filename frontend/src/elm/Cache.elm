@@ -1,9 +1,9 @@
 module Cache exposing
-    ( ApiData, Model, get
+    ( Cache, ApiData, get
     , Need(..), Needs, targetNeeds
     , updateWithModifiedDocument
     , ApiError, apiErrorToString
-    , Msg(..), initialModel, update
+    , Msg(..), init, update
     , orderingSelectionWindow
     )
 
@@ -11,8 +11,8 @@ module Cache exposing
 
 All data needed from the API is fetched and exposed through this module.
 
-Consuming modules declare their data needs as a value of type `Needs`.
-They can read the actual data from the tables in the `Model`.
+Consuming modules declare their data needs as a value of type [`Needs`](#Needs).
+They can read the actual data from the tables in the [`Cache`](#Cache).
 
 Reading the tables will result in a [`RemoteData`](/packages/krisajenkins/remotedata/6.0.1/RemoteData) value.
 So the consuming modules will have to deal with the possible states a `RemoteData` can show
@@ -21,7 +21,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Cached Data
 
-@docs ApiData, Model, get
+@docs Cache, ApiData, get
 
 
 # Declaring required data
@@ -41,7 +41,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Elm architecture standard functions
 
-@docs Msg, initialModel, update
+@docs Msg, init, update
 
 
 # Internal functions exposed for testing only
@@ -86,16 +86,17 @@ type alias ApiError =
     Api.Error
 
 
-{-| Represents all data for which fetching from the API has been at least started.
+{-| Represents all known data (in whatever state it may be: `Loading`, `Failure` or `Success`).
+
 Consuming modules read from these tables to fulfill their data needs.
 
-For each entity or relation in the local data schema there is a field in the `Model`.
+For each entity or relation in the local data schema there is a field in the `Cache` record.
 
 Most fields are lookup-tables that map from a key type (representing query parameters)
 to an `ApiData` type that contains (in case of a `RemoteData.Success`) the wanted content data.
 
 -}
-type alias Model =
+type alias Cache =
     { rootFolderIds : ApiData (List FolderId)
     , folders : Sort.Dict.Dict FolderId (ApiData Folder)
     , subfolderIds : Sort.Dict.Dict FolderId (ApiData (List FolderId))
@@ -132,8 +133,8 @@ apiErrorToString apiError =
 
 {-| Initial cache model without any entry
 -}
-initialModel : Model
-initialModel =
+init : Cache
+init =
     { rootFolderIds = NotAsked
     , folders = Sort.Dict.empty (Utils.sorter Id.ordering)
     , subfolderIds = Sort.Dict.empty (Utils.sorter Id.ordering)
@@ -144,7 +145,7 @@ initialModel =
     }
 
 
-{-| Read an entry from a lookup-table of the `Model`.
+{-| Read an entry from a lookup-table of the cache.
 
 If the given key is not yet present in the table return `RemoteData.NotAsked`.
 
@@ -170,44 +171,44 @@ type Msg
 
 
 {-| Check which of the needed data has not yet been requested.
-Submit API requests to get that data and mark the corresponding Model entries as `RemoteData.Loading`.
+Submit API requests to get that data and mark the corresponding cache entries as `RemoteData.Loading`.
 -}
-targetNeeds : Needs -> Model -> ( Model, Cmd Msg )
-targetNeeds needs model =
+targetNeeds : Needs -> Cache -> ( Cache, Cmd Msg )
+targetNeeds needs cache =
     Needs.target
-        (statusOfNeed model)
+        (statusOfNeed cache)
         requestNeed
         needs
-        model
+        cache
 
 
 {-| Check the status of an atomic need.
 -}
-statusOfNeed : Model -> Need -> Needs.Status
-statusOfNeed model need =
+statusOfNeed : Cache -> Need -> Needs.Status
+statusOfNeed cache need =
     case need of
         NeedRootFolderIds ->
-            model.rootFolderIds
+            cache.rootFolderIds
                 |> Needs.statusFromRemoteData
 
         NeedSubfolders parentIds ->
             Needs.statusFromListOfRemoteData
-                (List.map (get model.subfolderIds) parentIds)
+                (List.map (get cache.subfolderIds) parentIds)
 
         NeedGenericNode nodeId ->
-            get model.nodeTypes nodeId
+            get cache.nodeTypes nodeId
                 |> Needs.statusFromRemoteData
 
         NeedDocument documentId ->
-            get model.documents documentId
+            get cache.documents documentId
                 |> Needs.statusFromRemoteData
 
         NeedDocumentsPage selection window ->
-            get model.documentsPages ( selection, window )
+            get cache.documentsPages ( selection, window )
                 |> Needs.statusFromRemoteData
 
         NeedFolderCounts selection ->
-            get model.folderCounts selection
+            get cache.folderCounts selection
                 |> Needs.statusFromRemoteData
 
 
@@ -215,14 +216,14 @@ statusOfNeed model need =
 
 Will be called only for needs that are known not to be in progress or fulfilled yet.
 
-Also mark the corresponding Model entries as `RemoteData.Loading`.
+Also mark the corresponding cache entries as `RemoteData.Loading`.
 
 -}
-requestNeed : Need -> Model -> ( Model, Cmd Msg )
-requestNeed need model =
+requestNeed : Need -> Cache -> ( Cache, Cmd Msg )
+requestNeed need cache =
     case need of
         NeedRootFolderIds ->
-            ( { model
+            ( { cache
                 | rootFolderIds = Loading
               }
             , Api.sendQueryRequest
@@ -235,21 +236,21 @@ requestNeed need model =
                 parentIdsWithUnknownChildren =
                     List.filter
                         (\parentId ->
-                            get model.subfolderIds parentId == NotAsked
+                            get cache.subfolderIds parentId == NotAsked
                         )
                         parentIds
             in
             if List.isEmpty parentIdsWithUnknownChildren then
-                ( model, Cmd.none )
+                ( cache, Cmd.none )
 
             else
-                ( { model
+                ( { cache
                     | subfolderIds =
                         List.foldl
                             (\parentId subfolderIds ->
                                 Sort.Dict.insert parentId Loading subfolderIds
                             )
-                            model.subfolderIds
+                            cache.subfolderIds
                             parentIdsWithUnknownChildren
                   }
                 , Api.sendQueryRequest
@@ -258,9 +259,9 @@ requestNeed need model =
                 )
 
         NeedGenericNode nodeId ->
-            ( { model
+            ( { cache
                 | nodeTypes =
-                    Sort.Dict.insert nodeId Loading model.nodeTypes
+                    Sort.Dict.insert nodeId Loading cache.nodeTypes
               }
             , Api.sendQueryRequest
                 (ApiResponseGenericNode nodeId)
@@ -268,9 +269,9 @@ requestNeed need model =
             )
 
         NeedDocument documentId ->
-            ( { model
+            ( { cache
                 | documents =
-                    Sort.Dict.insert documentId Loading model.documents
+                    Sort.Dict.insert documentId Loading cache.documents
               }
             , Api.sendQueryRequest
                 (ApiResponseDocument documentId)
@@ -278,9 +279,9 @@ requestNeed need model =
             )
 
         NeedDocumentsPage selection window ->
-            ( { model
+            ( { cache
                 | documentsPages =
-                    Sort.Dict.insert ( selection, window ) Loading model.documentsPages
+                    Sort.Dict.insert ( selection, window ) Loading cache.documentsPages
               }
             , Api.sendQueryRequest
                 (ApiResponseDocumentsPage ( selection, window ))
@@ -302,9 +303,9 @@ requestNeed need model =
             )
 
         NeedFolderCounts selection ->
-            ( { model
+            ( { cache
                 | folderCounts =
-                    Sort.Dict.insert selection Loading model.folderCounts
+                    Sort.Dict.insert selection Loading cache.folderCounts
               }
             , Api.sendQueryRequest
                 (ApiResponseFolderCounts selection)
@@ -323,20 +324,20 @@ requestNeed need model =
             )
 
 
-{-| Insert or update a document into the table `Model.documents`.
+{-| Insert or update a document into the table `Cache.documents`.
 -}
-updateWithModifiedDocument : Document -> Model -> Model
-updateWithModifiedDocument document model =
-    { model
+updateWithModifiedDocument : Document -> Cache -> Cache
+updateWithModifiedDocument document cache =
+    { cache
         | documents =
-            Sort.Dict.insert document.id (Success (Just document)) model.documents
+            Sort.Dict.insert document.id (Success (Just document)) cache.documents
     }
 
 
-{-| Digest a Msg (i.e. a response from the API layer) and update the data in the `Model` accordingly.
+{-| Digest a Msg (i.e. a response from the API layer) and update the data in the cache accordingly.
 -}
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Msg -> Cache -> ( Cache, Cmd Msg )
+update msg cache =
     case msg of
         ApiResponseToplevelFolder (Ok listOfRootFoldersWithSubfolders) ->
             ( let
@@ -354,7 +355,7 @@ update msg model =
                         |> List.map Tuple.second
                         |> List.concat
               in
-              { model
+              { cache
                 | rootFolderIds =
                     Success
                         (List.map (Tuple.first >> .id) listOfRootFoldersWithSubfolders)
@@ -366,14 +367,14 @@ update msg model =
             )
 
         ApiResponseToplevelFolder (Err error) ->
-            ( { model
+            ( { cache
                 | rootFolderIds = Failure error
               }
             , Cmd.none
             )
 
         ApiResponseSubfolder parentIds (Ok listOfSubfolders) ->
-            ( model
+            ( cache
                 |> insertAsFolders listOfSubfolders
                 |> insertAsSubfolderIds parentIds listOfSubfolders
                 |> insertFoldersAsNodeTypes listOfSubfolders
@@ -381,13 +382,13 @@ update msg model =
             )
 
         ApiResponseSubfolder parentIds (Err error) ->
-            ( { model
+            ( { cache
                 | subfolderIds =
                     List.foldl
                         (\parentId subfolderIds ->
                             Sort.Dict.insert parentId (Failure error) subfolderIds
                         )
-                        model.subfolderIds
+                        cache.subfolderIds
                         parentIds
               }
             , Cmd.none
@@ -395,8 +396,8 @@ update msg model =
 
         ApiResponseGenericNode nodeId (Ok genericNode) ->
             let
-                model1 =
-                    model
+                cache1 =
+                    cache
                         |> insertNodeType nodeId (GenericNode.toNodeType genericNode)
             in
             case genericNode of
@@ -405,69 +406,69 @@ update msg model =
                         folders =
                             List.Nonempty.toList lineage
 
-                        ( model2, cmd ) =
-                            model1
+                        ( cache2, cmd ) =
+                            cache1
                                 |> insertAsFolders folders
                                 |> targetNeeds
                                     (Needs.atomic (NeedSubfolders (List.map .id folders)))
                     in
-                    ( model2
+                    ( cache2
                     , cmd
                     )
 
                 GenericNode.IsDocument document ->
-                    ( model1
+                    ( cache1
                         |> updateWithModifiedDocument document
                     , Cmd.none
                     )
 
                 GenericNode.IsNeither ->
-                    ( model1
+                    ( cache1
                     , Cmd.none
                     )
 
         ApiResponseGenericNode nodeId (Err error) ->
-            ( { model
+            ( { cache
                 | nodeTypes =
-                    Sort.Dict.insert nodeId (Failure error) model.nodeTypes
+                    Sort.Dict.insert nodeId (Failure error) cache.nodeTypes
               }
             , Cmd.none
             )
 
         ApiResponseDocument documentId result ->
-            ( { model
+            ( { cache
                 | documents =
-                    Sort.Dict.insert documentId (RemoteData.fromResult result) model.documents
+                    Sort.Dict.insert documentId (RemoteData.fromResult result) cache.documents
               }
             , Cmd.none
             )
 
         ApiResponseDocumentsPage selectionAndWindow result ->
-            ( { model
+            ( { cache
                 | documentsPages =
-                    Sort.Dict.insert selectionAndWindow (RemoteData.fromResult result) model.documentsPages
+                    Sort.Dict.insert selectionAndWindow (RemoteData.fromResult result) cache.documentsPages
               }
             , Cmd.none
             )
 
         ApiResponseFolderCounts selection result ->
-            ( { model
+            ( { cache
                 | folderCounts =
-                    Sort.Dict.insert selection (RemoteData.fromResult result) model.folderCounts
+                    Sort.Dict.insert selection (RemoteData.fromResult result) cache.folderCounts
               }
             , Cmd.none
             )
 
 
-insertAsFolders : List Folder -> Model -> Model
-insertAsFolders listOfNewFolders model =
-    { model
+insertAsFolders : List Folder -> Cache -> Cache
+insertAsFolders listOfNewFolders cache =
+    { cache
         | folders =
             List.foldl
                 (\folder ->
                     Sort.Dict.insert folder.id (Success folder)
                 )
-                model.folders
+                cache.folders
                 listOfNewFolders
         , subfolderIds =
             listOfNewFolders
@@ -477,13 +478,13 @@ insertAsFolders listOfNewFolders model =
                     (\folder ->
                         Sort.Dict.insert folder.id (Success [])
                     )
-                    model.subfolderIds
+                    cache.subfolderIds
     }
 
 
-insertAsSubfolderIds : List FolderId -> List Folder -> Model -> Model
-insertAsSubfolderIds parentFolderIds allSubfoldersOfTheParents model =
-    { model
+insertAsSubfolderIds : List FolderId -> List Folder -> Cache -> Cache
+insertAsSubfolderIds parentFolderIds allSubfoldersOfTheParents cache =
+    { cache
         | subfolderIds =
             List.foldl
                 (\parentFolderId ->
@@ -502,28 +503,28 @@ insertAsSubfolderIds parentFolderIds allSubfoldersOfTheParents model =
                             )
                         )
                 )
-                model.subfolderIds
+                cache.subfolderIds
                 parentFolderIds
     }
 
 
-insertFoldersAsNodeTypes : List Folder -> Model -> Model
-insertFoldersAsNodeTypes listOfNewFolders model =
+insertFoldersAsNodeTypes : List Folder -> Cache -> Cache
+insertFoldersAsNodeTypes listOfNewFolders cache =
     List.foldl
         (\folder ->
             insertNodeType
                 (folder.id |> Id.asNodeId)
                 (NodeIsFolder folder.display)
         )
-        model
+        cache
         listOfNewFolders
 
 
-insertNodeType : NodeId -> NodeType -> Model -> Model
-insertNodeType nodeId nodeType model =
-    { model
+insertNodeType : NodeId -> NodeType -> Cache -> Cache
+insertNodeType nodeId nodeType cache =
+    { cache
         | nodeTypes =
-            Sort.Dict.insert nodeId (Success nodeType) model.nodeTypes
+            Sort.Dict.insert nodeId (Success nodeType) cache.nodeTypes
     }
 
 

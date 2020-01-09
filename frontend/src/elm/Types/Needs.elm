@@ -214,10 +214,11 @@ statusOfNeeds statusOfAtomicNeed needs =
 
 {-| The cache management has to provide a function to evaluate the status of an atomic need.
 
-Note that the complete signature of the provided function will probably have a type of `Cache.Model -> Need -> Status`.
+Note that the complete type of the provided function will probably be `Cache.Model -> Need -> Status`.
 
-When calling the `target` the cache module already partially applies the function on `Cache.Model`.
-So the type of the function as passed to `target` is just `n -> Status` (where `n` is the type of an atomic need).
+The first argument will already be supplied by the cache module when passing the function to `target`.
+
+So the type as passed to `target` is just `n -> Status` (where `n` is the type of an atomic need).
 
 -}
 type alias StatusOfAtomicNeed n =
@@ -226,12 +227,12 @@ type alias StatusOfAtomicNeed n =
 
 {-| The cache management has to provide a function to request data in order to satisfy a unfulfilled need.
 
-Note that the function should two two things:
+Note that the function should do two things:
 
   - Return a `Cmd` with the necessary API request(s).
 
-  - Mapping a value of type `a`, which stands for the current cache content.
-    The function must mark the corresponding cache entries as `RemoteData.Loading`.
+  - Map a value of type `a` (which stands for the current cache content)
+    in order to mark the corresponding cache entries as `RemoteData.Loading`.
 
 -}
 type alias RequestAtomicNeed n a msg =
@@ -241,7 +242,7 @@ type alias RequestAtomicNeed n a msg =
 {-| Target a collection of needs:
 
   - Evaluate the status of each contained atomic need.
-  - For each need that is not yet addressed:
+  - For each need with status `NotRequested`:
       - Produce an API request to get the corresponding data.
       - Mark the data as `Loading` in the cache.
 

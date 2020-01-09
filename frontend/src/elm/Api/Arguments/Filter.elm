@@ -1,6 +1,11 @@
 module Api.Arguments.Filter exposing (filtersToAttributeTests)
 
-{-|
+{-| When using filters in a [`Selection`](Types-Selection) these filter
+are translated into certain tests on attributes of the documents.
+
+This module defines that translation for each of the provided filter.
+
+Used internally in module [`Api.Queries`](Api.Queries).
 
 @docs filtersToAttributeTests
 

@@ -5,7 +5,7 @@ module Api.Fragments exposing
     , graphqlDocumentObjects
     )
 
-{-| Definitions of GraphQL query fragments used in the root queries.
+{-| Definitions of GraphQL subqueries used in the toplevel queries.
 
 
 # Fragments on Folder
@@ -57,7 +57,7 @@ import Types.Id as Id exposing (FolderId)
 import Utils
 
 
-{-| Selection set on a Folder to get basic properties of the folder.
+{-| Selection set on a [`Folder`](Entities-Folder) to get basic properties of the folder.
 
 _GraphQL notation:_
 
@@ -127,7 +127,7 @@ folderAndSubfolders =
 {-| Selection set on a folder to get the lineage of that folder.
 
 The lineage is the non-emtpy list of folders representing the path
-from the given folder up to a root folder of the hierarchy.
+starting with the given folder up to a root folder of the hierarchy.
 
 _GraphQL notation:_
 

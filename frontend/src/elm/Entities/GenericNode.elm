@@ -3,7 +3,9 @@ module Entities.GenericNode exposing
     , toNodeType
     )
 
-{-| An API request by an arbitrary node number results in either a document, or a folder (together with all ancestor nodes), or neither. The type `GenericNode` represents such a result.
+{-| An API request on the node data by an arbitrary node number results in either a document,
+or a folder (together with all ancestor nodes), or neither.
+The type `GenericNode` represents such a result.
 
 @docs GenericNode
 @docs toNodeType

@@ -10,7 +10,7 @@ module UI exposing
 
 -}
 
-import Cache
+import Cache exposing (Cache)
 import Entities.Document exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
@@ -28,7 +28,7 @@ import UI.Tree
 {-| Context data provided by the parent module [`App`](App). Used by several functions here.
 -}
 type alias Context =
-    { cache : Cache.Model
+    { cache : Cache
     , route : Route
     , presentation : Presentation
     }

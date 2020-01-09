@@ -9,8 +9,14 @@ may be necessary to choose which kind of article should be display in the UI.
 
 Example:
 
-  - The route `/1234` may refer to a collection, a folder (displayed as a listing of itsdocuments) or a single document.
-  - The route `/1234/5678` will probably refer to a document within a folder. Then again one of the given ids may not exist in the database. In this case we want to display a special article with an appropriate erro message.
+  - The route `/1234` may refer to a collection, a folder (displayed as a listing of its documents)
+    or a specific document.
+  - The route `/1234/5678` will probably refer to a document within a folder.
+    Then again one of the given ids may not exist in the database,
+    or may reference an entity that is not of the respective type.
+    In this case we want to display a special article with an appropriate error message.
+  - For any route the app may not yet have received data about the resource to display.
+    In this case we want to display a generic article with an appropriate message.
 
 A [`Presentation`](#Presentation) describes the kind as well as the specific parameters of the article to be displayed
 for the given route under the current knowledge about the relevant node types.
@@ -23,7 +29,7 @@ Each variant of the type corresponds to a sub-component of [`UI.Article`](UI-Art
 
 -}
 
-import Cache
+import Cache exposing (Cache)
 import Cache.Derive
 import Maybe.Extra
 import RemoteData
@@ -43,7 +49,7 @@ type Presentation
 
 
 {-| -}
-getFolderId : Cache.Model -> Presentation -> Maybe FolderId
+getFolderId : Cache -> Presentation -> Maybe FolderId
 getFolderId cache presentation =
     case presentation of
         GenericPresentation maybeNodeIds ->
@@ -62,7 +68,7 @@ getFolderId cache presentation =
 
 
 {-| -}
-fromRoute : Cache.Model -> Route -> Presentation
+fromRoute : Cache -> Route -> Presentation
 fromRoute cache route =
     let
         folderPresentation folderId folderType =
