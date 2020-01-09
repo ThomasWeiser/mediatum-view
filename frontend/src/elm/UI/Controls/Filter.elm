@@ -130,7 +130,7 @@ viewEditControls focusId controls =
                     , Html.Attributes.type_ "number"
                     , Html.Attributes.min "1900"
                     , Html.Attributes.max "2100"
-                    , Html.Attributes.placeholder "from"
+                    , Html.Attributes.placeholder "From Year"
                     , Html.Attributes.value
                         (Maybe.Extra.unwrap "" String.fromInt from)
                     , Utils.onChange
@@ -143,7 +143,7 @@ viewEditControls focusId controls =
                     [ Html.Attributes.type_ "number"
                     , Html.Attributes.min "1900"
                     , Html.Attributes.max "2100"
-                    , Html.Attributes.placeholder "to"
+                    , Html.Attributes.placeholder "To Year"
                     , Html.Attributes.value
                         (Maybe.Extra.unwrap "" String.fromInt to)
                     , Utils.onChange
@@ -160,7 +160,7 @@ viewEditControls focusId controls =
                 [ Html.input
                     [ Html.Attributes.id focusId
                     , Html.Attributes.type_ "text"
-                    , Html.Attributes.placeholder "Title full text filter"
+                    , Html.Attributes.placeholder "Title Filter"
                     , Html.Attributes.value searchTerm
                     , Utils.onChange ControlsTitleFts
                     ]
