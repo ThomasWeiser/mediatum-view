@@ -80,7 +80,7 @@ type FtsSorting
     | FtsByDate
 
 
-{-| A `SetOfFilters` may contain one single `FilterYearWithin` and zero or more `FilterTitleFts` as long as the search terms a unqiue.
+{-| A `SetOfFilters` may contain one single `FilterYearWithin` and one single `FilterTitleFts`.
 -}
 type SetOfFilters
     = SetOfFilters (Sort.Dict.Dict FilterHandle Filter)
@@ -140,8 +140,7 @@ filterHandle filter =
                 "YearWithin"
 
             FilterTitleFts searchTerm ->
-                "TitleFts-"
-                    ++ SearchTerm.toString searchTerm
+                "TitleFts"
 
 
 {-| Used for newly created filter editors.

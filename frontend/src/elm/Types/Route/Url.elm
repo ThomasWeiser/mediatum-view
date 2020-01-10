@@ -65,11 +65,9 @@ parserParameters =
                     )
                 )
         )
-        (QueryParser.custom "filter-by-title"
-            (List.map Types.SearchTerm.fromString
-                >> Maybe.Extra.values
-                >> Types.SearchTerm.setFromList
-            )
+        (QueryParser.string "filter-by-title"
+            |> QueryParser.map
+                (Maybe.andThen Types.SearchTerm.fromString)
         )
         (QueryParser.int "offset"
             |> queryParserWithDefault 0
@@ -139,24 +137,20 @@ toString route =
                             ++ Maybe.Extra.unwrap "" String.fromInt maybeYear2
                 )
                 route.parameters.filterByYear
+            , route.parameters.filterByTitle
+                |> Maybe.map
+                    (Types.SearchTerm.toString
+                        >> Builder.string "filter-by-title"
+                    )
+            , buildParameterIfNotDefault
+                (Builder.int "offset")
+                0
+                route.parameters.offset
+            , buildParameterIfNotDefault
+                (Builder.int "limit")
+                Route.defaultLimit
+                route.parameters.limit
             ]
-            ++ (route.parameters.filterByTitle
-                    |> Types.SearchTerm.setToList
-                    |> List.map
-                        (Types.SearchTerm.toString
-                            >> Builder.string "filter-by-title"
-                        )
-               )
-            ++ Maybe.Extra.values
-                [ buildParameterIfNotDefault
-                    (Builder.int "offset")
-                    0
-                    route.parameters.offset
-                , buildParameterIfNotDefault
-                    (Builder.int "limit")
-                    Route.defaultLimit
-                    route.parameters.limit
-                ]
         )
 
 

@@ -4,11 +4,6 @@ module Types.SearchTerm exposing
     , fromStringWithDefault
     , toString
     , ordering
-    , SetOfSearchTerms
-    , emptySet
-    , setIsEmpty
-    , setFromList
-    , setToList
     )
 
 {-|
@@ -22,18 +17,8 @@ module Types.SearchTerm exposing
 @docs toString
 @docs ordering
 
-
-# Set of search terms
-
-@docs SetOfSearchTerms
-@docs emptySet
-@docs setIsEmpty
-@docs setFromList
-@docs setToList
-
 -}
 
-import List.Unique
 import Ordering exposing (Ordering)
 import String.Extra
 
@@ -81,34 +66,3 @@ toString (SearchTerm string) =
 ordering : Ordering SearchTerm
 ordering =
     Ordering.byField toString
-
-
-{-| A set of unique search terms
--}
-type SetOfSearchTerms
-    = SetOfSearchTerms (List.Unique.UniqueList SearchTerm)
-
-
-{-| -}
-emptySet : SetOfSearchTerms
-emptySet =
-    SetOfSearchTerms List.Unique.empty
-
-
-{-| -}
-setIsEmpty : SetOfSearchTerms -> Bool
-setIsEmpty (SetOfSearchTerms set) =
-    List.Unique.isEmpty set
-
-
-{-| -}
-setFromList : List SearchTerm -> SetOfSearchTerms
-setFromList list =
-    SetOfSearchTerms <|
-        List.Unique.fromList list
-
-
-{-| -}
-setToList : SetOfSearchTerms -> List SearchTerm
-setToList (SetOfSearchTerms set) =
-    List.Unique.toList set
