@@ -151,6 +151,47 @@ comment on function api.docset_subfolder_counts
 ;
     
 
+create or replace function api.docset_facet_by_metadatatype
+    ( docset api.docset
+    )
+    returns setof api.facet_value as $$
+        select document.schema, count(document.schema)::integer
+        from entity.document
+        where document.id = ANY (docset.id_list)
+        group by document.schema
+        order by count(document.schema) desc, document.schema
+        ;
+$$ language sql stable parallel safe rows 50;
+
+
+comment on function api.docset_facet_by_metadatatype
+    ( docset api.docset
+    ) is
+    'Gather the most frequent values of the metadatatype name within the docset. '
+;
+
+
+create or replace function api.docset_facet_by_metadatatype_longname
+    ( docset api.docset
+    )
+    returns setof api.facet_value as $$
+        select metadatatype.longname, count(metadatatype.longname)::integer
+        from entity.document
+        join entity.metadatatype on document.schema = metadatatype.name
+        where document.id = ANY (docset.id_list)
+        group by metadatatype.longname
+        order by count(metadatatype.longname) desc, metadatatype.longname
+        ;
+$$ language sql stable parallel safe rows 50;
+
+
+comment on function api.docset_facet_by_metadatatype_longname
+    ( docset api.docset
+    ) is
+    'Gather the most frequent values of the metadatatype longname within the docset. '
+;
+
+
 create or replace function api.docset_facet_by_key
     ( docset api.docset
     , key text
