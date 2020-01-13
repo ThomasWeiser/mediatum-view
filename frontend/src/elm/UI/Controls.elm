@@ -22,25 +22,34 @@ module UI.Controls exposing
 
 -}
 
+import Cache exposing (ApiData, Cache)
+import Config
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import RemoteData
 import Sort.Dict
+import Types.Facet exposing (FacetValue, FacetValues)
 import Types.Navigation as Navigation exposing (Navigation)
+import Types.Presentation as Presentation exposing (Presentation(..))
 import Types.Range as Range
 import Types.Route as Route exposing (Route)
 import Types.Route.Filter
 import Types.SearchTerm as SearchTerm
-import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), SetOfFilters)
+import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), Selection, SetOfFilters)
 import UI.Controls.Filter
 import UI.Controls.FilterEditor as FilterEditor
 import UI.Icons
 import Utils
+import Utils.Html
 
 
 {-| -}
 type alias Context =
-    { route : Route }
+    { route : Route
+    , cache : Cache
+    , presentation : Presentation
+    }
 
 
 {-| -}
@@ -245,6 +254,7 @@ view context model =
     Html.div []
         [ viewSearch context model
         , viewFilters context model
+        , viewFacets context model
         ]
 
 
@@ -352,3 +362,53 @@ viewExistingFilter beingEdited filter =
             ]
             [ Html.text "X" ]
         ]
+
+
+viewFacets : Context -> Model -> Html Msg
+viewFacets context model =
+    case context.presentation of
+        ListingPresentation selection _ ->
+            Html.div [ Html.Attributes.class "facets-bar" ]
+                [ viewFacet context selection model Config.standardFacetKey
+                ]
+
+        _ ->
+            Html.div [ Html.Attributes.class "facets-bar" ]
+                [ Html.text ""
+                ]
+
+
+viewFacet : Context -> Selection -> Model -> String -> Html Msg
+viewFacet context selection model key =
+    case
+        Cache.get
+            context.cache.facetsValues
+            ( selection, key )
+    of
+        RemoteData.NotAsked ->
+            -- Should never happen
+            UI.Icons.spinner
+
+        RemoteData.Loading ->
+            UI.Icons.spinner
+
+        RemoteData.Failure error ->
+            Utils.Html.viewApiError error
+
+        RemoteData.Success facetValues ->
+            viewFacetValues facetValues
+
+
+viewFacetValues : FacetValues -> Html Msg
+viewFacetValues facetValues =
+    Html.ul [] <|
+        List.map
+            (\{ value, count } ->
+                Html.li []
+                    [ Html.text value
+                    , Html.text " ("
+                    , Html.text (String.fromInt count)
+                    , Html.text ")"
+                    ]
+            )
+            facetValues

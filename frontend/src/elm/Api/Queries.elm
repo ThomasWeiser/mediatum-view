@@ -1,6 +1,7 @@
 module Api.Queries exposing
     ( toplevelFolder, subfolder
-    , folderDocumentsPage, folderDocumentsFolderCounts, ftsPage, ftsFolderCounts
+    , folderDocumentsPage, folderDocumentsFolderCounts, folderDocumentsFacetByKey
+    , ftsPage, ftsFolderCounts, ftsFacetByKey
     , documentDetails
     , genericNode, authorSearch
     )
@@ -24,7 +25,8 @@ In reality it's just function calling.
 
 # Document Search and Facet Queries
 
-@docs folderDocumentsPage, folderDocumentsFolderCounts, ftsPage, ftsFolderCounts
+@docs folderDocumentsPage, folderDocumentsFolderCounts, folderDocumentsFacetByKey
+@docs ftsPage, ftsFolderCounts, ftsFacetByKey
 
 
 # Document Queries
@@ -59,6 +61,7 @@ import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
 import Types exposing (Window)
+import Types.Facet exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (FtsSorting(..), SetOfFilters)
@@ -241,6 +244,44 @@ folderDocumentsFolderCounts folderId filters =
         |> SelectionSet.nonNullOrFail
 
 
+{-| Get a facet's value list of documents within a folder and its sub-folders.
+
+A list of filters may be used to restrict the documents to be counted.
+
+_GraphQL notation:_
+
+    query {
+        allDocumentsDocset(
+            folderId: $folderId
+            attributeTests: $listOfAttributeTestsForFiltering
+        ) {
+            ...facetByKey(key, limit)
+        }
+    }
+
+-}
+folderDocumentsFacetByKey :
+    FolderId
+    -> SetOfFilters
+    -> String
+    -> Int
+    -> SelectionSet FacetValues Graphql.Operation.RootQuery
+folderDocumentsFacetByKey folderId filters key limit =
+    Mediatum.Query.allDocumentsDocset
+        (\optionals ->
+            { optionals
+                | folderId = Present (Id.toInt folderId)
+                , attributeTests =
+                    filters
+                        |> Api.Arguments.Filter.filtersToAttributeTests
+                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
+                        |> Present
+            }
+        )
+        (Api.Fragments.facetByKey key limit)
+        |> SelectionSet.nonNullOrFail
+
+
 {-| Get documents using a full-text search with offset-based pagination.
 
 A list of filters may be used to restrict the documents to be found.
@@ -334,6 +375,47 @@ ftsFolderCounts folderId searchTerm filters =
             }
         )
         Api.Fragments.folderAndSubfolderCounts
+        |> SelectionSet.nonNullOrFail
+
+
+{-| Get a facet's value list of documents found by a full-text search.
+
+A list of filters may be used to restrict the documents to be counted.
+
+_GraphQL notation:_
+
+    query {
+        ftsDocumentsDocset(
+            folderId: $folderId
+            text: $searchTerm
+            attributeTests: $listOfAttributeTestsForFiltering
+        ) {
+            ...folderAndSubfolderCounts
+        }
+    }
+
+-}
+ftsFacetByKey :
+    FolderId
+    -> SearchTerm
+    -> SetOfFilters
+    -> String
+    -> Int
+    -> SelectionSet FacetValues Graphql.Operation.RootQuery
+ftsFacetByKey folderId searchTerm filters key limit =
+    Mediatum.Query.ftsDocumentsDocset
+        (\optionals ->
+            { optionals
+                | folderId = Present (Id.toInt folderId)
+                , text = Present (Types.SearchTerm.toString searchTerm)
+                , attributeTests =
+                    filters
+                        |> Api.Arguments.Filter.filtersToAttributeTests
+                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
+                        |> Present
+            }
+        )
+        (Api.Fragments.facetByKey key limit)
         |> SelectionSet.nonNullOrFail
 
 
