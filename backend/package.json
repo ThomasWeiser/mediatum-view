@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "postgraphile": "4.3.x"
+    "postgraphile": "~4.5.5"
   }
 }
