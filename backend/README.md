@@ -84,10 +84,10 @@ $ psql -d $MEDIATUM_DATABASE_NAME -c "CREATE EXTENSION snowball_bilingual;"
 
 ### PostGraphile
 
-[PostGraphile](https://www.graphile.org/postgraphile/) is a `Node.js` application. Install with:
+[PostGraphile](https://www.graphile.org/postgraphile/) is a `Node.js` application, installed utilizing _npm_:
 
 ```sh
-$ npm install -g postgraphile
+$ npm install
 ```
 
 ## Installation

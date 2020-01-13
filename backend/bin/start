@@ -18,7 +18,7 @@ mkdir -p export
 
 DATABASE_SUPER_USER="postgres"
 
-postgraphile \
+node_modules/.bin/postgraphile \
     --host localhost \
     --connection postgres://$DATABASE_SUPER_USER@localhost:5432/$MEDIATUM_DATABASE_NAME \
     --default-role $MEDIATUM_DATABASE_USER \
