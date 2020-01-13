@@ -158,6 +158,7 @@ create or replace function api.docset_facet_by_metadatatype
         select document.schema, count(document.schema)::integer
         from entity.document
         where document.id = ANY (docset.id_list)
+        and document.schema is not null
         group by document.schema
         order by count(document.schema) desc, document.schema
         ;
@@ -200,6 +201,7 @@ create or replace function api.docset_facet_by_key
         select document.attrs ->> key, count(document.attrs ->> key)::integer
         from entity.document
         where document.id = ANY (docset.id_list)
+        and document.attrs ->> key is not null
         group by document.attrs ->> key
         order by count(document.attrs ->> key) desc, document.attrs ->> key
         ;
@@ -225,6 +227,7 @@ create or replace function api.docset_facet_by_mask
         where v.document_id = ANY (docset.id_list)
         and v.mask_name = docset_facet_by_mask.mask_name
         and v.maskitem_name = docset_facet_by_mask.maskitem_name
+        and v.value is not null
         group by v.value
         order by count(v.value) desc, v.value
         ;
@@ -255,6 +258,7 @@ create or replace function api.all_documents_facet_by_key
         and (all_documents_facet_by_key.type is null or document.type = all_documents_facet_by_key.type)
         and (all_documents_facet_by_key.name is null or document.name = all_documents_facet_by_key.name)
         and (attribute_tests is null or aux.jsonb_test_list (document.attrs, attribute_tests))
+        and document.attrs ->> key is not null
         group by document.attrs ->> key
         order by count(document.attrs ->> key) desc, document.attrs ->> key
         ;
@@ -292,6 +296,7 @@ create or replace function api.all_documents_facet_by_mask
         and (attribute_tests is null or aux.jsonb_test_list (v.document_attrs, attribute_tests))
         and v.mask_name = all_documents_facet_by_mask.mask_name
         and v.maskitem_name = all_documents_facet_by_mask.maskitem_name
+        and v.value is not null
         group by v.value
         order by count(v.value) desc, v.value
         ;
