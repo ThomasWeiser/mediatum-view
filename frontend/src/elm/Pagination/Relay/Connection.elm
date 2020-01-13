@@ -52,7 +52,7 @@ type alias GraphqlObjects graphqlObjectsRecord connectionObject edgeObject nodeO
         | pageInfo :
             SelectionSet PageInfo pageInfoObject
             -> SelectionSet PageInfo connectionObject
-        , totalCount : SelectionSet (Maybe Int) connectionObject
+        , totalCount : SelectionSet Int connectionObject
         , edges : SelectionSet (Edge cursorScalar nodeType) edgeObject -> SelectionSet (List (Edge cursorScalar nodeType)) connectionObject
         , cursor : SelectionSet (Maybe cursorScalar) edgeObject
         , node : SelectionSet nodeType nodeObject -> SelectionSet nodeType edgeObject
@@ -76,7 +76,7 @@ connection graphqlObjects nodeSelectionSet =
     SelectionSet.succeed Connection
         |> SelectionSet.with (graphqlObjects.pageInfo (pageInfo graphqlObjects))
         |> SelectionSet.with (graphqlObjects.edges (edge graphqlObjects nodeSelectionSet))
-        |> SelectionSet.with (graphqlObjects.totalCount |> SelectionSet.nonNullOrFail)
+        |> SelectionSet.with graphqlObjects.totalCount
 
 
 edge :
