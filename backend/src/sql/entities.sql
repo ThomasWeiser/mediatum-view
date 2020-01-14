@@ -242,7 +242,8 @@ create or replace view entity.document as
         node.orderpos,
         node.attrs
     from mediatum.node
-    where not aux.nodetype_is_container (node.type)
+    where node.schema is not null
+      and not aux.nodetype_is_container (node.type)
       and aux.is_public_today (node.id);
 
 
