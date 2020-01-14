@@ -13,6 +13,7 @@ module Types.Selection exposing
     , filterHandle
     , newFilterHandle
     , orderingSelection
+    , orderingSelectionModuloSorting
     , orderingSelectMethod
     , orderingFtsSorting
     , orderingFilters
@@ -43,6 +44,7 @@ module Types.Selection exposing
 Define orderings on these types so we can use them as keys in `Sort.Dict`.
 
 @docs orderingSelection
+@docs orderingSelectionModuloSorting
 @docs orderingSelectMethod
 @docs orderingFtsSorting
 @docs orderingFilters
@@ -161,6 +163,16 @@ orderingSelection =
 
 
 {-| -}
+orderingSelectionModuloSorting : Ordering Selection
+orderingSelectionModuloSorting =
+    Ordering.byFieldWith Id.ordering .scope
+        |> Ordering.breakTiesWith
+            (Ordering.byFieldWith orderingSelectMethodModuloSorting .selectMethod)
+        |> Ordering.breakTiesWith
+            (Ordering.byFieldWith orderingFilters .filters)
+
+
+{-| -}
 orderingSelectMethod : Ordering SelectMethod
 orderingSelectMethod =
     Ordering.byRank
@@ -180,6 +192,30 @@ orderingSelectMethod =
                     SearchTerm.ordering searchTermL searchTermR
                         |> Ordering.ifStillTiedThen
                             (orderingFtsSorting ftsSortingL ftsSortingR)
+
+                _ ->
+                    Ordering.noConflicts
+        )
+
+
+{-| -}
+orderingSelectMethodModuloSorting : Ordering SelectMethod
+orderingSelectMethodModuloSorting =
+    Ordering.byRank
+        (\selectMethod ->
+            case selectMethod of
+                SelectByFolderListing ->
+                    1
+
+                SelectByFullTextSearch _ _ ->
+                    2
+        )
+        (\searchMethodL searchMethodR ->
+            case
+                ( searchMethodL, searchMethodR )
+            of
+                ( SelectByFullTextSearch searchTermL ftsSortingL, SelectByFullTextSearch searchTermR ftsSortingR ) ->
+                    SearchTerm.ordering searchTermL searchTermR
 
                 _ ->
                     Ordering.noConflicts
