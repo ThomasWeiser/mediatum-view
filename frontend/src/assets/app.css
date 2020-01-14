@@ -196,8 +196,10 @@ ul.folder-list ul.folder-list {
 .article {
   position: relative;
 }
-.article .spinner {
+.spinner {
   width: 3em;
+}
+.article .spinner {
   position: absolute;
   top: 50%;
   left: 50%;
