@@ -29,6 +29,7 @@ import Html.Attributes
 import Html.Events
 import RemoteData
 import Sort.Dict
+import String.Extra
 import Types.Facet exposing (FacetValue, FacetValues)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation as Presentation exposing (Presentation(..))
@@ -251,7 +252,7 @@ update context msg model =
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
-    Html.div []
+    Html.nav []
         [ viewSearch context model
         , viewFilters context model
         , viewFacets context model
@@ -368,9 +369,12 @@ viewFacets : Context -> Model -> Html Msg
 viewFacets context model =
     case context.presentation of
         ListingPresentation selection _ ->
-            Html.div [ Html.Attributes.class "facets-bar" ]
-                [ viewFacet context selection model Config.standardFacetKey
-                ]
+            Html.div
+                [ Html.Attributes.class "facets-bar" ]
+                (List.map
+                    (viewFacet context selection model)
+                    Config.standardFacetKeys
+                )
 
         _ ->
             Html.div [ Html.Attributes.class "facets-bar" ]
@@ -380,23 +384,32 @@ viewFacets context model =
 
 viewFacet : Context -> Selection -> Model -> String -> Html Msg
 viewFacet context selection model key =
-    case
-        Cache.get
-            context.cache.facetsValues
-            ( selection, key )
-    of
-        RemoteData.NotAsked ->
-            -- Should never happen
-            UI.Icons.spinner
+    Html.div
+        [ Html.Attributes.class "facet-box" ]
+        [ Html.div
+            [ Html.Attributes.class "facet-name" ]
+            [ Html.text key ]
+        , Html.div
+            [ Html.Attributes.class "facet-values" ]
+            [ case
+                Cache.get
+                    context.cache.facetsValues
+                    ( selection, key )
+              of
+                RemoteData.NotAsked ->
+                    -- Should never happen
+                    UI.Icons.spinner
 
-        RemoteData.Loading ->
-            UI.Icons.spinner
+                RemoteData.Loading ->
+                    UI.Icons.spinner
 
-        RemoteData.Failure error ->
-            Utils.Html.viewApiError error
+                RemoteData.Failure error ->
+                    Utils.Html.viewApiError error
 
-        RemoteData.Success facetValues ->
-            viewFacetValues facetValues
+                RemoteData.Success facetValues ->
+                    viewFacetValues facetValues
+            ]
+        ]
 
 
 viewFacetValues : FacetValues -> Html Msg
@@ -404,11 +417,19 @@ viewFacetValues facetValues =
     Html.ul [] <|
         List.map
             (\{ value, count } ->
-                Html.li []
-                    [ Html.text value
-                    , Html.text " ("
-                    , Html.text (String.fromInt count)
-                    , Html.text ")"
+                Html.li
+                    [ Html.Attributes.class "facet-value-line" ]
+                    [ Html.span
+                        [ Html.Attributes.class "facet-value-text" ]
+                        [ if String.Extra.isBlank value then
+                            Html.i [] [ Html.text "[not specified]" ]
+
+                          else
+                            Html.text value
+                        ]
+                    , Html.span
+                        [ Html.Attributes.class "facet-value-count" ]
+                        [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
                     ]
             )
             facetValues

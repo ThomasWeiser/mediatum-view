@@ -124,10 +124,11 @@ needs presentation =
         ListingPresentation selection window ->
             Types.Needs.sequence
                 (Types.Needs.atomic <| Cache.NeedDocumentsPage selection window)
-                (Types.Needs.batch
-                    [ Types.Needs.atomic <| Cache.NeedFolderCounts selection
-                    , Types.Needs.atomic <| Cache.NeedFacet selection Config.standardFacetKey
-                    ]
+                (Types.Needs.batch <|
+                    (Types.Needs.atomic <| Cache.NeedFolderCounts selection)
+                        :: List.map
+                            (Types.Needs.atomic << Cache.NeedFacet selection)
+                            Config.standardFacetKeys
                 )
 
 

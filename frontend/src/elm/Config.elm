@@ -1,6 +1,6 @@
 module Config exposing
     ( apiUrl, pageSize, facetValuesToQuery
-    , standardFacetKey
+    , standardFacetKeys
     )
 
 {-| Configurable values
@@ -33,6 +33,6 @@ facetValuesToQuery =
     20
 
 
-standardFacetKey : String
-standardFacetKey =
-    "subject"
+standardFacetKeys : List String
+standardFacetKeys =
+    [ "type", "subject", "origin" ]
