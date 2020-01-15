@@ -55,11 +55,14 @@ alterRoute cache navigation route =
                     Route.TwoIds idOne _ ->
                         Route.OneId idOne
             , parameters =
-                { parameters | offset = 0 }
+                parametersWithOffset0
             }
 
         parameters =
             route.parameters
+
+        parametersWithOffset0 =
+            { parameters | offset = 0 }
     in
     case navigation of
         ListOfNavigations listOfNavigations ->
@@ -83,7 +86,7 @@ alterRoute cache navigation route =
         ShowListingWithSearch maybeFtsTerm ftsSorting ->
             { listingRoute
                 | parameters =
-                    { parameters
+                    { parametersWithOffset0
                         | ftsTerm = maybeFtsTerm
                         , ftsSorting = ftsSorting
                     }
