@@ -35,6 +35,8 @@ fuzzerRoute =
                     |> Fuzz.maybe
                 )
             |> Fuzz.andMap
+                Tests.Types.fuzzerFacetFilters
+            |> Fuzz.andMap
                 fuzzerOffset
             |> Fuzz.andMap
                 fuzzerLimit

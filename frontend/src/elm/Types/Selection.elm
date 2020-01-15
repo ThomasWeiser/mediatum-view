@@ -5,6 +5,7 @@ module Types.Selection exposing
     , SetOfFilters
     , Filter(..)
     , FilterHandle
+    , FacetFilters
     , filtersNone
     , insertFilter
     , removeFilter
@@ -16,6 +17,7 @@ module Types.Selection exposing
     , orderingSelectionModuloSorting
     , orderingSelectMethod
     , orderingFtsSorting
+    , orderingFacetFilters
     , orderingFilters
     , orderingFilter
     , orderingFilterHandle
@@ -29,6 +31,7 @@ module Types.Selection exposing
 @docs SetOfFilters
 @docs Filter
 @docs FilterHandle
+@docs FacetFilters
 
 @docs filtersNone
 @docs insertFilter
@@ -47,12 +50,14 @@ Define orderings on these types so we can use them as keys in `Sort.Dict`.
 @docs orderingSelectionModuloSorting
 @docs orderingSelectMethod
 @docs orderingFtsSorting
+@docs orderingFacetFilters
 @docs orderingFilters
 @docs orderingFilter
 @docs orderingFilterHandle
 
 -}
 
+import Dict
 import Ordering exposing (Ordering)
 import Sort.Dict
 import Types.Id as Id exposing (FolderId)
@@ -66,6 +71,7 @@ type alias Selection =
     { scope : FolderId
     , selectMethod : SelectMethod
     , filters : SetOfFilters
+    , facetFilters : FacetFilters
     }
 
 
@@ -80,6 +86,12 @@ type SelectMethod
 type FtsSorting
     = FtsByRank
     | FtsByDate
+
+
+{-| A set of facet filters
+-}
+type alias FacetFilters =
+    Dict.Dict String String
 
 
 {-| A `SetOfFilters` may contain one single `FilterYearWithin` and one single `FilterTitleFts`.
@@ -160,6 +172,8 @@ orderingSelection =
             (Ordering.byFieldWith orderingSelectMethod .selectMethod)
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingFilters .filters)
+        |> Ordering.breakTiesWith
+            (Ordering.byFieldWith orderingFacetFilters .facetFilters)
 
 
 {-| -}
@@ -170,6 +184,8 @@ orderingSelectionModuloSorting =
             (Ordering.byFieldWith orderingSelectMethodModuloSorting .selectMethod)
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingFilters .filters)
+        |> Ordering.breakTiesWith
+            (Ordering.byFieldWith orderingFacetFilters .facetFilters)
 
 
 {-| -}
@@ -275,3 +291,11 @@ orderingFilter =
                 _ ->
                     Ordering.noConflicts
         )
+
+
+{-| -}
+orderingFacetFilters : Ordering FacetFilters
+orderingFacetFilters =
+    Ordering.byFieldWith
+        (Utils.lexicalOrder Ordering.natural)
+        Dict.toList

@@ -13,6 +13,7 @@ module Types.Route.Url exposing
 import Dict
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
+import Set
 import Types.Id as Id
 import Types.Range as Range
 import Types.Route as Route exposing (Route, RouteParameters, RoutePath(..))
@@ -46,7 +47,7 @@ parser =
 
 parserParameters : QueryParser.Parser RouteParameters
 parserParameters =
-    QueryParser.map6 RouteParameters
+    QueryParser.map7 RouteParameters
         (QueryParser.string "fts-term"
             |> QueryParser.map
                 (Maybe.andThen Types.SearchTerm.fromString)
@@ -68,6 +69,15 @@ parserParameters =
         (QueryParser.string "filter-by-title"
             |> QueryParser.map
                 (Maybe.andThen Types.SearchTerm.fromString)
+        )
+        (QueryParser.custom "filter-by-facet"
+            (List.map
+                (ElmParser.run elmParserFacetFilter
+                    >> Result.toMaybe
+                )
+                >> Maybe.Extra.values
+                >> Dict.fromList
+            )
         )
         (QueryParser.int "offset"
             |> queryParserWithDefault 0
@@ -98,6 +108,30 @@ elmParserYearRange =
                 |= ElmParser.int
             , ElmParser.succeed Nothing
             ]
+        |. ElmParser.end
+
+
+elmParserFacetFilter : ElmParser.Parser ( String, String )
+elmParserFacetFilter =
+    let
+        isKeyCharacter c =
+            Char.isAlphaNum c || c == '_' || c == '.' || c == '-'
+
+        isValueCharacter c =
+            True
+    in
+    ElmParser.succeed Tuple.pair
+        |= ElmParser.variable
+            { start = isKeyCharacter
+            , inner = isKeyCharacter
+            , reserved = Set.empty
+            }
+        |. ElmParser.symbol ":"
+        |= ElmParser.variable
+            { start = isValueCharacter
+            , inner = isValueCharacter
+            , reserved = Set.empty
+            }
         |. ElmParser.end
 
 
@@ -142,15 +176,23 @@ toString route =
                     (Types.SearchTerm.toString
                         >> Builder.string "filter-by-title"
                     )
-            , buildParameterIfNotDefault
-                (Builder.int "offset")
-                0
-                route.parameters.offset
-            , buildParameterIfNotDefault
-                (Builder.int "limit")
-                Route.defaultLimit
-                route.parameters.limit
             ]
+            ++ List.map
+                (\( key, value ) ->
+                    Builder.string "filter-by-facet"
+                        (key ++ ":" ++ value)
+                )
+                (Dict.toList route.parameters.facetFilters)
+            ++ Maybe.Extra.values
+                [ buildParameterIfNotDefault
+                    (Builder.int "offset")
+                    0
+                    route.parameters.offset
+                , buildParameterIfNotDefault
+                    (Builder.int "limit")
+                    Route.defaultLimit
+                    route.parameters.limit
+                ]
         )
 
 

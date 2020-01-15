@@ -80,6 +80,7 @@ type Msg
     | SubmitExampleQuery
     | FilterEditorMsg FilterHandle FilterEditor.Msg
     | SetFacetKeysInput String
+    | SelectFacetValue String String
 
 
 {-| -}
@@ -251,6 +252,13 @@ update context msg model =
 
                 Nothing ->
                     ( model, Cmd.none, NoReturn )
+
+        SelectFacetValue key value ->
+            ( model
+            , Cmd.none
+            , Navigate
+                (Navigation.ShowListingWithAddedFacetFilter key value)
+            )
 
         SetFacetKeysInput facetKeysInput ->
             ( { model | facetKeysInput = facetKeysInput }
@@ -436,18 +444,20 @@ viewFacet context selection model key =
                     Utils.Html.viewApiError error
 
                 RemoteData.Success facetValues ->
-                    viewFacetValues facetValues
+                    viewFacetValues key facetValues
             ]
         ]
 
 
-viewFacetValues : FacetValues -> Html Msg
-viewFacetValues facetValues =
+viewFacetValues : String -> FacetValues -> Html Msg
+viewFacetValues key facetValues =
     Html.ul [] <|
         List.map
             (\{ value, count } ->
                 Html.li
-                    [ Html.Attributes.class "facet-value-line" ]
+                    [ Html.Attributes.class "facet-value-line"
+                    , Html.Events.onClick (SelectFacetValue key value)
+                    ]
                     [ Html.span
                         [ Html.Attributes.class "facet-value-text" ]
                         [ if String.Extra.isBlank value then
