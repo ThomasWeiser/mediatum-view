@@ -26,7 +26,6 @@ type Navigation
     | ShowListingWithFolder FolderId
     | ShowListingWithSearch (Maybe SearchTerm) FtsSorting
     | ShowListingWithFilters SetOfFilters
-    | SetFolder FolderId
     | SetOffset Int
     | SetLimit Int
 
@@ -41,6 +40,7 @@ alterRoute cache navigation route =
     let
         listingRoute =
             { path =
+                -- Remove the document id if present
                 case route.path of
                     Route.NoId ->
                         Route.NoId
@@ -55,11 +55,14 @@ alterRoute cache navigation route =
                     Route.TwoIds idOne _ ->
                         Route.OneId idOne
             , parameters =
-                { parameters | offset = 0 }
+                parametersWithOffset0
             }
 
         parameters =
             route.parameters
+
+        parametersWithOffset0 =
+            { parameters | offset = 0 }
     in
     case navigation of
         ListOfNavigations listOfNavigations ->
@@ -83,7 +86,7 @@ alterRoute cache navigation route =
         ShowListingWithSearch maybeFtsTerm ftsSorting ->
             { listingRoute
                 | parameters =
-                    { parameters
+                    { parametersWithOffset0
                         | ftsTerm = maybeFtsTerm
                         , ftsSorting = ftsSorting
                     }
@@ -91,32 +94,6 @@ alterRoute cache navigation route =
 
         ShowListingWithFilters filters ->
             Types.Route.Filter.alterRoute filters listingRoute
-
-        SetFolder folderId ->
-            { path =
-                case route.path of
-                    Route.NoId ->
-                        Route.OneId
-                            (folderId |> Id.asNodeId)
-
-                    Route.OneId idOne ->
-                        case Cache.Derive.getAsDocumentId cache idOne of
-                            Nothing ->
-                                Route.OneId
-                                    (folderId |> Id.asNodeId)
-
-                            Just documentId ->
-                                Route.TwoIds
-                                    (folderId |> Id.asNodeId)
-                                    (documentId |> Id.asNodeId)
-
-                    Route.TwoIds idOne idTwo ->
-                        Route.TwoIds
-                            (folderId |> Id.asNodeId)
-                            idTwo
-            , parameters =
-                parameters
-            }
 
         SetOffset offset ->
             { route

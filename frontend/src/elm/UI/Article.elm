@@ -256,7 +256,7 @@ viewBreadcrumbs context maybeFolderId =
                                                         [ context.route
                                                             |> Navigation.alterRoute
                                                                 context.cache
-                                                                (Navigation.SetFolder folder.id)
+                                                                (Navigation.ShowListingWithFolder folder.id)
                                                             |> Types.Route.Url.toString
                                                             |> Html.Attributes.href
                                                         ]
