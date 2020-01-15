@@ -151,16 +151,58 @@ comment on function api.docset_subfolder_counts
 ;
     
 
+create or replace function api.docset_facet_by_metadatatype
+    ( docset api.docset
+    )
+    returns setof api.facet_value as $$
+        select document.schema, count(document.schema)::integer
+        from entity.document
+        where document.id = ANY (docset.id_list)
+        group by document.schema
+        order by count(document.schema) desc, document.schema
+        ;
+$$ language sql stable parallel safe rows 50;
+
+
+comment on function api.docset_facet_by_metadatatype
+    ( docset api.docset
+    ) is
+    'Gather the most frequent values of the metadatatype name within the docset. '
+;
+
+
+create or replace function api.docset_facet_by_metadatatype_longname
+    ( docset api.docset
+    )
+    returns setof api.facet_value as $$
+        select coalesce(metadatatype.longname, ''), count(coalesce(metadatatype.longname, ''))::integer
+        from entity.document
+        join entity.metadatatype on document.schema = metadatatype.name
+        where document.id = ANY (docset.id_list)
+        group by coalesce(metadatatype.longname, '')
+        order by count(coalesce(metadatatype.longname, '')) desc, coalesce(metadatatype.longname, '')
+        ;
+$$ language sql stable parallel safe rows 50;
+
+
+comment on function api.docset_facet_by_metadatatype_longname
+    ( docset api.docset
+    ) is
+    'Gather the most frequent values of the metadatatype longname within the docset. '
+    'In case of a missing longname the value is indicated as the empty string.'
+;
+
+
 create or replace function api.docset_facet_by_key
     ( docset api.docset
     , key text
     )
     returns setof api.facet_value as $$
-        select document.attrs ->> key, count(document.attrs ->> key)::integer
+        select coalesce(document.attrs ->> key, ''), count(coalesce(document.attrs ->> key, ''))::integer
         from entity.document
         where document.id = ANY (docset.id_list)
-        group by document.attrs ->> key
-        order by count(document.attrs ->> key) desc, document.attrs ->> key
+        group by coalesce(document.attrs ->> key, '')
+        order by count(coalesce(document.attrs ->> key, '')) desc, coalesce(document.attrs ->> key, '')
         ;
 $$ language sql stable parallel safe rows 50;
 
@@ -169,7 +211,8 @@ comment on function api.docset_facet_by_key
     , key text
     ) is
     'Gather the most frequent values of a facet within the docset. '
-    'The facet in question is specified by a JSON attribute key.'
+    'The facet in question is specified by a JSON attribute key. '
+    'Documents without this key indicate the value as the empty string.'
 ;
 
 
@@ -179,13 +222,13 @@ create or replace function api.docset_facet_by_mask
     , maskitem_name text
     )
     returns setof api.facet_value as $$
-        select v.value, count(v.value)::integer
+        select coalesce(v.value, ''), count(coalesce(v.value, ''))::integer
         from entity.document_mask_fields as v
         where v.document_id = ANY (docset.id_list)
         and v.mask_name = docset_facet_by_mask.mask_name
         and v.maskitem_name = docset_facet_by_mask.maskitem_name
-        group by v.value
-        order by count(v.value) desc, v.value
+        group by coalesce(v.value, '')
+        order by count(coalesce(v.value, '')) desc, coalesce(v.value, '')
         ;
 $$ language sql stable parallel safe rows 50;
 
@@ -195,7 +238,8 @@ comment on function api.docset_facet_by_mask
     , maskitem_name text
     ) is
     'Gather the most frequent values of a facet within the docset. '
-    'The facet in question is specified by maskName and maskitemName.'
+    'The facet in question is specified by maskName and maskitemName. '
+    'Documents without the corresponding key indicate the value as the empty string.'
 ;
 
 
@@ -207,15 +251,15 @@ create or replace function api.all_documents_facet_by_key
     , key text
     )
     returns setof api.facet_value as $$
-        select document.attrs ->> key, count (document.attrs ->> key)::integer
+        select coalesce(document.attrs ->> key, ''), count (coalesce(document.attrs ->> key, ''))::integer
         from entity.document
         join aux.node_lineage on document.id = node_lineage.descendant
         where folder_id = node_lineage.ancestor
         and (all_documents_facet_by_key.type is null or document.type = all_documents_facet_by_key.type)
         and (all_documents_facet_by_key.name is null or document.name = all_documents_facet_by_key.name)
         and (attribute_tests is null or aux.jsonb_test_list (document.attrs, attribute_tests))
-        group by document.attrs ->> key
-        order by count(document.attrs ->> key) desc, document.attrs ->> key
+        group by coalesce(document.attrs ->> key, '')
+        order by count(coalesce(document.attrs ->> key, '')) desc, coalesce(document.attrs ->> key, '')
         ;
 $$ language sql stable rows 10000;
 
@@ -227,7 +271,8 @@ comment on function api.all_documents_facet_by_key
     , key text
     ) is
     'Gather the most frequent values of a facet within all documents of a folder. '
-    'The facet in question is specified by a JSON attribute key.'
+    'The facet in question is specified by a JSON attribute key. '
+    'Documents without this key indicate the value as the empty string. '
     'Note: When dealing with large sets of documents, this function is faster '
     'than composing the functions "all_documents_docset" and "docset_facet_by_key".'
 ;
@@ -242,7 +287,7 @@ create or replace function api.all_documents_facet_by_mask
     , maskitem_name text
     )
     returns setof api.facet_value as $$
-        select v.value, count(v.value)::integer
+        select coalesce(v.value, ''), count(coalesce(v.value, ''))::integer
         from entity.document_mask_fields as v
         join aux.node_lineage on v.document_id = node_lineage.descendant
         where folder_id = node_lineage.ancestor
@@ -251,8 +296,8 @@ create or replace function api.all_documents_facet_by_mask
         and (attribute_tests is null or aux.jsonb_test_list (v.document_attrs, attribute_tests))
         and v.mask_name = all_documents_facet_by_mask.mask_name
         and v.maskitem_name = all_documents_facet_by_mask.maskitem_name
-        group by v.value
-        order by count(v.value) desc, v.value
+        group by coalesce(v.value, '')
+        order by count(coalesce(v.value, '')) desc, coalesce(v.value, '')
         ;
 $$ language sql stable rows 10000;
 
@@ -266,6 +311,7 @@ comment on function api.all_documents_facet_by_mask
     ) is
     'Gather the most frequent values of a facet within all documents of a folder. '
     'The facet in question is specified by maskName and maskitemName. '
+    'Documents without the corresponding key indicate the value as the empty string. '
     'Note: When dealing with large sets of documents, this function is faster '
     'than composing the functions "all_documents_docset" and "docset_facet_by_mask".'
 ;

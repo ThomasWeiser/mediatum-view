@@ -26,6 +26,7 @@ module UI.Article exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
+import Config
 import Entities.Document exposing (Document)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
@@ -123,7 +124,12 @@ needs presentation =
         ListingPresentation selection window ->
             Types.Needs.sequence
                 (Types.Needs.atomic <| Cache.NeedDocumentsPage selection window)
-                (Types.Needs.atomic <| Cache.NeedFolderCounts selection)
+                (Types.Needs.batch <|
+                    (Types.Needs.atomic <| Cache.NeedFolderCounts selection)
+                        :: List.map
+                            (Types.Needs.atomic << Cache.NeedFacet selection)
+                            Config.standardFacetKeys
+                )
 
 
 {-| -}

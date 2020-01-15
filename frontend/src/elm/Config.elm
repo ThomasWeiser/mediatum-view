@@ -1,8 +1,11 @@
-module Config exposing (apiUrl, pageSize)
+module Config exposing
+    ( apiUrl, pageSize, facetValuesToQuery
+    , standardFacetKeys
+    )
 
 {-| Configurable values
 
-@docs apiUrl, pageSize
+@docs apiUrl, pageSize, facetValuesToQuery
 
 -}
 
@@ -20,3 +23,16 @@ Currently hard-coded.
 pageSize : Int
 pageSize =
     10
+
+
+{-| Number of results per page used for pagination.
+Currently hard-coded.
+-}
+facetValuesToQuery : Int
+facetValuesToQuery =
+    20
+
+
+standardFacetKeys : List String
+standardFacetKeys =
+    [ "type", "subject", "origin" ]

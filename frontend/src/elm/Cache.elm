@@ -53,6 +53,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 import Api
 import Api.Queries
 import Basics.Extra
+import Config
 import Entities.Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder)
@@ -63,6 +64,7 @@ import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (NodeType(..), Window)
+import Types.Facet exposing (FacetValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Needs as Needs
 import Types.Selection as Selection exposing (SelectMethod(..), Selection)
@@ -104,6 +106,7 @@ type alias Cache =
     , documents : Sort.Dict.Dict DocumentId (ApiData (Maybe Document))
     , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
     , folderCounts : Sort.Dict.Dict Selection (ApiData FolderCounts)
+    , facetsValues : Sort.Dict.Dict ( Selection, String ) (ApiData FacetValues)
     }
 
 
@@ -116,6 +119,7 @@ type Need
     | NeedDocument DocumentId
     | NeedDocumentsPage Selection Window
     | NeedFolderCounts Selection
+    | NeedFacet Selection String
 
 
 {-| A collection of these needs.
@@ -142,6 +146,7 @@ init =
     , documents = Sort.Dict.empty (Utils.sorter Id.ordering)
     , documentsPages = Sort.Dict.empty (Utils.sorter orderingSelectionWindow)
     , folderCounts = Sort.Dict.empty (Utils.sorter Selection.orderingSelection)
+    , facetsValues = Sort.Dict.empty (Utils.sorter orderingSelectionFacet)
     }
 
 
@@ -168,6 +173,7 @@ type Msg
     | ApiResponseDocument DocumentId (Api.Response (Maybe Document))
     | ApiResponseDocumentsPage ( Selection, Window ) (Api.Response DocumentsPage)
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
+    | ApiResponseFacet ( Selection, String ) (Api.Response FacetValues)
 
 
 {-| Check which of the needed data has not yet been requested.
@@ -209,6 +215,10 @@ statusOfNeed cache need =
 
         NeedFolderCounts selection ->
             get cache.folderCounts selection
+                |> Needs.statusFromRemoteData
+
+        NeedFacet selection key ->
+            get cache.facetsValues ( selection, key )
                 |> Needs.statusFromRemoteData
 
 
@@ -320,6 +330,31 @@ requestNeed need cache =
                             selection.scope
                             searchTerm
                             selection.filters
+                )
+            )
+
+        NeedFacet selection key ->
+            ( { cache
+                | facetsValues =
+                    Sort.Dict.insert ( selection, key ) Loading cache.facetsValues
+              }
+            , Api.sendQueryRequest
+                (ApiResponseFacet ( selection, key ))
+                (case selection.selectMethod of
+                    SelectByFolderListing ->
+                        Api.Queries.folderDocumentsFacetByKey
+                            selection.scope
+                            selection.filters
+                            key
+                            Config.facetValuesToQuery
+
+                    SelectByFullTextSearch searchTerm ftsSorting ->
+                        Api.Queries.ftsFacetByKey
+                            selection.scope
+                            searchTerm
+                            selection.filters
+                            key
+                            Config.facetValuesToQuery
                 )
             )
 
@@ -459,6 +494,14 @@ update msg cache =
             , Cmd.none
             )
 
+        ApiResponseFacet selectionAndKey result ->
+            ( { cache
+                | facetsValues =
+                    Sort.Dict.insert selectionAndKey (RemoteData.fromResult result) cache.facetsValues
+              }
+            , Cmd.none
+            )
+
 
 insertAsFolders : List Folder -> Cache -> Cache
 insertAsFolders listOfNewFolders cache =
@@ -535,3 +578,12 @@ orderingSelectionWindow =
     Ordering.byFieldWith Selection.orderingSelection Tuple.first
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith Types.orderingWindow Tuple.second)
+
+
+{-| Ordering on the tuple type `( Selection, String )`
+-}
+orderingSelectionFacet : Ordering ( Selection, String )
+orderingSelectionFacet =
+    Ordering.byFieldWith Selection.orderingSelection Tuple.first
+        |> Ordering.breakTiesWith
+            (Ordering.byFieldWith Ordering.natural Tuple.second)

@@ -121,7 +121,7 @@ getPresentationFolderId context =
 {-| -}
 view : Context -> Model -> Maybe FolderCounts -> Html Msg
 view context model maybeFolderCounts =
-    Html.div []
+    Html.nav []
         [ viewListOfFolders
             context
             model

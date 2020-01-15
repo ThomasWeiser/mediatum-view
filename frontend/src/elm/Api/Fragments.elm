@@ -1,6 +1,6 @@
 module Api.Fragments exposing
     ( folder, folderAndSubfolders, folderLineage
-    , folderAndSubfolderCounts, folderCount
+    , folderAndSubfolderCounts, folderCount, facetByKey
     , documentsPage, documentResult, documentByMask
     , graphqlDocumentObjects
     )
@@ -15,7 +15,7 @@ module Api.Fragments exposing
 
 # Fragments for Facet Queries
 
-@docs folderAndSubfolderCounts, folderCount
+@docs folderAndSubfolderCounts, folderCount, facetByKey
 
 
 # Fragments for Document Results
@@ -44,6 +44,8 @@ import Mediatum.Object.DocumentResult
 import Mediatum.Object.DocumentResultPage
 import Mediatum.Object.DocumentsConnection
 import Mediatum.Object.DocumentsEdge
+import Mediatum.Object.FacetValue
+import Mediatum.Object.FacetValuesConnection
 import Mediatum.Object.Folder
 import Mediatum.Object.FolderCount
 import Mediatum.Object.FolderCountsConnection
@@ -53,6 +55,7 @@ import Mediatum.Object.PageInfo
 import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection
 import Types exposing (FolderDisplay(..), WindowPage)
+import Types.Facet exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (FolderId)
 import Utils
 
@@ -194,7 +197,7 @@ folderAndSubfolderCounts =
 
 _GraphQL notation:_
 
-    fragment folderCount on FolderCount Facet Queries
+    fragment folderCount on FolderCount
         count
         folderId
     }
@@ -210,6 +213,75 @@ folderCount =
             )
         |> SelectionSet.with
             (Mediatum.Object.FolderCount.count
+                |> SelectionSet.nonNullOrFail
+            )
+
+
+{-| Selection set on a Docset to get the top values of a facet given by an attribute key.
+
+_GraphQL notation:_
+
+    fragment facetByKey on Docset {
+        facetByKey(key: key, first: limit) {
+            ...facetValues
+        }
+    }
+
+-}
+facetByKey : String -> Int -> SelectionSet FacetValues Mediatum.Object.Docset
+facetByKey key limit =
+    SelectionSet.succeed identity
+        |> SelectionSet.with
+            (Mediatum.Object.Docset.facetByKey
+                (\optionals ->
+                    { optionals
+                        | key = Present key
+                        , first = Present limit
+                    }
+                )
+                facetValues
+            )
+
+
+{-| Selection set on the nodes of a list of FacetValue.
+
+_GraphQL notation:_
+
+    fragment facetValues on FacetValuesConnection {
+        nodes {
+            ...facetValue
+        }
+    }
+
+-}
+facetValues : SelectionSet FacetValues Mediatum.Object.FacetValuesConnection
+facetValues =
+    SelectionSet.succeed identity
+        |> SelectionSet.with
+            (Mediatum.Object.FacetValuesConnection.nodes
+                facetValue
+            )
+
+
+{-| Selection set on a FacetValue to get the value and the count of a facet's figure.
+
+_GraphQL notation:_
+
+    fragment facetValue on FacetValue
+        value
+        count
+    }
+
+-}
+facetValue : SelectionSet FacetValue Mediatum.Object.FacetValue
+facetValue =
+    SelectionSet.succeed FacetValue
+        |> SelectionSet.with
+            (Mediatum.Object.FacetValue.value
+                |> SelectionSet.withDefault "[null]"
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.FacetValue.count
                 |> SelectionSet.nonNullOrFail
             )
 

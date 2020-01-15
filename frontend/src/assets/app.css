@@ -55,7 +55,7 @@ aside {
   overflow: auto;
   /* border-right: 1px solid grey; */
 }
-aside > div {
+aside > nav {
   background-color: #f7f7f7;
   padding: 0.6em;
 }
@@ -196,8 +196,10 @@ ul.folder-list ul.folder-list {
 .article {
   position: relative;
 }
-.article .spinner {
+.spinner {
   width: 3em;
+}
+.article .spinner {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -226,4 +228,38 @@ ul.folder-list ul.folder-list {
 }
 .article .details table td + td {
   padding-left: 0.4em;
+}
+
+.facets-bar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+}
+.facet-box {
+  background-color: #f7f7f7;
+  flex: 0 0 33%;
+  max-width: 33%;
+}
+.facet-name {
+  font-weight: bold;
+}
+.facet-values {
+  height: 13.5ex;
+  overflow-y: auto;
+}
+.facet-values ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.facet-value-line {
+  display: flex;
+}
+.facet-value-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.facet-value-count {
+  margin-left: 0.2em;
 }
