@@ -233,6 +233,7 @@ ul.folder-list ul.folder-list {
 
 .facets-bar {
   display: flex;
+  flex-flow: row wrap;
   align-items: stretch;
   justify-content: space-between;
 }
@@ -240,6 +241,7 @@ ul.folder-list ul.folder-list {
   background-color: #f7f7f7;
   flex: 0 0 33%;
   max-width: 33%;
+  margin-bottom: 1ex;
 }
 .facet-name {
   font-weight: bold;
