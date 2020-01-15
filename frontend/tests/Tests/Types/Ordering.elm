@@ -2,10 +2,10 @@ module Tests.Types.Ordering exposing (suite)
 
 import Cache
 import Expect
-import Fuzz exposing (Fuzzer)
 import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Types exposing (..)
+import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types
 import Types.Id as Id
 import Types.Selection as Selection
@@ -13,7 +13,7 @@ import Types.Selection as Selection
 
 suite : Test
 suite =
-    describe "Data.Ordering"
+    describe "Ordering"
         [ testOrderingProperties "NodeId" fuzzerNodeId Id.ordering
         , testOrderingProperties "FolderId" fuzzerFolderId Id.ordering
         , testOrderingProperties "DocumentId" fuzzerDocumentId Id.ordering
@@ -24,4 +24,35 @@ suite =
         , testOrderingProperties "Filters" fuzzerFilters Selection.orderingFilters
         , testOrderingProperties "Filter" fuzzerFilter Selection.orderingFilter
         , testOrderingProperties "Window" fuzzerWindow Types.orderingWindow
+        , testOrderingSelectionModuloSorting
+        ]
+
+
+testOrderingSelectionModuloSorting : Test
+testOrderingSelectionModuloSorting =
+    describe "Ordering Selection modulo sorting"
+        [ testPreorderingProperties "Selection modulo sorting" fuzzerSelection Selection.orderingSelectionModuloSorting
+        , fuzz3
+            fuzzerFolderId
+            fuzzerSearchTerm
+            fuzzerFilters
+            "selections that only differ in FtsSorting should be ragarded as equal"
+          <|
+            \folderId searchTerm filters ->
+                Selection.orderingSelectionModuloSorting
+                    { scope = folderId
+                    , selectMethod =
+                        Selection.SelectByFullTextSearch
+                            searchTerm
+                            Selection.FtsByRank
+                    , filters = filters
+                    }
+                    { scope = folderId
+                    , selectMethod =
+                        Selection.SelectByFullTextSearch
+                            searchTerm
+                            Selection.FtsByDate
+                    , filters = filters
+                    }
+                    |> Expect.equal EQ
         ]

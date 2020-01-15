@@ -145,7 +145,7 @@ init =
     , nodeTypes = Sort.Dict.empty (Utils.sorter Id.ordering)
     , documents = Sort.Dict.empty (Utils.sorter Id.ordering)
     , documentsPages = Sort.Dict.empty (Utils.sorter orderingSelectionWindow)
-    , folderCounts = Sort.Dict.empty (Utils.sorter Selection.orderingSelection)
+    , folderCounts = Sort.Dict.empty (Utils.sorter Selection.orderingSelectionModuloSorting)
     , facetsValues = Sort.Dict.empty (Utils.sorter orderingSelectionFacet)
     }
 
@@ -584,6 +584,6 @@ orderingSelectionWindow =
 -}
 orderingSelectionFacet : Ordering ( Selection, String )
 orderingSelectionFacet =
-    Ordering.byFieldWith Selection.orderingSelection Tuple.first
+    Ordering.byFieldWith Selection.orderingSelectionModuloSorting Tuple.first
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith Ordering.natural Tuple.second)

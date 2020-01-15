@@ -9,6 +9,7 @@ module TestUtils exposing
     , testOrderingProperties
     , testOrderingReflexivity
     , testOrderingTransitivity
+    , testPreorderingProperties
     , testString
     )
 
@@ -98,7 +99,7 @@ shortList maxLength fuzzerElement =
             ]
 
 
-{-| Test the reuqired properties of a strict total ordering on a given type:
+{-| Test the required properties of a strict total ordering on a given type:
 reflexivity, antisymmetry and transitivity
 -}
 testOrderingProperties : String -> Fuzzer a -> (a -> a -> Order) -> Test
@@ -106,6 +107,17 @@ testOrderingProperties name fuzzer ordering =
     Test.describe name
         [ testOrderingReflexivity "reflexivity" fuzzer ordering
         , testOrderingAntisymmetry "antisymmetry" fuzzer ordering
+        , testOrderingTransitivity "transitivity" fuzzer ordering
+        ]
+
+
+{-| Test the required properties of a total preordering on a given type:
+reflexivity and transitivity
+-}
+testPreorderingProperties : String -> Fuzzer a -> (a -> a -> Order) -> Test
+testPreorderingProperties name fuzzer ordering =
+    Test.describe name
+        [ testOrderingReflexivity "reflexivity" fuzzer ordering
         , testOrderingTransitivity "transitivity" fuzzer ordering
         ]
 
