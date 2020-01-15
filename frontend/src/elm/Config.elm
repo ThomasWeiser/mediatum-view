@@ -35,4 +35,4 @@ facetValuesToQuery =
 
 standardFacetKeys : List String
 standardFacetKeys =
-    [ "type", "subject", "origin", "year" ]
+    [ "type", "subject", "origin" ]

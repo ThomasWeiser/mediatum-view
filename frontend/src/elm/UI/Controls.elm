@@ -23,7 +23,6 @@ module UI.Controls exposing
 -}
 
 import Cache exposing (ApiData, Cache)
-import Config
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -50,6 +49,7 @@ type alias Context =
     { route : Route
     , cache : Cache
     , presentation : Presentation
+    , facetKeys : List String
     }
 
 
@@ -57,6 +57,7 @@ type alias Context =
 type Return
     = NoReturn
     | Navigate Navigation
+    | ChangedFacetKeys (List String)
 
 
 {-| -}
@@ -64,6 +65,7 @@ type alias Model =
     { ftsTerm : String
     , ftsSorting : FtsSorting
     , filterEditors : Sort.Dict.Dict FilterHandle FilterEditor.Model
+    , facetKeysInput : String
     }
 
 
@@ -77,6 +79,7 @@ type Msg
     | Submit
     | SubmitExampleQuery
     | FilterEditorMsg FilterHandle FilterEditor.Msg
+    | SetFacetKeysInput String
 
 
 {-| -}
@@ -86,8 +89,8 @@ submitExampleQuery =
 
 
 {-| -}
-initialModel : Route -> Model
-initialModel route =
+initialModel : List String -> Route -> Model
+initialModel facetKeys route =
     { ftsTerm =
         case route.parameters.ftsTerm of
             Nothing ->
@@ -97,6 +100,7 @@ initialModel route =
                 SearchTerm.toString seachTerm
     , ftsSorting = route.parameters.ftsSorting
     , filterEditors = Sort.Dict.empty (Utils.sorter Selection.orderingFilterHandle)
+    , facetKeysInput = String.join " " facetKeys
     }
 
 
@@ -248,6 +252,16 @@ update context msg model =
                 Nothing ->
                     ( model, Cmd.none, NoReturn )
 
+        SetFacetKeysInput facetKeysInput ->
+            ( { model | facetKeysInput = facetKeysInput }
+            , Cmd.none
+            , facetKeysInput
+                |> String.Extra.clean
+                |> String.split " "
+                |> List.filter (String.Extra.isBlank >> not)
+                |> ChangedFacetKeys
+            )
+
 
 {-| -}
 view : Context -> Model -> Html Msg
@@ -255,6 +269,7 @@ view context model =
     Html.nav []
         [ viewSearch context model
         , viewFilters context model
+        , viewFacetKeysInput model
         , viewFacets context model
         ]
 
@@ -365,6 +380,20 @@ viewExistingFilter beingEdited filter =
         ]
 
 
+viewFacetKeysInput : Model -> Html Msg
+viewFacetKeysInput model =
+    Html.div []
+        [ Html.input
+            [ Html.Attributes.class "facet-keys-input"
+            , Html.Attributes.type_ "text"
+            , Html.Attributes.placeholder "Facet Keys ..."
+            , Html.Attributes.value model.facetKeysInput
+            , Utils.onChange SetFacetKeysInput
+            ]
+            []
+        ]
+
+
 viewFacets : Context -> Model -> Html Msg
 viewFacets context model =
     case context.presentation of
@@ -373,7 +402,7 @@ viewFacets context model =
                 [ Html.Attributes.class "facets-bar" ]
                 (List.map
                     (viewFacet context selection model)
-                    Config.standardFacetKeys
+                    context.facetKeys
                 )
 
         _ ->

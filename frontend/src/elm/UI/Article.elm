@@ -99,8 +99,8 @@ initialModel presentation =
 
 
 {-| -}
-needs : Presentation -> Cache.Needs
-needs presentation =
+needs : List String -> Presentation -> Cache.Needs
+needs facetKeys presentation =
     case presentation of
         GenericPresentation maybeNodeIds ->
             case maybeNodeIds of
@@ -128,7 +128,7 @@ needs presentation =
                     (Types.Needs.atomic <| Cache.NeedFolderCounts selection)
                         :: List.map
                             (Types.Needs.atomic << Cache.NeedFacet selection)
-                            Config.standardFacetKeys
+                            facetKeys
                 )
 
 
