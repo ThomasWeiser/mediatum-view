@@ -48,9 +48,11 @@ create or replace function aux.fts_documents_limited
                , (count(*) over ())::integer
            from preprocess.ufts
            where ufts.tsvec @@ fts_query
+           
            order by
-                case when sorting = 'by_rank' then ufts.tsvec <=> fts_query end,
-                case when sorting = 'by_date' then ufts.year <=| 2147483647 end
+                case when sorting = 'by_date' then ufts.year <=| 2147483647 end,
+                case when sorting = 'by_rank' then ufts.tsvec <=> fts_query end
+           
          ) as fts
     join entity.document on document.id = fts.id
 
@@ -62,7 +64,19 @@ create or replace function aux.fts_documents_limited
            aux.jsonb_test_list (document.attrs, attribute_tests)
           )
 
-    -- order by fts.distance -- Order obtained from subquery is preserved.
+    
+    
+    -- Order obtained from subquery used to be preserved.
+    -- Maybe not true anymore (PostgreSQL v11.5).
+    -- Behaviour seems inconsistent and fluctuating.
+    -- Performance may also be degraded.
+    -- Needs more investigation.
+
+    -- For now we sort here once again.
+    order by
+        case when sorting = 'by_date' then fts.year <=| 2147483647 end,
+        case when sorting = 'by_rank' then fts.distance end
+    
     limit "limit"
     ;
 $$ -- Language sql gives stable performance here.

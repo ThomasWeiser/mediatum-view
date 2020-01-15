@@ -31,5 +31,6 @@ node_modules/.bin/postgraphile \
     --legacy-relations=omit \
     --no-ignore-rbac \
     --enhance-graphiql \
+    --allow-explain
     
 #     --dynamic-json \

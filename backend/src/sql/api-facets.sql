@@ -27,6 +27,12 @@ create or replace function api.all_documents_docset
 $$ language plpgsql stable parallel safe;
 
 
+comment on function api.all_documents_docset (folder_id int4, type text, name text, attribute_tests api.attribute_test[]) is
+    'Perform a documents listing on a folder to provide a list of document ids, '
+    'intended to be consumed by a facet-counting function.'
+;
+
+
 create or replace function aux.fts_documents_tsquery_docset
     ( folder_id int4
     , fts_query tsquery
