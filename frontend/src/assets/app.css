@@ -162,6 +162,7 @@ ul.folder-list ul.folder-list {
 }
 
 .folder-head {
+  display: flex;
   transition: color .2s;
 }
 .folder-head.selected {

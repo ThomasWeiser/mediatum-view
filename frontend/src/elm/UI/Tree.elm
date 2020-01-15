@@ -213,24 +213,26 @@ viewFolderLine folder maybeCount selected expanded =
             , ( "selected", selected )
             ]
         ]
-        ([ if Folder.hasSubfolder folder then
-            UI.Icons.expando
+        [ Html.div []
+            [ if Folder.hasSubfolder folder then
+                UI.Icons.expando
 
-           else
-            UI.Icons.leaf
-         , Html.span
+              else
+                UI.Icons.leaf
+            ]
+        , Html.div
             [ Html.Attributes.class "folder-name" ]
-            [ Html.text folder.name ]
-         ]
-            ++ (case maybeCount of
-                    Nothing ->
-                        []
+            (Html.text folder.name
+                :: (case maybeCount of
+                        Nothing ->
+                            []
 
-                    Just count ->
-                        [ Html.text " "
-                        , Html.span
-                            [ Html.Attributes.class "folder-count" ]
-                            [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
-                        ]
-               )
-        )
+                        Just count ->
+                            [ Html.text " "
+                            , Html.span
+                                [ Html.Attributes.class "folder-count" ]
+                                [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
+                            ]
+                   )
+            )
+        ]
