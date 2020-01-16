@@ -56,6 +56,6 @@ facetFiltersToAttributeTests facetFilters =
         |> List.map
             (\( key, value ) ->
                 { key = key
-                , operation = Api.Arguments.AttributeTest.Equality value
+                , operation = Api.Arguments.AttributeTest.EqualityWithBlankNull value
                 }
             )

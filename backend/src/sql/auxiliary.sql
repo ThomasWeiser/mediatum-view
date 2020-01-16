@@ -87,15 +87,25 @@ create or replace function aux.jsonb_test_list (obj jsonb, tests api.attribute_t
         foreach test in array tests
         loop
             key_value := obj ->> test.key;
-            if key_value is null then
-                return false;
-            end if;
             case test.operator
                 when 'equality' then
+                    if key_value is null then
+                        return false; 
+                    end if;
                     if key_value != test.value then
                         return false;
                     end if;
+                when 'equalitywithblanknull' then
+                    if test.value = '' and
+                       (trim (E' \f\n\r\t' from (coalesce (key_value, ''))) != '') then
+                        return false;
+                    elsif key_value != test.value then
+                        return false;
+                    end if;
                 when 'ilike' then
+                    if key_value is null then
+                        return false; 
+                    end if;
                     if not (key_value ilike test.value
                             or (test.extra is not null and key_value ilike test.extra)
                            )
@@ -103,10 +113,16 @@ create or replace function aux.jsonb_test_list (obj jsonb, tests api.attribute_t
                         return false;
                     end if;
                 when 'simplefts' then
+                    if key_value is null then
+                        return false; 
+                    end if;
                     if not to_tsvector('english_german', key_value) @@ aux.custom_to_tsquery(test.value) then
                         return false;
                     end if;
                 when 'daterange' then
+                    if key_value is null then 
+                        return false;
+                    end if;
                     if left(key_value, length (test.value)) < test.value then
                         return false;
                     end if;
