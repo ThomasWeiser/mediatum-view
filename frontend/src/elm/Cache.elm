@@ -301,6 +301,7 @@ requestNeed need cache =
                             window
                             selection.scope
                             selection.filters
+                            selection.facetFilters
 
                     SelectByFullTextSearch searchTerm ftsSorting ->
                         Api.Queries.ftsPage
@@ -309,6 +310,7 @@ requestNeed need cache =
                             searchTerm
                             ftsSorting
                             selection.filters
+                            selection.facetFilters
                 )
             )
 
@@ -324,12 +326,14 @@ requestNeed need cache =
                         Api.Queries.folderDocumentsFolderCounts
                             selection.scope
                             selection.filters
+                            selection.facetFilters
 
                     SelectByFullTextSearch searchTerm ftsSorting ->
                         Api.Queries.ftsFolderCounts
                             selection.scope
                             searchTerm
                             selection.filters
+                            selection.facetFilters
                 )
             )
 
@@ -345,6 +349,7 @@ requestNeed need cache =
                         Api.Queries.folderDocumentsFacetByKey
                             selection.scope
                             selection.filters
+                            selection.facetFilters
                             key
                             Config.facetValuesToQuery
 
@@ -353,6 +358,7 @@ requestNeed need cache =
                             selection.scope
                             searchTerm
                             selection.filters
+                            selection.facetFilters
                             key
                             Config.facetValuesToQuery
                 )

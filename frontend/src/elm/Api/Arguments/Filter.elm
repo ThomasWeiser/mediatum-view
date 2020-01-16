@@ -1,4 +1,7 @@
-module Api.Arguments.Filter exposing (filtersToAttributeTests)
+module Api.Arguments.Filter exposing
+    ( filtersToAttributeTests
+    , facetFiltersToAttributeTests
+    )
 
 {-| When using filters in a [`Selection`](Types-Selection) these filter
 are translated into certain tests on attributes of the documents.
@@ -8,13 +11,15 @@ This module defines that translation for each of the provided filter.
 Used internally in module [`Api.Queries`](Api.Queries).
 
 @docs filtersToAttributeTests
+@docs facetFiltersToAttributeTests
 
 -}
 
 import Api.Arguments.AttributeTest
+import Dict
 import Types.Range as Range
 import Types.SearchTerm
-import Types.Selection exposing (Filter(..), SetOfFilters)
+import Types.Selection exposing (FacetFilters, Filter(..), SetOfFilters)
 
 
 {-| -}
@@ -41,3 +46,16 @@ filterToAttributeTest filter =
                 Api.Arguments.AttributeTest.SimpleFts
                     (Types.SearchTerm.toString searchTerm)
             }
+
+
+{-| -}
+facetFiltersToAttributeTests : FacetFilters -> List Api.Arguments.AttributeTest.Test
+facetFiltersToAttributeTests facetFilters =
+    facetFilters
+        |> Dict.toList
+        |> List.map
+            (\( key, value ) ->
+                { key = key
+                , operation = Api.Arguments.AttributeTest.Equality value
+                }
+            )

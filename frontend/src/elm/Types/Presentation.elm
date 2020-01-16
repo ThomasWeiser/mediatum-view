@@ -84,7 +84,7 @@ fromRoute cache route =
                                 { scope = folderId
                                 , selectMethod = SelectByFolderListing
                                 , filters = Types.Route.Filter.fromRoute route
-                                , facetFilters = Dict.empty -- TODO
+                                , facetFilters = route.parameters.facetFilters
                                 }
                                 windowOfRoute
 
@@ -93,7 +93,7 @@ fromRoute cache route =
                         { scope = folderId
                         , selectMethod = selectMethod
                         , filters = Types.Route.Filter.fromRoute route
-                        , facetFilters = Dict.empty -- TODO
+                        , facetFilters = route.parameters.facetFilters
                         }
                         windowOfRoute
 

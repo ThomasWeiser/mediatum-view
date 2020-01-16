@@ -54,6 +54,7 @@ import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import List.Nonempty exposing (Nonempty)
 import Mediatum.Enum.FtsSorting
+import Mediatum.InputObject
 import Mediatum.Object.FoldersConnection
 import Mediatum.Object.GenericNode
 import Mediatum.Query
@@ -64,7 +65,7 @@ import Types exposing (Window)
 import Types.Facet exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (FtsSorting(..), SetOfFilters)
+import Types.Selection exposing (FacetFilters, FtsSorting(..), SetOfFilters)
 
 
 {-| Get the root folders and their sub-folders.
@@ -189,17 +190,14 @@ folderDocumentsPage :
     Window
     -> FolderId
     -> SetOfFilters
+    -> FacetFilters
     -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
-folderDocumentsPage window folderId filters =
+folderDocumentsPage window folderId filters facetFilters =
     Mediatum.Query.allDocumentsPage
         (\optionals ->
             { optionals
                 | folderId = Present (Id.toInt folderId)
-                , attributeTests =
-                    filters
-                        |> Api.Arguments.Filter.filtersToAttributeTests
-                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
-                        |> Present
+                , attributeTests = filtersToGraphqlArgument filters facetFilters
                 , limit = Present window.limit
                 , offset = Present window.offset
             }
@@ -227,17 +225,14 @@ _GraphQL notation:_
 folderDocumentsFolderCounts :
     FolderId
     -> SetOfFilters
+    -> FacetFilters
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-folderDocumentsFolderCounts folderId filters =
+folderDocumentsFolderCounts folderId filters facetFilters =
     Mediatum.Query.allDocumentsDocset
         (\optionals ->
             { optionals
                 | folderId = Present (Id.toInt folderId)
-                , attributeTests =
-                    filters
-                        |> Api.Arguments.Filter.filtersToAttributeTests
-                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
-                        |> Present
+                , attributeTests = filtersToGraphqlArgument filters facetFilters
             }
         )
         Api.Fragments.folderAndSubfolderCounts
@@ -263,19 +258,16 @@ _GraphQL notation:_
 folderDocumentsFacetByKey :
     FolderId
     -> SetOfFilters
+    -> FacetFilters
     -> String
     -> Int
     -> SelectionSet FacetValues Graphql.Operation.RootQuery
-folderDocumentsFacetByKey folderId filters key limit =
+folderDocumentsFacetByKey folderId filters facetFilters key limit =
     Mediatum.Query.allDocumentsDocset
         (\optionals ->
             { optionals
                 | folderId = Present (Id.toInt folderId)
-                , attributeTests =
-                    filters
-                        |> Api.Arguments.Filter.filtersToAttributeTests
-                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
-                        |> Present
+                , attributeTests = filtersToGraphqlArgument filters facetFilters
             }
         )
         (Api.Fragments.facetByKey key limit)
@@ -308,8 +300,9 @@ ftsPage :
     -> SearchTerm
     -> FtsSorting
     -> SetOfFilters
+    -> FacetFilters
     -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
-ftsPage window folderId searchTerm ftsSorting filters =
+ftsPage window folderId searchTerm ftsSorting filters facetFilters =
     Mediatum.Query.ftsDocumentsPage
         (\optionals ->
             { optionals
@@ -324,11 +317,7 @@ ftsPage window folderId searchTerm ftsSorting filters =
                             FtsByDate ->
                                 Mediatum.Enum.FtsSorting.ByDate
                         )
-                , attributeTests =
-                    filters
-                        |> Api.Arguments.Filter.filtersToAttributeTests
-                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
-                        |> Present
+                , attributeTests = filtersToGraphqlArgument filters facetFilters
                 , limit = Present window.limit
                 , offset = Present window.offset
             }
@@ -360,18 +349,15 @@ ftsFolderCounts :
     FolderId
     -> SearchTerm
     -> SetOfFilters
+    -> FacetFilters
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
-ftsFolderCounts folderId searchTerm filters =
+ftsFolderCounts folderId searchTerm filters facetFilters =
     Mediatum.Query.ftsDocumentsDocset
         (\optionals ->
             { optionals
                 | folderId = Present (Id.toInt folderId)
                 , text = Present (Types.SearchTerm.toString searchTerm)
-                , attributeTests =
-                    filters
-                        |> Api.Arguments.Filter.filtersToAttributeTests
-                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
-                        |> Present
+                , attributeTests = filtersToGraphqlArgument filters facetFilters
             }
         )
         Api.Fragments.folderAndSubfolderCounts
@@ -399,20 +385,17 @@ ftsFacetByKey :
     FolderId
     -> SearchTerm
     -> SetOfFilters
+    -> FacetFilters
     -> String
     -> Int
     -> SelectionSet FacetValues Graphql.Operation.RootQuery
-ftsFacetByKey folderId searchTerm filters key limit =
+ftsFacetByKey folderId searchTerm filters facetFilters key limit =
     Mediatum.Query.ftsDocumentsDocset
         (\optionals ->
             { optionals
                 | folderId = Present (Id.toInt folderId)
                 , text = Present (Types.SearchTerm.toString searchTerm)
-                , attributeTests =
-                    filters
-                        |> Api.Arguments.Filter.filtersToAttributeTests
-                        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
-                        |> Present
+                , attributeTests = filtersToGraphqlArgument filters facetFilters
             }
         )
         (Api.Fragments.facetByKey key limit)
@@ -491,3 +474,15 @@ documentDetails documentId =
             }
         )
         (Api.Fragments.documentByMask "nodebig")
+
+
+filtersToGraphqlArgument :
+    SetOfFilters
+    -> FacetFilters
+    -> OptionalArgument (List (Maybe Mediatum.InputObject.AttributeTestInput))
+filtersToGraphqlArgument filters facetFilters =
+    (Api.Arguments.Filter.filtersToAttributeTests filters
+        ++ Api.Arguments.Filter.facetFiltersToAttributeTests facetFilters
+    )
+        |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
+        |> Present
