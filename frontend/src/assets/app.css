@@ -258,10 +258,16 @@ ul.folder-list ul.folder-list {
 .facet-value-line {
   display: flex;
 }
+.facet-value-line:hover {
+  text-decoration: underline;
+}
 .facet-value-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.facet-value-selected .facet-value-text {
+  font-weight: bold;
 }
 .facet-value-count {
   margin-left: 0.2em;

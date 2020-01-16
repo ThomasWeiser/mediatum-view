@@ -23,6 +23,7 @@ module UI.Controls exposing
 -}
 
 import Cache exposing (ApiData, Cache)
+import Dict
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -81,6 +82,7 @@ type Msg
     | FilterEditorMsg FilterHandle FilterEditor.Msg
     | SetFacetKeysInput String
     | SelectFacetValue String String
+    | SelectFacetUnfilter String
 
 
 {-| -}
@@ -258,6 +260,13 @@ update context msg model =
             , Cmd.none
             , Navigate
                 (Navigation.ShowListingWithAddedFacetFilter key value)
+            )
+
+        SelectFacetUnfilter key ->
+            ( model
+            , Cmd.none
+            , Navigate
+                (Navigation.ShowListingWithRemovedFacetFilter key)
             )
 
         SetFacetKeysInput facetKeysInput ->
@@ -444,31 +453,48 @@ viewFacet context selection model key =
                     Utils.Html.viewApiError error
 
                 RemoteData.Success facetValues ->
-                    viewFacetValues key facetValues
+                    viewFacetValues
+                        key
+                        facetValues
+                        (Dict.get key selection.facetFilters)
             ]
         ]
 
 
-viewFacetValues : String -> FacetValues -> Html Msg
-viewFacetValues key facetValues =
+viewFacetValues : String -> FacetValues -> Maybe String -> Html Msg
+viewFacetValues key facetValues maybeSelectedValue =
     Html.ul [] <|
-        List.map
-            (\{ value, count } ->
-                Html.li
-                    [ Html.Attributes.class "facet-value-line"
-                    , Html.Events.onClick (SelectFacetValue key value)
-                    ]
-                    [ Html.span
-                        [ Html.Attributes.class "facet-value-text" ]
-                        [ if String.Extra.isBlank value then
-                            Html.i [] [ Html.text "[not specified]" ]
+        (if maybeSelectedValue == Nothing then
+            Html.text ""
 
-                          else
-                            Html.text value
+         else
+            Html.li
+                [ Html.Attributes.class "facet-value-line facet-remove-filter"
+                , Html.Events.onClick (SelectFacetUnfilter key)
+                ]
+                [ Html.span
+                    [ Html.Attributes.class "facet-value-text" ]
+                    [ Html.i [] [ Html.text "<< All" ] ]
+                ]
+        )
+            :: List.map
+                (\{ value, count } ->
+                    Html.li
+                        [ Html.Attributes.class "facet-value-line"
+                        , Html.Attributes.classList [ ( "facet-value-selected", maybeSelectedValue == Just value ) ]
+                        , Html.Events.onClick (SelectFacetValue key value)
                         ]
-                    , Html.span
-                        [ Html.Attributes.class "facet-value-count" ]
-                        [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
-                    ]
-            )
-            facetValues
+                        [ Html.span
+                            [ Html.Attributes.class "facet-value-text" ]
+                            [ if String.Extra.isBlank value then
+                                Html.i [] [ Html.text "[not specified]" ]
+
+                              else
+                                Html.text value
+                            ]
+                        , Html.span
+                            [ Html.Attributes.class "facet-value-count" ]
+                            [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
+                        ]
+                )
+                facetValues
