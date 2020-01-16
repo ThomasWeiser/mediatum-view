@@ -295,23 +295,7 @@ requestNeed need cache =
               }
             , Api.sendQueryRequest
                 (ApiResponseDocumentsPage ( selection, window ))
-                (case selection.selectMethod of
-                    SelectByFolderListing ->
-                        Api.Queries.folderDocumentsPage
-                            window
-                            selection.scope
-                            selection.filters
-                            selection.facetFilters
-
-                    SelectByFullTextSearch searchTerm ftsSorting ->
-                        Api.Queries.ftsPage
-                            window
-                            selection.scope
-                            searchTerm
-                            ftsSorting
-                            selection.filters
-                            selection.facetFilters
-                )
+                (Api.Queries.selectionDocumentsPage window selection)
             )
 
         NeedFolderCounts selection ->
@@ -321,20 +305,7 @@ requestNeed need cache =
               }
             , Api.sendQueryRequest
                 (ApiResponseFolderCounts selection)
-                (case selection.selectMethod of
-                    SelectByFolderListing ->
-                        Api.Queries.folderDocumentsFolderCounts
-                            selection.scope
-                            selection.filters
-                            selection.facetFilters
-
-                    SelectByFullTextSearch searchTerm ftsSorting ->
-                        Api.Queries.ftsFolderCounts
-                            selection.scope
-                            searchTerm
-                            selection.filters
-                            selection.facetFilters
-                )
+                (Api.Queries.selectionFolderCounts selection)
             )
 
         NeedFacet selection key ->
@@ -344,24 +315,7 @@ requestNeed need cache =
               }
             , Api.sendQueryRequest
                 (ApiResponseFacet ( selection, key ))
-                (case selection.selectMethod of
-                    SelectByFolderListing ->
-                        Api.Queries.folderDocumentsFacetByKey
-                            selection.scope
-                            selection.filters
-                            selection.facetFilters
-                            key
-                            Config.facetValuesToQuery
-
-                    SelectByFullTextSearch searchTerm ftsSorting ->
-                        Api.Queries.ftsFacetByKey
-                            selection.scope
-                            searchTerm
-                            selection.filters
-                            selection.facetFilters
-                            key
-                            Config.facetValuesToQuery
-                )
+                (Api.Queries.selectionFacetByKey selection key Config.facetValuesToQuery)
             )
 
 
