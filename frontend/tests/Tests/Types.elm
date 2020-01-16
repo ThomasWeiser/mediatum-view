@@ -112,7 +112,7 @@ fuzzerFacetFilters : Fuzzer FacetFilters
 fuzzerFacetFilters =
     Fuzz.map2 Tuple.pair
         fuzzerFacetKey
-        TestUtils.nonEmptyString
+        Fuzz.string
         |> shortList 3
         |> Fuzz.map Dict.fromList
 

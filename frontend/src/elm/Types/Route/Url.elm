@@ -127,12 +127,17 @@ elmParserFacetFilter =
             , reserved = Set.empty
             }
         |. ElmParser.symbol ":"
-        |= ElmParser.variable
-            { start = isValueCharacter
-            , inner = isValueCharacter
-            , reserved = Set.empty
-            }
-        |. ElmParser.end
+        |= ElmParser.oneOf
+            [ ElmParser.succeed ""
+                |. ElmParser.end
+            , ElmParser.succeed identity
+                |= ElmParser.variable
+                    { start = isValueCharacter
+                    , inner = isValueCharacter
+                    , reserved = Set.empty
+                    }
+                |. ElmParser.end
+            ]
 
 
 {-| -}

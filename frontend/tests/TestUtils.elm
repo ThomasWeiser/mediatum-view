@@ -3,7 +3,6 @@ module TestUtils exposing
     , just
     , justAndThen
     , justAndThenAll
-    , nonEmptyString
     , nothing
     , shortList
     , testOrderingAntisymmetry
@@ -79,16 +78,6 @@ nothing maybeSubject =
 fixpoint : (a -> a) -> a -> Expectation
 fixpoint mapping subject =
     Expect.equal subject (mapping subject)
-
-
-{-| A fuzzer for non-empty strings
--}
-nonEmptyString : Fuzzer String
-nonEmptyString =
-    Fuzz.map2
-        String.cons
-        Fuzz.char
-        Fuzz.string
 
 
 {-| Given a fuzzer of a type, create a fuzzer of a list of that type.

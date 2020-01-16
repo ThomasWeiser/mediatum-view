@@ -54,6 +54,7 @@ import Mediatum.Object.Metadatatype
 import Mediatum.Object.PageInfo
 import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection
+import String.Extra
 import Types exposing (FolderDisplay(..), WindowPage)
 import Types.Facet exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (FolderId)
@@ -278,7 +279,9 @@ facetValue =
     SelectionSet.succeed FacetValue
         |> SelectionSet.with
             (Mediatum.Object.FacetValue.value
-                |> SelectionSet.withDefault "[null]"
+                |> SelectionSet.withDefault ""
+                |> SelectionSet.map
+                    (String.Extra.nonEmpty >> Maybe.withDefault "")
             )
         |> SelectionSet.with
             (Mediatum.Object.FacetValue.count

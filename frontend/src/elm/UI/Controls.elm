@@ -486,7 +486,7 @@ viewFacetValues key facetValues maybeSelectedValue =
                         ]
                         [ Html.span
                             [ Html.Attributes.class "facet-value-text" ]
-                            [ if String.Extra.isBlank value then
+                            [ if String.isEmpty value then
                                 Html.i [] [ Html.text "[not specified]" ]
 
                               else
