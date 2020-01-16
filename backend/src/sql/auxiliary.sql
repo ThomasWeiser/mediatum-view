@@ -96,10 +96,11 @@ create or replace function aux.jsonb_test_list (obj jsonb, tests api.attribute_t
                         return false;
                     end if;
                 when 'equalitywithblanknull' then
-                    if test.value = '' and
-                       (trim (E' \f\n\r\t' from (coalesce (key_value, ''))) != '') then
-                        return false;
-                    elsif key_value != test.value then
+                    if test.value = '' then
+                       if trim (E' \f\n\r\t' from (coalesce (key_value, ''))) != '' then
+                           return false;
+                        end if;
+                    elsif key_value is null  or key_value != test.value then
                         return false;
                     end if;
                 when 'ilike' then
