@@ -31,6 +31,7 @@ import Entities.Document exposing (Document)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
+import Maybe.Extra
 import RemoteData
 import Types.Id as Id exposing (FolderId)
 import Types.Navigation as Navigation exposing (Navigation)
@@ -109,7 +110,7 @@ needs facetKeys presentation =
 
                 Just ( nodeIdOne, maybeNodeIdTwo ) ->
                     [ nodeIdOne ]
-                        |> Utils.prependMaybe maybeNodeIdTwo
+                        |> Maybe.Extra.cons maybeNodeIdTwo
                         |> List.map Cache.NeedGenericNode
                         |> List.map Types.Needs.atomic
                         |> Types.Needs.batch

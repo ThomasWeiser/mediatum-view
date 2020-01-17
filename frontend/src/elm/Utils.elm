@@ -4,7 +4,6 @@ module Utils exposing
     , tupleAddThird
     , tupleRemoveThird
     , prependIf
-    , prependMaybe
     , findMap
     , findAdjacent
     , lexicalOrder
@@ -33,7 +32,6 @@ module Utils exposing
 # List
 
 @docs prependIf
-@docs prependMaybe
 @docs findMap
 @docs findAdjacent
 @docs lexicalOrder
@@ -105,18 +103,6 @@ prependIf element condition list =
 
     else
         list
-
-
-{-| Conditionally add an element to the front of a list.
--}
-prependMaybe : Maybe a -> List a -> List a
-prependMaybe maybeElement list =
-    case maybeElement of
-        Nothing ->
-            list
-
-        Just element ->
-            element :: list
 
 
 {-| Find the first element that maps to a `Just b` and return this mapping.
