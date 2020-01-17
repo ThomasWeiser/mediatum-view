@@ -155,7 +155,9 @@ create or replace function api.docset_facet_by_metadatatype
     ( docset api.docset
     )
     returns setof api.facet_value as $$
-        select document.schema, count(document.schema)::integer
+        select 
+            document.schema,
+            count(document.schema)::integer
         from entity.document
         where document.id = ANY (docset.id_list)
         group by document.schema
@@ -175,12 +177,14 @@ create or replace function api.docset_facet_by_metadatatype_longname
     ( docset api.docset
     )
     returns setof api.facet_value as $$
-        select coalesce(metadatatype.longname, ''), count(coalesce(metadatatype.longname, ''))::integer
+        select
+            aux.normalize_facet_value(metadatatype.longname),
+            count(aux.normalize_facet_value(metadatatype.longname))::integer
         from entity.document
         join entity.metadatatype on document.schema = metadatatype.name
         where document.id = ANY (docset.id_list)
-        group by coalesce(metadatatype.longname, '')
-        order by count(coalesce(metadatatype.longname, '')) desc, coalesce(metadatatype.longname, '')
+        group by aux.normalize_facet_value(metadatatype.longname)
+        order by count(aux.normalize_facet_value(metadatatype.longname)) desc, aux.normalize_facet_value(metadatatype.longname)
         ;
 $$ language sql stable parallel safe rows 50;
 
@@ -198,11 +202,13 @@ create or replace function api.docset_facet_by_key
     , key text
     )
     returns setof api.facet_value as $$
-        select coalesce(document.attrs ->> key, ''), count(coalesce(document.attrs ->> key, ''))::integer
+        select
+            aux.normalize_facet_value(document.attrs ->> key),
+            count(aux.normalize_facet_value(document.attrs ->> key))::integer
         from entity.document
         where document.id = ANY (docset.id_list)
-        group by coalesce(document.attrs ->> key, '')
-        order by count(coalesce(document.attrs ->> key, '')) desc, coalesce(document.attrs ->> key, '')
+        group by aux.normalize_facet_value(document.attrs ->> key)
+        order by count(aux.normalize_facet_value(document.attrs ->> key)) desc, aux.normalize_facet_value(document.attrs ->> key)
         ;
 $$ language sql stable parallel safe rows 50;
 
@@ -222,13 +228,15 @@ create or replace function api.docset_facet_by_mask
     , maskitem_name text
     )
     returns setof api.facet_value as $$
-        select coalesce(v.value, ''), count(coalesce(v.value, ''))::integer
+        select
+            aux.normalize_facet_value(v.value),
+            count(aux.normalize_facet_value(v.value))::integer
         from entity.document_mask_fields as v
         where v.document_id = ANY (docset.id_list)
         and v.mask_name = docset_facet_by_mask.mask_name
         and v.maskitem_name = docset_facet_by_mask.maskitem_name
-        group by coalesce(v.value, '')
-        order by count(coalesce(v.value, '')) desc, coalesce(v.value, '')
+        group by aux.normalize_facet_value(v.value)
+        order by count(aux.normalize_facet_value(v.value)) desc, aux.normalize_facet_value(v.value)
         ;
 $$ language sql stable parallel safe rows 50;
 
@@ -251,15 +259,17 @@ create or replace function api.all_documents_facet_by_key
     , key text
     )
     returns setof api.facet_value as $$
-        select coalesce(document.attrs ->> key, ''), count (coalesce(document.attrs ->> key, ''))::integer
+        select
+            aux.normalize_facet_value(document.attrs ->> key),
+            count (aux.normalize_facet_value(document.attrs ->> key))::integer
         from entity.document
         join aux.node_lineage on document.id = node_lineage.descendant
         where folder_id = node_lineage.ancestor
         and (all_documents_facet_by_key.type is null or document.type = all_documents_facet_by_key.type)
         and (all_documents_facet_by_key.name is null or document.name = all_documents_facet_by_key.name)
         and (attribute_tests is null or aux.jsonb_test_list (document.attrs, attribute_tests))
-        group by coalesce(document.attrs ->> key, '')
-        order by count(coalesce(document.attrs ->> key, '')) desc, coalesce(document.attrs ->> key, '')
+        group by aux.normalize_facet_value(document.attrs ->> key)
+        order by count(aux.normalize_facet_value(document.attrs ->> key)) desc, aux.normalize_facet_value(document.attrs ->> key)
         ;
 $$ language sql stable rows 10000;
 
@@ -287,7 +297,9 @@ create or replace function api.all_documents_facet_by_mask
     , maskitem_name text
     )
     returns setof api.facet_value as $$
-        select coalesce(v.value, ''), count(coalesce(v.value, ''))::integer
+        select
+            aux.normalize_facet_value(v.value),
+            count(aux.normalize_facet_value(v.value))::integer
         from entity.document_mask_fields as v
         join aux.node_lineage on v.document_id = node_lineage.descendant
         where folder_id = node_lineage.ancestor
@@ -296,8 +308,8 @@ create or replace function api.all_documents_facet_by_mask
         and (attribute_tests is null or aux.jsonb_test_list (v.document_attrs, attribute_tests))
         and v.mask_name = all_documents_facet_by_mask.mask_name
         and v.maskitem_name = all_documents_facet_by_mask.maskitem_name
-        group by coalesce(v.value, '')
-        order by count(coalesce(v.value, '')) desc, coalesce(v.value, '')
+        group by aux.normalize_facet_value(v.value)
+        order by count(aux.normalize_facet_value(v.value)) desc, aux.normalize_facet_value(v.value)
         ;
 $$ language sql stable rows 10000;
 

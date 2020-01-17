@@ -59,6 +59,14 @@ create or replace function aux.custom_to_tsquery (query text)
 $$ language plpgsql immutable;
 
 
+-- Strip whitescape from either end of the string.
+-- And replace NULL with the empty string.
+create or replace function aux.normalize_facet_value (value text)
+    returns text as $$
+        select trim (E' \f\n\r\t' from (coalesce (value, '')))
+$$ language sql immutable;
+
+
 create or replace function aux.jsonb_filter (obj jsonb, keys text[])
     returns jsonb as $$
     declare result jsonb := '{}'::jsonb;
@@ -97,7 +105,7 @@ create or replace function aux.jsonb_test_list (obj jsonb, tests api.attribute_t
                     end if;
                 when 'equalitywithblanknull' then
                     if test.value = '' then
-                       if trim (E' \f\n\r\t' from (coalesce (key_value, ''))) != '' then
+                       if aux.normalize_facet_value(key_value) != '' then
                            return false;
                         end if;
                     elsif key_value is null  or key_value != test.value then
