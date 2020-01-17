@@ -1,11 +1,13 @@
 module Config exposing
-    ( apiUrl, pageSize
+    ( apiUrl, graphqlOperationNamePrefix
+    , pageSize
     , facetValuesToQuery, standardFacetKeys
     )
 
 {-| Configurable values
 
-@docs apiUrl, pageSize
+@docs apiUrl, graphqlOperationNamePrefix
+@docs pageSize
 @docs facetValuesToQuery, standardFacetKeys
 
 -}
@@ -16,6 +18,16 @@ module Config exposing
 apiUrl : String
 apiUrl =
     "/graphql"
+
+
+{-| A common prefix to use for all GraphQL operation names used by the app.
+
+For operation names see: <https://graphql.org/learn/queries/#operation-name>
+
+-}
+graphqlOperationNamePrefix : String
+graphqlOperationNamePrefix =
+    "mediatumView_"
 
 
 {-| Number of results per page used for pagination.

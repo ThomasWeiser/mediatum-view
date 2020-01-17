@@ -1,6 +1,6 @@
 module Api exposing
     ( Response, Error
-    , sendQueryRequest, sendMutationRequest
+    , sendQueryRequest, sendMutationRequest, withOperationName
     , errorToString
     )
 
@@ -18,7 +18,7 @@ The available queries and mutations are located in the modules
 
 # Run GraphQL Requests
 
-@docs sendQueryRequest, sendMutationRequest
+@docs sendQueryRequest, sendMutationRequest, withOperationName
 
 
 # Error handling
@@ -71,17 +71,20 @@ relevant queries of the application.
     initCmd : Cmd Msg
     initCmd =
         makeQueryRequest
+            "Some operation name for poss. server-side logging and debugging"
             ApiResponseToplevelFolder
             Api.Queries.toplevelFolder
 
 -}
 sendQueryRequest :
-    (Response decodesTo -> msg)
+    String
+    -> (Response decodesTo -> msg)
     -> SelectionSet decodesTo Graphql.Operation.RootQuery
     -> Cmd msg
-sendQueryRequest tagger selectionSet =
+sendQueryRequest operationName tagger selectionSet =
     selectionSet
         |> Graphql.Http.queryRequest Config.apiUrl
+        |> Graphql.Http.withOperationName operationName
         |> Graphql.Http.send
             (Result.mapError Utils.Graphql.stripError >> tagger)
 
@@ -92,11 +95,20 @@ Like `makeQueryRequest` but for mutations.
 
 -}
 sendMutationRequest :
-    (Response decodesTo -> msg)
+    String
+    -> (Response decodesTo -> msg)
     -> SelectionSet decodesTo Graphql.Operation.RootMutation
     -> Cmd msg
-sendMutationRequest tagger selectionSet =
+sendMutationRequest operationName tagger selectionSet =
     selectionSet
         |> Graphql.Http.mutationRequest Config.apiUrl
+        |> Graphql.Http.withOperationName operationName
         |> Graphql.Http.send
             (Result.mapError Utils.Graphql.stripError >> tagger)
+
+
+{-| Build a specific GraphQL operation name (see <https://graphql.org/learn/queries/#operation-name>).
+-}
+withOperationName : String -> String
+withOperationName name =
+    Config.graphqlOperationNamePrefix ++ name
