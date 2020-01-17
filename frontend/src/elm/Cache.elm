@@ -295,21 +295,7 @@ requestNeed need cache =
               }
             , Api.sendQueryRequest
                 (ApiResponseDocumentsPage ( selection, window ))
-                (case selection.selectMethod of
-                    SelectByFolderListing ->
-                        Api.Queries.folderDocumentsPage
-                            window
-                            selection.scope
-                            selection.filters
-
-                    SelectByFullTextSearch searchTerm ftsSorting ->
-                        Api.Queries.ftsPage
-                            window
-                            selection.scope
-                            searchTerm
-                            ftsSorting
-                            selection.filters
-                )
+                (Api.Queries.selectionDocumentsPage window selection)
             )
 
         NeedFolderCounts selection ->
@@ -319,18 +305,7 @@ requestNeed need cache =
               }
             , Api.sendQueryRequest
                 (ApiResponseFolderCounts selection)
-                (case selection.selectMethod of
-                    SelectByFolderListing ->
-                        Api.Queries.folderDocumentsFolderCounts
-                            selection.scope
-                            selection.filters
-
-                    SelectByFullTextSearch searchTerm ftsSorting ->
-                        Api.Queries.ftsFolderCounts
-                            selection.scope
-                            searchTerm
-                            selection.filters
-                )
+                (Api.Queries.selectionFolderCounts selection)
             )
 
         NeedFacet selection key ->
@@ -340,22 +315,7 @@ requestNeed need cache =
               }
             , Api.sendQueryRequest
                 (ApiResponseFacet ( selection, key ))
-                (case selection.selectMethod of
-                    SelectByFolderListing ->
-                        Api.Queries.folderDocumentsFacetByKey
-                            selection.scope
-                            selection.filters
-                            key
-                            Config.facetValuesToQuery
-
-                    SelectByFullTextSearch searchTerm ftsSorting ->
-                        Api.Queries.ftsFacetByKey
-                            selection.scope
-                            searchTerm
-                            selection.filters
-                            key
-                            Config.facetValuesToQuery
-                )
+                (Api.Queries.selectionFacetByKey selection key Config.facetValuesToQuery)
             )
 
 

@@ -12,6 +12,7 @@ module Types.Navigation exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
+import Dict
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.Route as Route exposing (Route)
 import Types.Route.Filter
@@ -26,6 +27,8 @@ type Navigation
     | ShowListingWithFolder FolderId
     | ShowListingWithSearch (Maybe SearchTerm) FtsSorting
     | ShowListingWithFilters SetOfFilters
+    | ShowListingWithAddedFacetFilter String String
+    | ShowListingWithRemovedFacetFilter String
     | SetOffset Int
     | SetLimit Int
 
@@ -94,6 +97,24 @@ alterRoute cache navigation route =
 
         ShowListingWithFilters filters ->
             Types.Route.Filter.alterRoute filters listingRoute
+
+        ShowListingWithAddedFacetFilter key value ->
+            { listingRoute
+                | parameters =
+                    { parametersWithOffset0
+                        | facetFilters =
+                            Dict.insert key value parameters.facetFilters
+                    }
+            }
+
+        ShowListingWithRemovedFacetFilter key ->
+            { listingRoute
+                | parameters =
+                    { parametersWithOffset0
+                        | facetFilters =
+                            Dict.remove key parameters.facetFilters
+                    }
+            }
 
         SetOffset offset ->
             { route

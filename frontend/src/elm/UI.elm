@@ -11,6 +11,7 @@ module UI exposing
 -}
 
 import Cache exposing (Cache)
+import Config
 import Entities.Document exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
@@ -58,6 +59,7 @@ type alias Model =
     { tree : UI.Tree.Model
     , controls : UI.Controls.Model
     , article : UI.Article.Model
+    , facetKeys : List String
     }
 
 
@@ -74,8 +76,9 @@ type Msg
 init : Model
 init =
     { tree = UI.Tree.initialModel
-    , controls = UI.Controls.initialModel Route.initHome
+    , controls = UI.Controls.initialModel Config.standardFacetKeys Route.initHome
     , article = UI.Article.initialModel (GenericPresentation Nothing)
+    , facetKeys = Config.standardFacetKeys
     }
 
 
@@ -90,7 +93,7 @@ needs context model =
             , presentation = context.presentation
             }
             model.tree
-        , UI.Article.needs context.presentation
+        , UI.Article.needs model.facetKeys context.presentation
         ]
 
 
@@ -99,7 +102,7 @@ needs context model =
 updateOnChangedRoute : Context -> Model -> Model
 updateOnChangedRoute context model =
     { model
-        | controls = UI.Controls.initialModel context.route
+        | controls = UI.Controls.initialModel model.facetKeys context.route
         , tree = UI.Tree.expandPresentationFolder model.tree
     }
 
@@ -146,18 +149,28 @@ update context msg model =
                         { route = context.route
                         , cache = context.cache
                         , presentation = context.presentation
+                        , facetKeys = model.facetKeys
                         }
                         subMsg
                         model.controls
             in
-            ( { model | controls = subModel }
+            ( { model
+                | controls = subModel
+                , facetKeys =
+                    case subReturn of
+                        UI.Controls.ChangedFacetKeys newFacetKeys ->
+                            newFacetKeys
+
+                        _ ->
+                            model.facetKeys
+              }
             , Cmd.map ControlsMsg subCmd
             , case subReturn of
-                UI.Controls.NoReturn ->
-                    NoReturn
-
                 UI.Controls.Navigate navigation ->
                     Navigate navigation
+
+                _ ->
+                    NoReturn
             )
 
         ArticleMsg subMsg ->
@@ -217,6 +230,7 @@ view context model =
                 { route = context.route
                 , cache = context.cache
                 , presentation = context.presentation
+                , facetKeys = model.facetKeys
                 }
                 model.controls
                 |> Html.map ControlsMsg

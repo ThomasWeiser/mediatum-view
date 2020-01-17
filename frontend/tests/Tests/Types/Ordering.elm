@@ -1,6 +1,7 @@
 module Tests.Types.Ordering exposing (suite)
 
 import Cache
+import Dict
 import Expect
 import Test exposing (..)
 import TestUtils exposing (..)
@@ -23,6 +24,7 @@ suite =
         , testOrderingProperties "FtsSorting" fuzzerFtsSorting Selection.orderingFtsSorting
         , testOrderingProperties "Filters" fuzzerFilters Selection.orderingFilters
         , testOrderingProperties "Filter" fuzzerFilter Selection.orderingFilter
+        , testOrderingProperties "FacetFilters" fuzzerFacetFilters Selection.orderingFacetFilters
         , testOrderingProperties "Window" fuzzerWindow Types.orderingWindow
         , testOrderingSelectionModuloSorting
         ]
@@ -32,27 +34,24 @@ testOrderingSelectionModuloSorting : Test
 testOrderingSelectionModuloSorting =
     describe "Ordering Selection modulo sorting"
         [ testPreorderingProperties "Selection modulo sorting" fuzzerSelection Selection.orderingSelectionModuloSorting
-        , fuzz3
-            fuzzerFolderId
+        , fuzz2
+            fuzzerSelection
             fuzzerSearchTerm
-            fuzzerFilters
             "selections that only differ in FtsSorting should be ragarded as equal"
           <|
-            \folderId searchTerm filters ->
+            \selection searchTerm ->
                 Selection.orderingSelectionModuloSorting
-                    { scope = folderId
-                    , selectMethod =
-                        Selection.SelectByFullTextSearch
-                            searchTerm
-                            Selection.FtsByRank
-                    , filters = filters
+                    { selection
+                        | selectMethod =
+                            Selection.SelectByFullTextSearch
+                                searchTerm
+                                Selection.FtsByRank
                     }
-                    { scope = folderId
-                    , selectMethod =
-                        Selection.SelectByFullTextSearch
-                            searchTerm
-                            Selection.FtsByDate
-                    , filters = filters
+                    { selection
+                        | selectMethod =
+                            Selection.SelectByFullTextSearch
+                                searchTerm
+                                Selection.FtsByDate
                     }
                     |> Expect.equal EQ
         ]

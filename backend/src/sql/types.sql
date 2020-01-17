@@ -278,7 +278,7 @@ create type api.fts_sorting as enum (
 
 
 create type api.attribute_test_operator as enum (
-    'equality', 'ilike', 'simplefts', 'daterange'
+    'equality', 'equalitywithblanknull', 'ilike', 'simplefts', 'daterange'
 );
 
 create type api.attribute_test as (
@@ -293,7 +293,8 @@ comment on type api.attribute_test is
 comment on column api.attribute_test.key is
     'Name of the attribute to be tested';
 comment on column api.attribute_test.operator is
-    'The test to perform; maybe "equality", "ilike", "simplefts", "daterange"';
+    'The test to perform; maybe "equality", "equalitywithblanknull", "ilike", "simplefts", "daterange". '
+    'The test "equalitywithblanknull" succeeds also if comparison value is the empty string and the attribute value is either an emtpy or whitespace-only string or NULL.';
 comment on column api.attribute_test.value is
     'Comparison value for the attribute to be tested';
 comment on column api.attribute_test.extra is

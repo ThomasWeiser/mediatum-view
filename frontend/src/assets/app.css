@@ -35,7 +35,7 @@ header {
   flex: 0;
   border-bottom: 1px solid gray;
   padding-bottom: 1ex;
-  /* background-color: #eee; */
+  /* background-color: #eee; */ Html.Attributes.class "facets-" 
 }
 header .title {
   color: #3070b3;
@@ -233,13 +233,15 @@ ul.folder-list ul.folder-list {
 
 .facets-bar {
   display: flex;
+  flex-flow: row wrap;
   align-items: stretch;
-  justify-content: space-between;
 }
 .facet-box {
   background-color: #f7f7f7;
-  flex: 0 0 33%;
-  max-width: 33%;
+  flex: 0 0 32.5%;
+  max-width: 32.5%;
+  margin-right: 0.8%;
+  margin-bottom: 1ex;
 }
 .facet-name {
   font-weight: bold;
@@ -256,11 +258,20 @@ ul.folder-list ul.folder-list {
 .facet-value-line {
   display: flex;
 }
+.facet-value-line:hover {
+  text-decoration: underline;
+}
 .facet-value-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.facet-value-selected .facet-value-text {
+  font-weight: bold;
+}
 .facet-value-count {
   margin-left: 0.2em;
+}
+.facet-keys-input {
+  
 }

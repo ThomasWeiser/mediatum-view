@@ -1,5 +1,6 @@
 module Tests.Types exposing
     ( fuzzerDocumentId
+    , fuzzerFacetFilters
     , fuzzerFilter
     , fuzzerFilters
     , fuzzerFolderId
@@ -14,6 +15,7 @@ module Tests.Types exposing
     , fuzzerYear
     )
 
+import Dict
 import Expect
 import Fuzz exposing (Fuzzer)
 import Test exposing (..)
@@ -22,7 +24,7 @@ import Tests.Types.Range
 import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.Selection exposing (Filter(..), FtsSorting(..), SelectMethod(..), Selection, SetOfFilters)
+import Types.Selection exposing (FacetFilters, Filter(..), FtsSorting(..), SelectMethod(..), Selection, SetOfFilters)
 
 
 fuzzerId : Fuzzer Int
@@ -52,10 +54,11 @@ fuzzerDocumentId =
 
 fuzzerSelection : Fuzzer Selection
 fuzzerSelection =
-    Fuzz.map3 Selection
+    Fuzz.map4 Selection
         fuzzerFolderId
         fuzzerSearchMethod
         fuzzerFilters
+        fuzzerFacetFilters
 
 
 fuzzerSelectionWindow : Fuzzer ( Selection, Window )
@@ -103,6 +106,22 @@ fuzzerFilter =
             FilterTitleFts
             fuzzerSearchTerm
         ]
+
+
+fuzzerFacetFilters : Fuzzer FacetFilters
+fuzzerFacetFilters =
+    Fuzz.map2 Tuple.pair
+        fuzzerFacetKey
+        Fuzz.string
+        |> shortList 3
+        |> Fuzz.map Dict.fromList
+
+
+fuzzerFacetKey : Fuzzer String
+fuzzerFacetKey =
+    [ "type", "subject", "origin", "year-accepted", "author.firstname", "pdf_copy" ]
+        |> List.map Fuzz.constant
+        |> Fuzz.oneOf
 
 
 fuzzerWindow : Fuzzer Window

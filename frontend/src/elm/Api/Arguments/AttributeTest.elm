@@ -27,6 +27,7 @@ type alias Test =
 {-| -}
 type Operation
     = Equality String
+    | EqualityWithBlankNull String
     | ILike String (Maybe String)
     | SimpleFts String
     | DateRange ( String, String )
@@ -46,6 +47,13 @@ testInput test =
         Equality value ->
             { key = Present test.key
             , operator = Present Operator.Equality
+            , value = Present value
+            , extra = Absent
+            }
+
+        EqualityWithBlankNull value ->
+            { key = Present test.key
+            , operator = Present Operator.Equalitywithblanknull
             , value = Present value
             , extra = Absent
             }
