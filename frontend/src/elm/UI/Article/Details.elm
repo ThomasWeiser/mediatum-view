@@ -121,6 +121,7 @@ update context msg model =
         SubmitMutation documentId ->
             ( { model | mutationState = Pending }
             , Api.sendMutationRequest
+                (Api.withOperationName "ModifyDocumentAttribute")
                 (ApiMutationResponse documentId model.editAttributeKey)
                 (Api.Mutations.updateDocumentAttribute
                     documentId

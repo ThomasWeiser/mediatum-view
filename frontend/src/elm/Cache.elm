@@ -237,6 +237,7 @@ requestNeed need cache =
                 | rootFolderIds = Loading
               }
             , Api.sendQueryRequest
+                (Api.withOperationName "NeedRootFolderIds")
                 ApiResponseToplevelFolder
                 Api.Queries.toplevelFolder
             )
@@ -264,6 +265,7 @@ requestNeed need cache =
                             parentIdsWithUnknownChildren
                   }
                 , Api.sendQueryRequest
+                    (Api.withOperationName "NeedSubfolders")
                     (ApiResponseSubfolder parentIdsWithUnknownChildren)
                     (Api.Queries.subfolder parentIdsWithUnknownChildren)
                 )
@@ -274,6 +276,7 @@ requestNeed need cache =
                     Sort.Dict.insert nodeId Loading cache.nodeTypes
               }
             , Api.sendQueryRequest
+                (Api.withOperationName "NeedGenericNode")
                 (ApiResponseGenericNode nodeId)
                 (Api.Queries.genericNode nodeId)
             )
@@ -284,6 +287,7 @@ requestNeed need cache =
                     Sort.Dict.insert documentId Loading cache.documents
               }
             , Api.sendQueryRequest
+                (Api.withOperationName "NeedDocument")
                 (ApiResponseDocument documentId)
                 (Api.Queries.documentDetails documentId)
             )
@@ -294,6 +298,7 @@ requestNeed need cache =
                     Sort.Dict.insert ( selection, window ) Loading cache.documentsPages
               }
             , Api.sendQueryRequest
+                (Api.withOperationName "NeedDocumentsPage")
                 (ApiResponseDocumentsPage ( selection, window ))
                 (Api.Queries.selectionDocumentsPage window selection)
             )
@@ -304,6 +309,7 @@ requestNeed need cache =
                     Sort.Dict.insert selection Loading cache.folderCounts
               }
             , Api.sendQueryRequest
+                (Api.withOperationName "NeedFolderCounts")
                 (ApiResponseFolderCounts selection)
                 (Api.Queries.selectionFolderCounts selection)
             )
@@ -314,6 +320,7 @@ requestNeed need cache =
                     Sort.Dict.insert ( selection, key ) Loading cache.facetsValues
               }
             , Api.sendQueryRequest
+                (Api.withOperationName "NeedFacet")
                 (ApiResponseFacet ( selection, key ))
                 (Api.Queries.selectionFacetByKey selection key Config.facetValuesToQuery)
             )
