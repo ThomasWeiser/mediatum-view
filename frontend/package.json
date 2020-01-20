@@ -6,7 +6,7 @@
     "test": "elm-test",
     "test-watch": "elm-test --watch",
     "generate": "rimraf gen && elm-graphql http://localhost:5000/graphql --base Mediatum --output gen/",
-    "compile": "rimraf elm-stuff/build-artifacts && ncp src/assets dist && elm make --output=dist/app.js src/elm/Main.elm",
+    "compile": "rimraf elm-stuff && ncp src/assets dist && elm make --output=dist/app.js src/elm/Main.elm",
     "build": "npm run generate && npm run compile",
     "start": "ncp src/assets dist && elm-live -u -e node_modules/.bin/elm -d dist src/elm/Main.elm -x /graphql -y http://localhost:5000 -- --output=dist/app.js --debug",
     "format": "elm-format --yes src/elm tests",
