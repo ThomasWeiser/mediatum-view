@@ -12,9 +12,9 @@ $ npm install
 
 Alternatively, you may choose to install the tools individually.
 
-- [Elm](http://elm-lang.org/) v0.19. See [here](https://guide.elm-lang.org/install.html) for platform-specific instructions.
+- [Elm](http://elm-lang.org/) v0.19.1. See [here](https://guide.elm-lang.org/install.html) for platform-specific instructions.
 - [elm-graphql](https://github.com/dillonkearns/elm-graphql) to autogenerate GraphQL queries in Elm.
-- [elm-live](https://github.com/tomekwi/elm-live), which watches the Elm source code, recompiles it when needed, serves the result via HTTP and handles live reloading the browser.
+- [elm-live](https://www.elm-live.com/), which watches the Elm source code, recompiles it when needed, serves the result via HTTP and handles live reloading the browser.
 
 ## Building
 

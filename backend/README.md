@@ -9,7 +9,7 @@ The new code lives in these PostgreSQL schemas:
 
 | Schema    | Description                              |
 | --------- | ---------------------------------------- |
-| `preprocess`  | A table with preprocessed `tsvector` values for full text search. |
+| `preprocess`  | A table `ufts` with preprocessed `tsvector` values for full text search. |
 | `entity`  | Views (some of them materialized) that map the original generic node structure to the specific entities of interest. |
 | `api`     | Types and functions that define the GraphQL schema and the resolvers implementing the GraphQL operations. |
 | `aux`     | Helper functions                         |
