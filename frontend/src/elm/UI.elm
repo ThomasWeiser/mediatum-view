@@ -22,6 +22,7 @@ import Types.Presentation exposing (Presentation(..))
 import Types.Route as Route exposing (Route)
 import UI.Article
 import UI.Controls
+import UI.Facets
 import UI.Icons
 import UI.Tree
 
@@ -57,6 +58,7 @@ Only temporary or subordinate interaction state is represented in the UI model.
 -}
 type alias Model =
     { tree : UI.Tree.Model
+    , facets : UI.Facets.Model
     , controls : UI.Controls.Model
     , article : UI.Article.Model
     , facetKeys : List String
@@ -67,6 +69,7 @@ type alias Model =
 -}
 type Msg
     = TreeMsg UI.Tree.Msg
+    | FacetsMsg UI.Facets.Msg
     | ControlsMsg UI.Controls.Msg
     | ArticleMsg UI.Article.Msg
 
@@ -76,7 +79,8 @@ type Msg
 init : Model
 init =
     { tree = UI.Tree.initialModel
-    , controls = UI.Controls.initialModel Config.standardFacetKeys Route.initHome
+    , facets = UI.Facets.initialModel Config.standardFacetKeys
+    , controls = UI.Controls.initialModel Route.initHome
     , article = UI.Article.initialModel (GenericPresentation Nothing)
     , facetKeys = Config.standardFacetKeys
     }
@@ -102,7 +106,7 @@ needs context model =
 updateOnChangedRoute : Context -> Model -> Model
 updateOnChangedRoute context model =
     { model
-        | controls = UI.Controls.initialModel model.facetKeys context.route
+        | controls = UI.Controls.initialModel context.route
         , tree = UI.Tree.expandPresentationFolder model.tree
     }
 
@@ -142,6 +146,36 @@ update context msg model =
                     Navigate (Navigation.ShowListingWithFolder selectedFolder)
             )
 
+        FacetsMsg subMsg ->
+            let
+                ( subModel, subCmd, subReturn ) =
+                    UI.Facets.update
+                        { cache = context.cache
+                        , presentation = context.presentation
+                        , facetKeys = model.facetKeys
+                        }
+                        subMsg
+                        model.facets
+            in
+            ( { model
+                | facets = subModel
+                , facetKeys =
+                    case subReturn of
+                        UI.Facets.ChangedFacetKeys newFacetKeys ->
+                            newFacetKeys
+
+                        _ ->
+                            model.facetKeys
+              }
+            , Cmd.map FacetsMsg subCmd
+            , case subReturn of
+                UI.Facets.Navigate navigation ->
+                    Navigate navigation
+
+                _ ->
+                    NoReturn
+            )
+
         ControlsMsg subMsg ->
             let
                 ( subModel, subCmd, subReturn ) =
@@ -149,20 +183,12 @@ update context msg model =
                         { route = context.route
                         , cache = context.cache
                         , presentation = context.presentation
-                        , facetKeys = model.facetKeys
                         }
                         subMsg
                         model.controls
             in
             ( { model
                 | controls = subModel
-                , facetKeys =
-                    case subReturn of
-                        UI.Controls.ChangedFacetKeys newFacetKeys ->
-                            newFacetKeys
-
-                        _ ->
-                            model.facetKeys
               }
             , Cmd.map ControlsMsg subCmd
             , case subReturn of
@@ -230,7 +256,6 @@ view context model =
                 { route = context.route
                 , cache = context.cache
                 , presentation = context.presentation
-                , facetKeys = model.facetKeys
                 }
                 model.controls
                 |> Html.map ControlsMsg
@@ -249,6 +274,13 @@ view context model =
                             , presentation = context.presentation
                             }
                         )
+                , Html.map FacetsMsg <|
+                    UI.Facets.view
+                        { cache = context.cache
+                        , presentation = context.presentation
+                        , facetKeys = model.facetKeys
+                        }
+                        model.facets
                 ]
             , Html.map ArticleMsg <|
                 UI.Article.view
