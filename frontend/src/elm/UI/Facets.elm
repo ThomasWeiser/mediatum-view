@@ -104,7 +104,7 @@ update context msg model =
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
-    Html.nav []
+    Html.div []
         [ viewFacets context model
         , viewFacetKeysInput model
         ]
@@ -143,7 +143,7 @@ viewFacets context model =
 
 viewFacet : Context -> Selection -> Model -> String -> Html Msg
 viewFacet context selection model key =
-    Html.div
+    Html.nav
         [ Html.Attributes.class "facet-box" ]
         [ Html.div
             [ Html.Attributes.class "facet-name" ]
