@@ -35,7 +35,7 @@ header {
   flex: 0;
   border-bottom: 1px solid gray;
   padding-bottom: 1ex;
-  /* background-color: #eee; */ Html.Attributes.class "facets-" 
+  /* background-color: #eee; */
 }
 header .title {
   color: #3070b3;
