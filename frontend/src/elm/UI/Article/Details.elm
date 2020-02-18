@@ -242,7 +242,7 @@ viewEditAttribute model document =
             , Html.select
                 [ Html.Attributes.value model.editAttributeKey
                 , Html.Attributes.disabled formDisabled
-                , Utils.onChange SetAttributeKey
+                , Html.Events.onInput SetAttributeKey
                 ]
                 (List.map
                     (\{ field, name } ->
@@ -259,7 +259,7 @@ viewEditAttribute model document =
                 , Html.Attributes.placeholder "Value"
                 , Html.Attributes.value model.editAttributeValue
                 , Html.Attributes.disabled formDisabled
-                , Utils.onChange SetAttributeValue
+                , Html.Events.onInput SetAttributeValue
                 ]
                 []
             , Html.button

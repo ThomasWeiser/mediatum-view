@@ -23,6 +23,7 @@ module UI.Controls.Filter exposing
 import Basics.Extra
 import Html exposing (Html)
 import Html.Attributes
+import Html.Events
 import Maybe.Extra
 import Types.Range as Range
 import Types.SearchTerm
@@ -133,7 +134,7 @@ viewEditControls focusId controls =
                     , Html.Attributes.placeholder "From Year"
                     , Html.Attributes.value
                         (Maybe.Extra.unwrap "" String.fromInt from)
-                    , Utils.onChange
+                    , Html.Events.onInput
                         (\from1 ->
                             ControlsYearWithin (String.toInt from1) to
                         )
@@ -146,7 +147,7 @@ viewEditControls focusId controls =
                     , Html.Attributes.placeholder "To Year"
                     , Html.Attributes.value
                         (Maybe.Extra.unwrap "" String.fromInt to)
-                    , Utils.onChange
+                    , Html.Events.onInput
                         (\to1 ->
                             ControlsYearWithin from (String.toInt to1)
                         )
@@ -162,7 +163,7 @@ viewEditControls focusId controls =
                     , Html.Attributes.type_ "text"
                     , Html.Attributes.placeholder "Title Filter"
                     , Html.Attributes.value searchTerm
-                    , Utils.onChange ControlsTitleFts
+                    , Html.Events.onInput ControlsTitleFts
                     ]
                     []
                 ]
