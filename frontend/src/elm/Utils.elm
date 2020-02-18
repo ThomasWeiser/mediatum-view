@@ -242,7 +242,7 @@ noBreakSpace =
 
 {-| Detect `change` events for things like text fields.
 
-Currently not defined in `elm/htmll` version 1.0.0.
+Currently not defined in `elm/html` version 1.0.0.
 
 [From MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/change_event):
 
@@ -250,6 +250,13 @@ Currently not defined in `elm/htmll` version 1.0.0.
 > when an alteration to the element's value is committed by the user.
 > Unlike the `input` event, the `change` event is not necessarily fired
 > for each alteration to an element's value."
+
+Caution: In most cases you will want to use `Html.Events.onInput` instead.
+If you don't use `onInput` events to get each edit of the field then the field may get reset
+to the previous value through `Html.Attributes.value` in each rendering,
+i.e. on any Msg that the app processes, e.g. a HTTP response.
+
+Use the `onChange` only if this behaviour is acceptable.
 
 -}
 onChange : (String -> msg) -> Html.Attribute msg
