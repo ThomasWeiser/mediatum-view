@@ -267,7 +267,7 @@ viewSearch context model =
                 , Html.Attributes.type_ "search"
                 , Html.Attributes.placeholder "Search ..."
                 , Html.Attributes.value model.ftsTerm
-                , Utils.onChange SetSearchTerm
+                , Html.Events.onInput SetSearchTerm
                 ]
                 []
             , Html.button
