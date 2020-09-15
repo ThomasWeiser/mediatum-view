@@ -24,7 +24,7 @@ On top of that we use [PostGraphile](https://www.graphile.org/postgraphile/) (fo
 
 In general, we use an up-to-date version of PostgreSQL. 
 
-Currently we are using version 11.4.
+Currently we are using version 11.5.
 
 Minimum required version is 10.
 
