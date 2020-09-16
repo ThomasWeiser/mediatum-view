@@ -101,27 +101,23 @@ Actually, we would like to declare that the first parameter is required.
 This can be done by annotating the function as `strict` and using default arguments for the
 optional parameters. See https://github.com/graphile/postgraphile/issues/438
 
-Unfortunately, this leads to inefficient query execution.
+Unfortunately, this leads to inefficient query execution because of not inlining the function when declared as `strict`.
 See http://www.postgresonline.com/journal/archives/163-STRICT-on-SQL-Function-Breaks-In-lining-Gotcha.html
 
-We tested with PostgreSQL version 9.6.5
-Maybe a later of PostgreSQL version will fix this inefficiency.
-Then we may want to amend the API here.
+PostgreSQL is very rigorous about inlining `strict` functions:
+https://wiki.postgresql.org/wiki/Inlining_of_SQL_functions
 
-create or replace function api.all_documents (folder_id int4, type text='', name text='')
-    returns setof api.document as $$
-    select document.*
-    from entity.document
-    join aux.node_lineage on document.id = node_lineage.descendant
-    where folder_id = node_lineage.ancestor
-    and (all_documents.type = '' or document.type = all_documents.type)
-    and (all_documents.name = '' or document.name = all_documents.name);
-$$ language sql stable strict rows 10000;
+    If the function is declared STRICT, then the planner must be able to prove that the body expression necessarily
+    returns NULL if any parameter is null. At present, this condition is only satisfied if: every parameter is referenced
+    at least once, and all functions, operators and other constructs used in the body are themselves STRICT.
+
+It seems too hard to meet these requirements.
+As a consequnce it's currently not possible to to declare some of the parameters as required.
 */
 
 
 comment on function api.all_documents_page (folder_id int4, type text, name text, attribute_tests api.attribute_test[], "limit" integer, "offset" integer) is
-    'Reads and enables pagination through all documents in a folder, optionally filtered by type and name and a list of attribute tests';
+    'Reads and enables pagination through all documents in a folder (folder_id is a required parameter), optionally filtered by type and name and a list of attribute tests';
 
 
 create or replace function api.document_by_id (id int4)
