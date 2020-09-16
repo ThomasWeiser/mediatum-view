@@ -36,6 +36,7 @@ module Pagination.Offset.Page exposing
 -}
 
 import Api
+import Basics.Extra
 
 
 {-| -}
@@ -119,9 +120,8 @@ positionToOffset pageSize referencePage position =
                     0
 
                 Just { offset } ->
-                    offset
-                        - pageSize
-                        |> Basics.max 0
+                    (offset - pageSize)
+                        |> Basics.Extra.atLeast 0
 
         Next ->
             case referencePage of

@@ -90,6 +90,7 @@ toplevelFolder =
         (Mediatum.Object.FoldersConnection.nodes
             Api.Fragments.folderAndSubfolders
         )
+        |> SelectionSet.nonNullOrFail
 
 
 {-| Get the sub-folders of a list of folders.
@@ -114,6 +115,7 @@ subfolder folderIds =
             }
         )
         (Mediatum.Object.FoldersConnection.nodes Api.Fragments.folder)
+        |> SelectionSet.nonNullOrFail
 
 
 {-| Get a folder or a document with a given mediaTUM id.
@@ -390,6 +392,7 @@ authorSearch referencePage paginationPosition _ searchString =
             Api.Fragments.graphqlDocumentObjects
             (Api.Fragments.documentByMask "nodesmall")
         )
+        |> SelectionSet.nonNullOrFail
 
 
 {-| Get the basic properties of a document selected by its mediaTUM id

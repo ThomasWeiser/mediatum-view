@@ -23,6 +23,7 @@ module UI.Article.Listing exposing
 -- import Article.Iterator as Iterator
 -- import Pagination.Offset.Page as Page exposing (Page, PageResult)
 
+import Basics.Extra
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
@@ -108,7 +109,8 @@ update context msg model =
                             0
 
                         Previous ->
-                            context.window.offset - context.window.limit |> Basics.max 0
+                            (context.window.offset - context.window.limit)
+                                |> Basics.Extra.atLeast 0
 
                         Next ->
                             context.window.offset + context.window.limit
