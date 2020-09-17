@@ -20,7 +20,7 @@ create or replace function api.all_documents_docset
         where folder_id = node_lineage.ancestor
         and (all_documents_docset.type = 'use null instead of this surrogate dummy' or document.type = all_documents_docset.type)
         and (all_documents_docset.name = 'use null instead of this surrogate dummy' or document.name = all_documents_docset.name)
-        and (attribute_tests is null or aux.jsonb_test_list (document.attrs, attribute_tests))
+        and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
         ;
         return res;
     end;
@@ -87,7 +87,7 @@ create or replace function api.fts_documents_docset
         return aux.fts_documents_tsquery_docset
           ( folder_id
           , aux.custom_to_tsquery (text)
-          , attribute_tests
+          , nullif(attribute_tests, '{}')
           );
     end;
 $$ language plpgsql strict stable parallel safe;

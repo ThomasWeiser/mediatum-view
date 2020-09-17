@@ -135,7 +135,7 @@ create or replace function api.fts_documents_page
                 from aux.fts_documents_paginated
                     ( folder_id
                     , text
-                    , attribute_tests
+                    , nullif(attribute_tests, '{}')
                     , sorting
                     , "limit", "offset"
                     )
@@ -187,7 +187,7 @@ create or replace function api.fts_documents_page_pl
             aux.fts_documents_paginated
                 ( folder_id
                 , text
-                , attribute_tests
+                , nullif(attribute_tests, '{}')
                 , sorting
                 , "limit", "offset"
                 )

@@ -78,7 +78,7 @@ create or replace function api.all_documents_page
                     ( folder_id
                     , nullif(type, 'use null instead of this surrogate dummy')
                     , nullif(name, 'use null instead of this surrogate dummy')
-                    , attribute_tests
+                    , nullif(attribute_tests, '{}')
                     , "limit", "offset"
                     )
             )
