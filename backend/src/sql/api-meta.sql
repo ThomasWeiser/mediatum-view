@@ -27,7 +27,7 @@ create or replace function api.metadatatype_by_name (name text)
     returns api.metadatatype as $$
     select * from entity.metadatatype
     where entity.metadatatype.name = metadatatype_by_name.name
-$$ language sql stable;
+$$ language sql strict stable;
 
 comment on function api.metadatatype_by_name (name text) is
     'Gets a meta data type by its name.';
@@ -122,7 +122,7 @@ create or replace function api.mapping_by_name (name text)
     returns api.mapping as $$
     select * from entity.mapping
     where entity.mapping.name = mapping_by_name.name
-$$ language sql stable;
+$$ language sql strict stable;
 
 comment on function api.mapping_by_name (name text) is
     'Gets a mapping by its name.';
@@ -284,7 +284,7 @@ create or replace function api.metadatatype_metafield_by_name (mdt api.metadatat
     select * from entity.metafield
     where metafield.metadatatype_id = mdt.id
       and metafield.name = metadatatype_metafield_by_name.name
-$$ language sql stable;
+$$ language sql strict stable;
 
 comment on function api.metadatatype_metafield_by_name (mdt api.metadatatype, name text) is
     'Gets a meta field of this meta data type by name.';
@@ -324,7 +324,7 @@ create or replace function api.metadatatype_mask_by_name (mdt api.metadatatype, 
     select * from entity.mask
     where mask.metadatatype_id = mdt.id
       and mask.name = metadatatype_mask_by_name.name
-$$ language sql stable;
+$$ language sql strict stable;
 
 comment on function api.metadatatype_mask_by_name (mdt api.metadatatype, name text) is
     'Gets a mask of this meta data type by name.';
@@ -344,7 +344,7 @@ create or replace function api.mask_maskitems (mask api.mask, type text, fieldty
 $$ language sql stable rows 80;
 
 comment on function api.mask_maskitems (mask api.mask, type text, fieldtype text, is_required boolean, find text) is
-    'Reads and enables pagination through all items this mask, optionally filtered by type, fieldtype and is_required, and searchable by name.';
+    'Reads and enables pagination through all items of this mask, optionally filtered by type, fieldtype and is_required, and searchable by name.';
 
 
 create or replace function api.mask_maskitem_by_name (mask api.mask, name text)
@@ -352,7 +352,7 @@ create or replace function api.mask_maskitem_by_name (mask api.mask, name text)
     select * from entity.maskitem
     where maskitem.parent_id = mask.id
       and maskitem.name = mask_maskitem_by_name.name
-$$ language sql stable;
+$$ language sql strict stable;
 
 comment on function api.mask_maskitem_by_name (mask api.mask, name text) is
     'Gets an item of this mask by name.';
@@ -379,7 +379,7 @@ create or replace function api.maskitem_subitem_by_name (parent api.maskitem, na
     select * from entity.maskitem
     where maskitem.parent_id = parent.id
       and maskitem.name = maskitem_subitem_by_name.name
-$$ language sql stable;
+$$ language sql strict stable;
 
 comment on function api.maskitem_subitem_by_name (parent api.maskitem, name text) is
     'Gets a sub-item of this mask item by name.';
@@ -507,7 +507,7 @@ create or replace function api.mapping_mappingfield_by_name(m api.mapping, name 
     select * from entity.mappingfield
     where mappingfield.mapping_id = m.id
       and mappingfield.name = mapping_mappingfield_by_name.name
-$$ language sql stable;
+$$ language sql strict stable;
 
 comment on function api.mapping_mappingfield_by_name(m api.mapping, name text) is
     'Gets a mapping field of this mapping by name.';
