@@ -347,6 +347,7 @@ _GraphQL notation:_
 
     query {
         authorSearch(
+            folderId: $folderId
             text: $searchTerm
             first: $optionalRelayPaginationArgument
             last: $optionalRelayPaginationArgument
