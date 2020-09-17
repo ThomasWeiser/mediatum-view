@@ -182,7 +182,7 @@ create or replace function api.document_values_by_mask (document api.document, m
     from entity.document_mask_value_list as v
     where v.document_id = document_values_by_mask.document.id
       and v.mask_name = document_values_by_mask.mask_name
-$$ language sql stable parallel safe;
+$$ language sql strict stable parallel safe;
 
 comment on function api.document_values_by_mask (document api.document, mask_name text) is
     'Gets the meta field values of this document as a JSON value, selected by a named mask.';
