@@ -197,6 +197,7 @@ create or replace function api.fts_documents_page_pl
 $$ language plpgsql strict stable parallel safe;
 
 comment on function api.fts_documents_page_pl (folder_id int4, text text, attribute_tests api.attribute_test[], sorting api.fts_sorting, "limit" integer, "offset" integer) is
+    '@deprecated '
     'Alternative implementation of ftsDocumentsPage; may have different perfoamce behavior. '
     ' Perform a full-text-search on the documents of a folder, sorted by a search rank, optionally filtered by type and name and a list of attribute tests.'
     ' Sorting of the results is either "by_rank" (default) or "by_date".'
