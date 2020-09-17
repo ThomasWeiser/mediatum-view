@@ -22,7 +22,7 @@ create or replace function api.folder_by_id (id int4)
     returns api.folder as $$
     select * from entity.folder
     where entity.folder.id = folder_by_id.id
-$$ language sql stable;
+$$ language sql strict stable;
 
 comment on function api.folder_by_id (id int4) is
     'Gets a folder by its mediaTUM node id.';
