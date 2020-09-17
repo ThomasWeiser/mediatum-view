@@ -322,7 +322,7 @@ comment on function api.all_documents_facet_by_key_strict
     , attribute_tests api.attribute_test[]
     ) is
     '@deprecated '
-    'Experimental version of function all_documents_facet_by_key, '
+    'Experimental version of function allDocumentsFacetByKey, '
     'having the appropriate parameters marked as required. '
 ;
 
@@ -405,7 +405,7 @@ comment on function api.all_documents_facet_by_mask_strict
     , attribute_tests api.attribute_test[]
     ) is
     '@deprecated '
-    'Experimental version of function all_documents_facet_by_mask, '
+    'Experimental version of function allDocumentsFacetByMask, '
     'having the appropriate parameters marked as required. '
     'Performance may be degraded. '
 ;
