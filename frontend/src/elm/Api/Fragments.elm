@@ -236,10 +236,10 @@ facetByKey key limit =
             (Mediatum.Object.Docset.facetByKey
                 (\optionals ->
                     { optionals
-                        | key = Present key
-                        , first = Present limit
+                        | first = Present limit
                     }
                 )
+                { key = key }
                 facetValues
             )
 
