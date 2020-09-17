@@ -150,11 +150,7 @@ genericNode nodeId =
                     GenericNode.IsNeither
     in
     Mediatum.Query.genericNodeById
-        (\optionals ->
-            { optionals
-                | id = Present (Id.toInt nodeId)
-            }
-        )
+        { id = Id.toInt nodeId }
         (SelectionSet.succeed constructor
             |> SelectionSet.with
                 (Mediatum.Object.GenericNode.asFolder
@@ -209,33 +205,31 @@ selectionDocumentsPage window selection =
     (case selection.selectMethod of
         SelectByFolderListing ->
             Mediatum.Query.allDocumentsPage
-                (\optionals ->
-                    selectionToOptionalGraphqlArguments selection
-                        { optionals
-                            | limit = Present window.limit
-                            , offset = Present window.offset
-                        }
+                (selectionToOptionalGraphqlArguments selection
+                    >> windowToOptionalGraphqlArguments window
                 )
+                { folderId = selectionToFolderId selection }
 
         SelectByFullTextSearch searchTerm ftsSorting ->
             Mediatum.Query.ftsDocumentsPage
                 (\optionals ->
-                    selectionToOptionalGraphqlArguments selection
-                        { optionals
-                            | text = Present (Types.SearchTerm.toString searchTerm)
-                            , sorting =
-                                Present
-                                    (case ftsSorting of
-                                        FtsByRank ->
-                                            Mediatum.Enum.FtsSorting.ByRank
+                    { optionals
+                        | sorting =
+                            Present
+                                (case ftsSorting of
+                                    FtsByRank ->
+                                        Mediatum.Enum.FtsSorting.ByRank
 
-                                        FtsByDate ->
-                                            Mediatum.Enum.FtsSorting.ByDate
-                                    )
-                            , limit = Present window.limit
-                            , offset = Present window.offset
-                        }
+                                    FtsByDate ->
+                                        Mediatum.Enum.FtsSorting.ByDate
+                                )
+                    }
+                        |> selectionToOptionalGraphqlArguments selection
+                        |> windowToOptionalGraphqlArguments window
                 )
+                { folderId = selectionToFolderId selection
+                , text = Types.SearchTerm.toString searchTerm
+                }
     )
         (Api.Fragments.documentsPage "nodesmall")
         |> SelectionSet.nonNullOrFail
@@ -277,15 +271,14 @@ selectionFolderCounts selection =
         SelectByFolderListing ->
             Mediatum.Query.allDocumentsDocset
                 (selectionToOptionalGraphqlArguments selection)
+                { folderId = selectionToFolderId selection }
 
         SelectByFullTextSearch searchTerm ftsSorting ->
             Mediatum.Query.ftsDocumentsDocset
-                (\optionals ->
-                    selectionToOptionalGraphqlArguments selection
-                        { optionals
-                            | text = Present (Types.SearchTerm.toString searchTerm)
-                        }
-                )
+                (selectionToOptionalGraphqlArguments selection)
+                { folderId = selectionToFolderId selection
+                , text = Types.SearchTerm.toString searchTerm
+                }
     )
         Api.Fragments.folderAndSubfolderCounts
         |> SelectionSet.nonNullOrFail
@@ -331,15 +324,14 @@ selectionFacetByKey selection key limit =
         SelectByFolderListing ->
             Mediatum.Query.allDocumentsDocset
                 (selectionToOptionalGraphqlArguments selection)
+                { folderId = selectionToFolderId selection }
 
         SelectByFullTextSearch searchTerm ftsSorting ->
             Mediatum.Query.ftsDocumentsDocset
-                (\optionals ->
-                    selectionToOptionalGraphqlArguments selection
-                        { optionals
-                            | text = Present (Types.SearchTerm.toString searchTerm)
-                        }
-                )
+                (selectionToOptionalGraphqlArguments selection)
+                { folderId = selectionToFolderId selection
+                , text = Types.SearchTerm.toString searchTerm
+                }
     )
         (Api.Fragments.facetByKey key limit)
         |> SelectionSet.nonNullOrFail
@@ -376,18 +368,16 @@ authorSearch :
     -> FolderId
     -> String
     -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-authorSearch referencePage paginationPosition _ searchString =
+authorSearch referencePage paginationPosition folderId searchString =
     Mediatum.Query.authorSearch
-        ((\optionals ->
-            { optionals
-                | text = Present searchString
-            }
-         )
-            >> Pagination.Relay.Pagination.paginationArguments
-                Config.pageSize
-                referencePage
-                paginationPosition
+        (Pagination.Relay.Pagination.paginationArguments
+            Config.pageSize
+            referencePage
+            paginationPosition
         )
+        { folderId = Id.toInt folderId
+        , text = searchString
+        }
         (Connection.connection
             Api.Fragments.graphqlDocumentObjects
             (Api.Fragments.documentByMask "nodesmall")
@@ -412,18 +402,18 @@ documentDetails :
     -> SelectionSet (Maybe Document) Graphql.Operation.RootQuery
 documentDetails documentId =
     Mediatum.Query.documentById
-        (\optionals ->
-            { optionals
-                | id = Present (Id.toInt documentId)
-            }
-        )
+        { id = Id.toInt documentId }
         (Api.Fragments.documentByMask "nodebig")
+
+
+selectionToFolderId : Selection -> Int
+selectionToFolderId selection =
+    Id.toInt selection.scope
 
 
 type alias OptionalArgumentsForSelection a =
     { a
-        | folderId : OptionalArgument Int
-        , attributeTests : OptionalArgument (List (Maybe Mediatum.InputObject.AttributeTestInput))
+        | attributeTests : OptionalArgument (List (Maybe Mediatum.InputObject.AttributeTestInput))
     }
 
 
@@ -433,11 +423,28 @@ selectionToOptionalGraphqlArguments :
     -> OptionalArgumentsForSelection a
 selectionToOptionalGraphqlArguments selection optionals =
     { optionals
-        | folderId = Present (Id.toInt selection.scope)
-        , attributeTests =
+        | attributeTests =
             (Api.Arguments.Filter.filtersToAttributeTests selection.filters
                 ++ Api.Arguments.Filter.facetFiltersToAttributeTests selection.facetFilters
             )
                 |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
                 |> Present
+    }
+
+
+type alias OptionalArgumentsForWindow a =
+    { a
+        | limit : OptionalArgument Int
+        , offset : OptionalArgument Int
+    }
+
+
+windowToOptionalGraphqlArguments :
+    Window
+    -> OptionalArgumentsForWindow a
+    -> OptionalArgumentsForWindow a
+windowToOptionalGraphqlArguments window optionals =
+    { optionals
+        | limit = Present window.limit
+        , offset = Present window.offset
     }

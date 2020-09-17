@@ -123,7 +123,7 @@ $$ language plpgsql stable parallel safe rows 100;
 create or replace function api.fts_documents_page
     ( folder_id int4
     , text text
-    , attribute_tests api.attribute_test[]
+    , attribute_tests api.attribute_test[] default '{}'
     , sorting api.fts_sorting default 'by_rank'
     , "limit" integer default 10
     , "offset" integer default 0
@@ -150,14 +150,14 @@ create or replace function api.fts_documents_page
                 from search_result
             ) as content
         ;
-$$ language sql stable parallel safe;
+$$ language sql strict stable parallel safe;
 
 -- The same function as plpgsql
 -- Performance behavior seems to be the same.
 create or replace function api.fts_documents_page_pl
     ( folder_id int4
     , text text
-    , attribute_tests api.attribute_test[]
+    , attribute_tests api.attribute_test[] default '{}'
     , sorting api.fts_sorting default 'by_rank'
     , "limit" integer default 10
     , "offset" integer default 0
@@ -188,7 +188,7 @@ create or replace function api.fts_documents_page_pl
         ;
         return res;
     end;
-$$ language plpgsql stable parallel safe;
+$$ language plpgsql strict stable parallel safe;
 
 
 comment on function api.fts_documents_page (folder_id int4, text text, attribute_tests api.attribute_test[], sorting api.fts_sorting, "limit" integer, "offset" integer) is
@@ -218,7 +218,7 @@ create or replace function api.author_search (folder_id int4, text text)
             replace (node.attrs ->> 'author.surname', ';', ' ')
           )
           @@ tsq;
-$$ language sql stable rows 100 parallel safe;
+$$ language sql strict stable rows 100 parallel safe;
 
 comment on function api.author_search (folder_id int4, text text) is
     'Reads and enables pagination through all documents within a folder, filtered by a keyword search though the documents'' author.';

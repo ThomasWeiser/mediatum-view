@@ -8,7 +8,7 @@ create or replace function api.generic_node_by_id (id int4)
     select node.id
     from entity.node
     where entity.node.id = generic_node_by_id.id
-$$ language sql stable;
+$$ language sql strict stable;
 
 comment on function api.generic_node_by_id (id int4) is
     'Gets a generic node by its mediaTUM node id.';

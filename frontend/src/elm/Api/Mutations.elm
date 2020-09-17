@@ -15,6 +15,7 @@ import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Maybe.Extra
+import Mediatum.InputObject
 import Mediatum.Mutation
 import Mediatum.Object.UpdateDocumentAttributePayload
 import Types.Id as Id exposing (DocumentId)
@@ -48,11 +49,12 @@ updateDocumentAttribute documentId key value =
     SelectionSet.map Maybe.Extra.join
         (Mediatum.Mutation.updateDocumentAttribute
             { input =
-                { clientMutationId = Absent
-                , id = Present (Id.toInt documentId)
-                , key = Present key
-                , value = Present value
-                }
+                Mediatum.InputObject.buildUpdateDocumentAttributeInput
+                    { id = Id.toInt documentId
+                    , key = key
+                    , value = value
+                    }
+                    identity
             }
             (SelectionSet.succeed identity
                 |> SelectionSet.with

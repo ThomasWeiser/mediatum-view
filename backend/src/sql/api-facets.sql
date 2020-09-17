@@ -4,9 +4,9 @@
 
 create or replace function api.all_documents_docset
     ( folder_id int4
-    , type text
-    , name text
-    , attribute_tests api.attribute_test[]
+    , type text default 'use null instead of this surrogate dummy'
+    , name text default 'use null instead of this surrogate dummy'
+    , attribute_tests api.attribute_test[] default '{}'
     )
     returns api.docset as $$
     declare res api.docset;
@@ -18,13 +18,13 @@ create or replace function api.all_documents_docset
         from entity.document
         join aux.node_lineage on document.id = node_lineage.descendant
         where folder_id = node_lineage.ancestor
-        and (all_documents_docset.type is null or document.type = all_documents_docset.type)
-        and (all_documents_docset.name is null or document.name = all_documents_docset.name)
+        and (all_documents_docset.type = 'use null instead of this surrogate dummy' or document.type = all_documents_docset.type)
+        and (all_documents_docset.name = 'use null instead of this surrogate dummy' or document.name = all_documents_docset.name)
         and (attribute_tests is null or aux.jsonb_test_list (document.attrs, attribute_tests))
         ;
         return res;
     end;
-$$ language plpgsql stable parallel safe;
+$$ language plpgsql strict stable parallel safe;
 
 
 comment on function api.all_documents_docset (folder_id int4, type text, name text, attribute_tests api.attribute_test[]) is
@@ -79,7 +79,7 @@ $$ language plpgsql stable parallel safe;
 create or replace function api.fts_documents_docset
     ( folder_id int4
     , text text
-    , attribute_tests api.attribute_test[]
+    , attribute_tests api.attribute_test[] default '{}'
     )
     returns api.docset
     as $$ 
@@ -90,7 +90,7 @@ create or replace function api.fts_documents_docset
           , attribute_tests
           );
     end;
-$$ language plpgsql stable parallel safe;
+$$ language plpgsql strict stable parallel safe;
 
 comment on function api.fts_documents_docset
     ( folder_id int4

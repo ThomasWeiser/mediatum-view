@@ -42,7 +42,9 @@ create or replace function aux.all_documents_paginated
         , has_next_page boolean
         )
     as $$
-        begin return query
+        begin 
+            raise WARNING 'aux.all_documents_paginated limit = %', "limit";
+            return query
             select f
                 , 0.0::float4
                 , preprocess.year_from_attrs (f.attrs)
@@ -63,11 +65,11 @@ $$ language plpgsql stable parallel safe rows 100;
 
 create or replace function api.all_documents_page
     ( folder_id int4
-    , type text
-    , name text
-    , attribute_tests api.attribute_test[]
-    , "limit" integer
-    , "offset" integer
+    , type text default 'use null instead of this surrogate dummy'
+    , name text default 'use null instead of this surrogate dummy'
+    , attribute_tests api.attribute_test[] default '{}'
+    , "limit" integer default 10
+    , "offset" integer default 0
     )
     returns api.document_result_page as $$
 
@@ -75,7 +77,8 @@ create or replace function api.all_documents_page
                 select *
                 from aux.all_documents_paginated
                     ( folder_id
-                    , type, name
+                    , nullif(type, 'use null instead of this surrogate dummy')
+                    , nullif(name, 'use null instead of this surrogate dummy')
                     , attribute_tests
                     , "limit", "offset"
                     )
@@ -90,12 +93,14 @@ create or replace function api.all_documents_page
                 from search_result
             ) as content
         ;
-$$ language sql stable parallel safe;
+$$ language sql strict stable parallel safe;
 
 
 
 
 /*
+TODO: Update comment: We now have mixed required/optional arguments, my declaring the function as `strict` and using default arguments.
+
 Actually, we would like to declare that the first parameter is required.
 
 This can be done by annotating the function as `strict` and using default arguments for the
@@ -117,7 +122,7 @@ As a consequnce it's currently not possible to to declare some of the parameters
 
 
 comment on function api.all_documents_page (folder_id int4, type text, name text, attribute_tests api.attribute_test[], "limit" integer, "offset" integer) is
-    'Reads and enables pagination through all documents in a folder (folder_id is a required parameter), optionally filtered by type and name and a list of attribute tests';
+    'Reads and enables pagination through all documents in a folder, optionally filtered by type and name and a list of attribute tests';
 
 
 create or replace function api.document_by_id (id int4)
@@ -125,7 +130,7 @@ create or replace function api.document_by_id (id int4)
     select *
     from entity.document
     where document.id = document_by_id.id
-$$ language sql stable;
+$$ language sql strict stable;
 
 comment on function api.document_by_id (id int4) is
     'Gets a document by its mediaTUM node id.';

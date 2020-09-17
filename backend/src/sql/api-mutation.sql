@@ -15,7 +15,7 @@ create or replace function api.update_document_attribute (id int4, key text, val
     and attrs ? key 
     returning *
 
-$$ language sql volatile;
+$$ language sql strict volatile;
 
 comment on function api.update_document_attribute (id int4, key text, value text) is
     'Updates an existing attribute of the document with the given id.';
