@@ -43,7 +43,6 @@ create or replace function aux.all_documents_paginated
         )
     as $$
         begin 
-            raise WARNING 'aux.all_documents_paginated limit = %', "limit";
             return query
             select f
                 , 0.0::float4
