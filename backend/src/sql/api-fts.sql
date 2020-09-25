@@ -123,7 +123,7 @@ $$ language plpgsql stable parallel safe rows 100;
 create or replace function api.fts_documents_page
     ( folder_id int4
     , text text
-    , attribute_tests api.attribute_test[]
+    , attribute_tests api.attribute_test[] default '{}'
     , sorting api.fts_sorting default 'by_rank'
     , "limit" integer default 10
     , "offset" integer default 0
@@ -135,7 +135,7 @@ create or replace function api.fts_documents_page
                 from aux.fts_documents_paginated
                     ( folder_id
                     , text
-                    , attribute_tests
+                    , nullif(attribute_tests, '{}')
                     , sorting
                     , "limit", "offset"
                     )
@@ -150,14 +150,20 @@ create or replace function api.fts_documents_page
                 from search_result
             ) as content
         ;
-$$ language sql stable parallel safe;
+$$ language sql strict stable parallel safe;
+
+comment on function api.fts_documents_page (folder_id int4, text text, attribute_tests api.attribute_test[], sorting api.fts_sorting, "limit" integer, "offset" integer) is
+    'Perform a full-text-search on the documents of a folder, sorted by a search rank, optionally filtered by type and name and a list of attribute tests.'
+    ' Sorting of the results is either "by_rank" (default) or "by_date".'
+    ' For pagination you may specify a limit (defaults to 10) and an offset (defaults to 0).'
+    ;
 
 -- The same function as plpgsql
 -- Performance behavior seems to be the same.
 create or replace function api.fts_documents_page_pl
     ( folder_id int4
     , text text
-    , attribute_tests api.attribute_test[]
+    , attribute_tests api.attribute_test[] default '{}'
     , sorting api.fts_sorting default 'by_rank'
     , "limit" integer default 10
     , "offset" integer default 0
@@ -181,18 +187,19 @@ create or replace function api.fts_documents_page_pl
             aux.fts_documents_paginated
                 ( folder_id
                 , text
-                , attribute_tests
+                , nullif(attribute_tests, '{}')
                 , sorting
                 , "limit", "offset"
                 )
         ;
         return res;
     end;
-$$ language plpgsql stable parallel safe;
+$$ language plpgsql strict stable parallel safe;
 
-
-comment on function api.fts_documents_page (folder_id int4, text text, attribute_tests api.attribute_test[], sorting api.fts_sorting, "limit" integer, "offset" integer) is
-    'Perform a full-text-search on the documents of a folder, sorted by a search rank, optionally filtered by type and name and a list of attribute tests.'
+comment on function api.fts_documents_page_pl (folder_id int4, text text, attribute_tests api.attribute_test[], sorting api.fts_sorting, "limit" integer, "offset" integer) is
+    '@deprecated '
+    'Alternative implementation of ftsDocumentsPage; may have different perfoamce behavior. '
+    ' Perform a full-text-search on the documents of a folder, sorted by a search rank, optionally filtered by type and name and a list of attribute tests.'
     ' Sorting of the results is either "by_rank" (default) or "by_date".'
     ' For pagination you may specify a limit (defaults to 10) and an offset (defaults to 0).'
     ;
@@ -218,7 +225,7 @@ create or replace function api.author_search (folder_id int4, text text)
             replace (node.attrs ->> 'author.surname', ';', ' ')
           )
           @@ tsq;
-$$ language sql stable rows 100 parallel safe;
+$$ language sql strict stable rows 100 parallel safe;
 
 comment on function api.author_search (folder_id int4, text text) is
     'Reads and enables pagination through all documents within a folder, filtered by a keyword search though the documents'' author.';

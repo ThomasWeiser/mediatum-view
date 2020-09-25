@@ -42,7 +42,8 @@ create or replace function aux.all_documents_paginated
         , has_next_page boolean
         )
     as $$
-        begin return query
+        begin 
+            return query
             select f
                 , 0.0::float4
                 , preprocess.year_from_attrs (f.attrs)
@@ -63,11 +64,11 @@ $$ language plpgsql stable parallel safe rows 100;
 
 create or replace function api.all_documents_page
     ( folder_id int4
-    , type text
-    , name text
-    , attribute_tests api.attribute_test[]
-    , "limit" integer
-    , "offset" integer
+    , type text default 'use null instead of this surrogate dummy'
+    , name text default 'use null instead of this surrogate dummy'
+    , attribute_tests api.attribute_test[] default '{}'
+    , "limit" integer default 10
+    , "offset" integer default 0
     )
     returns api.document_result_page as $$
 
@@ -75,8 +76,9 @@ create or replace function api.all_documents_page
                 select *
                 from aux.all_documents_paginated
                     ( folder_id
-                    , type, name
-                    , attribute_tests
+                    , nullif(type, 'use null instead of this surrogate dummy')
+                    , nullif(name, 'use null instead of this surrogate dummy')
+                    , nullif(attribute_tests, '{}')
                     , "limit", "offset"
                     )
             )
@@ -90,33 +92,31 @@ create or replace function api.all_documents_page
                 from search_result
             ) as content
         ;
-$$ language sql stable parallel safe;
+$$ language sql strict stable parallel safe;
 
 
 
 
 /*
+TODO: Update comment: We now have mixed required/optional arguments, my declaring the function as `strict` and using default arguments.
+
 Actually, we would like to declare that the first parameter is required.
 
 This can be done by annotating the function as `strict` and using default arguments for the
 optional parameters. See https://github.com/graphile/postgraphile/issues/438
 
-Unfortunately, this leads to inefficient query execution.
+Unfortunately, this leads to inefficient query execution because of not inlining the function when declared as `strict`.
 See http://www.postgresonline.com/journal/archives/163-STRICT-on-SQL-Function-Breaks-In-lining-Gotcha.html
 
-We tested with PostgreSQL version 9.6.5
-Maybe a later of PostgreSQL version will fix this inefficiency.
-Then we may want to amend the API here.
+PostgreSQL is very rigorous about inlining `strict` functions:
+https://wiki.postgresql.org/wiki/Inlining_of_SQL_functions
 
-create or replace function api.all_documents (folder_id int4, type text='', name text='')
-    returns setof api.document as $$
-    select document.*
-    from entity.document
-    join aux.node_lineage on document.id = node_lineage.descendant
-    where folder_id = node_lineage.ancestor
-    and (all_documents.type = '' or document.type = all_documents.type)
-    and (all_documents.name = '' or document.name = all_documents.name);
-$$ language sql stable strict rows 10000;
+    If the function is declared STRICT, then the planner must be able to prove that the body expression necessarily
+    returns NULL if any parameter is null. At present, this condition is only satisfied if: every parameter is referenced
+    at least once, and all functions, operators and other constructs used in the body are themselves STRICT.
+
+It seems too hard to meet these requirements.
+As a consequnce it's currently not possible to to declare some of the parameters as required.
 */
 
 
@@ -129,7 +129,7 @@ create or replace function api.document_by_id (id int4)
     select *
     from entity.document
     where document.id = document_by_id.id
-$$ language sql stable;
+$$ language sql strict stable;
 
 comment on function api.document_by_id (id int4) is
     'Gets a document by its mediaTUM node id.';
@@ -181,7 +181,7 @@ create or replace function api.document_values_by_mask (document api.document, m
     from entity.document_mask_value_list as v
     where v.document_id = document_values_by_mask.document.id
       and v.mask_name = document_values_by_mask.mask_name
-$$ language sql stable parallel safe;
+$$ language sql strict stable parallel safe;
 
 comment on function api.document_values_by_mask (document api.document, mask_name text) is
     'Gets the meta field values of this document as a JSON value, selected by a named mask.';

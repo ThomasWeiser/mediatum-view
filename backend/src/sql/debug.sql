@@ -35,7 +35,7 @@ create or replace function debug.node_by_id (id int4)
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
     where node.id = node_by_id.id
-$$ language sql stable;
+$$ language sql strict stable;
 
 
 create or replace function debug.mediatum_node_attributes (node debug.mediatum_node, keys text[])

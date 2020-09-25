@@ -24,7 +24,6 @@ node_modules/.bin/postgraphile \
     --default-role $MEDIATUM_DATABASE_USER \
     --schema api,debug \
     --cors  \
-    --export-schema-json export/schema-export.json \
     --export-schema-graphql export/schema-export.graphql \
     --watch \
     --no-setof-functions-contain-nulls \
