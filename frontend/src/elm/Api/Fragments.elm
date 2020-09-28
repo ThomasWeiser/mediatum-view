@@ -398,11 +398,7 @@ documentByMask maskName =
             )
         |> SelectionSet.with
             (Mediatum.Object.Document.valuesByMask
-                (\optionals ->
-                    { optionals
-                        | maskName = Present maskName
-                    }
-                )
+                { maskName = maskName }
                 |> SelectionSet.map mapJsonToAttributes
             )
 
