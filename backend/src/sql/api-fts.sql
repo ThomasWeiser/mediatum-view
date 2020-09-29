@@ -50,8 +50,10 @@ create or replace function aux.fts_documents_limited
            where ufts.tsvec @@ fts_query
            
            order by
-                case when sorting = 'by_date' then ufts.year <=| 2147483647 end,
-                case when sorting = 'by_rank' then ufts.tsvec <=> fts_query end
+                ( case when sorting = 'by_date' then ufts.year <=| 2147483647 end
+                , case when sorting = 'by_rank' then ufts.tsvec <=> fts_query end
+                )
+                , ufts.nid desc
            
          ) as fts
     join entity.document on document.id = fts.id
@@ -74,8 +76,10 @@ create or replace function aux.fts_documents_limited
 
     -- For now we sort here once again.
     order by
-        case when sorting = 'by_date' then fts.year <=| 2147483647 end,
-        case when sorting = 'by_rank' then fts.distance end
+        ( case when sorting = 'by_date' then fts.year <=| 2147483647 end
+        , case when sorting = 'by_rank' then fts.distance end
+        )
+        , fts.id desc
     
     limit "limit"
     ;
