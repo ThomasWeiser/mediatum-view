@@ -20,7 +20,7 @@ create or replace function aux.all_documents_limited
     and (all_documents_limited.type is null or document.type = all_documents_limited.type)
     and (all_documents_limited.name is null or document.name = all_documents_limited.name)
     and (attribute_tests is null or aux.jsonb_test_list (document.attrs, attribute_tests))
-    order by document.id
+    order by document.id desc
     limit "limit"
     ;
 $$ language sql stable rows 100;
