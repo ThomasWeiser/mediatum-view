@@ -50,6 +50,8 @@ create or replace function aux.fts_documents_limited
            where ufts.tsvec @@ fts_query
            
            order by
+               -- The operators <=| and <=> are provided by the RUM extension.
+               -- See https://github.com/postgrespro/rum#common-operators-and-functions
                case when sorting = 'by_date' then ufts.year <=| 2147483647
                     when sorting = 'by_rank' then ufts.tsvec <=> fts_query
                end,
