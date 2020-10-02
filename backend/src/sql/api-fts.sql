@@ -48,7 +48,6 @@ create or replace function aux.fts_documents_limited
                , ufts.tsvec <=> fts_query as distance
                , ufts.recency as recency
                , ufts.year as year
-               , (count(*) over ())::integer
            from preprocess.ufts
            where ufts.tsvec @@ fts_query
            
