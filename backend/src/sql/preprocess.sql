@@ -5,11 +5,10 @@ drop schema if exists preprocess cascade;
 create schema if not exists preprocess;
 
 
-drop table if exists preprocess.ufts;
-
 create table preprocess.ufts (
 	nid serial not null primary key references mediatum.node(id) on delete cascade,
 	"year" int4 null,
+	recency int4 null,
 	tsvec tsvector null
 );
 
@@ -58,28 +57,30 @@ create or replace view preprocess.ufts_as_view as
     select
     node.id as id,
     preprocess.year_from_attrs(node.attrs) as "year",
+    - node.id as recency,
     preprocess.unified_tsvec_from_attrs_and_fulltext(node.attrs, node.fulltext) as tsvec
-    from mediatum.node;
+    from mediatum.node
+;
 
 
 -- Suppress notices about "Word is too long to be indexed. Words longer than 2047 characters are ignored."
 -- We don't mind that such long lexemes don't get indexed.
 set session client_min_messages to warning;
 
-insert into preprocess.ufts (nid, "year", tsvec)
+insert into preprocess.ufts (nid, "year", recency, tsvec)
   select * 
   from preprocess.ufts_as_view
-  where "year" is not null or tsvec is not null
   -- limit 2000 -- For testing the code one may just process a small fraction of the data
 ;
 
 -- Reset message level to default
 set session client_min_messages to notice;
 
+-- Index for queryies ordered by recency
 create index if not exists ufts_rum_tsvector_addon_ops
     on preprocess.ufts
- using rum (tsvec rum_tsvector_addon_ops, year)
-  with (attach ='year', to = 'tsvec');
+ using rum (tsvec rum_tsvector_addon_ops, recency)
+  with (attach ='recency', to = 'tsvec');
 
 
 ------------------------------------------------------------------
