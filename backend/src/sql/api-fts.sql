@@ -2,30 +2,78 @@
 -- Publicly exposed GraphQL functions
 -- regarding full-text search.
 
-create or replace function aux.fts_ordered
-    ( fts_query tsquery
+create or replace function aux.fts_limited_by_rank
+    ( folder_id int4
+    , fts_query tsquery
+    , attribute_tests api.attribute_test[]
+    , "limit" integer
     )
     returns table
         ( id int4
         , distance float4
+        , recency int4
         , year int4
-        , count integer
-        ) as $$
-    begin
-        return query
-        select ufts.nid as id
-             , ufts.tsvec <=> fts_query as distance
-             , ufts.year as year
-             , (count(*) over ())::integer
+        )
+    as $$
+    select ufts.nid as id
+            , ufts.tsvec <=> fts_query as distance
+            , ufts.recency as recency
+            , ufts.year as year
         from preprocess.ufts
         where ufts.tsvec @@ fts_query
-        order by ufts.tsvec <=> fts_query;
-    end;
-$$ -- Using language plpgsql is more efficient here than sql.
-   language plpgsql stable strict parallel safe rows 1000;
+        and exists (select 1 from mediatum.noderelation where nid = folder_id and cid = ufts.nid)
+        and exists
+            (select 1
+             from entity.document
+             where document.id = ufts.nid
+             and (attribute_tests is null or 
+                  aux.jsonb_test_list (document.attrs, attribute_tests)
+                 )
+            )           
+        -- The operator <=> is provided by the RUM extension.
+        -- See https://github.com/postgrespro/rum#common-operators-and-functions
+        order by ufts.tsvec <=> fts_query
+        limit "limit"
+    ;
+$$ language sql stable parallel safe rows 100;
+
+create or replace function aux.fts_limited_by_date
+    ( folder_id int4
+    , fts_query tsquery
+    , attribute_tests api.attribute_test[]
+    , "limit" integer
+    )
+    returns table
+        ( id int4
+        , distance float4
+        , recency int4
+        , year int4
+        )
+    as $$
+    select ufts.nid as id
+            , ufts.tsvec <=> fts_query as distance
+            , ufts.recency as recency
+            , ufts.year as year
+        from preprocess.ufts
+        where ufts.tsvec @@ fts_query
+        and exists (select 1 from mediatum.noderelation where nid = folder_id and cid = ufts.nid)           
+        and exists
+            (select 1
+             from entity.document
+             where document.id = ufts.nid
+             and (attribute_tests is null or 
+                  aux.jsonb_test_list (document.attrs, attribute_tests)
+                 )
+            )
+        -- The operator |=> is provided by the RUM extension.
+        -- See https://github.com/postgrespro/rum#common-operators-and-functions
+        order by ufts.recency |=> -2147483647
+        limit "limit"
+    ;
+$$ language sql stable parallel safe rows 100;
 
 
-create or replace function aux.fts_documents_limited
+create or replace function aux.fts_limited
     ( folder_id int4
     , fts_query tsquery
     , attribute_tests api.attribute_test[]
@@ -33,63 +81,55 @@ create or replace function aux.fts_documents_limited
     , "limit" integer
     )
     returns table
-        ( document api.document
+        ( id int4
         , distance float4
         , recency int4
         , year int4
         )
     as $$
-    select
-        (document.id, document.type, document.schema, document.name, document.orderpos, document.attrs)::api.document as document,
-        fts.distance,
-        fts.recency,
-        year
-    from (select ufts.nid as id
-               , ufts.tsvec <=> fts_query as distance
-               , ufts.recency as recency
-               , ufts.year as year
-           from preprocess.ufts
-           where ufts.tsvec @@ fts_query
-           
-           order by
-               -- The operators |=> and <=> are provided by the RUM extension.
-               -- See https://github.com/postgrespro/rum#common-operators-and-functions
-               case when sorting = 'by_date' then ufts.recency |=> -2147483647
-                    when sorting = 'by_rank' then ufts.tsvec <=> fts_query
-               end
-           
-         ) as fts
-    join entity.document on document.id = fts.id
+            select *
+                from aux.fts_limited_by_date(
+                        folder_id, fts_query, attribute_tests, "limit")
+                where sorting = 'by_date'
+            union
+            select *
+                from aux.fts_limited_by_rank(
+                        folder_id, fts_query, attribute_tests, "limit")
+                where sorting = 'by_rank'
+$$ language sql stable parallel safe rows 100;
 
-    -- Performance: Using exists with a subquery is faster than current implementation of aux.test_node_lineage
-    -- where aux.test_node_lineage (folder_id, fts.id)
-    where exists (select 1 from mediatum.noderelation where nid = folder_id and cid = fts.id)
 
-      and (attribute_tests is null or 
-           aux.jsonb_test_list (document.attrs, attribute_tests)
-          )
-
-    
-    
-    -- Order obtained from subquery used to be preserved.
-    -- Maybe not true anymore (PostgreSQL v11.5).
-    -- Behaviour seems inconsistent and fluctuating.
-    -- Performance may also be degraded.
-    -- Needs more investigation.
-
-    -- For now we sort here once again.
-    order by
-        case when sorting = 'by_date' then fts.recency |=> -2147483647 
-             when sorting = 'by_rank' then fts.distance
-        end
-    
-    
-    limit "limit"
-    ;
-$$ -- Language sql gives stable performance here.
-   -- Language plpgsql gives efficient performace for the first 5 queries
-   --                  and degrades badly afterwards.
-    language sql stable parallel safe rows 100;
+create or replace function aux.fts_paginated
+    ( folder_id int4
+    , text text
+    , attribute_tests api.attribute_test[]
+    , sorting api.fts_sorting
+    , "limit" integer
+    , "offset" integer
+    )
+    returns table
+        ( id int4
+        , distance float4
+        , recency int4
+        , year int4
+        , has_next_page boolean
+        )
+    as $$
+            select f.id
+                , f.distance
+                , f.recency
+                , f.year
+                , (count(*) over ()) > "limit" + "offset"
+            from aux.fts_limited
+                ( folder_id
+                , aux.custom_to_tsquery (text)
+                , attribute_tests
+                , sorting
+                , "limit" + "offset" + 1
+                ) as f
+            limit "limit"
+            offset "offset"
+$$ language sql stable parallel safe rows 10;
 
 
 create or replace function aux.fts_documents_paginated
@@ -109,27 +149,37 @@ create or replace function aux.fts_documents_paginated
         , has_next_page boolean
         )
     as $$
-        begin return query
-            select f.document
-                , f.distance
-                , f.recency
-                , f.year
-                , (row_number () over ())::integer as number
-                , (count(*) over ()) > "limit" + "offset"
-            from aux.fts_documents_limited
-                ( folder_id
-                , aux.custom_to_tsquery (text)
-                , attribute_tests
-                , sorting
-                , "limit" + "offset" + 1
-                ) as f
-            limit "limit"
-            offset "offset";
-        end;
-$$ language plpgsql stable parallel safe rows 100;
+        select (d.id, d.type, d.schema, d.name, d.orderpos, d.attrs)::api.document as document
+            , f.distance
+            , f.recency
+            , f.year
+            , ("offset" + 
+               row_number () over 
+                (order by
+                    case sorting when 'by_date' then f.recency
+                                 when 'by_rank' then f.distance
+                    end
+                )
+                )::integer as number
+            , f.has_next_page
+        from aux.fts_paginated
+            ( folder_id
+            , text
+            , attribute_tests
+            , sorting
+            , "limit"
+            , "offset"
+            ) as f
+        join entity.document as d on d.id = f.id
+        order by
+            case sorting when 'by_date' then f.recency
+                         when 'by_rank' then f.distance
+            end
+$$ language sql stable parallel safe rows 100;
 
 
-create or replace function api.fts_documents_page
+-- Static SQL version. Not used due to degraded performance.
+create or replace function debug.fts_documents_page_static_sql
     ( folder_id int4
     , text text
     , attribute_tests api.attribute_test[] default '{}'
@@ -150,7 +200,7 @@ create or replace function api.fts_documents_page
                     )
             )
         select
-            "offset",
+            "offset" as "offset",
             coalesce(
                 (select every(has_next_page) from search_result), false
             ) as has_next_page,
@@ -161,15 +211,8 @@ create or replace function api.fts_documents_page
         ;
 $$ language sql strict stable parallel safe;
 
-comment on function api.fts_documents_page (folder_id int4, text text, attribute_tests api.attribute_test[], sorting api.fts_sorting, "limit" integer, "offset" integer) is
-    'Perform a full-text-search on the documents of a folder, sorted by a search rank, optionally filtered by type and name and a list of attribute tests.'
-    ' Sorting of the results is either "by_rank" (default) or "by_date".'
-    ' For pagination you may specify a limit (defaults to 10) and an offset (defaults to 0).'
-    ;
-
--- The same function as plpgsql
--- Performance behavior seems to be the same.
-create or replace function api.fts_documents_page_pl
+-- PLpgSQL version. Not used due to degraded performance.
+create or replace function debug.fts_documents_page_plpgsql
     ( folder_id int4
     , text text
     , attribute_tests api.attribute_test[] default '{}'
@@ -188,7 +231,7 @@ create or replace function api.fts_documents_page_pl
                 , false
                 ) as has_next_page,
             coalesce
-                ( array_agg (row (number, distance, year, document)::api.document_result)
+                ( array_agg (row (number, distance, recency, year, document)::api.document_result)
                 , array[]::api.document_result[]
                 ) as content
         into res
@@ -205,10 +248,49 @@ create or replace function api.fts_documents_page_pl
     end;
 $$ language plpgsql strict stable parallel safe;
 
-comment on function api.fts_documents_page_pl (folder_id int4, text text, attribute_tests api.attribute_test[], sorting api.fts_sorting, "limit" integer, "offset" integer) is
-    '@deprecated '
-    'Alternative implementation of ftsDocumentsPage; may have different perfoamce behavior. '
-    ' Perform a full-text-search on the documents of a folder, sorted by a search rank, optionally filtered by type and name and a list of attribute tests.'
+
+create or replace function api.fts_documents_page
+    ( folder_id int4
+    , text text
+    , attribute_tests api.attribute_test[] default '{}'
+    , sorting api.fts_sorting default 'by_rank'
+    , "limit" integer default 10
+    , "offset" integer default 0
+    )
+    returns api.document_result_page as $$
+    declare res api.document_result_page;
+
+    begin
+        -- We use dynamic SQL execution here in order to avoid generic plan caching.
+        execute
+            'select'
+            '    $6,'
+            '    coalesce'
+            '        ( bool_or (has_next_page)'
+            '        , false'
+            '        ) as has_next_page,'
+            '    coalesce'
+            '        ( array_agg (row (number, distance, recency, year, document)::api.document_result)'
+            '        , array[]::api.document_result[]'
+            '        ) as content'
+            '  from'
+            '    aux.fts_documents_paginated'
+            '        ( $1'
+            '        , $2'
+            '        , nullif($3, ''{}'')'
+            '        , $4'
+            '        , $5, $6'
+            '        )'
+            ';'
+        into strict res
+        using folder_id, text, attribute_tests, sorting, "limit", "offset"
+        ;
+        return res;
+    end;
+$$ language plpgsql strict stable parallel safe;
+
+comment on function api.fts_documents_page (folder_id int4, text text, attribute_tests api.attribute_test[], sorting api.fts_sorting, "limit" integer, "offset" integer) is
+    'Perform a full-text-search on the documents of a folder, sorted by a search rank, optionally filtered by a list of attribute tests.'
     ' Sorting of the results is either "by_rank" (default) or "by_date".'
     ' For pagination you may specify a limit (defaults to 10) and an offset (defaults to 0).'
     ;
