@@ -54,7 +54,7 @@ create or replace function aux.fts_documents_limited
            order by
                -- The operators |=> and <=> are provided by the RUM extension.
                -- See https://github.com/postgrespro/rum#common-operators-and-functions
-               case when sorting = 'by_date' then ufts.recency |=> 2147483647
+               case when sorting = 'by_date' then ufts.recency |=> -2147483647
                     when sorting = 'by_rank' then ufts.tsvec <=> fts_query
                end
            
@@ -79,7 +79,7 @@ create or replace function aux.fts_documents_limited
 
     -- For now we sort here once again.
     order by
-        case when sorting = 'by_date' then fts.recency |=> 2147483647 
+        case when sorting = 'by_date' then fts.recency |=> -2147483647 
              when sorting = 'by_rank' then fts.distance
         end
     
