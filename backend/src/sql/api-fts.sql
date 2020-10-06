@@ -35,27 +35,28 @@ create or replace function aux.fts_documents_limited
     returns table
         ( document api.document
         , distance float4
+        , recency int4
         , year int4
         )
     as $$
     select
         (document.id, document.type, document.schema, document.name, document.orderpos, document.attrs)::api.document as document,
         fts.distance,
+        fts.recency,
         year
     from (select ufts.nid as id
                , ufts.tsvec <=> fts_query as distance
+               , ufts.recency as recency
                , ufts.year as year
-               , (count(*) over ())::integer
            from preprocess.ufts
            where ufts.tsvec @@ fts_query
            
            order by
-               -- The operators <=| and <=> are provided by the RUM extension.
+               -- The operators |=> and <=> are provided by the RUM extension.
                -- See https://github.com/postgrespro/rum#common-operators-and-functions
-               case when sorting = 'by_date' then ufts.year <=| 2147483647
+               case when sorting = 'by_date' then ufts.recency |=> -2147483647
                     when sorting = 'by_rank' then ufts.tsvec <=> fts_query
-               end,
-               ufts.nid desc
+               end
            
          ) as fts
     join entity.document on document.id = fts.id
@@ -78,10 +79,10 @@ create or replace function aux.fts_documents_limited
 
     -- For now we sort here once again.
     order by
-        case when sorting = 'by_date' then fts.year <=| 2147483647 
+        case when sorting = 'by_date' then fts.recency |=> -2147483647 
              when sorting = 'by_rank' then fts.distance
-        end,
-        fts.id desc
+        end
+    
     
     limit "limit"
     ;
@@ -102,6 +103,7 @@ create or replace function aux.fts_documents_paginated
     returns table
         ( document api.document
         , distance float4
+        , recency int4
         , year int4
         , number integer
         , has_next_page boolean
@@ -110,6 +112,7 @@ create or replace function aux.fts_documents_paginated
         begin return query
             select f.document
                 , f.distance
+                , f.recency
                 , f.year
                 , (row_number () over ())::integer as number
                 , (count(*) over ()) > "limit" + "offset"
@@ -152,7 +155,7 @@ create or replace function api.fts_documents_page
                 (select every(has_next_page) from search_result), false
             ) as has_next_page,
             array (
-            select row(number, distance, year, document)::api.document_result
+            select row(number, distance, recency, year, document)::api.document_result
                 from search_result
             ) as content
         ;
