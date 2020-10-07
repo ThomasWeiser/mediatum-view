@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Web app as a client for the GraphQL API of mediaTUM",
   "scripts": {
-    "install-elm-tooling": "elm-tooling install",
+    "postinstall": "elm-tooling install",
     "test": "elm-test",
     "test-watch": "elm-test --watch",
     "generate": "rimraf gen && elm-graphql http://localhost:5000/graphql --base Mediatum --output gen/",
