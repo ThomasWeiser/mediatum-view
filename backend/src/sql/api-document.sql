@@ -100,7 +100,7 @@ $$ language sql strict stable parallel safe;
 
 
 /*
-TODO: Update comment: We now have mixed required/optional arguments, my declaring the function as `strict` and using default arguments.
+TODO: Update comment: We now have mixed required/optional arguments, by declaring the function as `strict` and using default arguments.
 
 Actually, we would like to declare that the first parameter is required.
 
