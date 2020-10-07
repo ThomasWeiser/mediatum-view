@@ -137,6 +137,21 @@ comment on function api.document_by_id (id int4) is
     'Gets a document by its mediaTUM node id.';
 
 
+create or replace function api.document_folders (document api.document)
+    returns api.folder[] as $$
+    select array(
+        select row(folder.*)::api.folder
+        from entity.folder
+        join mediatum.nodemapping on folder.id = nodemapping.nid
+        where document.id = nodemapping.cid
+        order by folder.orderpos
+    )
+$$ language sql stable;
+
+comment on function api.document_folders (document api.document) is
+    'Gets the list of all folders in which the document appears.';
+
+
 create or replace function api.document_attributes (document api.document, keys text[])
     returns jsonb as $$
     select aux.get_document_attributes (document, keys)
