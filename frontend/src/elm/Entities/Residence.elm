@@ -1,4 +1,4 @@
-module Entities.Residence exposing (Residence)
+module Entities.Residence exposing (Residence, Lineage)
 
 {-| The residnce of a document
 

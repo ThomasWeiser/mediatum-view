@@ -24,9 +24,11 @@ import Api
 import Api.Mutations
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
+import Entities.Residence exposing (Lineage, Residence)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import List.Nonempty
 import Maybe.Extra
 import RemoteData
 import Types.Id as Id exposing (DocumentId)
@@ -184,8 +186,8 @@ view context model =
             RemoteData.Failure error ->
                 Utils.Html.viewApiError error
 
-            RemoteData.Success (Just ( document, _ )) ->
-                viewDocument model document
+            RemoteData.Success (Just ( document, residence )) ->
+                viewDocument context model document residence
 
             RemoteData.Success Nothing ->
                 Html.span []
@@ -196,8 +198,8 @@ view context model =
         ]
 
 
-viewDocument : Model -> Document -> Html Msg
-viewDocument model document =
+viewDocument : Context -> Model -> Document -> Residence -> Html Msg
+viewDocument context model document residence =
     Html.div []
         [ Html.div [ Html.Attributes.class "header" ]
             [ Html.div [ Html.Attributes.class "metadatatype" ]
@@ -205,6 +207,7 @@ viewDocument model document =
             , Html.div [ Html.Attributes.class "author" ]
                 [ Html.text document.name ]
             ]
+        , viewResidence context residence
         , Html.table []
             [ Html.tbody [] <|
                 List.map
@@ -226,6 +229,32 @@ viewAttribute attribute =
 
         Nothing ->
             Html.text ""
+
+
+viewResidence : Context -> Residence -> Html msg
+viewResidence context residence =
+    Html.div
+        [ Html.Attributes.class "residence" ]
+        (List.map
+            (viewLineage context)
+            residence
+        )
+
+
+viewLineage : Context -> Lineage -> Html msg
+viewLineage context lineage =
+    Html.div []
+        (lineage
+            |> List.Nonempty.toList
+            |> List.reverse
+            |> List.map
+                (\folderId ->
+                    Html.span []
+                        [ Html.text (Id.toString folderId) ]
+                )
+            |> List.intersperse
+                (Html.span [] [ Html.text " > " ])
+        )
 
 
 viewEditAttribute : Model -> Document -> Html Msg
