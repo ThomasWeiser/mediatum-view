@@ -154,6 +154,35 @@ folderLineage =
             )
 
 
+{-| Selection set on a folder to get the ids of the lineage of that folder.
+
+The lineage is the non-emtpy list of folder ids representing the path
+starting with the given folder up to a root folder of the hierarchy.
+
+_GraphQL notation:_
+
+    fragment folderLineage on Folder {
+        lineage {
+            id
+        }
+    }
+
+-}
+folderLineageIds : SelectionSet (Nonempty FolderId) Mediatum.Object.Folder
+folderLineageIds =
+    Mediatum.Object.Folder.lineage
+        (Mediatum.Object.Folder.id
+            |> SelectionSet.nonNullOrFail
+            |> SelectionSet.map Id.fromInt
+        )
+        |> SelectionSet.nonNullOrFail
+        |> SelectionSet.nonNullElementsOrFail
+        |> SelectionSet.mapOrFail
+            (List.Nonempty.fromList
+                >> Result.fromMaybe "Lineage needs at least one folder"
+            )
+
+
 {-| Selection set on a Docset to get the counts of documents within.
 
 _GraphQL notation:_
@@ -403,10 +432,7 @@ documentByMask maskName =
             )
         |> SelectionSet.with
             (Mediatum.Object.Document.folders
-                (Mediatum.Object.Folder.id
-                    |> SelectionSet.nonNullOrFail
-                    |> SelectionSet.map Id.fromInt
-                )
+                folderLineageIds
                 |> SelectionSet.nonNullOrFail
                 |> SelectionSet.nonNullElementsOrFail
             )
