@@ -32,6 +32,9 @@ import List.Nonempty
 import Maybe.Extra
 import RemoteData
 import Types.Id as Id exposing (DocumentId)
+import Types.Navigation as Navigation exposing (Navigation)
+import Types.Route exposing (Route)
+import Types.Route.Url
 import UI.Icons
 import Utils
 import Utils.Html
@@ -40,6 +43,7 @@ import Utils.Html
 {-| -}
 type alias Context =
     { cache : Cache
+    , route : Route
     , documentId : DocumentId
     }
 
@@ -236,13 +240,13 @@ viewResidence context residence =
     Html.div
         [ Html.Attributes.class "residence" ]
         (List.map
-            (viewLineage context)
+            (viewLineageBreadcrumbs context)
             residence
         )
 
 
-viewLineage : Context -> Lineage -> Html msg
-viewLineage context lineage =
+viewLineageBreadcrumbs : Context -> Lineage -> Html msg
+viewLineageBreadcrumbs context lineage =
     Html.div []
         (lineage
             |> List.Nonempty.toList
@@ -250,7 +254,22 @@ viewLineage context lineage =
             |> List.map
                 (\folderId ->
                     Html.span []
-                        [ Html.text (Id.toString folderId) ]
+                        [ Html.a
+                            [ context.route
+                                |> Navigation.alterRoute
+                                    context.cache
+                                    -- TODO: Navigation operation!
+                                    (Navigation.ShowListingWithFolder folderId)
+                                |> Types.Route.Url.toString
+                                |> Html.Attributes.href
+                            ]
+                            [ Cache.get context.cache.folders folderId
+                                |> RemoteData.unwrap
+                                    (Id.toString folderId)
+                                    (\folder -> folder.name)
+                                |> Html.text
+                            ]
+                        ]
                 )
             |> List.intersperse
                 (Html.span [] [ Html.text " > " ])

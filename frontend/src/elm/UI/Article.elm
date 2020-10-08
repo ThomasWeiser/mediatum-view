@@ -204,6 +204,7 @@ update context msg model =
                 ( subModel1, subCmd, subReturn ) =
                     UI.Article.Details.update
                         { cache = context.cache
+                        , route = context.route
                         , documentId = documentId
                         }
                         subMsg
@@ -307,6 +308,7 @@ viewContent context model =
         ( DetailsModel subModel, DocumentPresentation maybeFolderId documentId ) ->
             UI.Article.Details.view
                 { cache = context.cache
+                , route = context.route
                 , documentId = documentId
                 }
                 subModel
