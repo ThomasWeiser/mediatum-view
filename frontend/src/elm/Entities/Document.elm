@@ -11,7 +11,7 @@ module Entities.Document exposing
 -}
 
 import List.Extra
-import Types.Id exposing (DocumentId)
+import Types.Id exposing (DocumentId, FolderId)
 
 
 {-| -}
@@ -20,6 +20,7 @@ type alias Document =
     , name : String
     , metadatatypeName : String
     , attributes : List Attribute
+    , folders : List FolderId
     }
 
 
@@ -33,12 +34,13 @@ type alias Attribute =
 
 
 {-| -}
-init : DocumentId -> String -> String -> List Attribute -> Document
-init id metadatatypeName name attributes =
+init : DocumentId -> String -> String -> List Attribute -> List FolderId -> Document
+init id metadatatypeName name attributes folders =
     { id = id
     , name = name
     , metadatatypeName = metadatatypeName
     , attributes = attributes
+    , folders = folders
     }
 
 

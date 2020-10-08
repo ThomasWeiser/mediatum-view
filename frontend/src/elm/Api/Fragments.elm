@@ -401,6 +401,15 @@ documentByMask maskName =
                 { maskName = maskName }
                 |> SelectionSet.map mapJsonToAttributes
             )
+        |> SelectionSet.with
+            (Mediatum.Object.Document.folders
+                (Mediatum.Object.Folder.id
+                    |> SelectionSet.nonNullOrFail
+                    |> SelectionSet.map Id.fromInt
+                )
+                |> SelectionSet.nonNullOrFail
+                |> SelectionSet.nonNullElementsOrFail
+            )
 
 
 {-| Decode a JSON string returned from a query that denotes the mata-values of a document.
