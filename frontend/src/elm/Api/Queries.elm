@@ -47,6 +47,7 @@ import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
+import Entities.Residence exposing (Residence)
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
@@ -400,11 +401,16 @@ _GraphQL notation:_
 -}
 documentDetails :
     DocumentId
-    -> SelectionSet (Maybe Document) Graphql.Operation.RootQuery
+    -> SelectionSet (Maybe ( Document, Residence )) Graphql.Operation.RootQuery
 documentDetails documentId =
     Mediatum.Query.documentById
         { id = Id.toInt documentId }
-        (Api.Fragments.documentByMask "nodebig")
+        (SelectionSet.succeed Tuple.pair
+            |> SelectionSet.with
+                (Api.Fragments.documentByMask "nodebig")
+            |> SelectionSet.with
+                Api.Fragments.documentResidence
+        )
 
 
 selectionToFolderId : Selection -> Int

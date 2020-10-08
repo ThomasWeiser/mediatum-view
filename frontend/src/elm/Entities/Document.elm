@@ -21,7 +21,6 @@ type alias Document =
     , name : String
     , metadatatypeName : String
     , attributes : List Attribute
-    , locations : List (Nonempty FolderId)
     }
 
 
@@ -35,13 +34,12 @@ type alias Attribute =
 
 
 {-| -}
-init : DocumentId -> String -> String -> List Attribute -> List (Nonempty FolderId) -> Document
-init id metadatatypeName name attributes locations =
+init : DocumentId -> String -> String -> List Attribute -> Document
+init id metadatatypeName name attributes =
     { id = id
     , name = name
     , metadatatypeName = metadatatypeName
     , attributes = attributes
-    , locations = locations
     }
 
 

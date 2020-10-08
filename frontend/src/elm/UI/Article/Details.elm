@@ -139,7 +139,7 @@ initEditAttributeValue context model =
             context.cache.documents
             context.documentId
     of
-        RemoteData.Success (Just document) ->
+        RemoteData.Success (Just ( document, _ )) ->
             let
                 ( key1, value1 ) =
                     case Document.attributeValue model.editAttributeKey document of
@@ -184,7 +184,7 @@ view context model =
             RemoteData.Failure error ->
                 Utils.Html.viewApiError error
 
-            RemoteData.Success (Just document) ->
+            RemoteData.Success (Just ( document, _ )) ->
                 viewDocument model document
 
             RemoteData.Success Nothing ->

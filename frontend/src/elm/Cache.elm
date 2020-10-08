@@ -104,8 +104,7 @@ type alias Cache =
     , folders : Sort.Dict.Dict FolderId (ApiData Folder)
     , subfolderIds : Sort.Dict.Dict FolderId (ApiData (List FolderId))
     , nodeTypes : Sort.Dict.Dict NodeId (ApiData NodeType)
-    , documents : Sort.Dict.Dict DocumentId (ApiData (Maybe Document))
-    , residences : Sort.Dict.Dict DocumentId (ApiData Residence)
+    , documents : Sort.Dict.Dict DocumentId (ApiData (Maybe ( Document, Residence )))
     , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
     , folderCounts : Sort.Dict.Dict Selection (ApiData FolderCounts)
     , facetsValues : Sort.Dict.Dict ( Selection, String ) (ApiData FacetValues)
@@ -146,7 +145,6 @@ init =
     , subfolderIds = Sort.Dict.empty (Utils.sorter Id.ordering)
     , nodeTypes = Sort.Dict.empty (Utils.sorter Id.ordering)
     , documents = Sort.Dict.empty (Utils.sorter Id.ordering)
-    , residences = Sort.Dict.empty (Utils.sorter Id.ordering)
     , documentsPages = Sort.Dict.empty (Utils.sorter orderingSelectionWindow)
     , folderCounts = Sort.Dict.empty (Utils.sorter Selection.orderingSelectionModuloSorting)
     , facetsValues = Sort.Dict.empty (Utils.sorter orderingSelectionFacet)
@@ -173,7 +171,7 @@ type Msg
     = ApiResponseToplevelFolder (Api.Response (List ( Folder, List Folder )))
     | ApiResponseSubfolder (List FolderId) (Api.Response (List Folder))
     | ApiResponseGenericNode NodeId (Api.Response GenericNode)
-    | ApiResponseDocument DocumentId (Api.Response (Maybe Document))
+    | ApiResponseDocument DocumentId (Api.Response (Maybe ( Document, Residence )))
     | ApiResponseDocumentsPage ( Selection, Window ) (Api.Response DocumentsPage)
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
     | ApiResponseFacet ( Selection, String ) (Api.Response FacetValues)
@@ -335,7 +333,14 @@ updateWithModifiedDocument : Document -> Cache -> Cache
 updateWithModifiedDocument document cache =
     { cache
         | documents =
-            Sort.Dict.insert document.id (Success (Just document)) cache.documents
+            Sort.Dict.update
+                document.id
+                (Maybe.map <|
+                    RemoteData.map <|
+                        Maybe.map <|
+                            Tuple.mapFirst (always document)
+                )
+                cache.documents
     }
 
 

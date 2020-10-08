@@ -1,7 +1,7 @@
 module Api.Fragments exposing
     ( folder, folderAndSubfolders, folderLineage
     , folderAndSubfolderCounts, folderCount, facetByKey
-    , documentsPage, documentResult, documentByMask
+    , documentsPage, documentResult, documentByMask, documentResidence
     , graphqlDocumentObjects
     )
 
@@ -20,7 +20,7 @@ module Api.Fragments exposing
 
 # Fragments for Document Results
 
-@docs documentsPage, documentResult, documentByMask
+@docs documentsPage, documentResult, documentByMask, documentResidence
 
 
 # Relay Connection Utility
@@ -33,6 +33,7 @@ import Entities.Document as Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import Entities.Folder as Folder exposing (Folder)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
+import Entities.Residence exposing (Residence)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
@@ -430,12 +431,29 @@ documentByMask maskName =
                 { maskName = maskName }
                 |> SelectionSet.map mapJsonToAttributes
             )
-        |> SelectionSet.with
-            (Mediatum.Object.Document.folders
-                folderLineageIds
-                |> SelectionSet.nonNullOrFail
-                |> SelectionSet.nonNullElementsOrFail
-            )
+
+
+{-| Selection set on a Document to get the basic properties of the document
+together with the document's attributes selected by a named mediaTUM mask.
+
+_GraphQL notation:_
+
+    fragment documentByMask on Document {
+        id
+        metadatatype {
+            longname
+        }
+        name
+        valuesByMask(maskName: maskName)
+    }
+
+-}
+documentResidence : SelectionSet Residence Mediatum.Object.Document
+documentResidence =
+    Mediatum.Object.Document.folders
+        folderLineageIds
+        |> SelectionSet.nonNullOrFail
+        |> SelectionSet.nonNullElementsOrFail
 
 
 {-| Decode a JSON string returned from a query that denotes the mata-values of a document.
