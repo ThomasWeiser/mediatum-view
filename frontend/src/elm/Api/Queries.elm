@@ -138,14 +138,14 @@ _GraphQL notation:_
 genericNode : NodeId -> SelectionSet GenericNode Graphql.Operation.RootQuery
 genericNode nodeId =
     let
-        constructor : Maybe (Nonempty Folder) -> Maybe Document -> GenericNode
-        constructor maybeLineage maybeDocument =
-            case ( maybeLineage, maybeDocument ) of
+        constructor : Maybe (Nonempty Folder) -> Maybe ( Document, Residence ) -> GenericNode
+        constructor maybeLineage maybeDocumentAndResidence =
+            case ( maybeLineage, maybeDocumentAndResidence ) of
                 ( Just lineage, _ ) ->
                     GenericNode.IsFolder lineage
 
-                ( Nothing, Just document ) ->
-                    GenericNode.IsDocument document
+                ( Nothing, Just documentAndResidence ) ->
+                    GenericNode.IsDocument documentAndResidence
 
                 ( Nothing, Nothing ) ->
                     GenericNode.IsNeither
@@ -159,7 +159,12 @@ genericNode nodeId =
                 )
             |> SelectionSet.with
                 (Mediatum.Object.GenericNode.asDocument
-                    (Api.Fragments.documentByMask "nodebig")
+                    (SelectionSet.succeed Tuple.pair
+                        |> SelectionSet.with
+                            (Api.Fragments.documentByMask "nodebig")
+                        |> SelectionSet.with
+                            Api.Fragments.documentResidence
+                    )
                 )
         )
         |> SelectionSet.nonNullOrFail

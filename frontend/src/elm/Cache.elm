@@ -426,9 +426,14 @@ update msg cache =
                     , cmd
                     )
 
-                GenericNode.IsDocument document ->
-                    ( cache1
-                        |> updateWithModifiedDocument document
+                GenericNode.IsDocument ( document, residence ) ->
+                    ( { cache1
+                        | documents =
+                            Sort.Dict.insert
+                                document.id
+                                (Success (Just ( document, residence )))
+                                cache1.documents
+                      }
                     , Cmd.none
                     )
 
