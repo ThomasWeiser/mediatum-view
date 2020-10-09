@@ -7,6 +7,7 @@ module Utils exposing
     , findMap
     , findAdjacent
     , lexicalOrder
+    , mapWhile
     , remoteDataCheck
     , remoteDataMapFallible
     , sorter
@@ -35,6 +36,7 @@ module Utils exposing
 @docs findMap
 @docs findAdjacent
 @docs lexicalOrder
+@docs mapWhile
 
 
 # RemoteData
@@ -59,6 +61,7 @@ import Char
 import Html
 import Html.Events
 import Json.Decode
+import List.Extra
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData)
 import Sort exposing (Sorter)
@@ -189,6 +192,29 @@ lexicalOrder compareElements listL listR =
 
                 EQ ->
                     lexicalOrder compareElements tailL tailR
+
+
+{-| Map elements while they map to a Just.
+-}
+mapWhile : (a -> Maybe b) -> List a -> List b
+mapWhile mapping list =
+    List.foldl
+        (\element ( isContinuous, resultSoFar ) ->
+            if isContinuous then
+                case mapping element of
+                    Just value ->
+                        ( True, value :: resultSoFar )
+
+                    Nothing ->
+                        ( False, resultSoFar )
+
+            else
+                ( False, resultSoFar )
+        )
+        ( True, [] )
+        list
+        |> Tuple.second
+        |> List.reverse
 
 
 {-| Check the success-value of a `RemoteData` and conditionally turn it into a failure-value.

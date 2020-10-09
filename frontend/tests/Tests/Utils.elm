@@ -152,6 +152,35 @@ suite =
                 (Fuzz.list Fuzz.int)
                 (Utils.lexicalOrder compare)
             ]
+        , describe "mapWhile" <|
+            let
+                exampleMapping x =
+                    if x < 5 then
+                        Just (x * 10)
+
+                    else
+                        Nothing
+            in
+            [ test "on empty list" <|
+                \() ->
+                    Expect.equal (Utils.mapWhile exampleMapping []) []
+            , test "mixed list" <|
+                \() ->
+                    Expect.equal (Utils.mapWhile exampleMapping [ 1, 2, 5, 6, 3, 4, 7, 8 ]) [ 10, 20 ]
+            , test "starting with a mapping to Nothing" <|
+                \() ->
+                    Expect.equal (Utils.mapWhile exampleMapping [ 5, 6, 3, 4, 7, 8 ]) []
+            , test "works for very long list (i.e. is call stack size safe), dropping out early" <|
+                \() ->
+                    Expect.equal
+                        (Utils.mapWhile exampleMapping (List.range 1 100000))
+                        [ 10, 20, 30, 40 ]
+            , test "works for very long list (i.e. is call stack size safe), not dropping out" <|
+                \() ->
+                    Expect.equal
+                        (Utils.mapWhile exampleMapping (List.range -100000 -1))
+                        (List.map ((*) 10) (List.range -100000 -1))
+            ]
         ]
 
 
