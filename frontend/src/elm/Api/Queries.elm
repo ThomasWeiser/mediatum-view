@@ -1,5 +1,5 @@
 module Api.Queries exposing
-    ( toplevelFolder, subfolder
+    ( toplevelFolder, folder, subfolder
     , selectionDocumentsPage, selectionFolderCounts, selectionFacetByKey
     , documentDetails
     , genericNode, authorSearch
@@ -19,7 +19,7 @@ In reality it's just function calling.
 
 # Folder Queries
 
-@docs toplevelFolder, subfolder
+@docs toplevelFolder, folder, subfolder
 
 
 # Document Search and Facet Queries
@@ -91,6 +91,31 @@ toplevelFolder =
         (Mediatum.Object.FoldersConnection.nodes
             Api.Fragments.folderAndSubfolders
         )
+        |> SelectionSet.nonNullOrFail
+
+
+{-| Get the sub-folders of a list of folders.
+
+_GraphQL notation:_
+
+    query {
+        allFolders(ids: $listOfFolderIds) {
+            nodes {
+                ...folder
+            }
+        }
+    }
+
+-}
+folder : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
+folder folderIds =
+    Mediatum.Query.allFolders
+        (\optionals ->
+            { optionals
+                | ids = List.map (Id.toInt >> Just) folderIds |> Present
+            }
+        )
+        (Mediatum.Object.FoldersConnection.nodes Api.Fragments.folder)
         |> SelectionSet.nonNullOrFail
 
 

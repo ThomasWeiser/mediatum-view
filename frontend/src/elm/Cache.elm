@@ -115,6 +115,7 @@ type alias Cache =
 -}
 type Need
     = NeedRootFolderIds
+    | NeedFolders (List FolderId)
     | NeedSubfolders (List FolderId)
     | NeedGenericNode NodeId
     | NeedDocument DocumentId
@@ -169,6 +170,7 @@ Currently all messages transport some API response.
 -}
 type Msg
     = ApiResponseToplevelFolder (Api.Response (List ( Folder, List Folder )))
+    | ApiResponseFolder (List FolderId) (Api.Response (List Folder))
     | ApiResponseSubfolder (List FolderId) (Api.Response (List Folder))
     | ApiResponseGenericNode NodeId (Api.Response GenericNode)
     | ApiResponseDocument DocumentId (Api.Response (Maybe ( Document, Residence )))
@@ -197,6 +199,10 @@ statusOfNeed cache need =
         NeedRootFolderIds ->
             cache.rootFolderIds
                 |> Needs.statusFromRemoteData
+
+        NeedFolders folderIds ->
+            Needs.statusFromListOfRemoteData
+                (List.map (get cache.folders) folderIds)
 
         NeedSubfolders parentIds ->
             Needs.statusFromListOfRemoteData
@@ -242,6 +248,34 @@ requestNeed need cache =
                 ApiResponseToplevelFolder
                 Api.Queries.toplevelFolder
             )
+
+        NeedFolders folderIds ->
+            let
+                unknownFolderIds =
+                    List.filter
+                        (\folderId ->
+                            get cache.folders folderId == NotAsked
+                        )
+                        folderIds
+            in
+            if List.isEmpty unknownFolderIds then
+                ( cache, Cmd.none )
+
+            else
+                ( { cache
+                    | folders =
+                        List.foldl
+                            (\folderId folders ->
+                                Sort.Dict.insert folderId Loading folders
+                            )
+                            cache.folders
+                            unknownFolderIds
+                  }
+                , Api.sendQueryRequest
+                    (Api.withOperationName "NeedFolders")
+                    (ApiResponseFolder unknownFolderIds)
+                    (Api.Queries.folder unknownFolderIds)
+                )
 
         NeedSubfolders parentIds ->
             let
@@ -379,6 +413,26 @@ update msg cache =
         ApiResponseToplevelFolder (Err error) ->
             ( { cache
                 | rootFolderIds = Failure error
+              }
+            , Cmd.none
+            )
+
+        ApiResponseFolder folderIds (Ok listOfFolders) ->
+            ( cache
+                |> insertAsFolders listOfFolders
+                |> insertFoldersAsNodeTypes listOfFolders
+            , Cmd.none
+            )
+
+        ApiResponseFolder folderIds (Err error) ->
+            ( { cache
+                | folders =
+                    List.foldl
+                        (\folderId folders ->
+                            Sort.Dict.insert folderId (Failure error) folders
+                        )
+                        cache.folders
+                        folderIds
               }
             , Cmd.none
             )
