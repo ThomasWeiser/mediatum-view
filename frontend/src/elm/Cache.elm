@@ -469,16 +469,11 @@ update msg cache =
                     let
                         folders =
                             List.Nonempty.toList lineage
-
-                        ( cache2, cmd ) =
-                            cache1
-                                |> insertAsFolders folders
-                                |> targetNeeds
-                                    (Needs.atomic (NeedSubfolders (List.map .id folders)))
                     in
-                    ( cache2
-                    , cmd
-                    )
+                    cache1
+                        |> insertAsFolders folders
+                        |> targetNeeds
+                            (Needs.atomic (NeedSubfolders (List.map .id folders)))
 
                 GenericNode.IsDocument ( document, residence ) ->
                     updateWithDocumentAndResidence
