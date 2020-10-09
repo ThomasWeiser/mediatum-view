@@ -59,7 +59,7 @@ import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
-import Entities.Residence exposing (Residence)
+import Entities.Residence as Residence exposing (Residence)
 import List.Nonempty
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
@@ -481,15 +481,10 @@ update msg cache =
                     )
 
                 GenericNode.IsDocument ( document, residence ) ->
-                    ( { cache1
-                        | documents =
-                            Sort.Dict.insert
-                                document.id
-                                (Success (Just ( document, residence )))
-                                cache1.documents
-                      }
-                    , Cmd.none
-                    )
+                    updateWithDocumentAndResidence
+                        document.id
+                        (Just ( document, residence ))
+                        cache1
 
                 GenericNode.IsNeither ->
                     ( cache1
@@ -504,10 +499,16 @@ update msg cache =
             , Cmd.none
             )
 
-        ApiResponseDocument documentId result ->
+        ApiResponseDocument documentId (Ok maybeDocumentAndResidence) ->
+            updateWithDocumentAndResidence
+                documentId
+                maybeDocumentAndResidence
+                cache
+
+        ApiResponseDocument documentId (Err error) ->
             ( { cache
                 | documents =
-                    Sort.Dict.insert documentId (RemoteData.fromResult result) cache.documents
+                    Sort.Dict.insert documentId (Failure error) cache.documents
               }
             , Cmd.none
             )
@@ -535,6 +536,29 @@ update msg cache =
               }
             , Cmd.none
             )
+
+
+updateWithDocumentAndResidence : DocumentId -> Maybe ( Document, Residence ) -> Cache -> ( Cache, Cmd Msg )
+updateWithDocumentAndResidence documentId maybeDocumentAndResidence cache =
+    let
+        cache1 =
+            { cache
+                | documents =
+                    Sort.Dict.insert documentId (Success maybeDocumentAndResidence) cache.documents
+            }
+    in
+    targetNeeds
+        (case maybeDocumentAndResidence of
+            Just ( _, residence ) ->
+                Needs.atomic
+                    (NeedFolders
+                        (Residence.toList residence)
+                    )
+
+            Nothing ->
+                Needs.none
+        )
+        cache1
 
 
 insertAsFolders : List Folder -> Cache -> Cache
