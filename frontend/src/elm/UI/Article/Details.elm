@@ -258,8 +258,7 @@ viewLineageBreadcrumbs context lineage =
                             [ context.route
                                 |> Navigation.alterRoute
                                     context.cache
-                                    -- TODO: Navigation operation!
-                                    (Navigation.ShowListingWithFolder folderId)
+                                    (Navigation.ShowDocument folderId context.documentId)
                                 |> Types.Route.Url.toString
                                 |> Html.Attributes.href
                             ]
