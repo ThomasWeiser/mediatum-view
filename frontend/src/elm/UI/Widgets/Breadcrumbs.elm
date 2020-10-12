@@ -41,10 +41,10 @@ view : Context c -> Maybe (List FolderId) -> Html msg
 view context maybeLineage =
     let
         ellipsis =
-            Html.span [] [ Html.text "..." ]
+            Html.text "..."
 
         separator =
-            Html.span [] [ Html.text " > " ]
+            Html.text " > "
     in
     Html.div [ Html.Attributes.class "breadcrumbs" ]
         (maybeLineage
@@ -59,18 +59,15 @@ view context maybeLineage =
                                     |> RemoteData.toMaybe
                                     |> Maybe.map
                                         (\folder ->
-                                            Html.span
-                                                []
-                                                [ Html.a
-                                                    [ context.route
-                                                        |> Navigation.alterRoute
-                                                            context.cache
-                                                            (Navigation.ShowListingWithFolder folderId)
-                                                        |> Types.Route.Url.toString
-                                                        |> Html.Attributes.href
-                                                    ]
-                                                    [ Html.text folder.name ]
+                                            Html.a
+                                                [ context.route
+                                                    |> Navigation.alterRoute
+                                                        context.cache
+                                                        (Navigation.ShowListingWithFolder folderId)
+                                                    |> Types.Route.Url.toString
+                                                    |> Html.Attributes.href
                                                 ]
+                                                [ Html.text folder.name ]
                                         )
                             )
                             ellipsis
