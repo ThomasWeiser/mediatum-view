@@ -8,6 +8,7 @@ module Utils exposing
     , findAdjacent
     , lexicalOrder
     , mapWhile
+    , mapEllipsis
     , remoteDataCheck
     , remoteDataMapFallible
     , sorter
@@ -37,6 +38,7 @@ module Utils exposing
 @docs findAdjacent
 @docs lexicalOrder
 @docs mapWhile
+@docs mapEllipsis
 
 
 # RemoteData
@@ -195,8 +197,12 @@ lexicalOrder compareElements listL listR =
 
 
 {-| Map elements while they map to a Just.
+
+Return value is the mapped prefix of the list,
+and a Bool to indicate if elements were dropped due to mapping to Nothing.
+
 -}
-mapWhile : (a -> Maybe b) -> List a -> List b
+mapWhile : (a -> Maybe b) -> List a -> ( Bool, List b )
 mapWhile mapping list =
     List.foldl
         (\element ( isContinuous, resultSoFar ) ->
@@ -207,6 +213,32 @@ mapWhile mapping list =
 
                     Nothing ->
                         ( False, resultSoFar )
+
+            else
+                ( False, resultSoFar )
+        )
+        ( True, [] )
+        list
+        |> Tuple.mapSecond List.reverse
+
+
+{-| Map elements while they map to a Just.
+
+On the first mapping to Nothing add a placeholder
+(think of an ellipsis) to the result and terminate.
+
+-}
+mapEllipsis : (a -> Maybe b) -> b -> List a -> List b
+mapEllipsis mapping placeholderEllipsis list =
+    List.foldl
+        (\element ( isContinuous, resultSoFar ) ->
+            if isContinuous then
+                case mapping element of
+                    Just value ->
+                        ( True, value :: resultSoFar )
+
+                    Nothing ->
+                        ( False, placeholderEllipsis :: resultSoFar )
 
             else
                 ( False, resultSoFar )
