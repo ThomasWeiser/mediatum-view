@@ -245,47 +245,6 @@ viewResidence context residence =
         )
 
 
-viewLineageBreadcrumbs_1 :
-    Context
-    -> Lineage
-    -> Html msg -- TODO Remove!
-viewLineageBreadcrumbs_1 context lineage =
-    Html.div []
-        (lineage
-            |> List.Nonempty.toList
-            |> List.reverse
-            |> Utils.mapWhile
-                (\folderId ->
-                    Cache.get context.cache.folders folderId
-                        |> RemoteData.toMaybe
-                        |> Maybe.map
-                            (\folder ->
-                                Html.span
-                                    []
-                                    [ Html.a
-                                        [ context.route
-                                            |> Navigation.alterRoute
-                                                context.cache
-                                                (Navigation.ShowListingWithFolder folderId)
-                                            |> Types.Route.Url.toString
-                                            |> Html.Attributes.href
-                                        ]
-                                        [ Html.text folder.name ]
-                                    ]
-                            )
-                )
-            |> (\( complete, htmlSegments ) ->
-                    if not complete then
-                        List.append htmlSegments [ Html.text "..." ]
-
-                    else
-                        htmlSegments
-               )
-            |> List.intersperse
-                (Html.span [] [ Html.text " > " ])
-        )
-
-
 viewLineageBreadcrumbs : Context -> Lineage -> Html msg
 viewLineageBreadcrumbs context lineage =
     Html.div []
