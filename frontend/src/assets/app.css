@@ -210,6 +210,13 @@ ul.folder-list ul.folder-list {
 .error {
   color: #3070b3;
 }
+.residence {
+  margin-top: 2ex;
+}
+.residence .title {
+  font-weight: bold;
+  padding-bottom: 1ex;
+}
 .breadcrumbs {
   font-size: 80%;
   color: #737373

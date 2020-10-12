@@ -212,13 +212,13 @@ viewDocument context model document residence =
             , Html.div [ Html.Attributes.class "author" ]
                 [ Html.text document.name ]
             ]
-        , viewResidence context residence
         , Html.table []
             [ Html.tbody [] <|
                 List.map
                     viewAttribute
                     document.attributes
             ]
+        , viewResidence context residence
         , viewEditAttribute model document
         ]
 
@@ -240,15 +240,21 @@ viewResidence : Context -> Residence -> Html msg
 viewResidence context residence =
     Html.div
         [ Html.Attributes.class "residence" ]
-        (List.map
-            (\lineage ->
-                lineage
-                    |> List.Nonempty.toList
-                    |> Just
-                    |> UI.Widgets.Breadcrumbs.view context
-            )
-            residence
-        )
+        [ Html.div
+            [ Html.Attributes.class "title" ]
+            [ Html.text "Vorkommen:" ]
+        , Html.ul [] <|
+            List.map
+                (\lineage ->
+                    Html.li []
+                        [ lineage
+                            |> List.Nonempty.toList
+                            |> Just
+                            |> UI.Widgets.Breadcrumbs.view context
+                        ]
+                )
+                residence
+        ]
 
 
 viewEditAttribute : Model -> Document -> Html Msg
