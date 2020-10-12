@@ -199,7 +199,7 @@ lexicalOrder compareElements listL listR =
 {-| Map elements while they map to a Just.
 
 Return value is the mapped prefix of the list,
-and a Bool to indicate if elements were dropped due to mapping to Nothing.
+and a Bool to indicate if elements were dropped due to mapping an element to Nothing.
 
 -}
 mapWhile : (a -> Maybe b) -> List a -> ( Bool, List b )

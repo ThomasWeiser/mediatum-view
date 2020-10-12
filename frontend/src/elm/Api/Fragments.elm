@@ -433,18 +433,15 @@ documentByMask maskName =
             )
 
 
-{-| Selection set on a Document to get the basic properties of the document
-together with the document's attributes selected by a named mediaTUM mask.
+{-| Selection set on a Document to get the residence of the document,
+i.e. a list of folders with their lineage in which the document appears.
 
 _GraphQL notation:_
 
-    fragment documentByMask on Document {
-        id
-        metadatatype {
-            longname
+    fragment documentResidence on Document {
+        folder {
+            folderLineageIds
         }
-        name
-        valuesByMask(maskName: maskName)
     }
 
 -}

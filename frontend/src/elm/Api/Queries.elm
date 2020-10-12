@@ -94,7 +94,7 @@ toplevelFolder =
         |> SelectionSet.nonNullOrFail
 
 
-{-| Get the sub-folders of a list of folders.
+{-| Get the folders by a list of folder ids.
 
 _GraphQL notation:_
 
@@ -155,6 +155,7 @@ _GraphQL notation:_
             }
             asDocument {
                 ...documentByMask
+                ...documentResidence
             }
         }
     }
@@ -418,13 +419,15 @@ authorSearch referencePage paginationPosition folderId searchString =
 
 
 {-| Get the basic properties of a document selected by its mediaTUM id
-together with the document's attributes selected by the mediaTUM mask "nodebig".
+together with the document's attributes selected by the mediaTUM mask "nodebig"
+and the document's residence.
 
 _GraphQL notation:_
 
     query {
         documentById(id: $idOfTheDocument) {
             ...documentByMask
+            ...documentResidence
         }
     }
 

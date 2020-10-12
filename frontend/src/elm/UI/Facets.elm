@@ -14,7 +14,6 @@ module UI.Facets exposing
 @docs Return
 @docs Model
 @docs Msg
-@docs submitExampleQuery
 @docs initialModel
 @docs update
 @docs view
