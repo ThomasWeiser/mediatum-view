@@ -54,6 +54,7 @@ view context maybeLineage =
                     lineage
                         |> List.reverse
                         |> Utils.mapEllipsis
+                            ellipsis
                             (\folderId ->
                                 Cache.get context.cache.folders folderId
                                     |> RemoteData.toMaybe
@@ -70,7 +71,6 @@ view context maybeLineage =
                                                 [ Html.text folder.name ]
                                         )
                             )
-                            ellipsis
                         |> List.intersperse separator
                 )
         )

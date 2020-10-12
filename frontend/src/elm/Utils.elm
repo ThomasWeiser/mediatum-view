@@ -228,8 +228,8 @@ On the first mapping to Nothing add a placeholder
 (think of an ellipsis) to the result and terminate.
 
 -}
-mapEllipsis : (a -> Maybe b) -> b -> List a -> List b
-mapEllipsis mapping placeholderEllipsis list =
+mapEllipsis : b -> (a -> Maybe b) -> List a -> List b
+mapEllipsis placeholderEllipsis mapping list =
     List.foldl
         (\element ( isContinuous, resultSoFar ) ->
             if isContinuous then
