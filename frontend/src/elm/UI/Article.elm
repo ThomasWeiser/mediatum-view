@@ -43,6 +43,7 @@ import UI.Article.Collection
 import UI.Article.Details
 import UI.Article.Generic
 import UI.Article.Listing
+import UI.Widgets.Breadcrumbs
 import Utils
 
 
@@ -231,50 +232,21 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.article
         [ Html.Attributes.class "article" ]
-        [ Html.div
-            [ Html.Attributes.class "breadcrumbs" ]
-            [ viewBreadcrumbs
-                context
-                (Presentation.getFolderId context.cache context.presentation)
-            ]
+        [ viewBreadcrumbs
+            context
+            (Presentation.getFolderId context.cache context.presentation)
         , viewContent context model
         ]
 
 
 viewBreadcrumbs : Context -> Maybe FolderId -> Html msg
 viewBreadcrumbs context maybeFolderId =
-    Html.span [] <|
-        case maybeFolderId of
-            Nothing ->
-                [ Html.text "(no specific path)" ]
-
-            Just folderId ->
-                Cache.Derive.getPath context.cache folderId
-                    |> RemoteData.unwrap
-                        [ Html.text "..." ]
-                        (List.reverse
-                            >> List.map
-                                (\idPathSegment ->
-                                    Html.span []
-                                        [ Cache.get context.cache.folders idPathSegment
-                                            |> RemoteData.unwrap
-                                                (Html.text "...")
-                                                (\folder ->
-                                                    Html.a
-                                                        [ context.route
-                                                            |> Navigation.alterRoute
-                                                                context.cache
-                                                                (Navigation.ShowListingWithFolder folder.id)
-                                                            |> Types.Route.Url.toString
-                                                            |> Html.Attributes.href
-                                                        ]
-                                                        [ Html.text folder.name ]
-                                                )
-                                        ]
-                                )
-                            >> List.intersperse
-                                (Html.span [] [ Html.text " > " ])
-                        )
+    maybeFolderId
+        |> Maybe.andThen
+            (Cache.Derive.getPath context.cache
+                >> RemoteData.toMaybe
+            )
+        |> UI.Widgets.Breadcrumbs.view context
 
 
 viewContent : Context -> Model -> Html Msg

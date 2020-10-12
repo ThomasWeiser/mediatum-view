@@ -36,6 +36,7 @@ import Types.Navigation as Navigation exposing (Navigation)
 import Types.Route exposing (Route)
 import Types.Route.Url
 import UI.Icons
+import UI.Widgets.Breadcrumbs
 import Utils
 import Utils.Html
 
@@ -240,40 +241,13 @@ viewResidence context residence =
     Html.div
         [ Html.Attributes.class "residence" ]
         (List.map
-            (viewLineageBreadcrumbs context)
+            (\lineage ->
+                lineage
+                    |> List.Nonempty.toList
+                    |> Just
+                    |> UI.Widgets.Breadcrumbs.view context
+            )
             residence
-        )
-
-
-viewLineageBreadcrumbs : Context -> Lineage -> Html msg
-viewLineageBreadcrumbs context lineage =
-    Html.div []
-        (lineage
-            |> List.Nonempty.toList
-            |> List.reverse
-            |> Utils.mapEllipsis
-                (\folderId ->
-                    Cache.get context.cache.folders folderId
-                        |> RemoteData.toMaybe
-                        |> Maybe.map
-                            (\folder ->
-                                Html.span
-                                    []
-                                    [ Html.a
-                                        [ context.route
-                                            |> Navigation.alterRoute
-                                                context.cache
-                                                (Navigation.ShowListingWithFolder folderId)
-                                            |> Types.Route.Url.toString
-                                            |> Html.Attributes.href
-                                        ]
-                                        [ Html.text folder.name ]
-                                    ]
-                            )
-                )
-                (Html.span [] [ Html.text "..." ])
-            |> List.intersperse
-                (Html.span [] [ Html.text " > " ])
         )
 
 
