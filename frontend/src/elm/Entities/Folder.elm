@@ -43,6 +43,7 @@ dummy =
     }
 
 
+{-| -}
 init : FolderId -> Maybe FolderId -> String -> FolderDisplay -> Int -> Folder
 init id maybeParentId name display numSubfolder =
     { id = id
