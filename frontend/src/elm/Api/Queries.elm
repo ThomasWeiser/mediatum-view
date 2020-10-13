@@ -174,6 +174,7 @@ genericNode nodeId =
                     GenericNode.IsDocument documentAndResidence
 
                 ( Nothing, Nothing ) ->
+                    -- Node exists, but is neither a folder nor a document
                     GenericNode.IsNeither
     in
     Mediatum.Query.genericNodeById
@@ -193,7 +194,9 @@ genericNode nodeId =
                     )
                 )
         )
-        |> SelectionSet.nonNullOrFail
+        |> SelectionSet.map
+            -- Node doesn't exist
+            (Maybe.withDefault GenericNode.IsNeither)
 
 
 {-| Get the documents of a selection with offset-based pagination.
