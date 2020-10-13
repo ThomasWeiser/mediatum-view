@@ -59,6 +59,7 @@ import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
+import Entities.Residence as Residence exposing (Residence)
 import List.Nonempty
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
@@ -103,7 +104,7 @@ type alias Cache =
     , folders : Sort.Dict.Dict FolderId (ApiData Folder)
     , subfolderIds : Sort.Dict.Dict FolderId (ApiData (List FolderId))
     , nodeTypes : Sort.Dict.Dict NodeId (ApiData NodeType)
-    , documents : Sort.Dict.Dict DocumentId (ApiData (Maybe Document))
+    , documents : Sort.Dict.Dict DocumentId (ApiData (Maybe ( Document, Residence )))
     , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
     , folderCounts : Sort.Dict.Dict Selection (ApiData FolderCounts)
     , facetsValues : Sort.Dict.Dict ( Selection, String ) (ApiData FacetValues)
@@ -114,6 +115,7 @@ type alias Cache =
 -}
 type Need
     = NeedRootFolderIds
+    | NeedFolders (List FolderId)
     | NeedSubfolders (List FolderId)
     | NeedGenericNode NodeId
     | NeedDocument DocumentId
@@ -168,9 +170,10 @@ Currently all messages transport some API response.
 -}
 type Msg
     = ApiResponseToplevelFolder (Api.Response (List ( Folder, List Folder )))
+    | ApiResponseFolder (List FolderId) (Api.Response (List Folder))
     | ApiResponseSubfolder (List FolderId) (Api.Response (List Folder))
     | ApiResponseGenericNode NodeId (Api.Response GenericNode)
-    | ApiResponseDocument DocumentId (Api.Response (Maybe Document))
+    | ApiResponseDocument DocumentId (Api.Response (Maybe ( Document, Residence )))
     | ApiResponseDocumentsPage ( Selection, Window ) (Api.Response DocumentsPage)
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
     | ApiResponseFacet ( Selection, String ) (Api.Response FacetValues)
@@ -196,6 +199,10 @@ statusOfNeed cache need =
         NeedRootFolderIds ->
             cache.rootFolderIds
                 |> Needs.statusFromRemoteData
+
+        NeedFolders folderIds ->
+            Needs.statusFromListOfRemoteData
+                (List.map (get cache.folders) folderIds)
 
         NeedSubfolders parentIds ->
             Needs.statusFromListOfRemoteData
@@ -241,6 +248,34 @@ requestNeed need cache =
                 ApiResponseToplevelFolder
                 Api.Queries.toplevelFolder
             )
+
+        NeedFolders folderIds ->
+            let
+                unknownFolderIds =
+                    List.filter
+                        (\folderId ->
+                            get cache.folders folderId == NotAsked
+                        )
+                        folderIds
+            in
+            if List.isEmpty unknownFolderIds then
+                ( cache, Cmd.none )
+
+            else
+                ( { cache
+                    | folders =
+                        List.foldl
+                            (\folderId folders ->
+                                Sort.Dict.insert folderId Loading folders
+                            )
+                            cache.folders
+                            unknownFolderIds
+                  }
+                , Api.sendQueryRequest
+                    (Api.withOperationName "NeedFolders")
+                    (ApiResponseFolder unknownFolderIds)
+                    (Api.Queries.folder unknownFolderIds)
+                )
 
         NeedSubfolders parentIds ->
             let
@@ -332,7 +367,14 @@ updateWithModifiedDocument : Document -> Cache -> Cache
 updateWithModifiedDocument document cache =
     { cache
         | documents =
-            Sort.Dict.insert document.id (Success (Just document)) cache.documents
+            Sort.Dict.update
+                document.id
+                (Maybe.map <|
+                    RemoteData.map <|
+                        Maybe.map <|
+                            Tuple.mapFirst (always document)
+                )
+                cache.documents
     }
 
 
@@ -375,6 +417,26 @@ update msg cache =
             , Cmd.none
             )
 
+        ApiResponseFolder folderIds (Ok listOfFolders) ->
+            ( cache
+                |> insertAsFolders listOfFolders
+                |> insertFoldersAsNodeTypes listOfFolders
+            , Cmd.none
+            )
+
+        ApiResponseFolder folderIds (Err error) ->
+            ( { cache
+                | folders =
+                    List.foldl
+                        (\folderId folders ->
+                            Sort.Dict.insert folderId (Failure error) folders
+                        )
+                        cache.folders
+                        folderIds
+              }
+            , Cmd.none
+            )
+
         ApiResponseSubfolder parentIds (Ok listOfSubfolders) ->
             ( cache
                 |> insertAsFolders listOfSubfolders
@@ -407,22 +469,17 @@ update msg cache =
                     let
                         folders =
                             List.Nonempty.toList lineage
-
-                        ( cache2, cmd ) =
-                            cache1
-                                |> insertAsFolders folders
-                                |> targetNeeds
-                                    (Needs.atomic (NeedSubfolders (List.map .id folders)))
                     in
-                    ( cache2
-                    , cmd
-                    )
+                    cache1
+                        |> insertAsFolders folders
+                        |> targetNeeds
+                            (Needs.atomic (NeedSubfolders (List.map .id folders)))
 
-                GenericNode.IsDocument document ->
-                    ( cache1
-                        |> updateWithModifiedDocument document
-                    , Cmd.none
-                    )
+                GenericNode.IsDocument ( document, residence ) ->
+                    updateWithDocumentAndResidence
+                        document.id
+                        (Just ( document, residence ))
+                        cache1
 
                 GenericNode.IsNeither ->
                     ( cache1
@@ -437,10 +494,16 @@ update msg cache =
             , Cmd.none
             )
 
-        ApiResponseDocument documentId result ->
+        ApiResponseDocument documentId (Ok maybeDocumentAndResidence) ->
+            updateWithDocumentAndResidence
+                documentId
+                maybeDocumentAndResidence
+                cache
+
+        ApiResponseDocument documentId (Err error) ->
             ( { cache
                 | documents =
-                    Sort.Dict.insert documentId (RemoteData.fromResult result) cache.documents
+                    Sort.Dict.insert documentId (Failure error) cache.documents
               }
             , Cmd.none
             )
@@ -468,6 +531,29 @@ update msg cache =
               }
             , Cmd.none
             )
+
+
+updateWithDocumentAndResidence : DocumentId -> Maybe ( Document, Residence ) -> Cache -> ( Cache, Cmd Msg )
+updateWithDocumentAndResidence documentId maybeDocumentAndResidence cache =
+    let
+        cache1 =
+            { cache
+                | documents =
+                    Sort.Dict.insert documentId (Success maybeDocumentAndResidence) cache.documents
+            }
+    in
+    targetNeeds
+        (case maybeDocumentAndResidence of
+            Just ( _, residence ) ->
+                Needs.atomic
+                    (NeedFolders
+                        (Residence.toList residence)
+                    )
+
+            Nothing ->
+                Needs.none
+        )
+        cache1
 
 
 insertAsFolders : List Folder -> Cache -> Cache

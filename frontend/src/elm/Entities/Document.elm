@@ -11,7 +11,8 @@ module Entities.Document exposing
 -}
 
 import List.Extra
-import Types.Id exposing (DocumentId)
+import List.Nonempty exposing (Nonempty)
+import Types.Id exposing (DocumentId, FolderId)
 
 
 {-| -}

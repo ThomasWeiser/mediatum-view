@@ -24,13 +24,19 @@ import Api
 import Api.Mutations
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
+import Entities.Residence exposing (Lineage, Residence)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import List.Nonempty
 import Maybe.Extra
 import RemoteData
 import Types.Id as Id exposing (DocumentId)
+import Types.Navigation as Navigation exposing (Navigation)
+import Types.Route exposing (Route)
+import Types.Route.Url
 import UI.Icons
+import UI.Widgets.Breadcrumbs
 import Utils
 import Utils.Html
 
@@ -38,6 +44,7 @@ import Utils.Html
 {-| -}
 type alias Context =
     { cache : Cache
+    , route : Route
     , documentId : DocumentId
     }
 
@@ -139,7 +146,7 @@ initEditAttributeValue context model =
             context.cache.documents
             context.documentId
     of
-        RemoteData.Success (Just document) ->
+        RemoteData.Success (Just ( document, _ )) ->
             let
                 ( key1, value1 ) =
                     case Document.attributeValue model.editAttributeKey document of
@@ -184,8 +191,8 @@ view context model =
             RemoteData.Failure error ->
                 Utils.Html.viewApiError error
 
-            RemoteData.Success (Just document) ->
-                viewDocument model document
+            RemoteData.Success (Just ( document, residence )) ->
+                viewDocument context model document residence
 
             RemoteData.Success Nothing ->
                 Html.span []
@@ -196,8 +203,8 @@ view context model =
         ]
 
 
-viewDocument : Model -> Document -> Html Msg
-viewDocument model document =
+viewDocument : Context -> Model -> Document -> Residence -> Html Msg
+viewDocument context model document residence =
     Html.div []
         [ Html.div [ Html.Attributes.class "header" ]
             [ Html.div [ Html.Attributes.class "metadatatype" ]
@@ -211,6 +218,7 @@ viewDocument model document =
                     viewAttribute
                     document.attributes
             ]
+        , viewResidence context residence
         , viewEditAttribute model document
         ]
 
@@ -226,6 +234,27 @@ viewAttribute attribute =
 
         Nothing ->
             Html.text ""
+
+
+viewResidence : Context -> Residence -> Html msg
+viewResidence context residence =
+    Html.div
+        [ Html.Attributes.class "residence" ]
+        [ Html.div
+            [ Html.Attributes.class "title" ]
+            [ Html.text "Vorkommen:" ]
+        , Html.ul [] <|
+            List.map
+                (\lineage ->
+                    Html.li []
+                        [ lineage
+                            |> List.Nonempty.toList
+                            |> Just
+                            |> UI.Widgets.Breadcrumbs.view context
+                        ]
+                )
+                residence
+        ]
 
 
 viewEditAttribute : Model -> Document -> Html Msg

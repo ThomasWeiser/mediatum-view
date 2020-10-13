@@ -14,6 +14,7 @@ The type `GenericNode` represents such a result.
 
 import Entities.Document exposing (Document)
 import Entities.Folder exposing (Folder)
+import Entities.Residence exposing (Residence)
 import List.Nonempty exposing (Nonempty)
 import Types exposing (NodeType(..))
 
@@ -21,7 +22,7 @@ import Types exposing (NodeType(..))
 {-| -}
 type GenericNode
     = IsFolder (Nonempty Folder)
-    | IsDocument Document
+    | IsDocument ( Document, Residence )
     | IsNeither
 
 

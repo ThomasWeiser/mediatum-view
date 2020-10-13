@@ -152,6 +152,64 @@ suite =
                 (Fuzz.list Fuzz.int)
                 (Utils.lexicalOrder compare)
             ]
+        , describe "mapWhile" <|
+            let
+                exampleMapping x =
+                    if x < 5 then
+                        Just (x * 10)
+
+                    else
+                        Nothing
+            in
+            [ test "on empty list" <|
+                \() ->
+                    Expect.equal (Utils.mapWhile exampleMapping []) ( True, [] )
+            , test "mixed list" <|
+                \() ->
+                    Expect.equal (Utils.mapWhile exampleMapping [ 1, 2, 5, 6, 3, 4, 7, 8 ]) ( False, [ 10, 20 ] )
+            , test "starting with a mapping to Nothing" <|
+                \() ->
+                    Expect.equal (Utils.mapWhile exampleMapping [ 5, 6, 3, 4, 7, 8 ]) ( False, [] )
+            , test "works for very long list (i.e. is call stack size safe), dropping out early" <|
+                \() ->
+                    Expect.equal
+                        (Utils.mapWhile exampleMapping (List.range 1 100000))
+                        ( False, [ 10, 20, 30, 40 ] )
+            , test "works for very long list (i.e. is call stack size safe), not dropping out" <|
+                \() ->
+                    Expect.equal
+                        (Utils.mapWhile exampleMapping (List.range -100000 -1))
+                        ( True, List.map ((*) 10) (List.range -100000 -1) )
+            ]
+        , describe "mapEllipsis" <|
+            let
+                exampleMapping x =
+                    if x < 5 then
+                        Just (x * 10)
+
+                    else
+                        Nothing
+            in
+            [ test "on empty list" <|
+                \() ->
+                    Expect.equal (Utils.mapEllipsis 99 exampleMapping []) []
+            , test "mixed list" <|
+                \() ->
+                    Expect.equal (Utils.mapEllipsis 99 exampleMapping [ 1, 2, 5, 6, 3, 4, 7, 8 ]) [ 10, 20, 99 ]
+            , test "starting with a mapping to Nothing" <|
+                \() ->
+                    Expect.equal (Utils.mapEllipsis 99 exampleMapping [ 5, 6, 3, 4, 7, 8 ]) [ 99 ]
+            , test "works for very long list (i.e. is call stack size safe), dropping out early" <|
+                \() ->
+                    Expect.equal
+                        (Utils.mapEllipsis 99 exampleMapping (List.range 1 100000))
+                        [ 10, 20, 30, 40, 99 ]
+            , test "works for very long list (i.e. is call stack size safe), not dropping out" <|
+                \() ->
+                    Expect.equal
+                        (Utils.mapEllipsis 99 exampleMapping (List.range -100000 -1))
+                        (List.map ((*) 10) (List.range -100000 -1))
+            ]
         ]
 
 

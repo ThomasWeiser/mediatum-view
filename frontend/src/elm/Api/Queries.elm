@@ -1,5 +1,5 @@
 module Api.Queries exposing
-    ( toplevelFolder, subfolder
+    ( toplevelFolder, folder, subfolder
     , selectionDocumentsPage, selectionFolderCounts, selectionFacetByKey
     , documentDetails
     , genericNode, authorSearch
@@ -19,7 +19,7 @@ In reality it's just function calling.
 
 # Folder Queries
 
-@docs toplevelFolder, subfolder
+@docs toplevelFolder, folder, subfolder
 
 
 # Document Search and Facet Queries
@@ -47,6 +47,7 @@ import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
+import Entities.Residence exposing (Residence)
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
@@ -93,6 +94,31 @@ toplevelFolder =
         |> SelectionSet.nonNullOrFail
 
 
+{-| Get the folders by a list of folder ids.
+
+_GraphQL notation:_
+
+    query {
+        allFolders(ids: $listOfFolderIds) {
+            nodes {
+                ...folder
+            }
+        }
+    }
+
+-}
+folder : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
+folder folderIds =
+    Mediatum.Query.allFolders
+        (\optionals ->
+            { optionals
+                | ids = List.map (Id.toInt >> Just) folderIds |> Present
+            }
+        )
+        (Mediatum.Object.FoldersConnection.nodes Api.Fragments.folder)
+        |> SelectionSet.nonNullOrFail
+
+
 {-| Get the sub-folders of a list of folders.
 
 _GraphQL notation:_
@@ -129,6 +155,7 @@ _GraphQL notation:_
             }
             asDocument {
                 ...documentByMask
+                ...documentResidence
             }
         }
     }
@@ -137,14 +164,14 @@ _GraphQL notation:_
 genericNode : NodeId -> SelectionSet GenericNode Graphql.Operation.RootQuery
 genericNode nodeId =
     let
-        constructor : Maybe (Nonempty Folder) -> Maybe Document -> GenericNode
-        constructor maybeLineage maybeDocument =
-            case ( maybeLineage, maybeDocument ) of
+        constructor : Maybe (Nonempty Folder) -> Maybe ( Document, Residence ) -> GenericNode
+        constructor maybeLineage maybeDocumentAndResidence =
+            case ( maybeLineage, maybeDocumentAndResidence ) of
                 ( Just lineage, _ ) ->
                     GenericNode.IsFolder lineage
 
-                ( Nothing, Just document ) ->
-                    GenericNode.IsDocument document
+                ( Nothing, Just documentAndResidence ) ->
+                    GenericNode.IsDocument documentAndResidence
 
                 ( Nothing, Nothing ) ->
                     GenericNode.IsNeither
@@ -158,7 +185,12 @@ genericNode nodeId =
                 )
             |> SelectionSet.with
                 (Mediatum.Object.GenericNode.asDocument
-                    (Api.Fragments.documentByMask "nodebig")
+                    (SelectionSet.succeed Tuple.pair
+                        |> SelectionSet.with
+                            (Api.Fragments.documentByMask "nodebig")
+                        |> SelectionSet.with
+                            Api.Fragments.documentResidence
+                    )
                 )
         )
         |> SelectionSet.nonNullOrFail
@@ -387,24 +419,31 @@ authorSearch referencePage paginationPosition folderId searchString =
 
 
 {-| Get the basic properties of a document selected by its mediaTUM id
-together with the document's attributes selected by the mediaTUM mask "nodebig".
+together with the document's attributes selected by the mediaTUM mask "nodebig"
+and the document's residence.
 
 _GraphQL notation:_
 
     query {
         documentById(id: $idOfTheDocument) {
             ...documentByMask
+            ...documentResidence
         }
     }
 
 -}
 documentDetails :
     DocumentId
-    -> SelectionSet (Maybe Document) Graphql.Operation.RootQuery
+    -> SelectionSet (Maybe ( Document, Residence )) Graphql.Operation.RootQuery
 documentDetails documentId =
     Mediatum.Query.documentById
         { id = Id.toInt documentId }
-        (Api.Fragments.documentByMask "nodebig")
+        (SelectionSet.succeed Tuple.pair
+            |> SelectionSet.with
+                (Api.Fragments.documentByMask "nodebig")
+            |> SelectionSet.with
+                Api.Fragments.documentResidence
+        )
 
 
 selectionToFolderId : Selection -> Int

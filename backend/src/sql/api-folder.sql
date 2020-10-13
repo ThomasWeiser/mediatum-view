@@ -3,10 +3,11 @@
 -- regarding folders (i.e. collections and directories).
 
 
-create or replace function api.all_folders (name text, parent_ids int4[], is_root boolean, is_collection boolean, find text)
+create or replace function api.all_folders (name text, ids int4[], parent_ids int4[], is_root boolean, is_collection boolean, find text)
     returns setof api.folder as $$
     select * from entity.folder
     where (all_folders.name is null or folder.name = all_folders.name)
+      and (all_folders.ids is null or folder.id = any (all_folders.ids))
       and (all_folders.parent_ids is null or folder.parent_id = any (all_folders.parent_ids))
       and (all_folders.is_root is null or folder.parent_id is null = all_folders.is_root)
       and (all_folders.is_collection is null or folder.is_collection = all_folders.is_collection)
@@ -14,8 +15,9 @@ create or replace function api.all_folders (name text, parent_ids int4[], is_roo
     order by folder.orderpos
 $$ language sql stable rows 1000;
 
-comment on function api.all_folders (name text, parent_ids int4[], is_root boolean, is_collection boolean, find text) is
-    'Reads and enables pagination through all folders (i.w. collections and directories), optionally filtered by name, parentId, isRoot and isCollection, and searchable by name.';
+comment on function api.all_folders (name text, ids int4[], parent_ids int4[], is_root boolean, is_collection boolean, find text) is
+    'Reads and enables pagination through all folders (i.w. collections and directories),'
+    ' optionally filtered by name, list of ids, list of parentIds, isRoot and isCollection, and searchable by name.';
 
 
 create or replace function api.folder_by_id (id int4)

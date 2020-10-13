@@ -100,7 +100,7 @@ $$ language sql strict stable parallel safe;
 
 
 /*
-TODO: Update comment: We now have mixed required/optional arguments, my declaring the function as `strict` and using default arguments.
+TODO: Update comment: We now have mixed required/optional arguments, by declaring the function as `strict` and using default arguments.
 
 Actually, we would like to declare that the first parameter is required.
 
@@ -135,6 +135,21 @@ $$ language sql strict stable;
 
 comment on function api.document_by_id (id int4) is
     'Gets a document by its mediaTUM node id.';
+
+
+create or replace function api.document_folders (document api.document)
+    returns api.folder[] as $$
+    select array(
+        select row(folder.*)::api.folder
+        from entity.folder
+        join mediatum.nodemapping on folder.id = nodemapping.nid
+        where document.id = nodemapping.cid
+        order by folder.orderpos
+    )
+$$ language sql stable;
+
+comment on function api.document_folders (document api.document) is
+    'Gets the list of all folders in which the document appears.';
 
 
 create or replace function api.document_attributes (document api.document, keys text[])

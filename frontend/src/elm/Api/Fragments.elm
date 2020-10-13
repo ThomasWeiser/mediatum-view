@@ -1,7 +1,7 @@
 module Api.Fragments exposing
     ( folder, folderAndSubfolders, folderLineage
     , folderAndSubfolderCounts, folderCount, facetByKey
-    , documentsPage, documentResult, documentByMask
+    , documentsPage, documentResult, documentByMask, documentResidence
     , graphqlDocumentObjects
     )
 
@@ -20,7 +20,7 @@ module Api.Fragments exposing
 
 # Fragments for Document Results
 
-@docs documentsPage, documentResult, documentByMask
+@docs documentsPage, documentResult, documentByMask, documentResidence
 
 
 # Relay Connection Utility
@@ -33,6 +33,7 @@ import Entities.Document as Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import Entities.Folder as Folder exposing (Folder)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
+import Entities.Residence exposing (Residence)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
@@ -146,6 +147,35 @@ folderLineage : SelectionSet (Nonempty Folder) Mediatum.Object.Folder
 folderLineage =
     Mediatum.Object.Folder.lineage
         folder
+        |> SelectionSet.nonNullOrFail
+        |> SelectionSet.nonNullElementsOrFail
+        |> SelectionSet.mapOrFail
+            (List.Nonempty.fromList
+                >> Result.fromMaybe "Lineage needs at least one folder"
+            )
+
+
+{-| Selection set on a folder to get the ids of the lineage of that folder.
+
+The lineage is the non-emtpy list of folder ids representing the path
+starting with the given folder up to a root folder of the hierarchy.
+
+_GraphQL notation:_
+
+    fragment folderLineage on Folder {
+        lineage {
+            id
+        }
+    }
+
+-}
+folderLineageIds : SelectionSet (Nonempty FolderId) Mediatum.Object.Folder
+folderLineageIds =
+    Mediatum.Object.Folder.lineage
+        (Mediatum.Object.Folder.id
+            |> SelectionSet.nonNullOrFail
+            |> SelectionSet.map Id.fromInt
+        )
         |> SelectionSet.nonNullOrFail
         |> SelectionSet.nonNullElementsOrFail
         |> SelectionSet.mapOrFail
@@ -401,6 +431,26 @@ documentByMask maskName =
                 { maskName = maskName }
                 |> SelectionSet.map mapJsonToAttributes
             )
+
+
+{-| Selection set on a Document to get the residence of the document,
+i.e. a list of folders with their lineage in which the document appears.
+
+_GraphQL notation:_
+
+    fragment documentResidence on Document {
+        folder {
+            folderLineageIds
+        }
+    }
+
+-}
+documentResidence : SelectionSet Residence Mediatum.Object.Document
+documentResidence =
+    Mediatum.Object.Document.folders
+        folderLineageIds
+        |> SelectionSet.nonNullOrFail
+        |> SelectionSet.nonNullElementsOrFail
 
 
 {-| Decode a JSON string returned from a query that denotes the mata-values of a document.
