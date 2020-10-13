@@ -113,7 +113,7 @@ create or replace function aux.subfolder_counts
     begin
         return query
             select
-              node_children,
+              folder.id,
               -- Counting in a sub-query together with `exists` is faster than
               -- counting with a group-by and together with `aux.test_node_lineage`
               -- TODO: Test if this is also true in case of a large number of sub-folders.
@@ -121,10 +121,11 @@ create or replace function aux.subfolder_counts
                     from unnest (docset.id_list) as document_id_rows
                     where exists ( select 1
                                   from mediatum.noderelation
-                                  where nid = node_children and cid = document_id_rows
+                                  where nid = folder.id and cid = document_id_rows
                                 )
               )::integer
-            from aux.node_children (coalesce (parent_folder_id, docset.folder_id))
+            from entity.folder
+            where folder.parent_id = coalesce (parent_folder_id, docset.folder_id)
         ;
     end;
 $$ language plpgsql stable parallel safe rows 50;
