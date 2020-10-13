@@ -102,14 +102,11 @@ comment on function api.fts_documents_docset
 ;
 
 
-create or replace function aux.subfolder_counts
+create or replace function api.docset_subfolder_counts
     ( docset api.docset
     , parent_folder_id int4 default null
     )
-    returns table
-        ( folder_id int4
-        , count integer
-        ) as $$
+    returns setof api.folder_count as $$
     begin
         return query
             select
@@ -130,19 +127,6 @@ create or replace function aux.subfolder_counts
     end;
 $$ language plpgsql stable parallel safe rows 50;
 
-
-create or replace function api.docset_subfolder_counts
-    ( docset api.docset
-    , parent_folder_id int4 -- default null
-    )
-    returns setof api.folder_count as $$
-    begin
-        return query
-            select *
-            from aux.subfolder_counts (docset, parent_folder_id)
-        ;
-    end;
-$$ language plpgsql stable parallel safe rows 50;
 
 comment on function api.docset_subfolder_counts
     ( docset api.docset
