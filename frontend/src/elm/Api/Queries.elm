@@ -195,8 +195,10 @@ genericNode nodeId =
                 )
         )
         |> SelectionSet.map
-            -- Node doesn't exist
-            (Maybe.withDefault GenericNode.IsNeither)
+            (Maybe.withDefault
+                -- Node doesn't exist
+                GenericNode.IsNeither
+            )
 
 
 {-| Get the documents of a selection with offset-based pagination.
