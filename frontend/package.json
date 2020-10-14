@@ -12,7 +12,8 @@
     "start": "ncp src/assets dist && elm-live -u -e node_modules/.bin/elm -d dist src/elm/Main.elm -x /graphql -y http://localhost:5000/graphql -- --output=dist/app.js --debug",
     "format": "elm-format --yes src/elm tests",
     "doc-preview": "elm-doc-preview --port 8001 --no-browser .",
-    "clean": "rimraf gen elm-stuff"
+    "clean": "rimraf gen elm-stuff",
+    "elm-json": "elm-json"
   },
   "repository": {
     "type": "git",
