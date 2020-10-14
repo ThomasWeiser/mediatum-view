@@ -27,10 +27,10 @@ import Html.Attributes
 import Html.Events
 import RemoteData
 import String.Extra
-import Types.Facet exposing (FacetValue, FacetValues)
+import Types.Facet exposing (FacetValues)
 import Types.Navigation as Navigation exposing (Navigation)
-import Types.Presentation as Presentation exposing (Presentation(..))
-import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), Selection, SetOfFilters)
+import Types.Presentation exposing (Presentation(..))
+import Types.Selection exposing (Filter(..), FtsSorting(..), Selection)
 import UI.Icons
 import Utils
 import Utils.Html

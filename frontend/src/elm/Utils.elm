@@ -63,7 +63,6 @@ import Char
 import Html
 import Html.Events
 import Json.Decode
-import List.Extra
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData)
 import Sort exposing (Sorter)

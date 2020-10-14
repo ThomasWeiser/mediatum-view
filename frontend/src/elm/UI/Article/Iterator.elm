@@ -21,7 +21,6 @@ module UI.Article.Iterator exposing
 -}
 
 import Article.Details as Details
-import Cache
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events

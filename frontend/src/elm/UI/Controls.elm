@@ -22,26 +22,22 @@ module UI.Controls exposing
 
 -}
 
-import Cache exposing (ApiData, Cache)
-import Dict
+import Cache exposing (Cache)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import RemoteData
 import Sort.Dict
-import String.Extra
 import Types.Navigation as Navigation exposing (Navigation)
-import Types.Presentation as Presentation exposing (Presentation(..))
+import Types.Presentation exposing (Presentation(..))
 import Types.Range as Range
-import Types.Route as Route exposing (Route)
+import Types.Route exposing (Route)
 import Types.Route.Filter
 import Types.SearchTerm as SearchTerm
-import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), Selection, SetOfFilters)
+import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), SetOfFilters)
 import UI.Controls.Filter
 import UI.Controls.FilterEditor as FilterEditor
 import UI.Icons
 import Utils
-import Utils.Html
 
 
 {-| -}

@@ -13,7 +13,6 @@ module Entities.Residence exposing
 
 import List.Nonempty exposing (Nonempty)
 import Sort.Set
-import Svg exposing (line)
 import Types.Id as Id exposing (FolderId)
 import Utils
 

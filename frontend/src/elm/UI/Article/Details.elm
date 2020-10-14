@@ -24,7 +24,7 @@ import Api
 import Api.Mutations
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
-import Entities.Residence exposing (Lineage, Residence)
+import Entities.Residence exposing (Residence)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -32,12 +32,9 @@ import List.Nonempty
 import Maybe.Extra
 import RemoteData
 import Types.Id as Id exposing (DocumentId)
-import Types.Navigation as Navigation exposing (Navigation)
 import Types.Route exposing (Route)
-import Types.Route.Url
 import UI.Icons
 import UI.Widgets.Breadcrumbs
-import Utils
 import Utils.Html
 
 

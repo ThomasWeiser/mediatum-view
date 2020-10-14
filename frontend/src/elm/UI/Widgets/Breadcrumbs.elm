@@ -20,9 +20,8 @@ import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
 import RemoteData
-import Svg exposing (line)
-import Types.Id as Id exposing (FolderId)
-import Types.Navigation as Navigation exposing (Navigation)
+import Types.Id exposing (FolderId)
+import Types.Navigation as Navigation
 import Types.Route exposing (Route)
 import Types.Route.Url
 import Utils

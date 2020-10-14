@@ -11,8 +11,7 @@ module Entities.Document exposing
 -}
 
 import List.Extra
-import List.Nonempty exposing (Nonempty)
-import Types.Id exposing (DocumentId, FolderId)
+import Types.Id exposing (DocumentId)
 
 
 {-| A document as cached either as a detailed document or within a listing of documents.

@@ -26,19 +26,17 @@ module UI.Article exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
-import Config
 import Entities.Document exposing (Document)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
 import RemoteData
-import Types.Id as Id exposing (FolderId)
-import Types.Navigation as Navigation exposing (Navigation)
+import Types.Id exposing (FolderId)
+import Types.Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation as Presentation exposing (Presentation(..))
-import Types.Route as Route exposing (Route)
-import Types.Route.Url
+import Types.Route exposing (Route)
 import UI.Article.Collection
 import UI.Article.Details
 import UI.Article.Generic

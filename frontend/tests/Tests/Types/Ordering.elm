@@ -1,7 +1,6 @@
 module Tests.Types.Ordering exposing (suite)
 
 import Cache
-import Dict
 import Expect
 import Test exposing (..)
 import TestUtils exposing (..)

@@ -31,7 +31,6 @@ Each variant of the type corresponds to a sub-component of [`UI.Article`](UI-Art
 
 import Cache exposing (Cache)
 import Cache.Derive
-import Dict
 import Maybe.Extra
 import RemoteData
 import Types exposing (FolderDisplay(..), NodeType(..), Window)
