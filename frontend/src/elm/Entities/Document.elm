@@ -3,7 +3,7 @@ module Entities.Document exposing
     , init, attributeValue
     )
 
-{-| The metadata of a document and its attributes
+{-| The metadata of a document and its attributes.
 
 @docs Document, Attribute
 @docs init, attributeValue
@@ -15,7 +15,11 @@ import List.Nonempty exposing (Nonempty)
 import Types.Id exposing (DocumentId, FolderId)
 
 
-{-| -}
+{-| A document as cached either as a detailed document or within a listing of documents.
+
+The `attributes` are relative to a mask, which depends on the context where a `Document` is used.
+
+-}
 type alias Document =
     { id : DocumentId
     , name : String
@@ -24,7 +28,13 @@ type alias Document =
     }
 
 
-{-| -}
+{-| An attribute of an document through the view of a certain mask (e.g. `nodesmall`, `nodebig`).
+
+`field` is the key in the JSON representation of all attributes.
+
+`name` and `with` are given by the applied mask.
+
+-}
 type alias Attribute =
     { field : String
     , name : String
