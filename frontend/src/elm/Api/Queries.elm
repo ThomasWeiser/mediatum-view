@@ -1,5 +1,5 @@
 module Api.Queries exposing
-    ( toplevelFolder, folder, subfolder
+    ( toplevelFolders, folders, subfolders
     , selectionDocumentsPage, selectionFolderCounts, selectionFacetByKey
     , documentDetails
     , genericNode, authorSearch
@@ -19,7 +19,7 @@ In reality it's just function calling.
 
 # Folder Queries
 
-@docs toplevelFolder, folder, subfolder
+@docs toplevelFolders, folders, subfolders
 
 
 # Document Search and Facet Queries
@@ -80,8 +80,8 @@ _GraphQL notation:_
     }
 
 -}
-toplevelFolder : SelectionSet (List ( Folder, List Folder )) Graphql.Operation.RootQuery
-toplevelFolder =
+toplevelFolders : SelectionSet (List ( Folder, List Folder )) Graphql.Operation.RootQuery
+toplevelFolders =
     Mediatum.Query.allFolders
         (\optionals ->
             { optionals
@@ -107,8 +107,8 @@ _GraphQL notation:_
     }
 
 -}
-folder : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
-folder folderIds =
+folders : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
+folders folderIds =
     Mediatum.Query.allFolders
         (\optionals ->
             { optionals
@@ -132,8 +132,8 @@ _GraphQL notation:_
     }
 
 -}
-subfolder : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
-subfolder folderIds =
+subfolders : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
+subfolders folderIds =
     Mediatum.Query.allFolders
         (\optionals ->
             { optionals
