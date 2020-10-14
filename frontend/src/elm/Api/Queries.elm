@@ -44,7 +44,7 @@ import Api.Fragments
 import Config
 import Entities.Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentsPage)
-import Entities.Folder exposing (Folder)
+import Entities.Folder exposing (Folder, LineageFolders)
 import Entities.FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
 import Entities.Residence exposing (Residence)
@@ -164,7 +164,7 @@ _GraphQL notation:_
 genericNode : NodeId -> SelectionSet GenericNode Graphql.Operation.RootQuery
 genericNode nodeId =
     let
-        constructor : Maybe (Nonempty Folder) -> Maybe ( Document, Residence ) -> GenericNode
+        constructor : Maybe LineageFolders -> Maybe ( Document, Residence ) -> GenericNode
         constructor maybeLineage maybeDocumentAndResidence =
             case ( maybeLineage, maybeDocumentAndResidence ) of
                 ( Just lineage, _ ) ->
@@ -182,7 +182,7 @@ genericNode nodeId =
         (SelectionSet.succeed constructor
             |> SelectionSet.with
                 (Mediatum.Object.GenericNode.asFolder
-                    Api.Fragments.folderLineage
+                    Api.Fragments.folderLineageFolders
                 )
             |> SelectionSet.with
                 (Mediatum.Object.GenericNode.asDocument

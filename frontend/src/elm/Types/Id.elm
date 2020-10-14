@@ -2,6 +2,7 @@ module Types.Id exposing
     ( NodeId
     , FolderId
     , DocumentId
+    , LineageIds
     , asNodeId
     , asFolderId
     , asDocumentId
@@ -19,6 +20,11 @@ module Types.Id exposing
 @docs NodeId
 @docs FolderId
 @docs DocumentId
+
+
+# Types for aggregates of identifiers
+
+@docs LineageIds
 
 
 # Converting from one node id type into another
@@ -41,6 +47,7 @@ module Types.Id exposing
 
 -}
 
+import List.Nonempty exposing (Nonempty)
 import Ordering exposing (Ordering)
 
 
@@ -97,6 +104,15 @@ type alias FolderId =
 -}
 type alias DocumentId =
     Id Document
+
+
+{-| A lineage of a folder denotes the path from this folder up to the root folder.
+
+Each folder on this path is given by its `FolderId`.
+
+-}
+type alias LineageIds =
+    Nonempty FolderId
 
 
 dummyValueToAvoidElmAnalyseErrors : ( Folder -> Folder, Node -> Node, Document -> Document )

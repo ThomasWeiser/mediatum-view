@@ -1,7 +1,4 @@
-module Entities.Residence exposing
-    ( Residence, toList
-    , Lineage
-    )
+module Entities.Residence exposing (Residence, toList)
 
 {-| The residence of a document, i.e. the set of folders in which the document appears.
 
@@ -13,7 +10,7 @@ module Entities.Residence exposing
 
 import List.Nonempty exposing (Nonempty)
 import Sort.Set
-import Types.Id as Id exposing (FolderId)
+import Types.Id as Id exposing (FolderId, LineageIds)
 import Utils
 
 
@@ -21,14 +18,7 @@ import Utils
 where it is located in the hierarchy.
 -}
 type alias Residence =
-    List Lineage
-
-
-{-| A lineage of a folder denotes the path from this folder up to the root folder.
-Each folder on this path is given by its id.
--}
-type alias Lineage =
-    Nonempty FolderId
+    List LineageIds
 
 
 {-| Unique list of all folder ids in the residence.

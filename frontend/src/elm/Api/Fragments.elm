@@ -1,5 +1,5 @@
 module Api.Fragments exposing
-    ( folder, folderAndSubfolders, folderLineage
+    ( folder, folderAndSubfolders, folderLineageFolders
     , folderAndSubfolderCounts, folderCount, facetByKey
     , documentsPage, documentResult, documentByMask, documentResidence
     , graphqlDocumentObjects
@@ -10,7 +10,7 @@ module Api.Fragments exposing
 
 # Fragments on Folder
 
-@docs folder, folderAndSubfolders, folderLineage
+@docs folder, folderAndSubfolders, folderLineageFolders
 
 
 # Fragments for Facet Queries
@@ -31,7 +31,7 @@ module Api.Fragments exposing
 
 import Entities.Document as Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
-import Entities.Folder as Folder exposing (Folder)
+import Entities.Folder as Folder exposing (Folder, LineageFolders)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
 import Entities.Residence exposing (Residence)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
@@ -58,7 +58,7 @@ import Pagination.Relay.Connection as Connection
 import String.Extra
 import Types exposing (FolderDisplay(..), WindowPage)
 import Types.Facet exposing (FacetValue, FacetValues)
-import Types.Id as Id exposing (FolderId)
+import Types.Id as Id exposing (FolderId, LineageIds)
 import Utils
 
 
@@ -143,8 +143,8 @@ _GraphQL notation:_
     }
 
 -}
-folderLineage : SelectionSet (Nonempty Folder) Mediatum.Object.Folder
-folderLineage =
+folderLineageFolders : SelectionSet LineageFolders Mediatum.Object.Folder
+folderLineageFolders =
     Mediatum.Object.Folder.lineage
         folder
         |> SelectionSet.nonNullOrFail
@@ -169,7 +169,7 @@ _GraphQL notation:_
     }
 
 -}
-folderLineageIds : SelectionSet (Nonempty FolderId) Mediatum.Object.Folder
+folderLineageIds : SelectionSet LineageIds Mediatum.Object.Folder
 folderLineageIds =
     Mediatum.Object.Folder.lineage
         (Mediatum.Object.Folder.id
