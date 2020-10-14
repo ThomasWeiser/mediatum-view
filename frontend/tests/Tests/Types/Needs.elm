@@ -2,9 +2,7 @@ module Tests.Types.Needs exposing (suite)
 
 import Expect
 import Fuzz exposing (Fuzzer)
-import List.Extra
 import Test exposing (..)
-import TestUtils exposing (..)
 import Types.Needs as Needs
 
 

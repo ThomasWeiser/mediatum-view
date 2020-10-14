@@ -104,7 +104,7 @@ view context model =
                                         ( NodeIsFolder _, _ ) ->
                                             Just <|
                                                 "Node "
-                                                    ++ Id.toString nodeIdOne
+                                                    ++ Id.toString nodeIdTwo
                                                     ++ " is not a document"
 
                                         ( _, _ ) ->

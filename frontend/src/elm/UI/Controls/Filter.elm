@@ -28,7 +28,6 @@ import Maybe.Extra
 import Types.Range as Range
 import Types.SearchTerm
 import Types.Selection exposing (Filter(..))
-import Utils
 
 
 {-| -}

@@ -27,10 +27,10 @@ import Html.Attributes
 import Html.Events
 import RemoteData
 import String.Extra
-import Types.Facet exposing (FacetValue, FacetValues)
+import Types.Facet exposing (FacetValues)
 import Types.Navigation as Navigation exposing (Navigation)
-import Types.Presentation as Presentation exposing (Presentation(..))
-import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), Selection, SetOfFilters)
+import Types.Presentation exposing (Presentation(..))
+import Types.Selection exposing (Filter(..), FtsSorting(..), Selection)
 import UI.Icons
 import Utils
 import Utils.Html
@@ -104,7 +104,7 @@ update context msg model =
 view : Context -> Model -> Html Msg
 view context model =
     Html.div []
-        [ viewFacets context model
+        [ viewFacets context
         , viewFacetKeysInput model
         ]
 
@@ -123,14 +123,14 @@ viewFacetKeysInput model =
         ]
 
 
-viewFacets : Context -> Model -> Html Msg
-viewFacets context model =
+viewFacets : Context -> Html Msg
+viewFacets context =
     case context.presentation of
         ListingPresentation selection _ ->
             Html.div
                 [ Html.Attributes.class "facets-bar" ]
                 (List.map
-                    (viewFacet context selection model)
+                    (viewFacet context selection)
                     context.facetKeys
                 )
 
@@ -140,8 +140,8 @@ viewFacets context model =
                 ]
 
 
-viewFacet : Context -> Selection -> Model -> String -> Html Msg
-viewFacet context selection model key =
+viewFacet : Context -> Selection -> String -> Html Msg
+viewFacet context selection key =
     Html.nav
         [ Html.Attributes.class "facet-box" ]
         [ Html.div

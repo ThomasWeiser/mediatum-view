@@ -1,5 +1,6 @@
 module Entities.Folder exposing
     ( Folder
+    , LineageFolders
     , dummy
     , init
     , isRoot
@@ -11,6 +12,7 @@ module Entities.Folder exposing
 Folders are arranged in a hierarchy, with collections at the top and directories at the bottom.
 
 @docs Folder
+@docs LineageFolders
 @docs dummy
 @docs init
 @docs isRoot
@@ -18,6 +20,7 @@ Folders are arranged in a hierarchy, with collections at the top and directories
 
 -}
 
+import List.Nonempty exposing (Nonempty)
 import Types exposing (FolderDisplay(..))
 import Types.Id as Id exposing (FolderId)
 
@@ -30,6 +33,15 @@ type alias Folder =
     , display : FolderDisplay
     , numSubfolder : Int
     }
+
+
+{-| A lineage of a folder denotes the path from this folder up to the root folder.
+
+This type aggregates all `Folder` on that path.
+
+-}
+type alias LineageFolders =
+    Nonempty Folder
 
 
 {-| -}

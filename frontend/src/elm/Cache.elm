@@ -169,9 +169,9 @@ Currently all messages transport some API response.
 
 -}
 type Msg
-    = ApiResponseToplevelFolder (Api.Response (List ( Folder, List Folder )))
-    | ApiResponseFolder (List FolderId) (Api.Response (List Folder))
-    | ApiResponseSubfolder (List FolderId) (Api.Response (List Folder))
+    = ApiResponseToplevelFolders (Api.Response (List ( Folder, List Folder )))
+    | ApiResponseFolders (List FolderId) (Api.Response (List Folder))
+    | ApiResponseSubfolders (List FolderId) (Api.Response (List Folder))
     | ApiResponseGenericNode NodeId (Api.Response GenericNode)
     | ApiResponseDocument DocumentId (Api.Response (Maybe ( Document, Residence )))
     | ApiResponseDocumentsPage ( Selection, Window ) (Api.Response DocumentsPage)
@@ -245,8 +245,8 @@ requestNeed need cache =
               }
             , Api.sendQueryRequest
                 (Api.withOperationName "NeedRootFolderIds")
-                ApiResponseToplevelFolder
-                Api.Queries.toplevelFolder
+                ApiResponseToplevelFolders
+                Api.Queries.toplevelFolders
             )
 
         NeedFolders folderIds ->
@@ -273,8 +273,8 @@ requestNeed need cache =
                   }
                 , Api.sendQueryRequest
                     (Api.withOperationName "NeedFolders")
-                    (ApiResponseFolder unknownFolderIds)
-                    (Api.Queries.folder unknownFolderIds)
+                    (ApiResponseFolders unknownFolderIds)
+                    (Api.Queries.folders unknownFolderIds)
                 )
 
         NeedSubfolders parentIds ->
@@ -301,8 +301,8 @@ requestNeed need cache =
                   }
                 , Api.sendQueryRequest
                     (Api.withOperationName "NeedSubfolders")
-                    (ApiResponseSubfolder parentIdsWithUnknownChildren)
-                    (Api.Queries.subfolder parentIdsWithUnknownChildren)
+                    (ApiResponseSubfolders parentIdsWithUnknownChildren)
+                    (Api.Queries.subfolders parentIdsWithUnknownChildren)
                 )
 
         NeedGenericNode nodeId ->
@@ -383,7 +383,7 @@ updateWithModifiedDocument document cache =
 update : Msg -> Cache -> ( Cache, Cmd Msg )
 update msg cache =
     case msg of
-        ApiResponseToplevelFolder (Ok listOfRootFoldersWithSubfolders) ->
+        ApiResponseToplevelFolders (Ok listOfRootFoldersWithSubfolders) ->
             ( let
                 allNewFolders =
                     listOfRootFoldersWithSubfolders
@@ -410,21 +410,21 @@ update msg cache =
             , Cmd.none
             )
 
-        ApiResponseToplevelFolder (Err error) ->
+        ApiResponseToplevelFolders (Err error) ->
             ( { cache
                 | rootFolderIds = Failure error
               }
             , Cmd.none
             )
 
-        ApiResponseFolder folderIds (Ok listOfFolders) ->
+        ApiResponseFolders folderIds (Ok listOfFolders) ->
             ( cache
                 |> insertAsFolders listOfFolders
                 |> insertFoldersAsNodeTypes listOfFolders
             , Cmd.none
             )
 
-        ApiResponseFolder folderIds (Err error) ->
+        ApiResponseFolders folderIds (Err error) ->
             ( { cache
                 | folders =
                     List.foldl
@@ -437,7 +437,7 @@ update msg cache =
             , Cmd.none
             )
 
-        ApiResponseSubfolder parentIds (Ok listOfSubfolders) ->
+        ApiResponseSubfolders parentIds (Ok listOfSubfolders) ->
             ( cache
                 |> insertAsFolders listOfSubfolders
                 |> insertAsSubfolderIds parentIds listOfSubfolders
@@ -445,7 +445,7 @@ update msg cache =
             , Cmd.none
             )
 
-        ApiResponseSubfolder parentIds (Err error) ->
+        ApiResponseSubfolders parentIds (Err error) ->
             ( { cache
                 | subfolderIds =
                     List.foldl

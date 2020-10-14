@@ -12,7 +12,8 @@
     "start": "ncp src/assets dist && elm-live -u -e node_modules/.bin/elm -d dist src/elm/Main.elm -x /graphql -y http://localhost:5000/graphql -- --output=dist/app.js --debug",
     "format": "elm-format --yes src/elm tests",
     "doc-preview": "elm-doc-preview --port 8001 --no-browser .",
-    "clean": "rimraf gen elm-stuff"
+    "clean": "rimraf gen elm-stuff",
+    "elm-json": "elm-json"
   },
   "repository": {
     "type": "git",
@@ -35,9 +36,10 @@
   },
   "homepage": "https://github.com/ThomasWeiser/mediatum-view#readme",
   "devDependencies": {
+    "elm-doc-preview": "^5.0.3",
     "elm-live": "^4.0.2",
-    "elm-test": "^0.19.1-revision2",
-    "elm-tooling": "^0.4.1"
+    "elm-test": "^0.19.1-revision4",
+    "elm-tooling": "^0.5.0"
   },
   "dependencies": {
     "@dillonkearns/elm-graphql": "^4.0.3",

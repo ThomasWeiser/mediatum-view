@@ -117,8 +117,8 @@ elmParserFacetFilter =
         isKeyCharacter c =
             Char.isAlphaNum c || c == '_' || c == '.' || c == '-'
 
-        isValueCharacter c =
-            True
+        isValueCharacter =
+            always True
     in
     ElmParser.succeed Tuple.pair
         |= ElmParser.variable

@@ -1,5 +1,5 @@
 module Api.Queries exposing
-    ( toplevelFolder, folder, subfolder
+    ( toplevelFolders, folders, subfolders
     , selectionDocumentsPage, selectionFolderCounts, selectionFacetByKey
     , documentDetails
     , genericNode, authorSearch
@@ -19,7 +19,7 @@ In reality it's just function calling.
 
 # Folder Queries
 
-@docs toplevelFolder, folder, subfolder
+@docs toplevelFolders, folders, subfolders
 
 
 # Document Search and Facet Queries
@@ -44,7 +44,7 @@ import Api.Fragments
 import Config
 import Entities.Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentsPage)
-import Entities.Folder exposing (Folder)
+import Entities.Folder exposing (Folder, LineageFolders)
 import Entities.FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
 import Entities.Residence exposing (Residence)
@@ -61,10 +61,10 @@ import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
 import Types exposing (Window)
-import Types.Facet exposing (FacetValue, FacetValues)
+import Types.Facet exposing (FacetValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (FacetFilters, FtsSorting(..), SelectMethod(..), Selection, SetOfFilters)
+import Types.SearchTerm
+import Types.Selection exposing (FtsSorting(..), SelectMethod(..), Selection)
 
 
 {-| Get the root folders and their sub-folders.
@@ -80,8 +80,8 @@ _GraphQL notation:_
     }
 
 -}
-toplevelFolder : SelectionSet (List ( Folder, List Folder )) Graphql.Operation.RootQuery
-toplevelFolder =
+toplevelFolders : SelectionSet (List ( Folder, List Folder )) Graphql.Operation.RootQuery
+toplevelFolders =
     Mediatum.Query.allFolders
         (\optionals ->
             { optionals
@@ -107,8 +107,8 @@ _GraphQL notation:_
     }
 
 -}
-folder : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
-folder folderIds =
+folders : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
+folders folderIds =
     Mediatum.Query.allFolders
         (\optionals ->
             { optionals
@@ -132,8 +132,8 @@ _GraphQL notation:_
     }
 
 -}
-subfolder : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
-subfolder folderIds =
+subfolders : List FolderId -> SelectionSet (List Folder) Graphql.Operation.RootQuery
+subfolders folderIds =
     Mediatum.Query.allFolders
         (\optionals ->
             { optionals
@@ -164,7 +164,7 @@ _GraphQL notation:_
 genericNode : NodeId -> SelectionSet GenericNode Graphql.Operation.RootQuery
 genericNode nodeId =
     let
-        constructor : Maybe (Nonempty Folder) -> Maybe ( Document, Residence ) -> GenericNode
+        constructor : Maybe LineageFolders -> Maybe ( Document, Residence ) -> GenericNode
         constructor maybeLineage maybeDocumentAndResidence =
             case ( maybeLineage, maybeDocumentAndResidence ) of
                 ( Just lineage, _ ) ->
@@ -182,7 +182,7 @@ genericNode nodeId =
         (SelectionSet.succeed constructor
             |> SelectionSet.with
                 (Mediatum.Object.GenericNode.asFolder
-                    Api.Fragments.folderLineage
+                    Api.Fragments.folderLineageFolders
                 )
             |> SelectionSet.with
                 (Mediatum.Object.GenericNode.asDocument

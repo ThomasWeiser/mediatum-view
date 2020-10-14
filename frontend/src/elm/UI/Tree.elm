@@ -32,7 +32,7 @@ import Entities.FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import RemoteData exposing (RemoteData)
+import RemoteData
 import Sort.Dict
 import Types exposing (FolderDisplay(..))
 import Types.Id exposing (FolderId)

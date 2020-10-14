@@ -33,7 +33,7 @@ import Html.Events
 import Regex
 import RemoteData
 import Types exposing (Window)
-import Types.Id as Id exposing (DocumentId)
+import Types.Id exposing (DocumentId)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Route as Route
 import Types.Route.Url
