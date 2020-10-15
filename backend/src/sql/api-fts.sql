@@ -299,7 +299,10 @@ comment on function api.fts_documents_page (folder_id int4, text text, attribute
 ----------------------------------------------------
 
 
-create or replace function api.author_search (folder_id int4, text text)
+create or replace function api.author_search
+    ( folder_id int4
+    , text text
+    )
     returns setof api.document as $$
     select
         node.id,

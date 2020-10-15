@@ -30,7 +30,9 @@ create or replace function debug.all_nodes (
 $$ language sql stable;
 
 
-create or replace function debug.node_by_id (id int4)
+create or replace function debug.node_by_id
+    ( id int4
+    )
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -38,13 +40,19 @@ create or replace function debug.node_by_id (id int4)
 $$ language sql strict stable;
 
 
-create or replace function debug.mediatum_node_attributes (node debug.mediatum_node, keys text[])
+create or replace function debug.mediatum_node_attributes
+    ( node debug.mediatum_node
+    , keys text[]
+    )
     returns jsonb as $$
     select aux.get_node_attributes (node.id, keys)
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_system_attributes (node debug.mediatum_node, keys text[])
+create or replace function debug.mediatum_node_system_attributes
+    ( node debug.mediatum_node
+    , keys text[]
+    )
     returns jsonb as $$
     select aux.get_node_system_attributes (node.id, keys)
 $$ language sql stable;
@@ -119,7 +127,9 @@ $$ language sql stable;
    Maybe we should remove these functions altogether!
    Don't think they are that useful anyway!.
 */
-create or replace function api.metadatatype_node (metadatatype api.metadatatype)
+create or replace function api.metadatatype_node
+    ( metadatatype api.metadatatype
+    )
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -127,7 +137,9 @@ create or replace function api.metadatatype_node (metadatatype api.metadatatype)
 $$ language sql stable;
 
 
-create or replace function api.metafield_node (metafield api.metafield)
+create or replace function api.metafield_node
+    ( metafield api.metafield
+    )
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -135,7 +147,9 @@ create or replace function api.metafield_node (metafield api.metafield)
 $$ language sql stable;
 
 
-create or replace function api.mask_node (mask api.mask)
+create or replace function api.mask_node
+    ( mask api.mask
+    )
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -143,7 +157,9 @@ create or replace function api.mask_node (mask api.mask)
 $$ language sql stable;
 
 
-create or replace function api.maskitem_node (maskitem api.maskitem)
+create or replace function api.maskitem_node
+    ( maskitem api.maskitem
+    )
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -151,7 +167,9 @@ create or replace function api.maskitem_node (maskitem api.maskitem)
 $$ language sql stable;
 
 
-create or replace function api.mapping_node (mapping api.mapping)
+create or replace function api.mapping_node
+    ( mapping api.mapping
+    )
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -159,7 +177,9 @@ create or replace function api.mapping_node (mapping api.mapping)
 $$ language sql stable;
 
 
-create or replace function api.mappingfield_node (mappingfield api.mappingfield)
+create or replace function api.mappingfield_node
+    ( mappingfield api.mappingfield
+    )
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -167,7 +187,9 @@ create or replace function api.mappingfield_node (mappingfield api.mappingfield)
 $$ language sql stable;
 
 
-create or replace function api.document_node (document api.document)
+create or replace function api.document_node
+    ( document api.document
+    )
     returns debug.mediatum_node as $$
     select id, type, schema, name, orderpos, fulltext, subnode
     from mediatum.node
@@ -175,49 +197,63 @@ create or replace function api.document_node (document api.document)
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_as_metadatatype (node debug.mediatum_node)
+create or replace function debug.mediatum_node_as_metadatatype
+    ( node debug.mediatum_node
+    )
     returns api.metadatatype as $$
     select * from entity.metadatatype
     where entity.metadatatype.id = node.id
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_as_metafield (node debug.mediatum_node)
+create or replace function debug.mediatum_node_as_metafield
+    ( node debug.mediatum_node
+    )
     returns api.metafield as $$
     select * from entity.metafield
     where entity.metafield.id = node.id
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_as_mask (node debug.mediatum_node)
+create or replace function debug.mediatum_node_as_mask
+    ( node debug.mediatum_node
+    )
     returns api.mask as $$
     select * from entity.mask
     where entity.mask.id = node.id
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_as_maskitem (node debug.mediatum_node)
+create or replace function debug.mediatum_node_as_maskitem
+    ( node debug.mediatum_node
+    )
     returns api.maskitem as $$
     select * from entity.maskitem
     where entity.maskitem.id = node.id
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_as_mapping (node debug.mediatum_node)
+create or replace function debug.mediatum_node_as_mapping
+    ( node debug.mediatum_node
+    )
     returns api.mapping as $$
     select * from entity.mapping
     where entity.mapping.id = node.id
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_as_mappingfield (node debug.mediatum_node)
+create or replace function debug.mediatum_node_as_mappingfield
+    ( node debug.mediatum_node
+    )
     returns api.mappingfield as $$
     select * from entity.mappingfield
     where entity.mappingfield.id = node.id
 $$ language sql stable;
 
 
-create or replace function debug.mediatum_node_as_document (node debug.mediatum_node)
+create or replace function debug.mediatum_node_as_document
+    ( node debug.mediatum_node
+    )
     returns api.document as $$
     select * from entity.document
     where entity.document.id = node.id

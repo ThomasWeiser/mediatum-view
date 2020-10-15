@@ -12,7 +12,9 @@ create table preprocess.ufts (
 	tsvec tsvector null
 );
 
-create or replace function preprocess.year_from_attrs (attrs jsonb)
+create or replace function preprocess.year_from_attrs
+    ( attrs jsonb
+    )
     returns int4 as $$
     begin
         return
@@ -25,7 +27,10 @@ create or replace function preprocess.year_from_attrs (attrs jsonb)
     end;
 $$ language plpgsql immutable;
 
-create or replace function preprocess.unified_tsvec_from_attrs_and_fulltext (attrs jsonb, fulltext varchar)
+create or replace function preprocess.unified_tsvec_from_attrs_and_fulltext
+    ( attrs jsonb
+    , fulltext varchar
+    )
     returns tsvector as $$
     declare
         exc_text text;
