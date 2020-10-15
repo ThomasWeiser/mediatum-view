@@ -126,7 +126,9 @@ comment on function api.all_documents_page (folder_id int4, type text, name text
     'Reads and enables pagination through all documents in a folder, optionally filtered by type and name and a list of attribute tests';
 
 
-create or replace function api.document_by_id (id int4)
+create or replace function api.document_by_id
+    ( id int4
+    )
     returns api.document as $$
     select *
     from entity.document
@@ -137,7 +139,9 @@ comment on function api.document_by_id (id int4) is
     'Gets a document by its mediaTUM node id.';
 
 
-create or replace function api.document_folders (document api.document)
+create or replace function api.document_folders
+    ( document api.document
+    )
     returns api.folder[] as $$
     select array(
         select row(folder.*)::api.folder
@@ -152,7 +156,10 @@ comment on function api.document_folders (document api.document) is
     'Gets the list of all folders in which the document appears.';
 
 
-create or replace function api.document_attributes (document api.document, keys text[])
+create or replace function api.document_attributes
+    ( document api.document
+    , keys text[]
+    )
     returns jsonb as $$
     select aux.get_document_attributes (document, keys)
 $$ language sql stable;
@@ -161,7 +168,10 @@ comment on function api.document_attributes (document api.document, keys text[])
     'Gets the node attributes of this document as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.document_system_attributes (document api.document, keys text[])
+create or replace function api.document_system_attributes
+    ( document api.document
+    , keys text[]
+    )
     returns jsonb as $$
     select aux.get_node_system_attributes (document.id, keys)
 $$ language sql stable;
@@ -170,7 +180,9 @@ comment on function api.document_system_attributes (document api.document, keys 
     'Gets the node system attributes of this document as a JSON value, optionally filtered by a list of keys.';
 
 
-create or replace function api.document_metadatatype (document api.document)
+create or replace function api.document_metadatatype
+    ( document api.document
+    )
     returns api.metadatatype as $$
     select api.metadatatype_by_name (document.schema)
 $$ language sql stable;
@@ -179,7 +191,11 @@ comment on function api.document_metadatatype (document api.document) is
     'Gets the meta data type of this document.';
 
 
-create or replace function api.metadatatype_documents (mdt api.metadatatype, type text, name text)
+create or replace function api.metadatatype_documents
+    ( mdt api.metadatatype
+    , type text
+    , name text
+    )
     returns setof api.document as $$
     select document.*
     from entity.node as document
@@ -192,7 +208,10 @@ comment on function api.metadatatype_documents (mdt api.metadatatype, type text,
     'Reads and enables pagination through all documents having this meta data type, optionally filtered by type and name.';
 
 
-create or replace function api.document_values_by_mask (document api.document, mask_name text)
+create or replace function api.document_values_by_mask
+    ( document api.document
+    , mask_name text
+    )
     returns jsonb as $$
     select v.values
     from entity.document_mask_value_list as v

@@ -8,10 +8,10 @@ create schema if not exists api;
 create schema if not exists debug;
 
 
-create type api.generic_node as (
-    id int4
+create type api.generic_node as
+    ( id int4
     -- Add more (hidden) columns?
-);
+    );
 
 comment on type api.generic_node is
     'A generic node, which may be a folder or a document';
@@ -19,14 +19,14 @@ comment on column api.generic_node.id is
     'The mediaTUM node id';
 
 
-create type api.folder as (
-    id int4,
-	parent_id int4,
-    "name" text,
-	orderpos int4,
-	is_collection boolean,
-	num_subfolder integer
-);
+create type api.folder as
+    ( id int4
+	, parent_id int4
+    , "name" text
+	, orderpos int4
+	, is_collection boolean
+	, num_subfolder integer
+    );
 
 comment on type api.folder is
     'A collection or directory, located within a hierarchy';
@@ -44,15 +44,15 @@ comment on column api.folder.num_subfolder is
     'Number of subfolders of this folder';
 
 
-create type api.metadatatype as (
-    id int4,
-    "name" text,
-    longname text,
-    datatypes text,
-    description text,
-    bibtexmapping text,
-    citeprocmapping text
-);
+create type api.metadatatype as
+    ( id int4
+    , "name" text
+    , longname text
+    , datatypes text
+    , description text
+    , bibtexmapping text
+    , citeprocmapping text
+    );
 
 comment on type api.metadatatype is
     'A meta data type';
@@ -72,15 +72,15 @@ comment on column api.metadatatype.citeprocmapping is
     'The citeprocmapping given in the node attributes of the meta data type';
 
 
-create type api.metafield as (
-	id int4,
-	metadatatype_id int4,
-	name text,
-	orderpos int4,
-    description text,
-	label text,
-	"type" text
-);
+create type api.metafield as
+    ( id int4
+	, metadatatype_id int4
+	, name text
+	, orderpos int4
+    , description text
+	, label text
+	, "type" text
+    );
 
 comment on type api.metafield is
     'A field of a meta data type';
@@ -100,18 +100,18 @@ comment on column api.metafield."type" is
     'The type given in the node attributes of the field, e.g. "text", "list" etc';
 
 
-create type api.mask as (
-	id int4,
-	metadatatype_id int4,
-	name text,
-	orderpos int4,
-	masktype text,
-    language text,
-    description text,
-    is_default boolean,
+create type api.mask as
+    ( id int4
+	, metadatatype_id int4
+	, name text
+	, orderpos int4
+	, masktype text
+    , language text
+    , description text
+    , is_default boolean
     -- TODO: Poss. use extra entity mask(item)type
-	is_vgroup boolean
-);
+	, is_vgroup boolean
+    );
 
 comment on type api.mask is
     'A mask used for a specific meta data type';
@@ -135,16 +135,16 @@ comment on column api.mask.is_vgroup is
     'The mask may be a vertical group; given in the node attributes of the mask';
     
 
-create type api.maskitem as (
-	id int4,
-	parent_id int4,
-	name text,
-	orderpos int4,
-	"type" text,
-	fieldtype text,
-    width int4,
-    is_required boolean
-);
+create type api.maskitem as
+    ( id int4
+	, parent_id int4
+	, name text
+	, orderpos int4
+	, "type" text
+	, fieldtype text
+    , width int4
+    , is_required boolean
+    );
 
 comment on type api.maskitem is
     'An item of a specific mask or a sub-item of another mask item';
@@ -164,19 +164,19 @@ comment on column api.maskitem.is_required is
     'The item may be required; as given in the node attributes of the item';
 
     
-create type api.maskitem_reachable as (
-	id int4,
-	mask_id int4,
-	metadatatype_id int4,
-	superitem_id int4,
-	depth integer,
-	name text,
-	orderpos int4,
-	"type" text,
-	fieldtype text,
-    width int4,
-    is_required boolean
-);
+create type api.maskitem_reachable as
+    ( id int4
+	, mask_id int4
+	, metadatatype_id int4
+	, superitem_id int4
+	, depth integer
+	, name text
+	, orderpos int4
+	, "type" text
+	, fieldtype text
+    , width int4
+    , is_required boolean
+    );
 
 comment on type api.maskitem_reachable is
     'An item of a specific mask or a sub-item of another mask item; this uses an alternative implementation to "maskitem", using recursion';
@@ -202,13 +202,13 @@ comment on column api.maskitem_reachable.is_required is
     'The item may be required; as given in the node attributes of the item';
 
     
-create type api.mapping as (
-	id int4,
-	name text,
-	orderpos int4,
-	"type" text,
-    description text
-);
+create type api.mapping as
+    ( id int4
+	, name text
+	, orderpos int4
+	, "type" text
+    , description text
+    );
 
 comment on type api.mapping is
     'A mapping used e.g. for exporting the data selected by a mask';
@@ -224,14 +224,14 @@ comment on column api.mapping.description is
     'A description as given in the node attributes of the mapping';
     
 
-create type api.mappingfield as (
-	id int4,
-	mapping_id int4,
-	name text,
-	orderpos int4,
-    description text,
-    is_mandatory boolean
-);
+create type api.mappingfield as
+    ( id int4
+	, mapping_id int4
+	, name text
+	, orderpos int4
+    , description text
+    , is_mandatory boolean
+    );
 
 comment on type api.mappingfield is
     'A field within a mapping used e.g. for exporting the data selected by a mask';
@@ -247,14 +247,14 @@ comment on column api.mappingfield.is_mandatory is
     'The field may be mandatory; as given in the node attributes of the mapping field';
 
     
-create type api.document as (
-	id int4,
-	"type" text,
-	"schema" text,
-	name text,
-	orderpos int4,
-    attrs jsonb
-);
+create type api.document as
+    ( id int4
+    , "type" text
+    , "schema" text
+    , name text
+    , orderpos int4
+    , attrs jsonb
+    );
 
 comment on type api.document is
     'A document as the basic subject of publication of the media server';
@@ -272,21 +272,22 @@ comment on column api.document.attrs is
     '@omit';
 
 
-create type api.fts_sorting as enum (
-    'by_rank', 'by_date'
-);
+create type api.fts_sorting as enum
+    ( 'by_rank'
+    , 'by_date'
+    );
 
 
 create type api.attribute_test_operator as enum (
     'equality', 'equalitywithblanknull', 'ilike', 'simplefts', 'daterange'
 );
 
-create type api.attribute_test as (
-    key text,
-    operator api.attribute_test_operator,
-    value text,
-    extra text
-);
+create type api.attribute_test as
+    ( key text
+    , operator api.attribute_test_operator
+    , value text
+    , extra text
+    );
 
 comment on type api.attribute_test is
     'Specification for testing  a single attribute value of a document';
@@ -301,13 +302,13 @@ comment on column api.attribute_test.extra is
     'Second comparison value, used if operator may take two values, like "ilike" or "daterange"';
 
 
-create type api.document_result as (
-    number integer,
-    distance float4,
-    recency int4,
-    year int4,
-    document api.document
-);
+create type api.document_result as
+    ( number integer
+    , distance float4
+    , recency int4
+    , year int4
+    , document api.document
+    );
 
 comment on type api.document_result is
     'A single result from a full text search, containing a document';
@@ -324,11 +325,11 @@ comment on column api.document_result.document is
     'The resulting document';
 
 
-create type api.document_result_page as (
-    "offset" integer,
-    has_next_page boolean,
-    content api.document_result[]
-);
+create type api.document_result_page as
+    ( "offset" integer
+    , has_next_page boolean
+    , content api.document_result[]
+    );
 
 comment on type api.document_result_page is
     'A result page from a full text search of documents';
@@ -338,20 +339,20 @@ comment on column api.document_result_page.content is
     'A list of document results from a full text search';
 
 
-create type api.folder_count as (
-    folder_id int4,
-    count integer
-);
+create type api.folder_count as
+    ( folder_id int4
+    , count integer
+    );
 
 comment on type api.folder_count is
     'Specification of the number of documents of a given set within a folder';
 
 
-create type api.docset as (
-    folder_id int4,
-    folder_count api.folder_count,
-    id_list int4[]
-);
+create type api.docset as
+    ( folder_id int4
+    , folder_count api.folder_count
+    , id_list int4[]
+    );
 
 comment on type api.docset is
     'A set of documents as the result of e.g. a FTS query. '
@@ -367,10 +368,10 @@ comment on column api.docset.id_list is
     'it is more of a interim result to be consumed by a counting function.';
 
 
-create type api.facet_value as (
-    value text,
-    count integer
-);
+create type api.facet_value as
+    ( value text
+    , count integer
+    );
 
 comment on type api.facet_value is
     'A facet instance, i.e. the occurences of an attribute''s value.';
@@ -380,12 +381,12 @@ comment on column api.facet_value.count is
     'The number of occurences of the facet.';
 
 
-create type debug.mediatum_node as (
-	id int4,
-	"type" varchar,
-	"schema" varchar,
-	"name" varchar,
-	orderpos int4,
-	fulltext varchar,
-	subnode boolean
-);
+create type debug.mediatum_node as
+    ( id int4
+	, "type" varchar
+	, "schema" varchar
+	, "name" varchar
+	, orderpos int4
+	, fulltext varchar
+	, subnode boolean
+    );

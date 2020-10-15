@@ -3,7 +3,11 @@
 -- demonstrating mutations
 
 
-create or replace function api.update_document_attribute (id int4, key text, value text)
+create or replace function api.update_document_attribute
+    ( id int4
+    , key text
+    , value text
+    )
     returns api.document as $$
 
     -- Currently we allow updating already existing attributes only.

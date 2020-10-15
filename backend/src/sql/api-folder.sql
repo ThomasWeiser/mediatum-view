@@ -3,7 +3,14 @@
 -- regarding folders (i.e. collections and directories).
 
 
-create or replace function api.all_folders (name text, ids int4[], parent_ids int4[], is_root boolean, is_collection boolean, find text)
+create or replace function api.all_folders
+    ( name text
+    , ids int4[]
+    , parent_ids int4[]
+    , is_root boolean
+    , is_collection boolean
+    , find text
+    )
     returns setof api.folder as $$
     select * from entity.folder
     where (all_folders.name is null or folder.name = all_folders.name)
@@ -20,7 +27,9 @@ comment on function api.all_folders (name text, ids int4[], parent_ids int4[], i
     ' optionally filtered by name, list of ids, list of parentIds, isRoot and isCollection, and searchable by name.';
 
 
-create or replace function api.folder_by_id (id int4)
+create or replace function api.folder_by_id
+    ( id int4
+    )
     returns api.folder as $$
     select * from entity.folder
     where entity.folder.id = folder_by_id.id
@@ -30,7 +39,12 @@ comment on function api.folder_by_id (id int4) is
     'Gets a folder by its mediaTUM node id.';
 
 
-create or replace function api.folder_subfolders (parent api.folder, name text, is_collection boolean, find text)
+create or replace function api.folder_subfolders
+    ( parent api.folder
+    , name text
+    , is_collection boolean
+    , find text
+    )
     returns setof api.folder as $$
     select * from entity.folder
     where folder.parent_id = parent.id
@@ -44,7 +58,9 @@ comment on function api.folder_subfolders (parent api.folder, name text, is_coll
     'Reads and enables pagination through all sub-folders of this folder, optionally filtered by name and isCollection, and searchable by name.';
 
 
-create or replace function api.folder_superfolder (child api.folder)
+create or replace function api.folder_superfolder
+    ( child api.folder
+    )
     returns api.folder as $$
     select * from entity.folder
     where folder.id = child.parent_id
@@ -54,7 +70,9 @@ comment on function api.folder_superfolder (child api.folder) is
     'Gets the super-folder of this folder. Returns null if this folder is at the root.';
 
 
-create or replace function api.folder_lineage (current_folder api.folder)
+create or replace function api.folder_lineage
+    ( current_folder api.folder
+    )
     returns api.folder[] as $$
     declare lineage api.folder[] := array[current_folder];
     begin
