@@ -38,6 +38,7 @@ import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
 import List.Nonempty exposing (Nonempty)
+import Maybe.Extra
 import Mediatum.Object
 import Mediatum.Object.Docset
 import Mediatum.Object.Document
@@ -59,6 +60,7 @@ import String.Extra
 import Types exposing (FolderDisplay(..), WindowPage)
 import Types.Facet exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (FolderId, LineageIds)
+import Types.SearchTerm exposing (SearchTerm)
 import Utils
 
 
@@ -338,8 +340,9 @@ _GraphQL notation:_
 -}
 documentsPage :
     String
+    -> Maybe SearchTerm
     -> SelectionSet DocumentsPage Mediatum.Object.DocumentResultPage
-documentsPage maskName =
+documentsPage maskName maybeSearchTerm =
     SelectionSet.succeed WindowPage
         |> SelectionSet.with
             (Mediatum.Object.DocumentResultPage.offset
@@ -351,7 +354,7 @@ documentsPage maskName =
             )
         |> SelectionSet.with
             (Mediatum.Object.DocumentResultPage.content
-                (documentResult maskName)
+                (documentResult maskName maybeSearchTerm)
                 |> SelectionSet.nonNullOrFail
                 |> SelectionSet.nonNullElementsOrFail
             )
@@ -371,8 +374,8 @@ _GraphQL notation:_
     }
 
 -}
-documentResult : String -> SelectionSet DocumentResult Mediatum.Object.DocumentResult
-documentResult maskName =
+documentResult : String -> Maybe SearchTerm -> SelectionSet DocumentResult Mediatum.Object.DocumentResult
+documentResult maskName maybeSearchTerm =
     SelectionSet.succeed Entities.DocumentResults.DocumentResult
         |> SelectionSet.with
             (Mediatum.Object.DocumentResult.number
@@ -384,13 +387,15 @@ documentResult maskName =
             )
         |> SelectionSet.with
             (Mediatum.Object.DocumentResult.document
-                (documentByMask maskName)
+                (documentByMask maskName maybeSearchTerm)
                 |> SelectionSet.nonNullOrFail
             )
 
 
 {-| Selection set on a Document to get the basic properties of the document
 together with the document's attributes selected by a named mediaTUM mask.
+
+Optionally a SearchTerm maybe highlighted within the attributes.
 
 _GraphQL notation:_
 
@@ -400,12 +405,12 @@ _GraphQL notation:_
             longname
         }
         name
-        valuesByMask(maskName: maskName)
+        valuesByMask(maskName: maskName, highlightText: optionalHighlightText)
     }
 
 -}
-documentByMask : String -> SelectionSet Document Mediatum.Object.Document
-documentByMask maskName =
+documentByMask : String -> Maybe SearchTerm -> SelectionSet Document Mediatum.Object.Document
+documentByMask maskName maybeSearchTerm =
     SelectionSet.succeed Document.init
         |> SelectionSet.with
             (Mediatum.Object.Document.id
@@ -428,6 +433,16 @@ documentByMask maskName =
             )
         |> SelectionSet.with
             (Mediatum.Object.Document.valuesByMask
+                (\optionals ->
+                    { optionals
+                        | highlightText =
+                            maybeSearchTerm
+                                |> Maybe.Extra.unwrap
+                                    Absent
+                                    (Types.SearchTerm.toString >> Present)
+                    }
+                )
+                -- TODO: Add argument for highlight
                 { maskName = maskName }
                 |> SelectionSet.map mapJsonToAttributes
             )

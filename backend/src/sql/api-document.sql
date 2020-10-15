@@ -211,13 +211,24 @@ comment on function api.metadatatype_documents (mdt api.metadatatype, type text,
 create or replace function api.document_values_by_mask
     ( document api.document
     , mask_name text
+    , highlight_text text default ''
     )
     returns jsonb as $$
-    select v.values
+    select 
+        case when highlight_text = '' then
+            v.values
+        else
+            ts_headline
+                ( v.values
+                , aux.custom_to_tsquery (highlight_text)
+                , aux.ts_headline_options (true)
+                )
+        end
     from entity.document_mask_value_list as v
     where v.document_id = document_values_by_mask.document.id
       and v.mask_name = document_values_by_mask.mask_name
 $$ language sql strict stable parallel safe;
 
-comment on function api.document_values_by_mask (document api.document, mask_name text) is
-    'Gets the meta field values of this document as a JSON value, selected by a named mask.';
+comment on function api.document_values_by_mask (document api.document, mask_name text, highlightText text) is
+    'Gets the meta field values of this document as a JSON value, selected by a named mask. '
+    'Optionally mark the occurences of a search term given as highlightText.';
