@@ -260,16 +260,7 @@ viewAttribute attribute =
                 attribute.field
     in
     case attribute.value of
-        Just valueLong ->
-            let
-                value =
-                    {- if String.length valueLong > maxAttributeStringLength then
-                           String.left (maxAttributeStringLength - 3) valueLong ++ "..."
-
-                       else
-                    -}
-                    valueLong
-            in
+        Just value ->
             Html.span
                 [ Html.Attributes.classList
                     [ ( "attribute", True )
@@ -279,7 +270,6 @@ viewAttribute attribute =
                             && not (isField "congress|journal")
                       )
                     ]
-                , Html.Attributes.title (attribute.name ++ ": " ++ valueLong)
                 ]
                 [ (if isField "year" then
                     String.left 4 value ++ ". "
