@@ -145,6 +145,9 @@ button.filter-button, .filter-inputs {
 .attribute.title {
   font-style: italic;
 }
+.attribute .highlight {
+  color: red;
+}
 .folder-list {
   list-style-type: none;
   padding-left: 0;

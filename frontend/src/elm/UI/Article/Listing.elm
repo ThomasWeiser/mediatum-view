@@ -40,6 +40,7 @@ import Types.Route.Url
 import Types.Selection exposing (Selection)
 import UI.Icons
 import Utils.Html
+import Utils.Markup
 
 
 {-| -}
@@ -262,11 +263,12 @@ viewAttribute attribute =
         Just valueLong ->
             let
                 value =
-                    if String.length valueLong > maxAttributeStringLength then
-                        String.left (maxAttributeStringLength - 3) valueLong ++ "..."
+                    {- if String.length valueLong > maxAttributeStringLength then
+                           String.left (maxAttributeStringLength - 3) valueLong ++ "..."
 
-                    else
-                        valueLong
+                       else
+                    -}
+                    valueLong
             in
             Html.span
                 [ Html.Attributes.classList
@@ -279,18 +281,20 @@ viewAttribute attribute =
                     ]
                 , Html.Attributes.title (attribute.name ++ ": " ++ valueLong)
                 ]
-                [ Html.text <|
-                    if isField "year" then
-                        String.left 4 value ++ ". "
+                [ (if isField "year" then
+                    String.left 4 value ++ ". "
 
-                    else if isField "author" then
-                        value ++ ": "
+                   else if isField "author" then
+                    value ++ ": "
 
-                    else if isField "title|type" then
-                        value ++ ". "
+                   else if isField "title|type" then
+                    value ++ ". "
 
-                    else
-                        attribute.name ++ ": " ++ value ++ ". "
+                   else
+                    attribute.name ++ ": " ++ value ++ ". "
+                  )
+                    |> Utils.Markup.parse
+                    |> Utils.Markup.view
                 ]
 
         Nothing ->

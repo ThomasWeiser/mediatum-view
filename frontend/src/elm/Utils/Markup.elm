@@ -1,9 +1,18 @@
-module Utils.Markup exposing (Segment(..), Segments, parse, parseTestable)
+module Utils.Markup exposing (Segment(..), Segments, parse, parseTestable, view)
 
+import Html exposing (Html)
+import Html.Attributes
 import Maybe.Extra
 import Parser exposing (..)
 
 
+{-|
+
+@docs Segments, Segment
+@docs parse, parseTestable
+@docs view
+
+-}
 startTag : String
 startTag =
     "<mediatum:fts>"
@@ -41,6 +50,24 @@ parse : String -> Segments
 parse text =
     parseTestable text
         |> Result.withDefault [ Text text ]
+
+
+{-| -}
+view : Segments -> Html msg
+view segments =
+    segments
+        |> List.map
+            (\segment ->
+                case segment of
+                    Text t ->
+                        Html.text t
+
+                    Fts t ->
+                        Html.span
+                            [ Html.Attributes.class "highlight" ]
+                            [ Html.text t ]
+            )
+        |> Html.span []
 
 
 {-| The Parser is written in a way that it should never result in a dead end.
