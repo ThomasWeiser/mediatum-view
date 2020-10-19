@@ -31,6 +31,7 @@ import Html.Events
 import List.Nonempty
 import Maybe.Extra
 import RemoteData
+import Types exposing (DocumentIdWithSearch)
 import Types.Id as Id exposing (DocumentId)
 import Types.Route exposing (Route)
 import UI.Icons
@@ -42,7 +43,7 @@ import Utils.Html
 type alias Context =
     { cache : Cache
     , route : Route
-    , documentId : DocumentId
+    , documentIdWithSearch : DocumentIdWithSearch
     }
 
 
@@ -141,7 +142,7 @@ initEditAttributeValue context model =
     case
         Cache.get
             context.cache.documents
-            context.documentId
+            context.documentIdWithSearch
     of
         RemoteData.Success (Just document) ->
             let
@@ -175,8 +176,8 @@ view context model =
     Html.div [ Html.Attributes.class "details" ]
         [ case
             RemoteData.map2 Tuple.pair
-                (Cache.get context.cache.documents context.documentId)
-                (Cache.get context.cache.residence context.documentId)
+                (Cache.get context.cache.documents context.documentIdWithSearch)
+                (Cache.get context.cache.residence context.documentIdWithSearch.documentId)
           of
             RemoteData.NotAsked ->
                 -- Should never happen
@@ -194,7 +195,7 @@ view context model =
             RemoteData.Success ( Nothing, _ ) ->
                 Html.span []
                     [ Html.text "Document with id "
-                    , Html.text (context.documentId |> Id.toString)
+                    , Html.text (context.documentIdWithSearch.documentId |> Id.toString)
                     , Html.text " not available"
                     ]
         ]
