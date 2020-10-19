@@ -1,5 +1,6 @@
 module Tests.Types exposing
     ( fuzzerDocumentId
+    , fuzzerDocumentIdAndMaybeSearchTerm
     , fuzzerFacetFilters
     , fuzzerFilter
     , fuzzerFilters
@@ -10,6 +11,7 @@ module Tests.Types exposing
     , fuzzerOffset
     , fuzzerSearchMethod
     , fuzzerSelection
+    , fuzzerSelectionFacet
     , fuzzerSelectionWindow
     , fuzzerWindow
     , fuzzerYear
@@ -24,6 +26,7 @@ import Tests.Types.Range
 import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types exposing (Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
+import Types.SearchTerm as SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (FacetFilters, Filter(..), FtsSorting(..), SelectMethod(..), Selection, SetOfFilters)
 
 
@@ -52,6 +55,13 @@ fuzzerDocumentId =
     Fuzz.map Id.fromInt fuzzerId
 
 
+fuzzerDocumentIdAndMaybeSearchTerm : Fuzzer ( DocumentId, Maybe SearchTerm )
+fuzzerDocumentIdAndMaybeSearchTerm =
+    Fuzz.map2 Tuple.pair
+        (Fuzz.map Id.fromInt fuzzerId)
+        (Fuzz.maybe fuzzerSearchTerm)
+
+
 fuzzerSelection : Fuzzer Selection
 fuzzerSelection =
     Fuzz.map4 Selection
@@ -66,6 +76,25 @@ fuzzerSelectionWindow =
     Fuzz.map2 Tuple.pair
         fuzzerSelection
         fuzzerWindow
+
+
+fuzzerSelectionFacet : Fuzzer ( Selection, String )
+fuzzerSelectionFacet =
+    Fuzz.map2 Tuple.pair
+        fuzzerSelection
+        fuzzerFacet
+
+
+fuzzerFacet : Fuzzer String
+fuzzerFacet =
+    Fuzz.oneOf
+        [ [ "year"
+          , "author"
+          ]
+            |> List.map Fuzz.constant
+            |> Fuzz.oneOf
+        , Fuzz.string
+        ]
 
 
 fuzzerSearchMethod : Fuzzer SelectMethod

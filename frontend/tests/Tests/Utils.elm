@@ -152,6 +152,12 @@ suite =
                 (Fuzz.list Fuzz.int)
                 (Utils.lexicalOrder compare)
             ]
+        , describe "maybeOrder"
+            [ testOrderingProperties
+                "with maybe fuzzy element"
+                (Fuzz.maybe (Fuzz.intRange 0 2))
+                (Utils.maybeOrder compare)
+            ]
         , describe "mapWhile" <|
             let
                 exampleMapping x =

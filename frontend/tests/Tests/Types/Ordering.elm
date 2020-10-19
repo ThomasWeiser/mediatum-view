@@ -18,7 +18,9 @@ suite =
         , testOrderingProperties "FolderId" fuzzerFolderId Id.ordering
         , testOrderingProperties "DocumentId" fuzzerDocumentId Id.ordering
         , testOrderingProperties "Selection" fuzzerSelection Selection.orderingSelection
+        , testOrderingProperties "DocumentIdAndMaybeSearchTerm" fuzzerDocumentIdAndMaybeSearchTerm Cache.orderingDocumentIdAndMaybeSearchTerm
         , testOrderingProperties "SelectionWindow" fuzzerSelectionWindow Cache.orderingSelectionWindow
+        , testOrderingProperties "SelectionFacet" fuzzerSelectionFacet Cache.orderingSelectionFacet
         , testOrderingProperties "SearchMethod" fuzzerSearchMethod Selection.orderingSelectMethod
         , testOrderingProperties "FtsSorting" fuzzerFtsSorting Selection.orderingFtsSorting
         , testOrderingProperties "Filters" fuzzerFilters Selection.orderingFilters

@@ -14,6 +14,7 @@ module Utils exposing
     , sorter
     , noBreakSpace
     , onChange
+    , maybeOrder
     )
 
 {-|
@@ -193,6 +194,30 @@ lexicalOrder compareElements listL listR =
 
                 EQ ->
                     lexicalOrder compareElements tailL tailR
+
+
+{-| Lift an ordering on a type to a Maybe of that type.
+-}
+
+
+
+-- TODO: Suggest for elm-community/maybe-extra, and posssibly also for matthewsj/elm-ordering
+
+
+maybeOrder : (a -> a -> Order) -> Maybe a -> Maybe a -> Order
+maybeOrder compareBaseType maybeL maybeR =
+    case ( maybeL, maybeR ) of
+        ( Nothing, Nothing ) ->
+            EQ
+
+        ( Nothing, Just _ ) ->
+            LT
+
+        ( Just _, Nothing ) ->
+            GT
+
+        ( Just l, Just r ) ->
+            compareBaseType l r
 
 
 {-| Map elements while they map to a Just.
