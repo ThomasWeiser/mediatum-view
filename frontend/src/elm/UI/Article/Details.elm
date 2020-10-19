@@ -143,7 +143,7 @@ initEditAttributeValue context model =
             context.cache.documents
             context.documentId
     of
-        RemoteData.Success (Just ( document, _ )) ->
+        RemoteData.Success (Just document) ->
             let
                 ( key1, value1 ) =
                     case Document.attributeValue model.editAttributeKey document of
@@ -174,9 +174,9 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.div [ Html.Attributes.class "details" ]
         [ case
-            Cache.get
-                context.cache.documents
-                context.documentId
+            RemoteData.map2 Tuple.pair
+                (Cache.get context.cache.documents context.documentId)
+                (Cache.get context.cache.residence context.documentId)
           of
             RemoteData.NotAsked ->
                 -- Should never happen
@@ -188,10 +188,10 @@ view context model =
             RemoteData.Failure error ->
                 Utils.Html.viewApiError error
 
-            RemoteData.Success (Just ( document, residence )) ->
+            RemoteData.Success ( Just document, residence ) ->
                 viewDocument context model document residence
 
-            RemoteData.Success Nothing ->
+            RemoteData.Success ( Nothing, _ ) ->
                 Html.span []
                     [ Html.text "Document with id "
                     , Html.text (context.documentId |> Id.toString)
