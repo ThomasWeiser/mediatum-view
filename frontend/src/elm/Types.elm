@@ -3,7 +3,8 @@ module Types exposing
     , NodeType(..)
     , Window
     , WindowPage
-    , orderingWindow
+    , DocumentIdWithSearch
+    , orderingWindow, orderingDocumentIdWithSearch
     )
 
 {-| Some general types used throughout the application.
@@ -16,12 +17,16 @@ Note that certain other types, which are entities representing query results, ar
 @docs NodeType
 @docs Window
 @docs WindowPage
+@docs DocumentIdWithSearch
 
-@docs orderingWindow
+@docs orderingWindow, orderingDocumentIdWithSearch
 
 -}
 
 import Ordering exposing (Ordering)
+import Types.Id as Id exposing (DocumentId)
+import Types.SearchTerm exposing (SearchTerm)
+import Utils
 
 
 {-| In mediaTUM a folder is marked either as a collection (which is displayed showing its dedicated title page)
@@ -64,3 +69,21 @@ orderingWindow =
     Ordering.byField .offset
         |> Ordering.breakTiesWith
             (Ordering.byField .limit)
+
+
+type alias DocumentIdWithSearch =
+    { documentId : DocumentId
+    , search : Maybe SearchTerm
+    }
+
+
+{-| Ordering on the tuple type `( Selection, Window )`
+-}
+orderingDocumentIdWithSearch : Ordering DocumentIdWithSearch
+orderingDocumentIdWithSearch =
+    Ordering.byFieldWith Id.ordering .documentId
+        |> Ordering.breakTiesWith
+            (Ordering.byFieldWith
+                (Utils.maybeOrdering Types.SearchTerm.ordering)
+                .search
+            )

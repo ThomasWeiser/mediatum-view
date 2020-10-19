@@ -4,7 +4,7 @@ module Cache exposing
     , updateWithModifiedDocument
     , ApiError, apiErrorToString
     , Msg(..), init, update
-    , orderingDocumentIdAndMaybeSearchTerm, orderingSelectionWindow, orderingSelectionFacet
+    , orderingSelectionWindow, orderingSelectionFacet
     )
 
 {-| Manage fetching and caching of all API data.
@@ -46,7 +46,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Internal functions exposed for testing only
 
-@docs orderingDocumentIdAndMaybeSearchTerm, orderingSelectionWindow, orderingSelectionFacet
+@docs orderingSelectionWindow, orderingSelectionFacet
 
 -}
 
@@ -631,18 +631,6 @@ insertNodeType nodeId nodeType cache =
         | nodeTypes =
             Sort.Dict.insert nodeId (Success nodeType) cache.nodeTypes
     }
-
-
-{-| Ordering on the tuple type `( Selection, Window )`
--}
-orderingDocumentIdAndMaybeSearchTerm : Ordering ( DocumentId, Maybe SearchTerm )
-orderingDocumentIdAndMaybeSearchTerm =
-    Ordering.byFieldWith Id.ordering Tuple.first
-        |> Ordering.breakTiesWith
-            (Ordering.byFieldWith
-                (Utils.maybeOrdering Types.SearchTerm.ordering)
-                Tuple.second
-            )
 
 
 {-| Ordering on the tuple type `( Selection, Window )`
