@@ -640,7 +640,7 @@ orderingDocumentIdAndMaybeSearchTerm =
     Ordering.byFieldWith Id.ordering Tuple.first
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith
-                (Utils.maybeOrder Types.SearchTerm.ordering)
+                (Utils.maybeOrdering Types.SearchTerm.ordering)
                 Tuple.second
             )
 

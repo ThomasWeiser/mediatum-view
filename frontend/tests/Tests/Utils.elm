@@ -138,7 +138,7 @@ suite =
         , describe "lexicalOrder"
             [ fuzz2 Fuzz.string Fuzz.string "order of random strings should match the order of the corresponding lists of chars" <|
                 \strL strR ->
-                    Utils.lexicalOrder
+                    Utils.lexicalOrdering
                         compare
                         (String.toList strL)
                         (String.toList strR)
@@ -146,17 +146,17 @@ suite =
             , testOrderingProperties
                 "with fuzzy list (short)"
                 (shortList 3 (Fuzz.intRange 0 2))
-                (Utils.lexicalOrder compare)
+                (Utils.lexicalOrdering compare)
             , testOrderingProperties
                 "with fuzzy list (regular)"
                 (Fuzz.list Fuzz.int)
-                (Utils.lexicalOrder compare)
+                (Utils.lexicalOrdering compare)
             ]
         , describe "maybeOrder"
             [ testOrderingProperties
                 "with maybe fuzzy element"
                 (Fuzz.maybe (Fuzz.intRange 0 2))
-                (Utils.maybeOrder compare)
+                (Utils.maybeOrdering compare)
             ]
         , describe "mapWhile" <|
             let

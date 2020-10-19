@@ -6,7 +6,7 @@ module Utils exposing
     , prependIf
     , findMap
     , findAdjacent
-    , lexicalOrder
+    , lexicalOrdering
     , mapWhile
     , mapEllipsis
     , remoteDataCheck
@@ -14,7 +14,7 @@ module Utils exposing
     , sorter
     , noBreakSpace
     , onChange
-    , maybeOrder
+    , maybeOrdering
     )
 
 {-|
@@ -37,7 +37,7 @@ module Utils exposing
 @docs prependIf
 @docs findMap
 @docs findAdjacent
-@docs lexicalOrder
+@docs lexicalOrdering
 @docs mapWhile
 @docs mapEllipsis
 
@@ -172,8 +172,8 @@ findAdjacent predicate list =
 -- TODO: Suggest for elm-community/list-extra, and posssibly also for matthewsj/elm-ordering
 
 
-lexicalOrder : (a -> a -> Order) -> List a -> List a -> Order
-lexicalOrder compareElements listL listR =
+lexicalOrdering : (a -> a -> Order) -> List a -> List a -> Order
+lexicalOrdering compareElements listL listR =
     case ( listL, listR ) of
         ( [], [] ) ->
             EQ
@@ -193,7 +193,7 @@ lexicalOrder compareElements listL listR =
                     GT
 
                 EQ ->
-                    lexicalOrder compareElements tailL tailR
+                    lexicalOrdering compareElements tailL tailR
 
 
 {-| Lift an ordering on a type to a Maybe of that type.
@@ -204,8 +204,8 @@ lexicalOrder compareElements listL listR =
 -- TODO: Suggest for elm-community/maybe-extra, and posssibly also for matthewsj/elm-ordering
 
 
-maybeOrder : (a -> a -> Order) -> Maybe a -> Maybe a -> Order
-maybeOrder compareBaseType maybeL maybeR =
+maybeOrdering : (a -> a -> Order) -> Maybe a -> Maybe a -> Order
+maybeOrdering compareBaseType maybeL maybeR =
     case ( maybeL, maybeR ) of
         ( Nothing, Nothing ) ->
             EQ
