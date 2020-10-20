@@ -214,20 +214,32 @@ create or replace function api.document_values_by_mask
     , highlight_text text default ''
     )
     returns jsonb as $$
-    select 
-        case when highlight_text = '' then
-            v.values
-        else
-            ts_headline
-                ( v.values
-                , aux.custom_to_tsquery (highlight_text)
-                , aux.ts_headline_options (true)
-                )
-        end
-    from entity.document_mask_value_list as v
-    where v.document_id = document_values_by_mask.document.id
-      and v.mask_name = document_values_by_mask.mask_name
+    select
+        jsonb_agg (
+            jsonb_build_object (
+                'field',
+                metafield_name,
+                'name',
+                maskitem_name,
+                'width',
+                maskitem_width,
+                'value',
+                case when highlight_text = '' then
+                    value
+                else
+                    ts_headline
+                        ( value
+                        , aux.custom_to_tsquery (highlight_text)
+                        , aux.ts_headline_options (true)
+                        )
+                end
+            )
+        )
+    from (select * from entity.document_mask_fields order by maskitem_orderpos) as e
+    where e.document_id = document_values_by_mask.document.id
+    and   e.mask_name = document_values_by_mask.mask_name
 $$ language sql strict stable parallel safe;
+
 
 comment on function api.document_values_by_mask (document api.document, mask_name text, highlightText text) is
     'Gets the meta field values of this document as a JSON value, selected by a named mask. '
