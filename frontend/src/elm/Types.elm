@@ -71,13 +71,15 @@ orderingWindow =
             (Ordering.byField .limit)
 
 
+{-| A type to query a document id, possibly together with a search term for highlight markup.
+-}
 type alias DocumentIdFromSearch =
     { id : DocumentId
     , search : Maybe SearchTerm
     }
 
 
-{-| Ordering on the tuple type `( Selection, Window )`
+{-| Ordering on the type DocumentIdFromSearch
 -}
 orderingDocumentIdFromSearch : Ordering DocumentIdFromSearch
 orderingDocumentIdFromSearch =

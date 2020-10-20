@@ -1,10 +1,9 @@
-module Entities.Markup exposing (Segment(..), Segments, empty, normalizeYear, parse, parseTestable, plainText, view)
-
-import Html exposing (Html)
-import Html.Attributes
-import Maybe.Extra
-import Parser exposing (..)
-
+module Entities.Markup exposing
+    ( Segments, Segment(..)
+    , parse, parseTestable
+    , empty, plainText, normalizeYear
+    , view
+    )
 
 {-|
 
@@ -14,6 +13,13 @@ import Parser exposing (..)
 @docs view
 
 -}
+
+import Html exposing (Html)
+import Html.Attributes
+import Maybe.Extra
+import Parser exposing (..)
+
+
 startTag : String
 startTag =
     "<mediatum:fts>"

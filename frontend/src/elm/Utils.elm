@@ -6,15 +6,13 @@ module Utils exposing
     , prependIf
     , findMap
     , findAdjacent
-    , lexicalOrdering
     , mapWhile
     , mapEllipsis
     , remoteDataCheck
     , remoteDataMapFallible
-    , sorter
+    , sorter, maybeOrdering, lexicalOrdering
     , noBreakSpace
     , onChange
-    , maybeOrdering
     )
 
 {-|
@@ -37,7 +35,6 @@ module Utils exposing
 @docs prependIf
 @docs findMap
 @docs findAdjacent
-@docs lexicalOrdering
 @docs mapWhile
 @docs mapEllipsis
 
@@ -50,7 +47,7 @@ module Utils exposing
 
 # Ordering
 
-@docs sorter
+@docs sorter, maybeOrdering, lexicalOrdering
 
 
 # Html
