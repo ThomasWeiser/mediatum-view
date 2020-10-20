@@ -176,7 +176,7 @@ type Msg
     | ApiResponseFolders (List FolderId) (Api.Response (List Folder))
     | ApiResponseSubfolders (List FolderId) (Api.Response (List Folder))
     | ApiResponseGenericNode NodeId (Api.Response GenericNode)
-    | ApiResponseDocumentFromSearch DocumentIdFromSearch (Api.Response (Maybe ( Document, Residence )))
+    | ApiResponseDocumentFromSearch DocumentIdFromSearch (Api.Response (Maybe ( Document, Maybe Residence )))
     | ApiResponseDocumentsPage ( Selection, Window ) (Api.Response DocumentsPage)
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
     | ApiResponseFacet ( Selection, String ) (Api.Response FacetValues)
@@ -320,14 +320,26 @@ requestNeed need cache =
             )
 
         NeedDocumentFromSearch documentIdFromSearch ->
+            let
+                needResidence =
+                    Needs.statusFromRemoteData
+                        (get cache.residence documentIdFromSearch.id)
+                        == Needs.NotRequested
+
+                _ =
+                    Debug.log "NeedDocumentFromSearch"
+                        { documentIdFromSearch = documentIdFromSearch
+                        , needResidence = needResidence
+                        }
+            in
             ( { cache
                 | documents =
                     Sort.Dict.insert documentIdFromSearch Loading cache.documents
               }
             , Api.sendQueryRequest
-                (Api.withOperationName "NeedDocument")
+                (Api.withOperationName "NeedDocumentFromSearch")
                 (ApiResponseDocumentFromSearch documentIdFromSearch)
-                (Api.Queries.documentDetails documentIdFromSearch)
+                (Api.Queries.documentDetails documentIdFromSearch needResidence)
             )
 
         NeedDocumentsPage selection window ->
@@ -477,7 +489,7 @@ update msg cache =
                 GenericNode.IsDocument ( document, residence ) ->
                     updateWithDocumentAndResidence
                         (DocumentIdFromSearch document.id Nothing)
-                        (Just ( document, residence ))
+                        (Just ( document, Just residence ))
                         cache1
 
                 GenericNode.IsNeither ->
@@ -532,23 +544,18 @@ update msg cache =
             )
 
 
-updateWithDocumentAndResidence : DocumentIdFromSearch -> Maybe ( Document, Residence ) -> Cache -> ( Cache, Cmd Msg )
+updateWithDocumentAndResidence : DocumentIdFromSearch -> Maybe ( Document, Maybe Residence ) -> Cache -> ( Cache, Cmd Msg )
 updateWithDocumentAndResidence documentIdFromSearch maybeDocumentAndResidence cache =
     let
         cache1 =
             case maybeDocumentAndResidence of
-                Just ( document, residence ) ->
+                Just ( document, _ ) ->
                     { cache
                         | documents =
                             Sort.Dict.insert
                                 documentIdFromSearch
                                 (Success (Just document))
                                 cache.documents
-                        , residence =
-                            Sort.Dict.insert
-                                documentIdFromSearch.id
-                                (Success residence)
-                                cache.residence
                     }
 
                 Nothing ->
@@ -559,19 +566,39 @@ updateWithDocumentAndResidence documentIdFromSearch maybeDocumentAndResidence ca
                                 (Success Nothing)
                                 cache.documents
                     }
+
+        cache2 =
+            case maybeDocumentAndResidence of
+                Just ( _, Just residence ) ->
+                    { cache1
+                        | residence =
+                            Sort.Dict.insert
+                                documentIdFromSearch.id
+                                (Success residence)
+                                cache1.residence
+                    }
+
+                Just ( _, Nothing ) ->
+                    cache1
+
+                Nothing ->
+                    cache1
     in
     targetNeeds
         (case maybeDocumentAndResidence of
-            Just ( _, residence ) ->
+            Just ( _, Just residence ) ->
                 Needs.atomic
                     (NeedFolders
                         (Residence.toList residence)
                     )
 
+            Just ( _, Nothing ) ->
+                Needs.none
+
             Nothing ->
                 Needs.none
         )
-        cache1
+        cache2
 
 
 insertAsFolders : List Folder -> Cache -> Cache

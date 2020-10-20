@@ -447,15 +447,23 @@ _GraphQL notation:_
 -}
 documentDetails :
     DocumentIdFromSearch
-    -> SelectionSet (Maybe ( Document, Residence )) Graphql.Operation.RootQuery
-documentDetails documentIdFromSearch =
+    -> Bool
+    -> SelectionSet (Maybe ( Document, Maybe Residence )) Graphql.Operation.RootQuery
+documentDetails documentIdFromSearch withResidence =
     Mediatum.Query.documentById
         { id = Id.toInt documentIdFromSearch.id }
         (SelectionSet.succeed Tuple.pair
             |> SelectionSet.with
                 (Api.Fragments.documentByMask "nodebig" documentIdFromSearch.search)
-            |> SelectionSet.with
-                Api.Fragments.documentResidence
+            |> (if withResidence then
+                    SelectionSet.with
+                        (Api.Fragments.documentResidence
+                            |> SelectionSet.map Just
+                        )
+
+                else
+                    SelectionSet.hardcoded Nothing
+               )
         )
 
 
