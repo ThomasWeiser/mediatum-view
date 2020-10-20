@@ -274,10 +274,10 @@ viewAttribute attribute =
                 ]
                 (let
                     markup =
-                        value |> Utils.Markup.parse |> Utils.Markup.view
+                        Utils.Markup.view value
                  in
                  if isField "year" then
-                    [ value |> Utils.Markup.parse |> Utils.Markup.normalizeYear |> Utils.Markup.view
+                    [ value |> Utils.Markup.normalizeYear |> Utils.Markup.view
                     , Html.text ". "
                     ]
 

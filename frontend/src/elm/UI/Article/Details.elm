@@ -159,15 +159,13 @@ initEditAttributeValue context model =
                                         |> Maybe.Extra.unwrap "" .field
                             in
                             ( firstKey
-                            , Document.attributeValue firstKey document |> Maybe.withDefault ""
+                            , Document.attributeValue firstKey document |> Maybe.withDefault Utils.Markup.empty
                             )
             in
             { model
                 | editAttributeKey = key1
                 , editAttributeValue =
-                    value1
-                        |> Utils.Markup.parse
-                        |> Utils.Markup.plainText
+                    Utils.Markup.plainText value1
             }
 
         _ ->
@@ -233,9 +231,7 @@ viewAttribute attribute =
                 [ Html.Attributes.class "attribute" ]
                 [ Html.td [] [ Html.text attribute.name ]
                 , Html.td []
-                    [ value
-                        |> Utils.Markup.parse
-                        |> Utils.Markup.view
+                    [ Utils.Markup.view value
                     ]
                 ]
 

@@ -1,4 +1,4 @@
-module Utils.Markup exposing (Segment(..), Segments, normalizeYear, parse, parseTestable, plainText, view)
+module Utils.Markup exposing (Segment(..), Segments, empty, normalizeYear, parse, parseTestable, plainText, view)
 
 import Html exposing (Html)
 import Html.Attributes
@@ -10,7 +10,7 @@ import Parser exposing (..)
 
 @docs Segments, Segment
 @docs parse, parseTestable
-@docs plainText, normalizeYear
+@docs empty, plainText, normalizeYear
 @docs view
 
 -}
@@ -36,6 +36,13 @@ type alias Segments =
 type Segment
     = Text String
     | Fts String
+
+
+{-| An empty list of segments
+-}
+empty : Segments
+empty =
+    []
 
 
 {-| Decompose a string with markup.

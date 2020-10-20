@@ -62,6 +62,7 @@ import Types.Facet exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (FolderId, LineageIds)
 import Types.SearchTerm exposing (SearchTerm)
 import Utils
+import Utils.Markup
 
 
 {-| Selection set on a [`Folder`](Entities-Folder) to get basic properties of the folder.
@@ -489,7 +490,12 @@ decoderAttributeList =
                 (Json.Decode.field "field" Json.Decode.string)
                 (Json.Decode.field "name" Json.Decode.string)
                 (Json.Decode.field "width" Json.Decode.int)
-                (Json.Decode.field "value" (Json.Decode.maybe Json.Decode.string))
+                (Json.Decode.field "value"
+                    (Json.Decode.string
+                        |> Json.Decode.map Utils.Markup.parse
+                        |> Json.Decode.maybe
+                    )
+                )
         ]
 
 

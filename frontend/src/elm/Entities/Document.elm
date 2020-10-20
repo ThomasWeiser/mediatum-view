@@ -12,6 +12,7 @@ module Entities.Document exposing
 
 import List.Extra
 import Types.Id exposing (DocumentId)
+import Utils.Markup exposing (Segments)
 
 
 {-| A document as cached either as a detailed document or within a listing of documents.
@@ -38,7 +39,7 @@ type alias Attribute =
     { field : String
     , name : String
     , width : Int
-    , value : Maybe String
+    , value : Maybe Segments
     }
 
 
@@ -54,9 +55,9 @@ init id metadatatypeName name attributes =
 
 {-| Lookup an attribute value by field.
 -}
-attributeValue : String -> Document -> Maybe String
+attributeValue : String -> Document -> Maybe Segments
 attributeValue key document =
     List.Extra.find
         (\attribute -> attribute.field == key)
         document.attributes
-        |> Maybe.map (.value >> Maybe.withDefault "")
+        |> Maybe.map (.value >> Maybe.withDefault Utils.Markup.empty)
