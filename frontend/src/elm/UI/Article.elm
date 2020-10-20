@@ -88,7 +88,7 @@ initialModel presentation =
         GenericPresentation maybeNodeIds ->
             { content = GenericModel UI.Article.Generic.initialModel }
 
-        DocumentPresentation maybeFolderId documentId ->
+        DocumentPresentation maybeFolderId documentIdFromSearch ->
             { content = DetailsModel UI.Article.Details.initialModel }
 
         CollectionPresentation folderId ->
@@ -139,7 +139,7 @@ folderCountsForQuery context =
         GenericPresentation maybeNodeIds ->
             Nothing
 
-        DocumentPresentation maybeFolderId documentId ->
+        DocumentPresentation maybeFolderId documentIdFromSearch ->
             Nothing
 
         CollectionPresentation folderId ->

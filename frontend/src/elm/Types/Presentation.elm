@@ -57,7 +57,7 @@ getFolderId cache presentation =
                 |> Maybe.andThen
                     (Tuple.first >> Cache.Derive.getAsFolderId cache)
 
-        DocumentPresentation maybeFolderId documentId ->
+        DocumentPresentation maybeFolderId documentIdFromSearch ->
             maybeFolderId
 
         CollectionPresentation folderId ->
