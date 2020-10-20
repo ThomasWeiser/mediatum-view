@@ -202,7 +202,8 @@ viewDocumentsPage : Context -> DocumentsPage -> Html Msg
 viewDocumentsPage context documentsPage =
     Html.div []
         [ -- viewNumberOfResults page,
-          Html.div []
+          Html.div
+            [ Html.Attributes.class "listing" ]
             (List.map
                 (viewDocumentResult context)
                 documentsPage.content

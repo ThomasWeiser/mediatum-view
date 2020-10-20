@@ -37,6 +37,7 @@ import Types.Route exposing (Route)
 import UI.Icons
 import UI.Widgets.Breadcrumbs
 import Utils.Html
+import Utils.Markup
 
 
 {-| -}
@@ -225,9 +226,14 @@ viewAttribute : Document.Attribute -> Html msg
 viewAttribute attribute =
     case attribute.value of
         Just value ->
-            Html.tr []
+            Html.tr
+                [ Html.Attributes.class "attribute" ]
                 [ Html.td [] [ Html.text attribute.name ]
-                , Html.td [] [ Html.text value ]
+                , Html.td []
+                    [ value
+                        |> Utils.Markup.parse
+                        |> Utils.Markup.view
+                    ]
                 ]
 
         Nothing ->
