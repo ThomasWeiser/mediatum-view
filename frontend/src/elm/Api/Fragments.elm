@@ -442,7 +442,6 @@ documentByMask maskName maybeSearchTerm =
                                     (Types.SearchTerm.toString >> Present)
                     }
                 )
-                -- TODO: Add argument for highlight
                 { maskName = maskName }
                 |> SelectionSet.map mapJsonToAttributes
             )
