@@ -272,21 +272,31 @@ viewAttribute attribute =
                       )
                     ]
                 ]
-                [ (if isField "year" then
-                    String.left 4 value ++ ". "
+                (let
+                    markup =
+                        value |> Utils.Markup.parse |> Utils.Markup.view
+                 in
+                 if isField "year" then
+                    [ value |> Utils.Markup.parse |> Utils.Markup.normalizeYear |> Utils.Markup.view
+                    , Html.text ". "
+                    ]
 
-                   else if isField "author" then
-                    value ++ ": "
+                 else if isField "author" then
+                    [ markup
+                    , Html.text ": "
+                    ]
 
-                   else if isField "title|type" then
-                    value ++ ". "
+                 else if isField "title|type" then
+                    [ markup
+                    , Html.text ". "
+                    ]
 
-                   else
-                    attribute.name ++ ": " ++ value ++ ". "
-                  )
-                    |> Utils.Markup.parse
-                    |> Utils.Markup.view
-                ]
+                 else
+                    [ Html.text (attribute.name ++ ": ")
+                    , markup
+                    , Html.text ". "
+                    ]
+                )
 
         Nothing ->
             Html.text ""

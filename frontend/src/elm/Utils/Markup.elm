@@ -1,4 +1,4 @@
-module Utils.Markup exposing (Segment(..), Segments, parse, parseTestable, view)
+module Utils.Markup exposing (Segment(..), Segments, normalizeYear, parse, parseTestable, view)
 
 import Html exposing (Html)
 import Html.Attributes
@@ -10,6 +10,7 @@ import Parser exposing (..)
 
 @docs Segments, Segment
 @docs parse, parseTestable
+@docs normalizeYear
 @docs view
 
 -}
@@ -50,6 +51,29 @@ parse : String -> Segments
 parse text =
     parseTestable text
         |> Result.withDefault [ Text text ]
+
+
+{-| Years are sometime formatted as "2020-00-00T00:00:00".
+So we take just the first segment and only the first 4 characters of it.
+-}
+normalizeYear : Segments -> Segments
+normalizeYear segments =
+    segments
+        |> List.take 1
+        |> List.map
+            (mapSegment
+                (String.left 4)
+            )
+
+
+mapSegment : (String -> String) -> Segment -> Segment
+mapSegment mapping segment =
+    case segment of
+        Text s ->
+            Text (mapping s)
+
+        Fts s ->
+            Fts (mapping s)
 
 
 {-| -}
