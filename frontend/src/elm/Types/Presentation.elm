@@ -136,7 +136,7 @@ fromRoute cache route =
                     DocumentPresentation Nothing
                         (DocumentIdFromSearch
                             (nodeId |> Id.asDocumentId)
-                            Nothing
+                            route.parameters.ftsTerm
                         )
 
                 Just (NodeIsFolder folderType) ->
@@ -156,7 +156,7 @@ fromRoute cache route =
                         (Just (nodeIdOne |> Id.asFolderId))
                         (DocumentIdFromSearch
                             (nodeIdTwo |> Id.asDocumentId)
-                            Nothing
+                            route.parameters.ftsTerm
                         )
 
                 _ ->

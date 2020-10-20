@@ -61,7 +61,7 @@ import Mediatum.Query
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
-import Types exposing (Window)
+import Types exposing (DocumentIdFromSearch, Window)
 import Types.Facet exposing (FacetValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm
@@ -446,14 +446,14 @@ _GraphQL notation:_
 
 -}
 documentDetails :
-    DocumentId
+    DocumentIdFromSearch
     -> SelectionSet (Maybe ( Document, Residence )) Graphql.Operation.RootQuery
-documentDetails documentId =
+documentDetails documentIdFromSearch =
     Mediatum.Query.documentById
-        { id = Id.toInt documentId }
+        { id = Id.toInt documentIdFromSearch.id }
         (SelectionSet.succeed Tuple.pair
             |> SelectionSet.with
-                (Api.Fragments.documentByMask "nodebig" Nothing)
+                (Api.Fragments.documentByMask "nodebig" documentIdFromSearch.search)
             |> SelectionSet.with
                 Api.Fragments.documentResidence
         )

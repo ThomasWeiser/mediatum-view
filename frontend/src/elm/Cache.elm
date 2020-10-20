@@ -327,7 +327,7 @@ requestNeed need cache =
             , Api.sendQueryRequest
                 (Api.withOperationName "NeedDocument")
                 (ApiResponseDocumentFromSearch documentIdFromSearch)
-                (Api.Queries.documentDetails documentIdFromSearch.id)
+                (Api.Queries.documentDetails documentIdFromSearch)
             )
 
         NeedDocumentsPage selection window ->
