@@ -24,6 +24,7 @@ import Api
 import Api.Mutations
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
+import Entities.Markup
 import Entities.Residence exposing (Residence)
 import Html exposing (Html)
 import Html.Attributes
@@ -37,7 +38,6 @@ import Types.Route exposing (Route)
 import UI.Icons
 import UI.Widgets.Breadcrumbs
 import Utils.Html
-import Utils.Markup
 
 
 {-| -}
@@ -159,13 +159,13 @@ initEditAttributeValue context model =
                                         |> Maybe.Extra.unwrap "" .field
                             in
                             ( firstKey
-                            , Document.attributeValue firstKey document |> Maybe.withDefault Utils.Markup.empty
+                            , Document.attributeValue firstKey document |> Maybe.withDefault Entities.Markup.empty
                             )
             in
             { model
                 | editAttributeKey = key1
                 , editAttributeValue =
-                    Utils.Markup.plainText value1
+                    Entities.Markup.plainText value1
             }
 
         _ ->
@@ -231,7 +231,7 @@ viewAttribute attribute =
                 [ Html.Attributes.class "attribute" ]
                 [ Html.td [] [ Html.text attribute.name ]
                 , Html.td []
-                    [ Utils.Markup.view value
+                    [ Entities.Markup.view value
                     ]
                 ]
 

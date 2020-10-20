@@ -27,6 +27,7 @@ import Basics.Extra
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
+import Entities.Markup
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -40,7 +41,6 @@ import Types.Route.Url
 import Types.Selection exposing (Selection)
 import UI.Icons
 import Utils.Html
-import Utils.Markup
 
 
 {-| -}
@@ -274,10 +274,10 @@ viewAttribute attribute =
                 ]
                 (let
                     markup =
-                        Utils.Markup.view value
+                        Entities.Markup.view value
                  in
                  if isField "year" then
-                    [ value |> Utils.Markup.normalizeYear |> Utils.Markup.view
+                    [ value |> Entities.Markup.normalizeYear |> Entities.Markup.view
                     , Html.text ". "
                     ]
 

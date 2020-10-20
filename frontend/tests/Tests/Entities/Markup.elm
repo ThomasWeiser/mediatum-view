@@ -1,9 +1,9 @@
-module Tests.Utils.Markup exposing (all)
+module Tests.Entities.Markup exposing (all)
 
+import Entities.Markup exposing (..)
 import Expect
 import Fuzz exposing (Fuzzer)
 import Test exposing (..)
-import Utils.Markup exposing (..)
 
 
 all : Test

@@ -10,9 +10,9 @@ module Entities.Document exposing
 
 -}
 
+import Entities.Markup exposing (Segments)
 import List.Extra
 import Types.Id exposing (DocumentId)
-import Utils.Markup exposing (Segments)
 
 
 {-| A document as cached either as a detailed document or within a listing of documents.
@@ -60,4 +60,4 @@ attributeValue key document =
     List.Extra.find
         (\attribute -> attribute.field == key)
         document.attributes
-        |> Maybe.map (.value >> Maybe.withDefault Utils.Markup.empty)
+        |> Maybe.map (.value >> Maybe.withDefault Entities.Markup.empty)

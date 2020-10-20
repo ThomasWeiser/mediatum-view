@@ -33,6 +33,7 @@ import Entities.Document as Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import Entities.Folder as Folder exposing (Folder, LineageFolders)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
+import Entities.Markup
 import Entities.Residence exposing (Residence)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
@@ -62,7 +63,6 @@ import Types.Facet exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (FolderId, LineageIds)
 import Types.SearchTerm exposing (SearchTerm)
 import Utils
-import Utils.Markup
 
 
 {-| Selection set on a [`Folder`](Entities-Folder) to get basic properties of the folder.
@@ -492,7 +492,7 @@ decoderAttributeList =
                 (Json.Decode.field "width" Json.Decode.int)
                 (Json.Decode.field "value"
                     (Json.Decode.string
-                        |> Json.Decode.map Utils.Markup.parse
+                        |> Json.Decode.map Entities.Markup.parse
                         |> Json.Decode.maybe
                     )
                 )
