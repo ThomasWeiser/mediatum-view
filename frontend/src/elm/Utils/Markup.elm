@@ -1,4 +1,4 @@
-module Utils.Markup exposing (Segment(..), Segments, normalizeYear, parse, parseTestable, view)
+module Utils.Markup exposing (Segment(..), Segments, normalizeYear, parse, parseTestable, plainText, view)
 
 import Html exposing (Html)
 import Html.Attributes
@@ -10,7 +10,7 @@ import Parser exposing (..)
 
 @docs Segments, Segment
 @docs parse, parseTestable
-@docs normalizeYear
+@docs plainText, normalizeYear
 @docs view
 
 -}
@@ -53,6 +53,15 @@ parse text =
         |> Result.withDefault [ Text text ]
 
 
+{-| The parsed text with markup removed
+-}
+plainText : Segments -> String
+plainText segments =
+    segments
+        |> List.map segmentText
+        |> String.concat
+
+
 {-| Years are sometime formatted as "2020-00-00T00:00:00".
 So we take just the first segment and only the first 4 characters of it.
 -}
@@ -64,16 +73,6 @@ normalizeYear segments =
             (mapSegment
                 (String.left 4)
             )
-
-
-mapSegment : (String -> String) -> Segment -> Segment
-mapSegment mapping segment =
-    case segment of
-        Text s ->
-            Text (mapping s)
-
-        Fts s ->
-            Fts (mapping s)
 
 
 {-| -}
@@ -92,6 +91,26 @@ view segments =
                             [ Html.text t ]
             )
         |> Html.span []
+
+
+mapSegment : (String -> String) -> Segment -> Segment
+mapSegment mapping segment =
+    case segment of
+        Text s ->
+            Text (mapping s)
+
+        Fts s ->
+            Fts (mapping s)
+
+
+segmentText : Segment -> String
+segmentText segment =
+    case segment of
+        Text s ->
+            s
+
+        Fts s ->
+            s
 
 
 {-| The Parser is written in a way that it should never result in a dead end.

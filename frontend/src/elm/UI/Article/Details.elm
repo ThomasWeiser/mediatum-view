@@ -164,7 +164,10 @@ initEditAttributeValue context model =
             in
             { model
                 | editAttributeKey = key1
-                , editAttributeValue = value1
+                , editAttributeValue =
+                    value1
+                        |> Utils.Markup.parse
+                        |> Utils.Markup.plainText
             }
 
         _ ->
