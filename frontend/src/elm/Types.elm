@@ -3,8 +3,8 @@ module Types exposing
     , NodeType(..)
     , Window
     , WindowPage
-    , DocumentIdWithSearch
-    , orderingWindow, orderingDocumentIdWithSearch
+    , DocumentIdFromSearch
+    , orderingWindow, orderingDocumentIdFromSearch
     )
 
 {-| Some general types used throughout the application.
@@ -17,9 +17,9 @@ Note that certain other types, which are entities representing query results, ar
 @docs NodeType
 @docs Window
 @docs WindowPage
-@docs DocumentIdWithSearch
+@docs DocumentIdFromSearch
 
-@docs orderingWindow, orderingDocumentIdWithSearch
+@docs orderingWindow, orderingDocumentIdFromSearch
 
 -}
 
@@ -71,17 +71,17 @@ orderingWindow =
             (Ordering.byField .limit)
 
 
-type alias DocumentIdWithSearch =
-    { documentId : DocumentId
+type alias DocumentIdFromSearch =
+    { id : DocumentId
     , search : Maybe SearchTerm
     }
 
 
 {-| Ordering on the tuple type `( Selection, Window )`
 -}
-orderingDocumentIdWithSearch : Ordering DocumentIdWithSearch
-orderingDocumentIdWithSearch =
-    Ordering.byFieldWith Id.ordering .documentId
+orderingDocumentIdFromSearch : Ordering DocumentIdFromSearch
+orderingDocumentIdFromSearch =
+    Ordering.byFieldWith Id.ordering .id
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith
                 (Utils.maybeOrdering Types.SearchTerm.ordering)

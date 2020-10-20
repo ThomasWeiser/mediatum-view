@@ -114,8 +114,8 @@ needs facetKeys presentation =
                         |> List.map Types.Needs.atomic
                         |> Types.Needs.batch
 
-        DocumentPresentation maybeFolderId documentIdWithSearch ->
-            Cache.NeedDocumentWithSearch documentIdWithSearch
+        DocumentPresentation maybeFolderId documentIdFromSearch ->
+            Cache.NeedDocumentFromSearch documentIdFromSearch
                 |> Types.Needs.atomic
 
         CollectionPresentation folderId ->
@@ -198,13 +198,13 @@ update context msg model =
                             Navigate navigation
                     )
 
-        ( DetailsMsg subMsg, DetailsModel subModel, DocumentPresentation maybeFolderId documentIdWithSearch ) ->
+        ( DetailsMsg subMsg, DetailsModel subModel, DocumentPresentation maybeFolderId documentIdFromSearch ) ->
             let
                 ( subModel1, subCmd, subReturn ) =
                     UI.Article.Details.update
                         { cache = context.cache
                         , route = context.route
-                        , documentIdWithSearch = documentIdWithSearch
+                        , documentIdFromSearch = documentIdFromSearch
                         }
                         subMsg
                         subModel
@@ -275,11 +275,11 @@ viewContent context model =
                 subModel
                 |> Html.map ListingMsg
 
-        ( DetailsModel subModel, DocumentPresentation maybeFolderId documentIdWithSearch ) ->
+        ( DetailsModel subModel, DocumentPresentation maybeFolderId documentIdFromSearch ) ->
             UI.Article.Details.view
                 { cache = context.cache
                 , route = context.route
-                , documentIdWithSearch = documentIdWithSearch
+                , documentIdFromSearch = documentIdFromSearch
                 }
                 subModel
                 |> Html.map DetailsMsg

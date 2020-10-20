@@ -1,6 +1,6 @@
 module Tests.Types exposing
     ( fuzzerDocumentId
-    , fuzzerDocumentIdWithSearch
+    , fuzzerDocumentIdFromSearch
     , fuzzerFacetFilters
     , fuzzerFilter
     , fuzzerFilters
@@ -24,7 +24,7 @@ import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Types.Range
 import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
-import Types exposing (DocumentIdWithSearch, Window)
+import Types exposing (DocumentIdFromSearch, Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm as SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (FacetFilters, Filter(..), FtsSorting(..), SelectMethod(..), Selection, SetOfFilters)
@@ -55,9 +55,9 @@ fuzzerDocumentId =
     Fuzz.map Id.fromInt fuzzerId
 
 
-fuzzerDocumentIdWithSearch : Fuzzer DocumentIdWithSearch
-fuzzerDocumentIdWithSearch =
-    Fuzz.map2 DocumentIdWithSearch
+fuzzerDocumentIdFromSearch : Fuzzer DocumentIdFromSearch
+fuzzerDocumentIdFromSearch =
+    Fuzz.map2 DocumentIdFromSearch
         (Fuzz.map Id.fromInt fuzzerId)
         (Fuzz.maybe fuzzerSearchTerm)
 

@@ -33,7 +33,7 @@ import Cache exposing (Cache)
 import Cache.Derive
 import Maybe.Extra
 import RemoteData
-import Types exposing (DocumentIdWithSearch, FolderDisplay(..), NodeType(..), Window)
+import Types exposing (DocumentIdFromSearch, FolderDisplay(..), NodeType(..), Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Route as Route exposing (Route)
 import Types.Route.Filter
@@ -44,7 +44,7 @@ import Types.Selection exposing (SelectMethod(..), Selection)
 type Presentation
     = GenericPresentation (Maybe ( NodeId, Maybe NodeId ))
     | CollectionPresentation FolderId
-    | DocumentPresentation (Maybe FolderId) DocumentIdWithSearch
+    | DocumentPresentation (Maybe FolderId) DocumentIdFromSearch
     | ListingPresentation Selection Window
 
 
@@ -134,7 +134,7 @@ fromRoute cache route =
 
                 Just NodeIsDocument ->
                     DocumentPresentation Nothing
-                        (DocumentIdWithSearch
+                        (DocumentIdFromSearch
                             (nodeId |> Id.asDocumentId)
                             Nothing
                         )
@@ -154,7 +154,7 @@ fromRoute cache route =
                 Just ( NodeIsFolder folderType, NodeIsDocument ) ->
                     DocumentPresentation
                         (Just (nodeIdOne |> Id.asFolderId))
-                        (DocumentIdWithSearch
+                        (DocumentIdFromSearch
                             (nodeIdTwo |> Id.asDocumentId)
                             Nothing
                         )
