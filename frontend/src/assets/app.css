@@ -133,17 +133,20 @@ button.filter-button, .filter-inputs {
 .document {
   margin: 2ex 0;
 }
-.attributes {
+.listing .attributes {
   margin-left: 2em;
 }
-.attribute:hover {
+.listing .attribute:hover {
   background-color: #eee;
 }
-.author {
+.listing .author {
   font-weight: bold;
 }
-.attribute.title {
+.listing .attribute.title {
   font-style: italic;
+}
+.attribute .highlight {
+  color: red;
 }
 .folder-list {
   list-style-type: none;

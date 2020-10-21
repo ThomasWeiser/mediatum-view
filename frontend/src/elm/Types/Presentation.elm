@@ -33,7 +33,7 @@ import Cache exposing (Cache)
 import Cache.Derive
 import Maybe.Extra
 import RemoteData
-import Types exposing (FolderDisplay(..), NodeType(..), Window)
+import Types exposing (DocumentIdFromSearch, FolderDisplay(..), NodeType(..), Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Route as Route exposing (Route)
 import Types.Route.Filter
@@ -44,7 +44,7 @@ import Types.Selection exposing (SelectMethod(..), Selection)
 type Presentation
     = GenericPresentation (Maybe ( NodeId, Maybe NodeId ))
     | CollectionPresentation FolderId
-    | DocumentPresentation (Maybe FolderId) DocumentId
+    | DocumentPresentation (Maybe FolderId) DocumentIdFromSearch
     | ListingPresentation Selection Window
 
 
@@ -57,7 +57,7 @@ getFolderId cache presentation =
                 |> Maybe.andThen
                     (Tuple.first >> Cache.Derive.getAsFolderId cache)
 
-        DocumentPresentation maybeFolderId documentId ->
+        DocumentPresentation maybeFolderId documentIdFromSearch ->
             maybeFolderId
 
         CollectionPresentation folderId ->
@@ -133,7 +133,11 @@ fromRoute cache route =
                     GenericPresentation (Just ( nodeId, Nothing ))
 
                 Just NodeIsDocument ->
-                    DocumentPresentation Nothing (nodeId |> Id.asDocumentId)
+                    DocumentPresentation Nothing
+                        (DocumentIdFromSearch
+                            (nodeId |> Id.asDocumentId)
+                            route.parameters.ftsTerm
+                        )
 
                 Just (NodeIsFolder folderType) ->
                     folderPresentation
@@ -150,7 +154,10 @@ fromRoute cache route =
                 Just ( NodeIsFolder folderType, NodeIsDocument ) ->
                     DocumentPresentation
                         (Just (nodeIdOne |> Id.asFolderId))
-                        (nodeIdTwo |> Id.asDocumentId)
+                        (DocumentIdFromSearch
+                            (nodeIdTwo |> Id.asDocumentId)
+                            route.parameters.ftsTerm
+                        )
 
                 _ ->
                     GenericPresentation (Just ( nodeIdOne, Just nodeIdTwo ))

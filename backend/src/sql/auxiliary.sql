@@ -59,6 +59,19 @@ create or replace function aux.custom_to_tsquery (query text)
 $$ language plpgsql immutable;
 
 
+create or replace function aux.ts_headline_options (highlight_all boolean)
+    returns text as $$
+    declare delimiter text := 'StartSel=<mediatum:fts>, StopSel=</mediatum:fts>';
+    begin
+        if highlight_all then
+            return delimiter || ', HighlightAll=true';
+        else
+            return delimiter || ', HighlightAll=false';
+        end if;
+    end;
+$$ language plpgsql immutable;
+
+
 -- Strip whitescape from either end of the string.
 -- And replace NULL with the empty string.
 create or replace function aux.normalize_facet_value (value text)

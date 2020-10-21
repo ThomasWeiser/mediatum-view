@@ -10,6 +10,7 @@ module Entities.Document exposing
 
 -}
 
+import Entities.Markup exposing (Markup)
 import List.Extra
 import Types.Id exposing (DocumentId)
 
@@ -38,7 +39,7 @@ type alias Attribute =
     { field : String
     , name : String
     , width : Int
-    , value : Maybe String
+    , value : Maybe Markup
     }
 
 
@@ -54,9 +55,9 @@ init id metadatatypeName name attributes =
 
 {-| Lookup an attribute value by field.
 -}
-attributeValue : String -> Document -> Maybe String
+attributeValue : String -> Document -> Maybe Markup
 attributeValue key document =
     List.Extra.find
         (\attribute -> attribute.field == key)
         document.attributes
-        |> Maybe.map (.value >> Maybe.withDefault "")
+        |> Maybe.map (.value >> Maybe.withDefault Entities.Markup.empty)

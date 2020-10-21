@@ -4,8 +4,6 @@ module Entities.Residence exposing (Residence, toList)
 
 @docs Residence, toList
 
-@docs Lineage
-
 -}
 
 import List.Nonempty exposing (Nonempty)

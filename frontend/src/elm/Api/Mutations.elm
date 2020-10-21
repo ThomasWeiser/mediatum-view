@@ -59,7 +59,7 @@ updateDocumentAttribute documentId key value =
             (SelectionSet.succeed identity
                 |> SelectionSet.with
                     (Mediatum.Object.UpdateDocumentAttributePayload.document
-                        (Api.Fragments.documentByMask "nodebig")
+                        (Api.Fragments.documentByMask "nodebig" Nothing)
                     )
             )
         )

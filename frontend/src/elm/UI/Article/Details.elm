@@ -24,6 +24,7 @@ import Api
 import Api.Mutations
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
+import Entities.Markup
 import Entities.Residence exposing (Residence)
 import Html exposing (Html)
 import Html.Attributes
@@ -31,6 +32,7 @@ import Html.Events
 import List.Nonempty
 import Maybe.Extra
 import RemoteData
+import Types exposing (DocumentIdFromSearch)
 import Types.Id as Id exposing (DocumentId)
 import Types.Route exposing (Route)
 import UI.Icons
@@ -42,7 +44,7 @@ import Utils.Html
 type alias Context =
     { cache : Cache
     , route : Route
-    , documentId : DocumentId
+    , documentIdFromSearch : DocumentIdFromSearch
     }
 
 
@@ -141,9 +143,9 @@ initEditAttributeValue context model =
     case
         Cache.get
             context.cache.documents
-            context.documentId
+            context.documentIdFromSearch
     of
-        RemoteData.Success (Just ( document, _ )) ->
+        RemoteData.Success (Just document) ->
             let
                 ( key1, value1 ) =
                     case Document.attributeValue model.editAttributeKey document of
@@ -157,12 +159,13 @@ initEditAttributeValue context model =
                                         |> Maybe.Extra.unwrap "" .field
                             in
                             ( firstKey
-                            , Document.attributeValue firstKey document |> Maybe.withDefault ""
+                            , Document.attributeValue firstKey document |> Maybe.withDefault Entities.Markup.empty
                             )
             in
             { model
                 | editAttributeKey = key1
-                , editAttributeValue = value1
+                , editAttributeValue =
+                    Entities.Markup.plainText value1
             }
 
         _ ->
@@ -174,9 +177,9 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.div [ Html.Attributes.class "details" ]
         [ case
-            Cache.get
-                context.cache.documents
-                context.documentId
+            RemoteData.map2 Tuple.pair
+                (Cache.get context.cache.documents context.documentIdFromSearch)
+                (Cache.get context.cache.residence context.documentIdFromSearch.id)
           of
             RemoteData.NotAsked ->
                 -- Should never happen
@@ -188,13 +191,13 @@ view context model =
             RemoteData.Failure error ->
                 Utils.Html.viewApiError error
 
-            RemoteData.Success (Just ( document, residence )) ->
+            RemoteData.Success ( Just document, residence ) ->
                 viewDocument context model document residence
 
-            RemoteData.Success Nothing ->
+            RemoteData.Success ( Nothing, _ ) ->
                 Html.span []
                     [ Html.text "Document with id "
-                    , Html.text (context.documentId |> Id.toString)
+                    , Html.text (context.documentIdFromSearch.id |> Id.toString)
                     , Html.text " not available"
                     ]
         ]
@@ -224,9 +227,12 @@ viewAttribute : Document.Attribute -> Html msg
 viewAttribute attribute =
     case attribute.value of
         Just value ->
-            Html.tr []
+            Html.tr
+                [ Html.Attributes.class "attribute" ]
                 [ Html.td [] [ Html.text attribute.name ]
-                , Html.td [] [ Html.text value ]
+                , Html.td []
+                    [ Entities.Markup.view value
+                    ]
                 ]
 
         Nothing ->

@@ -4,7 +4,7 @@ module Cache exposing
     , updateWithModifiedDocument
     , ApiError, apiErrorToString
     , Msg(..), init, update
-    , orderingSelectionWindow
+    , orderingSelectionWindow, orderingSelectionFacet
     )
 
 {-| Manage fetching and caching of all API data.
@@ -46,7 +46,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Internal functions exposed for testing only
 
-@docs orderingSelectionWindow
+@docs orderingSelectionWindow, orderingSelectionFacet
 
 -}
 
@@ -64,10 +64,11 @@ import List.Nonempty
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
-import Types exposing (NodeType(..), Window)
+import Types exposing (DocumentIdFromSearch, NodeType(..), Window)
 import Types.Facet exposing (FacetValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Needs as Needs
+import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection as Selection exposing (SelectMethod(..), Selection)
 import Utils
 
@@ -104,7 +105,8 @@ type alias Cache =
     , folders : Sort.Dict.Dict FolderId (ApiData Folder)
     , subfolderIds : Sort.Dict.Dict FolderId (ApiData (List FolderId))
     , nodeTypes : Sort.Dict.Dict NodeId (ApiData NodeType)
-    , documents : Sort.Dict.Dict DocumentId (ApiData (Maybe ( Document, Residence )))
+    , documents : Sort.Dict.Dict DocumentIdFromSearch (ApiData (Maybe Document))
+    , residence : Sort.Dict.Dict DocumentId (ApiData Residence)
     , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
     , folderCounts : Sort.Dict.Dict Selection (ApiData FolderCounts)
     , facetsValues : Sort.Dict.Dict ( Selection, String ) (ApiData FacetValues)
@@ -118,7 +120,7 @@ type Need
     | NeedFolders (List FolderId)
     | NeedSubfolders (List FolderId)
     | NeedGenericNode NodeId
-    | NeedDocument DocumentId
+    | NeedDocumentFromSearch DocumentIdFromSearch
     | NeedDocumentsPage Selection Window
     | NeedFolderCounts Selection
     | NeedFacet Selection String
@@ -145,7 +147,8 @@ init =
     , folders = Sort.Dict.empty (Utils.sorter Id.ordering)
     , subfolderIds = Sort.Dict.empty (Utils.sorter Id.ordering)
     , nodeTypes = Sort.Dict.empty (Utils.sorter Id.ordering)
-    , documents = Sort.Dict.empty (Utils.sorter Id.ordering)
+    , documents = Sort.Dict.empty (Utils.sorter Types.orderingDocumentIdFromSearch)
+    , residence = Sort.Dict.empty (Utils.sorter Id.ordering)
     , documentsPages = Sort.Dict.empty (Utils.sorter orderingSelectionWindow)
     , folderCounts = Sort.Dict.empty (Utils.sorter Selection.orderingSelectionModuloSorting)
     , facetsValues = Sort.Dict.empty (Utils.sorter orderingSelectionFacet)
@@ -173,7 +176,7 @@ type Msg
     | ApiResponseFolders (List FolderId) (Api.Response (List Folder))
     | ApiResponseSubfolders (List FolderId) (Api.Response (List Folder))
     | ApiResponseGenericNode NodeId (Api.Response GenericNode)
-    | ApiResponseDocument DocumentId (Api.Response (Maybe ( Document, Residence )))
+    | ApiResponseDocumentFromSearch DocumentIdFromSearch (Api.Response (Maybe ( Document, Maybe Residence )))
     | ApiResponseDocumentsPage ( Selection, Window ) (Api.Response DocumentsPage)
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
     | ApiResponseFacet ( Selection, String ) (Api.Response FacetValues)
@@ -212,7 +215,7 @@ statusOfNeed cache need =
             get cache.nodeTypes nodeId
                 |> Needs.statusFromRemoteData
 
-        NeedDocument documentId ->
+        NeedDocumentFromSearch documentId ->
             get cache.documents documentId
                 |> Needs.statusFromRemoteData
 
@@ -316,15 +319,27 @@ requestNeed need cache =
                 (Api.Queries.genericNode nodeId)
             )
 
-        NeedDocument documentId ->
+        NeedDocumentFromSearch documentIdFromSearch ->
+            let
+                needResidence =
+                    Needs.statusFromRemoteData
+                        (get cache.residence documentIdFromSearch.id)
+                        == Needs.NotRequested
+
+                _ =
+                    Debug.log "NeedDocumentFromSearch"
+                        { documentIdFromSearch = documentIdFromSearch
+                        , needResidence = needResidence
+                        }
+            in
             ( { cache
                 | documents =
-                    Sort.Dict.insert documentId Loading cache.documents
+                    Sort.Dict.insert documentIdFromSearch Loading cache.documents
               }
             , Api.sendQueryRequest
-                (Api.withOperationName "NeedDocument")
-                (ApiResponseDocument documentId)
-                (Api.Queries.documentDetails documentId)
+                (Api.withOperationName "NeedDocumentFromSearch")
+                (ApiResponseDocumentFromSearch documentIdFromSearch)
+                (Api.Queries.documentDetails documentIdFromSearch needResidence)
             )
 
         NeedDocumentsPage selection window ->
@@ -367,13 +382,9 @@ updateWithModifiedDocument : Document -> Cache -> Cache
 updateWithModifiedDocument document cache =
     { cache
         | documents =
-            Sort.Dict.update
-                document.id
-                (Maybe.map <|
-                    RemoteData.map <|
-                        Maybe.map <|
-                            Tuple.mapFirst (always document)
-                )
+            Sort.Dict.insert
+                (DocumentIdFromSearch document.id Nothing)
+                (Success (Just document))
                 cache.documents
     }
 
@@ -477,8 +488,8 @@ update msg cache =
 
                 GenericNode.IsDocument ( document, residence ) ->
                     updateWithDocumentAndResidence
-                        document.id
-                        (Just ( document, residence ))
+                        (DocumentIdFromSearch document.id Nothing)
+                        (Just ( document, Just residence ))
                         cache1
 
                 GenericNode.IsNeither ->
@@ -494,16 +505,16 @@ update msg cache =
             , Cmd.none
             )
 
-        ApiResponseDocument documentId (Ok maybeDocumentAndResidence) ->
+        ApiResponseDocumentFromSearch documentIdFromSearch (Ok maybeDocumentAndResidence) ->
             updateWithDocumentAndResidence
-                documentId
+                documentIdFromSearch
                 maybeDocumentAndResidence
                 cache
 
-        ApiResponseDocument documentId (Err error) ->
+        ApiResponseDocumentFromSearch documentIdFromSearch (Err error) ->
             ( { cache
                 | documents =
-                    Sort.Dict.insert documentId (Failure error) cache.documents
+                    Sort.Dict.insert documentIdFromSearch (Failure error) cache.documents
               }
             , Cmd.none
             )
@@ -533,27 +544,61 @@ update msg cache =
             )
 
 
-updateWithDocumentAndResidence : DocumentId -> Maybe ( Document, Residence ) -> Cache -> ( Cache, Cmd Msg )
-updateWithDocumentAndResidence documentId maybeDocumentAndResidence cache =
+updateWithDocumentAndResidence : DocumentIdFromSearch -> Maybe ( Document, Maybe Residence ) -> Cache -> ( Cache, Cmd Msg )
+updateWithDocumentAndResidence documentIdFromSearch maybeDocumentAndResidence cache =
     let
         cache1 =
-            { cache
-                | documents =
-                    Sort.Dict.insert documentId (Success maybeDocumentAndResidence) cache.documents
-            }
+            case maybeDocumentAndResidence of
+                Just ( document, _ ) ->
+                    { cache
+                        | documents =
+                            Sort.Dict.insert
+                                documentIdFromSearch
+                                (Success (Just document))
+                                cache.documents
+                    }
+
+                Nothing ->
+                    { cache
+                        | documents =
+                            Sort.Dict.insert
+                                documentIdFromSearch
+                                (Success Nothing)
+                                cache.documents
+                    }
+
+        cache2 =
+            case maybeDocumentAndResidence of
+                Just ( _, Just residence ) ->
+                    { cache1
+                        | residence =
+                            Sort.Dict.insert
+                                documentIdFromSearch.id
+                                (Success residence)
+                                cache1.residence
+                    }
+
+                Just ( _, Nothing ) ->
+                    cache1
+
+                Nothing ->
+                    cache1
     in
     targetNeeds
         (case maybeDocumentAndResidence of
-            Just ( _, residence ) ->
+            Just ( _, Just residence ) ->
                 Needs.atomic
                     (NeedFolders
                         (Residence.toList residence)
                     )
 
+            Just ( _, Nothing ) ->
+                Needs.none
+
             Nothing ->
                 Needs.none
         )
-        cache1
+        cache2
 
 
 insertAsFolders : List Folder -> Cache -> Cache

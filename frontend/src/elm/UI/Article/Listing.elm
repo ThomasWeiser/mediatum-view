@@ -27,6 +27,7 @@ import Basics.Extra
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
+import Entities.Markup
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -201,7 +202,8 @@ viewDocumentsPage : Context -> DocumentsPage -> Html Msg
 viewDocumentsPage context documentsPage =
     Html.div []
         [ -- viewNumberOfResults page,
-          Html.div []
+          Html.div
+            [ Html.Attributes.class "listing" ]
             (List.map
                 (viewDocumentResult context)
                 documentsPage.content
@@ -259,15 +261,7 @@ viewAttribute attribute =
                 attribute.field
     in
     case attribute.value of
-        Just valueLong ->
-            let
-                value =
-                    if String.length valueLong > maxAttributeStringLength then
-                        String.left (maxAttributeStringLength - 3) valueLong ++ "..."
-
-                    else
-                        valueLong
-            in
+        Just value ->
             Html.span
                 [ Html.Attributes.classList
                     [ ( "attribute", True )
@@ -277,21 +271,32 @@ viewAttribute attribute =
                             && not (isField "congress|journal")
                       )
                     ]
-                , Html.Attributes.title (attribute.name ++ ": " ++ valueLong)
                 ]
-                [ Html.text <|
-                    if isField "year" then
-                        String.left 4 value ++ ". "
+                (let
+                    markup =
+                        Entities.Markup.view value
+                 in
+                 if isField "year" then
+                    [ value |> Entities.Markup.normalizeYear |> Entities.Markup.view
+                    , Html.text ". "
+                    ]
 
-                    else if isField "author" then
-                        value ++ ": "
+                 else if isField "author" then
+                    [ markup
+                    , Html.text ": "
+                    ]
 
-                    else if isField "title|type" then
-                        value ++ ". "
+                 else if isField "title|type" then
+                    [ markup
+                    , Html.text ". "
+                    ]
 
-                    else
-                        attribute.name ++ ": " ++ value ++ ". "
-                ]
+                 else
+                    [ Html.text (attribute.name ++ ": ")
+                    , markup
+                    , Html.text ". "
+                    ]
+                )
 
         Nothing ->
             Html.text ""

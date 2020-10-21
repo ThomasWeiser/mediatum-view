@@ -88,7 +88,7 @@ initialModel presentation =
         GenericPresentation maybeNodeIds ->
             { content = GenericModel UI.Article.Generic.initialModel }
 
-        DocumentPresentation maybeFolderId documentId ->
+        DocumentPresentation maybeFolderId documentIdFromSearch ->
             { content = DetailsModel UI.Article.Details.initialModel }
 
         CollectionPresentation folderId ->
@@ -114,8 +114,8 @@ needs facetKeys presentation =
                         |> List.map Types.Needs.atomic
                         |> Types.Needs.batch
 
-        DocumentPresentation maybeFolderId documentId ->
-            Cache.NeedDocument documentId
+        DocumentPresentation maybeFolderId documentIdFromSearch ->
+            Cache.NeedDocumentFromSearch documentIdFromSearch
                 |> Types.Needs.atomic
 
         CollectionPresentation folderId ->
@@ -139,7 +139,7 @@ folderCountsForQuery context =
         GenericPresentation maybeNodeIds ->
             Nothing
 
-        DocumentPresentation maybeFolderId documentId ->
+        DocumentPresentation maybeFolderId documentIdFromSearch ->
             Nothing
 
         CollectionPresentation folderId ->
@@ -198,13 +198,13 @@ update context msg model =
                             Navigate navigation
                     )
 
-        ( DetailsMsg subMsg, DetailsModel subModel, DocumentPresentation maybeFolderId documentId ) ->
+        ( DetailsMsg subMsg, DetailsModel subModel, DocumentPresentation maybeFolderId documentIdFromSearch ) ->
             let
                 ( subModel1, subCmd, subReturn ) =
                     UI.Article.Details.update
                         { cache = context.cache
                         , route = context.route
-                        , documentId = documentId
+                        , documentIdFromSearch = documentIdFromSearch
                         }
                         subMsg
                         subModel
@@ -275,11 +275,11 @@ viewContent context model =
                 subModel
                 |> Html.map ListingMsg
 
-        ( DetailsModel subModel, DocumentPresentation maybeFolderId documentId ) ->
+        ( DetailsModel subModel, DocumentPresentation maybeFolderId documentIdFromSearch ) ->
             UI.Article.Details.view
                 { cache = context.cache
                 , route = context.route
-                , documentId = documentId
+                , documentIdFromSearch = documentIdFromSearch
                 }
                 subModel
                 |> Html.map DetailsMsg

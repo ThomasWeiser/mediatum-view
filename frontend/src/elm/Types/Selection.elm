@@ -249,7 +249,7 @@ orderingFtsSorting =
 orderingFilters : Ordering SetOfFilters
 orderingFilters =
     Ordering.byFieldWith
-        (Utils.lexicalOrder orderingTupleOfFilterHandleAndFilter)
+        (Utils.lexicalOrdering orderingTupleOfFilterHandleAndFilter)
         (\(SetOfFilters fs1) -> Sort.Dict.toList fs1)
 
 
@@ -297,5 +297,5 @@ orderingFilter =
 orderingFacetFilters : Ordering FacetFilters
 orderingFacetFilters =
     Ordering.byFieldWith
-        (Utils.lexicalOrder Ordering.natural)
+        (Utils.lexicalOrdering Ordering.natural)
         Dict.toList

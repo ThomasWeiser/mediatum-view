@@ -54,13 +54,14 @@ import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import List.Nonempty exposing (Nonempty)
 import Mediatum.Enum.FtsSorting
 import Mediatum.InputObject
+import Mediatum.Object
 import Mediatum.Object.FoldersConnection
 import Mediatum.Object.GenericNode
 import Mediatum.Query
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
-import Types exposing (Window)
+import Types exposing (DocumentIdFromSearch, Window)
 import Types.Facet exposing (FacetValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm
@@ -188,7 +189,7 @@ genericNode nodeId =
                 (Mediatum.Object.GenericNode.asDocument
                     (SelectionSet.succeed Tuple.pair
                         |> SelectionSet.with
-                            (Api.Fragments.documentByMask "nodebig")
+                            (Api.Fragments.documentByMask "nodebig" Nothing)
                         |> SelectionSet.with
                             Api.Fragments.documentResidence
                     )
@@ -239,36 +240,43 @@ selectionDocumentsPage :
     -> Selection
     -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
 selectionDocumentsPage window selection =
-    (case selection.selectMethod of
-        SelectByFolderListing ->
-            Mediatum.Query.allDocumentsPage
-                (selectionToOptionalGraphqlArguments selection
-                    >> windowToOptionalGraphqlArguments window
-                )
-                { folderId = selectionToFolderId selection }
+    let
+        ( query, maybeSearchTerm ) =
+            case selection.selectMethod of
+                SelectByFolderListing ->
+                    ( Mediatum.Query.allDocumentsPage
+                        (selectionToOptionalGraphqlArguments selection
+                            >> windowToOptionalGraphqlArguments window
+                        )
+                        { folderId = selectionToFolderId selection }
+                    , Nothing
+                    )
 
-        SelectByFullTextSearch searchTerm ftsSorting ->
-            Mediatum.Query.ftsDocumentsPage
-                (\optionals ->
-                    { optionals
-                        | sorting =
-                            Present
-                                (case ftsSorting of
-                                    FtsByRank ->
-                                        Mediatum.Enum.FtsSorting.ByRank
+                SelectByFullTextSearch searchTerm ftsSorting ->
+                    ( Mediatum.Query.ftsDocumentsPage
+                        (\optionals ->
+                            { optionals
+                                | sorting =
+                                    Present
+                                        (case ftsSorting of
+                                            FtsByRank ->
+                                                Mediatum.Enum.FtsSorting.ByRank
 
-                                    FtsByDate ->
-                                        Mediatum.Enum.FtsSorting.ByDate
-                                )
-                    }
-                        |> selectionToOptionalGraphqlArguments selection
-                        |> windowToOptionalGraphqlArguments window
-                )
-                { folderId = selectionToFolderId selection
-                , text = Types.SearchTerm.toString searchTerm
-                }
-    )
-        (Api.Fragments.documentsPage "nodesmall")
+                                            FtsByDate ->
+                                                Mediatum.Enum.FtsSorting.ByDate
+                                        )
+                            }
+                                |> selectionToOptionalGraphqlArguments selection
+                                |> windowToOptionalGraphqlArguments window
+                        )
+                        { folderId = selectionToFolderId selection
+                        , text = Types.SearchTerm.toString searchTerm
+                        }
+                    , Just searchTerm
+                    )
+    in
+    query
+        (Api.Fragments.documentsPage "nodesmall" maybeSearchTerm)
         |> SelectionSet.nonNullOrFail
 
 
@@ -418,7 +426,7 @@ authorSearch referencePage paginationPosition folderId searchString =
         }
         (Connection.connection
             Api.Fragments.graphqlDocumentObjects
-            (Api.Fragments.documentByMask "nodesmall")
+            (Api.Fragments.documentByMask "nodesmall" Nothing)
         )
         |> SelectionSet.nonNullOrFail
 
@@ -438,16 +446,24 @@ _GraphQL notation:_
 
 -}
 documentDetails :
-    DocumentId
-    -> SelectionSet (Maybe ( Document, Residence )) Graphql.Operation.RootQuery
-documentDetails documentId =
+    DocumentIdFromSearch
+    -> Bool
+    -> SelectionSet (Maybe ( Document, Maybe Residence )) Graphql.Operation.RootQuery
+documentDetails documentIdFromSearch withResidence =
     Mediatum.Query.documentById
-        { id = Id.toInt documentId }
+        { id = Id.toInt documentIdFromSearch.id }
         (SelectionSet.succeed Tuple.pair
             |> SelectionSet.with
-                (Api.Fragments.documentByMask "nodebig")
-            |> SelectionSet.with
-                Api.Fragments.documentResidence
+                (Api.Fragments.documentByMask "nodebig" documentIdFromSearch.search)
+            |> (if withResidence then
+                    SelectionSet.with
+                        (Api.Fragments.documentResidence
+                            |> SelectionSet.map Just
+                        )
+
+                else
+                    SelectionSet.hardcoded Nothing
+               )
         )
 
 
