@@ -544,7 +544,11 @@ update msg cache =
             )
 
 
-updateWithDocumentAndResidence : DocumentIdFromSearch -> Maybe ( Document, Maybe Residence ) -> Cache -> ( Cache, Cmd Msg )
+updateWithDocumentAndResidence :
+    DocumentIdFromSearch
+    -> Maybe ( Document, Maybe Residence )
+    -> Cache
+    -> ( Cache, Cmd Msg )
 updateWithDocumentAndResidence documentIdFromSearch maybeDocumentAndResidence cache =
     let
         cache1 =
@@ -557,6 +561,9 @@ updateWithDocumentAndResidence documentIdFromSearch maybeDocumentAndResidence ca
                                 (Success (Just document))
                                 cache.documents
                     }
+                        |> insertNodeType
+                            (Id.asNodeId documentIdFromSearch.id)
+                            NodeIsDocument
 
                 Nothing ->
                     { cache
@@ -566,6 +573,9 @@ updateWithDocumentAndResidence documentIdFromSearch maybeDocumentAndResidence ca
                                 (Success Nothing)
                                 cache.documents
                     }
+                        |> insertNodeType
+                            (Id.asNodeId documentIdFromSearch.id)
+                            NodeIsNeither
 
         cache2 =
             case maybeDocumentAndResidence of

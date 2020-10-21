@@ -42,7 +42,7 @@ import Types.Selection exposing (SelectMethod(..), Selection)
 
 {-| -}
 type Presentation
-    = GenericPresentation (Maybe ( NodeId, Maybe NodeId ))
+    = GenericPresentation (Maybe ( NodeId, Maybe DocumentIdFromSearch ))
     | CollectionPresentation FolderId
     | DocumentPresentation (Maybe FolderId) DocumentIdFromSearch
     | ListingPresentation Selection Window
@@ -160,4 +160,13 @@ fromRoute cache route =
                         )
 
                 _ ->
-                    GenericPresentation (Just ( nodeIdOne, Just nodeIdTwo ))
+                    GenericPresentation
+                        (Just
+                            ( nodeIdOne
+                            , Just
+                                (DocumentIdFromSearch
+                                    (nodeIdTwo |> Id.asDocumentId)
+                                    route.parameters.ftsTerm
+                                )
+                            )
+                        )
