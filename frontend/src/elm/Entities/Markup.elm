@@ -1,74 +1,60 @@
 module Entities.Markup exposing
-    ( Markup, Segment(..)
-    , parse, parseTestable
+    ( Markup
+    , parse
     , empty, plainText, normalizeYear
     , view
     )
 
 {-|
 
-@docs Markup, Segment
-@docs parse, parseTestable
+@docs Markup
+@docs parse
 @docs empty, plainText, normalizeYear
 @docs view
 
 -}
 
+import Entities.Markup.Parser exposing (Segment(..), Segments)
 import Html exposing (Html)
 import Html.Attributes
-import Maybe.Extra
-import Parser exposing (..)
 
 
-startTag : String
-startTag =
-    "<mediatum:fts>"
-
-
-endTag : String
-endTag =
-    "</mediatum:fts>"
-
-
-{-| A text with markup. Consists of a list of segments.
+{-| A text with markup. Internaly represented as a list of segments.
 -}
-type alias Markup =
-    List Segment
+type Markup
+    = Markup Segments
 
 
-{-| A segment represents either regular text or a markup element with embedded text.
--}
-type Segment
-    = Text String
-    | Fts String
-
-
-{-| An empty list of segments
+{-| An empty markup text, i.e. an empty list of segments
 -}
 empty : Markup
 empty =
-    []
+    Markup []
 
 
 {-| Decompose a string with markup.
 
-    parse "foo<mediatum:fts>bar</mediatum:fts>baz"
-        == [ Text "foo"
-           , Fts "bar"
-           , Text "baz"
-           ]
+    parse "foo <mediatum:fts>bar</mediatum:fts> baz"
+        == Markup
+            [ Text "foo "
+            , Fts "bar"
+            , Text " baz"
+            ]
 
 -}
 parse : String -> Markup
-parse text =
-    parseTestable text
-        |> Result.withDefault [ Text text ]
+parse =
+    Markup << Entities.Markup.Parser.parse
 
 
 {-| The parsed text with markup removed
+
+    plaintext (parse "foo <mediatum:fts>bar</mediatum:fts> baz")
+        == "foo bar baz"
+
 -}
 plainText : Markup -> String
-plainText segments =
+plainText (Markup segments) =
     segments
         |> List.map segmentText
         |> String.concat
@@ -76,21 +62,36 @@ plainText segments =
 
 {-| Years are sometime formatted as "2020-00-00T00:00:00".
 For a nicer display we take just the first segment and only the first 4 characters of it.
+
+    normalizeYear (parse "<mediatum:fts>2020</mediatum:fts>-00-00T00:00:00")
+        == Markup [ Fts "2020" ]
+
 -}
 normalizeYear : Markup -> Markup
-normalizeYear segments =
+normalizeYear (Markup segments) =
     segments
         |> List.take 1
         |> List.map
             (mapSegment
                 (String.left 4)
             )
+        |> Markup
 
 
 {-| Map markup to a Html.span element. Fts segments get marked with class "highlight".
+
+    view (parse "foo <mediatum:fts>bar</mediatum:fts> baz")
+        == Html.span []
+            [ Html.text "foo "
+            , Html.span
+                [ Html.Attributes.class "highlight" ]
+                [ Html.text "bar" ]
+            , Html.text " baz"
+            ]
+
 -}
 view : Markup -> Html msg
-view segments =
+view (Markup segments) =
     segments
         |> List.map
             (\segment ->
@@ -124,103 +125,3 @@ segmentText segment =
 
         Fts s ->
             s
-
-
-{-| The Parser is written in a way that it should never result in a dead end.
-
-For testing this property we expose the function that returns a Result nevertheless.
-
--}
-parseTestable : String -> Result (List DeadEnd) Markup
-parseTestable text =
-    Parser.run
-        theParser
-        text
-        |> Result.map postprocess
-
-
-postprocess : Markup -> Markup
-postprocess =
-    List.filter
-        (\segment -> segment /= Fts "")
-
-
-theParser : Parser Markup
-theParser =
-    getSource
-        |> andThen
-            (\source ->
-                loop [] (parserOuterLoop source)
-            )
-
-
-{-| Loop through a sequence of text and markup element fragments
--}
-parserOuterLoop : String -> Markup -> Parser (Step Markup Markup)
-parserOuterLoop source state =
-    getOffset
-        |> andThen
-            (\startOffset ->
-                loop
-                    ()
-                    (parserInnerLoop source startOffset)
-                    |> map
-                        (\innerLoopValue ->
-                            let
-                                newState =
-                                    state
-                                        |> Maybe.Extra.cons innerLoopValue.maybeTextFragment
-                                        |> Maybe.Extra.cons innerLoopValue.maybeElementFragment
-                            in
-                            if innerLoopValue.maybeElementFragment == Nothing then
-                                Done (List.reverse newState)
-
-                            else
-                                Loop newState
-                        )
-            )
-
-
-type alias InnerLoopValue =
-    { maybeTextFragment : Maybe Segment
-    , maybeElementFragment : Maybe Segment
-    }
-
-
-{-| Chomp regular text, followed by either a markup element or the end of input
--}
-parserInnerLoop : String -> Int -> () -> Parser (Step () InnerLoopValue)
-parserInnerLoop source startOffset _ =
-    let
-        innerLoopValue : Int -> Maybe Segment -> InnerLoopValue
-        innerLoopValue endOffset maybeElementFragment =
-            { maybeTextFragment =
-                if endOffset > startOffset then
-                    Just (Text (String.slice startOffset endOffset source))
-
-                else
-                    Nothing
-            , maybeElementFragment = maybeElementFragment
-            }
-    in
-    oneOf
-        [ succeed
-            (\endOffset -> Done (innerLoopValue endOffset Nothing))
-            |. end
-            |= getOffset
-        , succeed
-            (\endOffset element -> Done (innerLoopValue endOffset (Just element)))
-            |= getOffset
-            |= backtrackable parserFtsElement
-        , succeed (Loop ())
-            |. chompIf (always True)
-        ]
-
-
-parserFtsElement : Parser Segment
-parserFtsElement =
-    succeed Fts
-        |. symbol startTag
-        |= getChompedString
-            (chompUntil endTag)
-        |. symbol endTag

@@ -19,6 +19,7 @@
         "Entities.FolderCounts",
         "Entities.GenericNode",
         "Entities.Markup",
+        "Entities.Markup.Parser",
         "Entities.Residence",
         "Main",
         "Pagination.Offset.Page",
