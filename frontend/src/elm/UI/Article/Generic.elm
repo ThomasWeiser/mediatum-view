@@ -22,7 +22,7 @@ import Cache exposing (Cache)
 import Cache.Derive
 import Html exposing (Html)
 import RemoteData exposing (RemoteData(..))
-import Types exposing (NodeType(..))
+import Types exposing (DocumentIdFromSearch, NodeType(..))
 import Types.Id as Id exposing (NodeId)
 import UI.Icons
 import Utils
@@ -32,7 +32,7 @@ import Utils.Html
 {-| -}
 type alias Context =
     { cache : Cache
-    , nodeIds : Maybe ( NodeId, Maybe NodeId )
+    , genericParameters : Maybe ( NodeId, Maybe DocumentIdFromSearch )
     }
 
 
@@ -64,7 +64,7 @@ view context model =
     let
         remoteDataMessage =
             -- Find the reason why we have a GenericPresentation
-            case context.nodeIds of
+            case context.genericParameters of
                 Nothing ->
                     Cache.Derive.getRootFolder context.cache
                         |> RemoteData.map (always "Going to show the root folder")
@@ -90,7 +90,11 @@ view context model =
                                     ++ Id.toString nodeId
                             )
 
-                Just ( nodeIdOne, Just nodeIdTwo ) ->
+                Just ( nodeIdOne, Just documentIdFromSearch ) ->
+                    let
+                        nodeIdTwo =
+                            Id.asNodeId documentIdFromSearch.id
+                    in
                     RemoteData.map2 Tuple.pair
                         (Cache.Derive.getNodeType context.cache nodeIdOne |> Cache.Derive.asDerivedData)
                         (Cache.Derive.getNodeType context.cache nodeIdTwo |> Cache.Derive.asDerivedData)

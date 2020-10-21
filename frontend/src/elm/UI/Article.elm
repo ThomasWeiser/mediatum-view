@@ -102,15 +102,20 @@ initialModel presentation =
 needs : List String -> Presentation -> Cache.Needs
 needs facetKeys presentation =
     case presentation of
-        GenericPresentation maybeNodeIds ->
-            case maybeNodeIds of
+        GenericPresentation genericParameters ->
+            case genericParameters of
                 Nothing ->
                     Types.Needs.none
 
-                Just ( nodeIdOne, maybeNodeIdTwo ) ->
-                    [ nodeIdOne ]
-                        |> Maybe.Extra.cons maybeNodeIdTwo
-                        |> List.map Cache.NeedGenericNode
+                Just ( nodeIdOne, maybeDocumentIdFromSearch ) ->
+                    let
+                        maybeNeedTwo =
+                            maybeDocumentIdFromSearch
+                                |> Maybe.map
+                                    Cache.NeedDocumentFromSearch
+                    in
+                    [ Cache.NeedGenericNode nodeIdOne ]
+                        |> Maybe.Extra.cons maybeNeedTwo
                         |> List.map Types.Needs.atomic
                         |> Types.Needs.batch
 
@@ -250,10 +255,10 @@ viewBreadcrumbs context maybeFolderId =
 viewContent : Context -> Model -> Html Msg
 viewContent context model =
     case ( model.content, context.presentation ) of
-        ( GenericModel subModel, GenericPresentation nodeIds ) ->
+        ( GenericModel subModel, GenericPresentation genericParameters ) ->
             UI.Article.Generic.view
                 { cache = context.cache
-                , nodeIds = nodeIds
+                , genericParameters = genericParameters
                 }
                 subModel
                 |> Html.map GenericMsg

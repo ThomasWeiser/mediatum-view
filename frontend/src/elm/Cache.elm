@@ -105,7 +105,7 @@ type alias Cache =
     , folders : Sort.Dict.Dict FolderId (ApiData Folder)
     , subfolderIds : Sort.Dict.Dict FolderId (ApiData (List FolderId))
     , nodeTypes : Sort.Dict.Dict NodeId (ApiData NodeType)
-    , documents : Sort.Dict.Dict DocumentIdFromSearch (ApiData (Maybe Document))
+    , documents : Sort.Dict.Dict DocumentIdFromSearch (ApiData Document)
     , residence : Sort.Dict.Dict DocumentId (ApiData Residence)
     , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
     , folderCounts : Sort.Dict.Dict Selection (ApiData FolderCounts)
@@ -384,7 +384,7 @@ updateWithModifiedDocument document cache =
         | documents =
             Sort.Dict.insert
                 (DocumentIdFromSearch document.id Nothing)
-                (Success (Just document))
+                (Success document)
                 cache.documents
     }
 
@@ -544,7 +544,11 @@ update msg cache =
             )
 
 
-updateWithDocumentAndResidence : DocumentIdFromSearch -> Maybe ( Document, Maybe Residence ) -> Cache -> ( Cache, Cmd Msg )
+updateWithDocumentAndResidence :
+    DocumentIdFromSearch
+    -> Maybe ( Document, Maybe Residence )
+    -> Cache
+    -> ( Cache, Cmd Msg )
 updateWithDocumentAndResidence documentIdFromSearch maybeDocumentAndResidence cache =
     let
         cache1 =
@@ -554,18 +558,18 @@ updateWithDocumentAndResidence documentIdFromSearch maybeDocumentAndResidence ca
                         | documents =
                             Sort.Dict.insert
                                 documentIdFromSearch
-                                (Success (Just document))
+                                (Success document)
                                 cache.documents
                     }
+                        |> insertNodeType
+                            (Id.asNodeId documentIdFromSearch.id)
+                            NodeIsDocument
 
                 Nothing ->
-                    { cache
-                        | documents =
-                            Sort.Dict.insert
-                                documentIdFromSearch
-                                (Success Nothing)
-                                cache.documents
-                    }
+                    cache
+                        |> insertNodeType
+                            (Id.asNodeId documentIdFromSearch.id)
+                            NodeIsNeither
 
         cache2 =
             case maybeDocumentAndResidence of

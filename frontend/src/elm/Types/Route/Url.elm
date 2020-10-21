@@ -14,7 +14,7 @@ import Dict
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
 import Set
-import Types.Id as Id
+import Types.Id as Id exposing (NodeId)
 import Types.Range as Range
 import Types.Route as Route exposing (Route, RouteParameters, RoutePath(..))
 import Types.SearchTerm
@@ -23,6 +23,7 @@ import Url exposing (Url)
 import Url.Builder as Builder
 import Url.Parser as Parser exposing ((</>), (<?>), Parser)
 import Url.Parser.Query as QueryParser
+import Utils
 
 
 {-| -}
@@ -36,13 +37,20 @@ parser =
     Parser.map Route <|
         Parser.oneOf
             [ Parser.map NoId Parser.top <?> parserParameters
-            , Parser.map OneId (Parser.map Id.fromInt Parser.int) <?> parserParameters
+            , Parser.map OneId parseNodeId <?> parserParameters
             , Parser.map TwoIds
-                (Parser.map Id.fromInt Parser.int
-                    </> Parser.map Id.fromInt Parser.int
-                )
+                (parseNodeId </> parseNodeId)
                 <?> parserParameters
             ]
+
+
+parseNodeId : Parser (NodeId -> a) a
+parseNodeId =
+    Parser.custom "NODE_ID" <|
+        String.toInt
+            >> Maybe.map Id.fromInt
+            >> Maybe.andThen
+                (Utils.ensure Id.isValidId)
 
 
 parserParameters : QueryParser.Parser RouteParameters
