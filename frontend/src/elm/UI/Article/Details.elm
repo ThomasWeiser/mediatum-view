@@ -145,7 +145,7 @@ initEditAttributeValue context model =
             context.cache.documents
             context.documentIdFromSearch
     of
-        RemoteData.Success (Just document) ->
+        RemoteData.Success document ->
             let
                 ( key1, value1 ) =
                     case Document.attributeValue model.editAttributeKey document of
@@ -191,15 +191,8 @@ view context model =
             RemoteData.Failure error ->
                 Utils.Html.viewApiError error
 
-            RemoteData.Success ( Just document, residence ) ->
+            RemoteData.Success ( document, residence ) ->
                 viewDocument context model document residence
-
-            RemoteData.Success ( Nothing, _ ) ->
-                Html.span []
-                    [ Html.text "Document with id "
-                    , Html.text (context.documentIdFromSearch.id |> Id.toString)
-                    , Html.text " not available"
-                    ]
         ]
 
 
