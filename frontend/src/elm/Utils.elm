@@ -1,5 +1,6 @@
 module Utils exposing
     ( ifElse
+    , ensure
     , when
     , tupleAddThird
     , tupleRemoveThird
@@ -21,6 +22,7 @@ module Utils exposing
 # Bool
 
 @docs ifElse
+@docs ensure
 @docs when
 
 
@@ -75,6 +77,17 @@ ifElse ifTrue ifFalse bool =
 
     else
         ifFalse
+
+
+{-| Lift value into Maybe depending on a predicate
+-}
+ensure : (a -> Bool) -> a -> Maybe a
+ensure predicate value =
+    if predicate value then
+        Just value
+
+    else
+        Nothing
 
 
 {-| Conditionally apply a function
