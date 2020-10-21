@@ -9,6 +9,7 @@ module Types.Id exposing
     , toInt
     , fromInt
     , toString
+    , isValidId
     , ordering
     )
 
@@ -43,6 +44,7 @@ module Types.Id exposing
 
 # Miscellaneous
 
+@docs isValidId
 @docs ordering
 
 -}
@@ -121,6 +123,21 @@ dummyValueToAvoidElmAnalyseErrors =
     , EmptyTypeConstructor_Node
     , EmptyTypeConstructor_Document
     )
+
+
+maxValidId : Int
+maxValidId =
+    2 ^ 31 - 1
+
+
+{-| Checks if the id is in the allowed range (0 .. 2^31-1).
+
+Note that the server represents ids as (signed) int4 in PostgreSQL.
+
+-}
+isValidId : Id a -> Bool
+isValidId (Id i) =
+    i >= 0 && i <= maxValidId
 
 
 {-| Convert any id type into a `NodeId`.
