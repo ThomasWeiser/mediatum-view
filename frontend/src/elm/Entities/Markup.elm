@@ -1,5 +1,5 @@
 module Entities.Markup exposing
-    ( Segments, Segment(..)
+    ( Markup, Segment(..)
     , parse, parseTestable
     , empty, plainText, normalizeYear
     , view
@@ -7,7 +7,7 @@ module Entities.Markup exposing
 
 {-|
 
-@docs Segments, Segment
+@docs Markup, Segment
 @docs parse, parseTestable
 @docs empty, plainText, normalizeYear
 @docs view
@@ -30,10 +30,9 @@ endTag =
     "</mediatum:fts>"
 
 
-{-| The parser decomposes into a list of segments, alternating between
-text and markup element segments.
+{-| A text with markup. Consists of a list of segments.
 -}
-type alias Segments =
+type alias Markup =
     List Segment
 
 
@@ -46,7 +45,7 @@ type Segment
 
 {-| An empty list of segments
 -}
-empty : Segments
+empty : Markup
 empty =
     []
 
@@ -60,7 +59,7 @@ empty =
            ]
 
 -}
-parse : String -> Segments
+parse : String -> Markup
 parse text =
     parseTestable text
         |> Result.withDefault [ Text text ]
@@ -68,7 +67,7 @@ parse text =
 
 {-| The parsed text with markup removed
 -}
-plainText : Segments -> String
+plainText : Markup -> String
 plainText segments =
     segments
         |> List.map segmentText
@@ -76,9 +75,9 @@ plainText segments =
 
 
 {-| Years are sometime formatted as "2020-00-00T00:00:00".
-So we take just the first segment and only the first 4 characters of it.
+For a nicer display we take just the first segment and only the first 4 characters of it.
 -}
-normalizeYear : Segments -> Segments
+normalizeYear : Markup -> Markup
 normalizeYear segments =
     segments
         |> List.take 1
@@ -88,8 +87,9 @@ normalizeYear segments =
             )
 
 
-{-| -}
-view : Segments -> Html msg
+{-| Map markup to a Html.span element. Fts segments get marked with class "highlight".
+-}
+view : Markup -> Html msg
 view segments =
     segments
         |> List.map
@@ -131,7 +131,7 @@ segmentText segment =
 For testing this property we expose the function that returns a Result nevertheless.
 
 -}
-parseTestable : String -> Result (List DeadEnd) Segments
+parseTestable : String -> Result (List DeadEnd) Markup
 parseTestable text =
     Parser.run
         theParser
@@ -139,13 +139,13 @@ parseTestable text =
         |> Result.map postprocess
 
 
-postprocess : Segments -> Segments
+postprocess : Markup -> Markup
 postprocess =
     List.filter
         (\segment -> segment /= Fts "")
 
 
-theParser : Parser Segments
+theParser : Parser Markup
 theParser =
     getSource
         |> andThen
@@ -156,7 +156,7 @@ theParser =
 
 {-| Loop through a sequence of text and markup element fragments
 -}
-parserOuterLoop : String -> Segments -> Parser (Step Segments Segments)
+parserOuterLoop : String -> Markup -> Parser (Step Markup Markup)
 parserOuterLoop source state =
     getOffset
         |> andThen

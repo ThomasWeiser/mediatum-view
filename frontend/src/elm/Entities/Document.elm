@@ -10,7 +10,7 @@ module Entities.Document exposing
 
 -}
 
-import Entities.Markup exposing (Segments)
+import Entities.Markup exposing (Markup)
 import List.Extra
 import Types.Id exposing (DocumentId)
 
@@ -39,7 +39,7 @@ type alias Attribute =
     { field : String
     , name : String
     , width : Int
-    , value : Maybe Segments
+    , value : Maybe Markup
     }
 
 
@@ -55,7 +55,7 @@ init id metadatatypeName name attributes =
 
 {-| Lookup an attribute value by field.
 -}
-attributeValue : String -> Document -> Maybe Segments
+attributeValue : String -> Document -> Maybe Markup
 attributeValue key document =
     List.Extra.find
         (\attribute -> attribute.field == key)

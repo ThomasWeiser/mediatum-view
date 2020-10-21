@@ -50,7 +50,7 @@ all =
 
 {-| Use a string as the test name as well as the test subject.
 -}
-testText : String -> Segments -> Test
+testText : String -> Markup -> Test
 testText textToParse expectedResult =
     test ("text = \"" ++ textToParse ++ "\"") <|
         \_ ->
