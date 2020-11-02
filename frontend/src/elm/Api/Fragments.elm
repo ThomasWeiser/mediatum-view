@@ -43,6 +43,7 @@ import Maybe.Extra
 import Mediatum.Object
 import Mediatum.Object.Docset
 import Mediatum.Object.Document
+import Mediatum.Object.DocumentFromSearch
 import Mediatum.Object.DocumentResult
 import Mediatum.Object.DocumentResultPage
 import Mediatum.Object.DocumentsConnection
@@ -446,6 +447,28 @@ documentByMask maskName maybeSearchTerm =
                 { maskName = maskName }
                 |> SelectionSet.map mapJsonToAttributes
             )
+        |> (case maybeSearchTerm of
+                Just searchTerm ->
+                    SelectionSet.with
+                        (Mediatum.Object.Document.fromSearch
+                            { text = Types.SearchTerm.toString searchTerm }
+                            (SelectionSet.succeed Document.SearchMatching
+                                |> SelectionSet.with
+                                    (Mediatum.Object.DocumentFromSearch.fulltextMatching
+                                        |> SelectionSet.nonNullOrFail
+                                    )
+                                |> SelectionSet.with
+                                    (Mediatum.Object.DocumentFromSearch.attributesMatching
+                                        |> SelectionSet.nonNullOrFail
+                                    )
+                            )
+                            |> SelectionSet.nonNullOrFail
+                            |> SelectionSet.map Just
+                        )
+
+                Nothing ->
+                    SelectionSet.hardcoded Nothing
+           )
 
 
 {-| Selection set on a Document to get the residence of the document,
