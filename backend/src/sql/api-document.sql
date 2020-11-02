@@ -208,6 +208,24 @@ comment on function api.metadatatype_documents (mdt api.metadatatype, type text,
     'Reads and enables pagination through all documents having this meta data type, optionally filtered by type and name.';
 
 
+create or replace function api.document_fulltext_matching
+    ( document api.document
+    , text text
+    )
+    returns boolean as $$
+    select exists
+        (select
+            from preprocess.ufts
+            where ufts.tsvec @@ aux.custom_to_tsquery (text)
+            and ufts.nid = document.id
+        )
+$$ language sql strict stable parallel safe;
+
+
+comment on function api.document_fulltext_matching (document api.document, text text) is
+    'Checks whether the given search term occurs in the fulltext of the document.';
+
+
 create or replace function api.document_values_by_mask
     ( document api.document
     , mask_name text
