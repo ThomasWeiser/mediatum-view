@@ -272,6 +272,20 @@ comment on column api.document.attrs is
     '@omit';
 
 
+create type api.document_from_search as
+    ( document api.document
+    , tsquery tsquery
+    );
+
+comment on type api.document_from_search is
+    'A document together with a search term that was used to find the document. '
+    'Utilized to get search-related annotations on the document.';
+comment on column api.document_from_search.document is
+    '@omit';
+comment on column api.document_from_search.tsquery is
+    '@omit';
+
+
 create type api.fts_sorting as enum
     ( 'by_rank'
     , 'by_date'

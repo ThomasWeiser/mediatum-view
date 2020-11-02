@@ -72,6 +72,18 @@ create or replace function aux.ts_headline_options (highlight_all boolean)
 $$ language plpgsql immutable;
 
 
+-- Set weight(s) on a tsquery, like PostgreSQL's setweight does on a tsvector.
+-- Taken from: https://stackoverflow.com/a/45338769
+create function aux.setweight (query tsquery, weights text)
+    returns tsquery as $$
+    select regexp_replace(
+                query::text, 
+                '(?<=[^ !])'':?(\*?)A?B?C?D?', ''':\1'||weights, 
+                'g'
+            )::tsquery;
+$$ language sql strict immutable;
+
+
 -- Strip whitescape from either end of the string.
 -- And replace NULL with the empty string.
 create or replace function aux.normalize_facet_value (value text)
