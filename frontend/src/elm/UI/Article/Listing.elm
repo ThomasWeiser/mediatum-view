@@ -31,6 +31,7 @@ import Entities.Markup
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Maybe.Extra
 import Regex
 import RemoteData
 import Types exposing (Window)
@@ -244,7 +245,29 @@ viewDocument context number document =
                 viewAttribute
                 document.attributes
             )
+        , viewSearchMatching document.searchMatching
         ]
+
+
+viewSearchMatching : Maybe Document.SearchMatching -> Html msg
+viewSearchMatching =
+    Maybe.Extra.unwrap
+        ""
+        (\{ attributes, fulltext } ->
+            case ( attributes, fulltext ) of
+                ( False, False ) ->
+                    ""
+
+                ( True, False ) ->
+                    "Suchbegriff in Metadaten gefunden"
+
+                ( False, True ) ->
+                    "Suchbegriff in Volltext gefunden"
+
+                ( True, True ) ->
+                    "Suchbegriff in Metadaten und Volltext gefunden"
+        )
+        >> Html.text
 
 
 maxAttributeStringLength : Int
