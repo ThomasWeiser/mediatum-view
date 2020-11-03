@@ -215,7 +215,7 @@ create or replace function api.document_from_search
     returns api.document_from_search as $$
     select 
         document,
-        aux.custom_to_tsquery (text)
+        aux.convert_to_or_query(aux.custom_to_tsquery (text))
 $$ language sql strict stable parallel safe;
 
 comment on function api.document_from_search (document api.document, text text) is

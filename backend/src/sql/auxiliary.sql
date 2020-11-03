@@ -78,7 +78,20 @@ create function aux.setweight (query tsquery, weights text)
     returns tsquery as $$
     select regexp_replace(
                 query::text, 
-                '(?<=[^ !])'':?(\*?)A?B?C?D?', ''':\1'||weights, 
+                '(?<=[^ !])'':?(\*?)A?B?C?D?',
+                ''':\1'||weights, 
+                'g'
+            )::tsquery;
+$$ language sql strict immutable;
+
+
+create function aux.convert_to_or_query (query tsquery)
+    returns tsquery as $$
+    select regexp_replace(
+                querytree(query), 
+                -- TODO: Make sure we don't replace a quoted ampersand
+                ' & ', 
+                ' | ', 
                 'g'
             )::tsquery;
 $$ language sql strict immutable;
