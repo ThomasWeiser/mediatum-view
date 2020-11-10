@@ -116,7 +116,11 @@ create or replace function aux.fts_paginated
         )
     as $$
             select f.id
-                , f.distance
+                , -- Note that the RUM extension may return a distance of 'Infinity'
+                  -- which is a valid value of float4, but not a valid JSON number.
+                  -- Therefore we replace 'Infinity' with the approximate maximum
+                  -- valid float4 value.
+                  least (f.distance, 3.4028235e+38::float4)
                 , f.recency
                 , f.year
                 , (count(*) over ()) > "limit" + "offset"
