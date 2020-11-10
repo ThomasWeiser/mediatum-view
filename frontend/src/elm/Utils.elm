@@ -79,7 +79,7 @@ ifElse ifTrue ifFalse bool =
         ifFalse
 
 
-{-| Lift value into Maybe depending on a predicate
+{-| Lift a value into Maybe depending on a predicate
 -}
 ensure : (a -> Bool) -> a -> Maybe a
 ensure predicate value =

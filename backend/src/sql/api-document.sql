@@ -208,6 +208,58 @@ comment on function api.metadatatype_documents (mdt api.metadatatype, type text,
     'Reads and enables pagination through all documents having this meta data type, optionally filtered by type and name.';
 
 
+create or replace function api.document_from_search
+    ( document api.document
+    , text text
+    )
+    returns api.document_from_search as $$
+    select 
+        document,
+        aux.convert_to_or_query(aux.custom_to_tsquery (text))
+$$ language sql strict stable parallel safe;
+
+comment on function api.document_from_search (document api.document, text text) is
+    'Attach a search term that was used to find this document. '
+    'Utilized to get search-related annotations on the document.';
+
+
+create or replace function api.document_from_search_fulltext_matching
+    ( document_from_search api.document_from_search
+    )
+    returns boolean as $$
+    select exists
+        (select
+            from preprocess.ufts
+            where ufts.tsvec @@ aux.setweight (document_from_search.tsquery, 
+                -- Note that we use weight 'D' for indexing fulltext.
+                'D')
+            and ufts.nid = (document_from_search).document.id
+        )
+$$ language sql strict stable parallel safe;
+
+comment on function api.document_from_search_fulltext_matching (document_from_search api.document_from_search) is
+    'Checks whether the associated search term occurs in the fulltext of the document.';
+
+
+create or replace function api.document_from_search_attributes_matching
+    ( document_from_search api.document_from_search
+    )
+    returns boolean as $$
+    select exists
+        (select
+            from preprocess.ufts
+            where ufts.tsvec @@ aux.setweight (document_from_search.tsquery,
+                -- Note that we use weight 'A' for indexing attributes.
+                -- Later we may also use the weights 'B' and 'C' for attributes.
+                'ABC')
+            and ufts.nid = (document_from_search).document.id
+        )
+$$ language sql strict stable parallel safe;
+
+comment on function api.document_from_search_attributes_matching (document_from_search api.document_from_search) is
+    'Checks whether the associated search term occurs in the attributes of the document.';
+
+
 create or replace function api.document_values_by_mask
     ( document api.document
     , mask_name text

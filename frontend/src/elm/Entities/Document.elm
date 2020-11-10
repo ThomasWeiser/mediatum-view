@@ -1,11 +1,11 @@
 module Entities.Document exposing
-    ( Document, Attribute
+    ( Document, Attribute, SearchMatching
     , init, attributeValue
     )
 
 {-| The metadata of a document and its attributes.
 
-@docs Document, Attribute
+@docs Document, Attribute, SearchMatching
 @docs init, attributeValue
 
 -}
@@ -19,12 +19,16 @@ import Types.Id exposing (DocumentId)
 
 The `attributes` are relative to a mask, which depends on the context where a `Document` is used.
 
+`searchMatching` contains additional search-related annotations on the document
+if originating from a fulltext search.
+
 -}
 type alias Document =
     { id : DocumentId
     , name : String
     , metadatatypeName : String
     , attributes : List Attribute
+    , searchMatching : Maybe SearchMatching
     }
 
 
@@ -43,13 +47,28 @@ type alias Attribute =
     }
 
 
+{-| For documents that were found in a search: where does the search term occur?
+-}
+type alias SearchMatching =
+    { fulltext : Bool
+    , attributes : Bool
+    }
+
+
 {-| -}
-init : DocumentId -> String -> String -> List Attribute -> Document
-init id metadatatypeName name attributes =
+init :
+    DocumentId
+    -> String
+    -> String
+    -> List Attribute
+    -> Maybe SearchMatching
+    -> Document
+init id metadatatypeName name attributes searchMatching =
     { id = id
     , name = name
     , metadatatypeName = metadatatypeName
     , attributes = attributes
+    , searchMatching = searchMatching
     }
 
 

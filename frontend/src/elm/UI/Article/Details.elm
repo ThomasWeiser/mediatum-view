@@ -211,9 +211,31 @@ viewDocument context model document residence =
                     viewAttribute
                     document.attributes
             ]
+        , viewSearchMatching document.searchMatching
         , viewResidence context residence
         , viewEditAttribute model document
         ]
+
+
+viewSearchMatching : Maybe Document.SearchMatching -> Html msg
+viewSearchMatching =
+    Maybe.Extra.unwrap
+        ""
+        (\{ attributes, fulltext } ->
+            case ( attributes, fulltext ) of
+                ( False, False ) ->
+                    ""
+
+                ( True, False ) ->
+                    "Suchbegriff in Metadaten gefunden"
+
+                ( False, True ) ->
+                    "Suchbegriff in Volltext gefunden"
+
+                ( True, True ) ->
+                    "Suchbegriff in Metadaten und Volltext gefunden"
+        )
+        >> Html.text
 
 
 viewAttribute : Document.Attribute -> Html msg
