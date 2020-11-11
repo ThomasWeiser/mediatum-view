@@ -26,6 +26,7 @@ import Cache exposing (Cache)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import RemoteData
 import Sort.Dict
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
@@ -261,7 +262,8 @@ viewSearch context model =
             [ Html.input
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
-                , Html.Attributes.placeholder "Search ..."
+                , Html.Attributes.placeholder
+                    (getSearchFieldPlaceholder context)
                 , Html.Attributes.value model.ftsTerm
                 , Html.Events.onInput SetSearchTerm
                 ]
@@ -288,6 +290,27 @@ viewSearch context model =
                 [ UI.Icons.search, Html.text " By Date" ]
             ]
         ]
+
+
+getSearchFieldPlaceholder : Context -> String
+getSearchFieldPlaceholder context =
+    case getPresentationFolderName context of
+        Just folderName ->
+            "Search in " ++ folderName
+
+        Nothing ->
+            ""
+
+
+getPresentationFolderName : Context -> Maybe String
+getPresentationFolderName context =
+    Types.Presentation.getFolderId context.cache context.presentation
+        |> Maybe.andThen
+            (\folderId ->
+                Cache.get context.cache.folders folderId
+                    |> RemoteData.toMaybe
+                    |> Maybe.map .name
+            )
 
 
 viewFilters : Context -> Model -> Html Msg
