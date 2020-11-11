@@ -390,5 +390,5 @@ viewExistingFilter beingEdited filter =
             , Html.Events.onClick (RemoveFilter filter)
             , Html.Attributes.class "filter-button"
             ]
-            [ Html.text "X" ]
+            [ UI.Icons.clear ]
         ]
