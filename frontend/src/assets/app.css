@@ -83,6 +83,11 @@ article {
 input:focus{
   outline: none;
 }
+button:focus{
+  outline-style: none;
+  box-shadow: none;
+  border-color: transparent;
+}
 input[type="search"]::-webkit-search-cancel-button {
   display: none;
 }
