@@ -41,6 +41,7 @@ import UI.Controls.Filter
 import UI.Controls.FilterEditor as FilterEditor
 import UI.Icons
 import Utils
+import Utils.Html
 
 
 {-| -}
@@ -68,6 +69,7 @@ type alias Model =
 {-| -}
 type Msg
     = SetSearchTerm String
+    | ClearSearchTerm
     | SetSorting FtsSorting
     | AddFilter UI.Controls.Filter.FilterType
     | EditFilter Filter
@@ -118,6 +120,12 @@ update context msg model =
     case msg of
         SetSearchTerm ftsTerm ->
             ( { model | ftsTerm = ftsTerm }
+            , Cmd.none
+            , NoReturn
+            )
+
+        ClearSearchTerm ->
+            ( { model | ftsTerm = "" }
             , Cmd.none
             , NoReturn
             )
@@ -270,6 +278,13 @@ viewSearch context model =
                 , Html.Events.onInput SetSearchTerm
                 ]
                 []
+            , Html.button
+                [ Html.Attributes.type_ "button"
+                , Html.Attributes.class "clear-input"
+                , Utils.Html.displayNone (model.ftsTerm == "")
+                , Html.Events.onClick ClearSearchTerm
+                ]
+                [ UI.Icons.clear ]
             , Html.button
                 [ Html.Attributes.type_ "submit"
                 , Html.Attributes.classList
