@@ -7,6 +7,7 @@ module Cache.Derive exposing
     , getAsFolderId
     , getAsDocumentId
     , getRootFolder
+    , getRootFolderId
     , getParentId
     , getPath
     , getPathAsFarAsCached
@@ -31,6 +32,7 @@ module Cache.Derive exposing
 @docs getAsFolderId
 @docs getAsDocumentId
 @docs getRootFolder
+@docs getRootFolderId
 @docs getParentId
 @docs getPath
 @docs getPathAsFarAsCached
@@ -132,6 +134,14 @@ getRootFolder cache =
                                     Failure (CacheDerivationError "Root node is not a folder")
                         )
             )
+
+
+{-| -}
+getRootFolderId : Cache -> Maybe FolderId
+getRootFolderId cache =
+    getRootFolder cache
+        |> RemoteData.toMaybe
+        |> Maybe.map Tuple.first
 
 
 {-| -}

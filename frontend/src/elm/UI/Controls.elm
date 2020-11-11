@@ -23,9 +23,11 @@ module UI.Controls exposing
 -}
 
 import Cache exposing (Cache)
+import Cache.Derive
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Maybe.Extra
 import RemoteData
 import Sort.Dict
 import Types.Navigation as Navigation exposing (Navigation)
@@ -294,23 +296,18 @@ viewSearch context model =
 
 getSearchFieldPlaceholder : Context -> String
 getSearchFieldPlaceholder context =
-    case getPresentationFolderName context of
-        Just folderName ->
-            "Search in " ++ folderName
-
-        Nothing ->
-            ""
-
-
-getPresentationFolderName : Context -> Maybe String
-getPresentationFolderName context =
     Types.Presentation.getFolderId context.cache context.presentation
+        |> Maybe.Extra.orElse
+            (Cache.Derive.getRootFolderId context.cache)
         |> Maybe.andThen
             (\folderId ->
                 Cache.get context.cache.folders folderId
                     |> RemoteData.toMaybe
                     |> Maybe.map .name
             )
+        |> Maybe.Extra.unwrap
+            "Search"
+            (\folderName -> "Search in " ++ folderName)
 
 
 viewFilters : Context -> Model -> Html Msg
