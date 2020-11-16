@@ -2,6 +2,7 @@ module Utils.Html exposing
     ( viewApiError
     , viewCacheError
     , viewError
+    , displayNone
     )
 
 {-| Display errors messages using a standardized layout.
@@ -10,11 +11,13 @@ module Utils.Html exposing
 @docs viewCacheError
 @docs viewError
 
+@docs displayNone
+
 -}
 
 import Cache
 import Cache.Derive
-import Html exposing (Html)
+import Html exposing (Attribute, Html)
 import Html.Attributes
 
 
@@ -36,3 +39,13 @@ viewError defect =
     Html.div
         [ Html.Attributes.class "error" ]
         [ Html.text defect ]
+
+
+{-| -}
+displayNone : Bool -> Attribute msg
+displayNone hide =
+    if hide then
+        Html.Attributes.style "display" "none"
+
+    else
+        Html.Attributes.class ""

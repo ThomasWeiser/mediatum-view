@@ -23,9 +23,12 @@ module UI.Controls exposing
 -}
 
 import Cache exposing (Cache)
+import Cache.Derive
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Maybe.Extra
+import RemoteData
 import Sort.Dict
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
@@ -38,6 +41,7 @@ import UI.Controls.Filter
 import UI.Controls.FilterEditor as FilterEditor
 import UI.Icons
 import Utils
+import Utils.Html
 
 
 {-| -}
@@ -65,6 +69,7 @@ type alias Model =
 {-| -}
 type Msg
     = SetSearchTerm String
+    | ClearSearchTerm
     | SetSorting FtsSorting
     | AddFilter UI.Controls.Filter.FilterType
     | EditFilter Filter
@@ -115,6 +120,12 @@ update context msg model =
     case msg of
         SetSearchTerm ftsTerm ->
             ( { model | ftsTerm = ftsTerm }
+            , Cmd.none
+            , NoReturn
+            )
+
+        ClearSearchTerm ->
+            ( { model | ftsTerm = "" }
             , Cmd.none
             , NoReturn
             )
@@ -261,11 +272,19 @@ viewSearch context model =
             [ Html.input
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
-                , Html.Attributes.placeholder "Search ..."
+                , Html.Attributes.placeholder
+                    (getSearchFieldPlaceholder context)
                 , Html.Attributes.value model.ftsTerm
                 , Html.Events.onInput SetSearchTerm
                 ]
                 []
+            , Html.button
+                [ Html.Attributes.type_ "button"
+                , Html.Attributes.class "clear-input"
+                , Utils.Html.displayNone (model.ftsTerm == "")
+                , Html.Events.onClick ClearSearchTerm
+                ]
+                [ UI.Icons.clear ]
             , Html.button
                 [ Html.Attributes.type_ "submit"
                 , Html.Attributes.classList
@@ -288,6 +307,22 @@ viewSearch context model =
                 [ UI.Icons.search, Html.text " By Date" ]
             ]
         ]
+
+
+getSearchFieldPlaceholder : Context -> String
+getSearchFieldPlaceholder context =
+    Types.Presentation.getFolderId context.cache context.presentation
+        |> Maybe.Extra.orElse
+            (Cache.Derive.getRootFolderId context.cache)
+        |> Maybe.andThen
+            (\folderId ->
+                Cache.get context.cache.folders folderId
+                    |> RemoteData.toMaybe
+                    |> Maybe.map .name
+            )
+        |> Maybe.Extra.unwrap
+            "Search"
+            (\folderName -> "Search in " ++ folderName)
 
 
 viewFilters : Context -> Model -> Html Msg
@@ -355,5 +390,5 @@ viewExistingFilter beingEdited filter =
             , Html.Events.onClick (RemoveFilter filter)
             , Html.Attributes.class "filter-button"
             ]
-            [ Html.text "X" ]
+            [ UI.Icons.clear ]
         ]

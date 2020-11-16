@@ -64,13 +64,38 @@ article {
   overflow: auto;
   padding: 0.5em;
 }
+
 .search-bar {
   display: flex;
+  border: 1px solid #ccc;
 }
-.search-input {
+.search-bar .search-input {
   flex: 1;
   font-size: 105%;
-  border: 1px solid #ccc;
+  border: none;
+}
+.search-bar .clear-input {
+  background: none;
+  border: none;
+}
+
+/* Remove some builtin-styles for input fields in webkit, chrome, ie */
+input:focus{
+  outline: none;
+}
+button:focus{
+  outline-style: none;
+  box-shadow: none;
+  border-color: transparent;
+}
+input[type="search"]::-webkit-search-cancel-button {
+  display: none;
+}
+input.hide-clear[type=search]::-ms-clear,
+input.hide-clear[type=search]::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0; 
 }
 
 .filters-bar {
@@ -178,15 +203,13 @@ ul.folder-list ul.folder-list {
   text-decoration: underline;
 }
 
-.svg-icon-definitions symbol {
-  stroke-width: 14%;
-  stroke-linejoin: round;
-}
 .svg-icon {
   display: inline-block;
   width: 1.5ex;
   height: 1.5ex;
   stroke: currentColor;
+  stroke-width: 3px;
+  stroke-linejoin: round;
   fill: currentColor;
   transition: transform 0.15s
 }
