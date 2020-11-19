@@ -16,21 +16,21 @@ create or replace function preprocess.some_attributes_as_array (attrs jsonb, key
 	select array(
         select left(value, 1048000) from jsonb_each_text(attrs) where key = any (keys)
     )
-$$ language sql stable;
+$$ language sql immutable;
 
 
 create or replace function preprocess.some_attributes_as_text (attrs jsonb, keys text[])
     returns text as $$
 	select
         array_to_string(preprocess.some_attributes_as_array(attrs, keys), ' ')
-$$ language sql stable;
+$$ language sql immutable;
 
 
 create or replace function preprocess.some_attributes_as_tsvector (attrs jsonb, keys text[])
     returns tsvector as $$
 	select
         to_tsvector('english_german', preprocess.some_attributes_as_text(attrs, keys))
-$$ language sql stable;
+$$ language sql immutable;
 
 
 create or replace procedure preprocess.add_document_aspect (document mediatum.node, name text, keys text[])
