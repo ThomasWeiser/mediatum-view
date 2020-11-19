@@ -11,42 +11,63 @@ create table preprocess.aspect (
 );
 
 
-create or replace function preprocess.some_attributes_as_array (attrs jsonb, keys text[])
-    returns text[] as $$
-	select array(
-        select left(value, 1048000) from jsonb_each_text(attrs) where key = any (keys)
-    )
+create or replace function preprocess.flatten_array (nested_array anyarray)
+    returns anyarray as $$
+	select array_agg(u)
+      from unnest() as u
 $$ language sql immutable;
 
 
-create or replace function preprocess.some_attributes_as_text (attrs jsonb, keys text[])
+create or replace function preprocess.some_attributes_as_array (attrs jsonb, keys text[], split_at_semicolon boolean default false)
+    returns text[] as $$
+    select
+        case when split_at_semicolon then
+            (   select array_agg(left(u, 1048000))
+                from jsonb_each_text(attrs), unnest (regexp_split_to_array(value, ';')) as u
+                where key = any (keys)
+            )
+        else
+            (   select array(
+                    -- Refactor string-normalizing function
+                    select left(value, 1048000)
+                    from jsonb_each_text(attrs) 
+                    where key = any (keys)
+                )
+            )
+        end
+$$ language sql immutable;
+
+
+
+create or replace function preprocess.some_attributes_as_text (attrs jsonb, keys text[], split_at_semicolon boolean default false)
     returns text as $$
 	select
-        array_to_string(preprocess.some_attributes_as_array(attrs, keys), ' ')
+        array_to_string(preprocess.some_attributes_as_array(attrs, keys, split_at_semicolon), ' ')
 $$ language sql immutable;
 
 
-create or replace function preprocess.some_attributes_as_tsvector (attrs jsonb, keys text[])
+create or replace function preprocess.some_attributes_as_tsvector (attrs jsonb, keys text[], split_at_semicolon boolean default false)
     returns tsvector as $$
 	select
-        to_tsvector('english_german', preprocess.some_attributes_as_text(attrs, keys))
+        to_tsvector('english_german', preprocess.some_attributes_as_text(attrs, keys, split_at_semicolon))
 $$ language sql immutable;
 
 
-create or replace procedure preprocess.add_document_aspect (document mediatum.node, name text, keys text[])
+create or replace procedure preprocess.add_document_aspect (document mediatum.node, name text, keys text[], split_at_semicolon boolean default false)
     as $$
         insert into preprocess.aspect (nid, name, values, tsvec)
             select
                 document.id,
                 name,
-                preprocess.some_attributes_as_array(document.attrs, keys) as values,
-                preprocess.some_attributes_as_tsvector(document.attrs, keys) as tsvec
+                preprocess.some_attributes_as_array(document.attrs, keys, split_at_semicolon) as values,
+                preprocess.some_attributes_as_tsvector(document.attrs, keys, split_at_semicolon) as tsvec
         ;
 $$ language sql;
 
 create or replace function preprocess.add_document_aspects (document mediatum.node)
     returns void as $$
-        call preprocess.add_document_aspect(document, 'title', array['title', 'title-translated']);
+        call preprocess.add_document_aspect(document, 'title', array['title', 'title-translated'], false);
+        call preprocess.add_document_aspect(document, 'person', array['author', 'advisor', 'referee'], true);
 $$ language sql volatile;
 
 
@@ -56,7 +77,7 @@ create or replace procedure preprocess.populate_aspect_table ()
             from mediatum.node
             where node.schema is not null
                 and not aux.nodetype_is_container (node.type)
-        limit 1000 -- For testing the code we may just process a small fraction of the data
+        limit 10000 -- For testing the code we may just process a small fraction of the data
         ;
 $$ language sql;
 
