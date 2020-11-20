@@ -81,8 +81,15 @@ $$ language sql;
 
 create or replace function preprocess.add_document_aspects (document mediatum.node)
     returns void as $$
+        call preprocess.add_document_aspect(document, 'type', array['type'], false);
+        call preprocess.add_document_aspect(document, 'origin', array['origin'], false);
+        call preprocess.add_document_aspect(document, 'subject', array['subject'], false);
+        call preprocess.add_document_aspect(document, 'subject2', array['subject2'], true);
         call preprocess.add_document_aspect(document, 'title', array['title', 'title-translated'], false);
-        call preprocess.add_document_aspect(document, 'person', array['author', 'advisor', 'referee'], true);
+        call preprocess.add_document_aspect(document, 'author', array['author', 'author.fullname_comma'], true);
+        call preprocess.add_document_aspect(document, 'person', array['author', 'author.fullname_comma', 'advisor', 'referee'], true);
+        call preprocess.add_document_aspect(document, 'keywords', array['keywords', 'keywords-translated'], true);
+        call preprocess.add_document_aspect(document, 'description', array['description', 'description-translated'], false);
 $$ language sql volatile;
 
 
