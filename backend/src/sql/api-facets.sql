@@ -236,6 +236,35 @@ comment on function api.docset_facet_by_mask
 ;
 
 
+create or replace function api.docset_facet_by_apect
+    ( docset api.docset
+    , aspect_name text
+    )
+    returns setof api.facet_value as $$
+        select
+            value,
+            count(value)::integer
+        from 
+            preprocess.aspect,
+            unnest (aspect.values) as value
+        where aspect.nid = ANY (docset.id_list)
+          and aspect.name = aspect_name
+        group by value
+        order by count(value) desc, value
+        ;
+$$ language sql strict stable parallel safe rows 50;
+
+comment on function api.docset_facet_by_apect
+    ( docset api.docset
+    , aspect_name text
+    ) is
+    'Gather the most frequent values of a facet within the docset. '
+    'The facet in question is specified by an aspectName. '
+    -- TODO: Determine how we will handle missing values; and describe it here in this doc.
+    'Documents without the corresponding key indicate the value as the empty string.'
+;
+
+
 create or replace function api.all_documents_facet_by_key
     ( folder_id int4
     , key text
