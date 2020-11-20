@@ -99,7 +99,8 @@ create or replace procedure preprocess.populate_aspect_table ()
             from mediatum.node
             where node.schema is not null
                 and not aux.nodetype_is_container (node.type)
-        limit 10000 -- For testing the code we may just process a small fraction of the data
+                -- and node.id > 601000 and node.id < 602000 -- For testing: process some well-known documents only
+        -- limit 5000 -- For testing: just process a small fraction of the data
         ;
 $$ language sql;
 
