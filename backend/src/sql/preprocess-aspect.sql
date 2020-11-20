@@ -107,16 +107,49 @@ create or replace function preprocess.add_document_aspects (document mediatum.no
 $$ language sql volatile;
 
 
-create or replace procedure preprocess.populate_aspect_table ()
+create or replace procedure preprocess.add_document_aspects_proc (document mediatum.node)
+    as $$
+        call preprocess.add_document_aspect(document, 'type', array['type'], false);
+        call preprocess.add_document_aspect(document, 'origin', array['origin'], false);
+        call preprocess.add_document_aspect(document, 'subject', array['subject'], true);
+        call preprocess.add_document_aspect(document, 'subject2', array['subject2'], true);
+        call preprocess.add_document_aspect(document, 'title', array['title', 'title-translated'], false);
+        call preprocess.add_document_aspect(document, 'author', array['author', 'author.fullname_comma'], true);
+        call preprocess.add_document_aspect(document, 'person', array['author', 'author.fullname_comma', 'advisor', 'referee'], true);
+        call preprocess.add_document_aspect(document, 'keywords', array['keywords', 'keywords-translated'], true);
+        call preprocess.add_document_aspect(document, 'description', array['description', 'description-translated'], false);
+        call preprocess.add_document_aspect_year(document);
+$$ language sql;
+
+
+create or replace procedure preprocess.populate_aspect_table_1 ()
     as $$
         select preprocess.add_document_aspects(node::mediatum.node)
             from mediatum.node
             where node.schema is not null
                 and not aux.nodetype_is_container (node.type)
-                -- and node.id > 601000 and node.id < 602000 -- For testing: process some well-known documents only
-        -- limit 5000 -- For testing: just process a small fraction of the data
+                and node.id > 601000 and node.id < 620000 -- For testing: process some well-known documents only
+        limit 4000 -- For testing: just process a small fraction of the data
         ;
 $$ language sql;
+
+
+create or replace procedure preprocess.populate_aspect_table_2() 
+    as $$
+        declare current_node mediatum.node;
+        begin
+            for current_node in
+                select *
+                    from mediatum.node
+                    where node.schema is not null
+                        and not aux.nodetype_is_container (node.type)
+                        -- and node.id > 601000 and node.id < 620000 -- For testing: process some well-known documents only
+                -- limit 4000 -- For testing: just process a small fraction of the data
+            loop
+                call preprocess.add_document_aspects_proc(current_node);
+            end loop;
+        end;
+$$ language plpgsql;
 
 
 -- Suppress notices about "Word is too long to be indexed. Words longer than 2047 characters are ignored."
@@ -124,7 +157,7 @@ $$ language sql;
 set session client_min_messages to warning;
 
 delete from preprocess.aspect;   
-call preprocess.populate_aspect_table ();
+call preprocess.populate_aspect_table_2 ();
 
 -- Reset message level to default
 set session client_min_messages to notice;
