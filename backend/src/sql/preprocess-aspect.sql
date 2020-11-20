@@ -79,6 +79,19 @@ create or replace procedure preprocess.add_document_aspect (document mediatum.no
         ;
 $$ language sql;
 
+create or replace procedure preprocess.add_document_aspect_year (document mediatum.node)
+    as $$
+        insert into preprocess.aspect (nid, name, values, tsvec)
+            select
+                document.id,
+                'year',
+                -- Try to extract a 4 digits year substring from different possible date formats used in attribute field "year"
+                array[substring((document.attrs ->> 'year') from '\d{4}')::int4],
+                to_tsvector('english_german', substring((document.attrs ->> 'year') from '\d{4}'))
+        ;
+$$ language sql;
+
+
 create or replace function preprocess.add_document_aspects (document mediatum.node)
     returns void as $$
         call preprocess.add_document_aspect(document, 'type', array['type'], false);
@@ -90,6 +103,7 @@ create or replace function preprocess.add_document_aspects (document mediatum.no
         call preprocess.add_document_aspect(document, 'person', array['author', 'author.fullname_comma', 'advisor', 'referee'], true);
         call preprocess.add_document_aspect(document, 'keywords', array['keywords', 'keywords-translated'], true);
         call preprocess.add_document_aspect(document, 'description', array['description', 'description-translated'], false);
+        call preprocess.add_document_aspect_year(document);
 $$ language sql volatile;
 
 
