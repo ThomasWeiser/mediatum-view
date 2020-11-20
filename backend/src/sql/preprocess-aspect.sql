@@ -18,13 +18,27 @@ create or replace function preprocess.flatten_array (nested_array anyarray)
 $$ language sql immutable;
 
 
+create or replace function preprocess.array_unique_stable (input_array anyarray)
+    -- https://dba.stackexchange.com/a/211502
+    returns anyarray as $$
+    select array_agg(element order by index)
+    from (
+        select distinct on (element) element,index
+        from unnest(input_array) with ordinality as p(element,index)
+        order by element,index
+    ) sub
+$$ language sql immutable strict;
+
+
 create or replace function preprocess.some_attributes_as_array (attrs jsonb, keys text[], split_at_semicolon boolean default false)
     returns text[] as $$
-    select
+    select preprocess.array_unique_stable(
         case when split_at_semicolon then
-            (   select array_agg(left(u, 1048000))
-                from jsonb_each_text(attrs), unnest (regexp_split_to_array(value, ';')) as u
-                where key = any (keys)
+            (   select array(
+                    select left(u, 1048000)
+                    from jsonb_each_text(attrs), unnest (regexp_split_to_array(value, ';')) as u
+                    where key = any (keys)
+                )
             )
         else
             (   select array(
@@ -35,6 +49,7 @@ create or replace function preprocess.some_attributes_as_array (attrs jsonb, key
                 )
             )
         end
+    )
 $$ language sql immutable;
 
 
