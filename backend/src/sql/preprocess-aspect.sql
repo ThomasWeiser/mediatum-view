@@ -30,7 +30,7 @@ create or replace function preprocess.array_unique_stable (input_array anyarray)
 $$ language sql immutable strict;
 
 
-create or replace function preprocess.some_attributes_as_array (attrs jsonb, keys text[], split_at_semicolon boolean default false)
+create or replace function preprocess.some_attributes_as_array (attrs jsonb, keys text[], split_at_semicolon boolean)
     returns text[] as $$
     select preprocess.array_unique_stable(
         case when split_at_semicolon then
@@ -50,25 +50,25 @@ create or replace function preprocess.some_attributes_as_array (attrs jsonb, key
             )
         end
     )
-$$ language sql immutable;
+$$ language sql immutable strict;
 
 
 
-create or replace function preprocess.some_attributes_as_text (attrs jsonb, keys text[], split_at_semicolon boolean default false)
+create or replace function preprocess.some_attributes_as_text (attrs jsonb, keys text[], split_at_semicolon boolean)
     returns text as $$
 	select
         array_to_string(preprocess.some_attributes_as_array(attrs, keys, split_at_semicolon), ' ')
-$$ language sql immutable;
+$$ language sql immutable strict;
 
 
-create or replace function preprocess.some_attributes_as_tsvector (attrs jsonb, keys text[], split_at_semicolon boolean default false)
+create or replace function preprocess.some_attributes_as_tsvector (attrs jsonb, keys text[], split_at_semicolon boolean)
     returns tsvector as $$
 	select
         to_tsvector('english_german', preprocess.some_attributes_as_text(attrs, keys, split_at_semicolon))
-$$ language sql immutable;
+$$ language sql immutable strict;
 
 
-create or replace procedure preprocess.add_document_aspect (document mediatum.node, name text, keys text[], split_at_semicolon boolean default false)
+create or replace procedure preprocess.add_document_aspect (document mediatum.node, name text, keys text[], split_at_semicolon boolean)
     as $$
         insert into preprocess.aspect (nid, name, values, tsvec)
             select
