@@ -96,7 +96,7 @@ create or replace function preprocess.add_document_aspects (document mediatum.no
     returns void as $$
         call preprocess.add_document_aspect(document, 'type', array['type'], false);
         call preprocess.add_document_aspect(document, 'origin', array['origin'], false);
-        call preprocess.add_document_aspect(document, 'subject', array['subject'], false);
+        call preprocess.add_document_aspect(document, 'subject', array['subject'], true);
         call preprocess.add_document_aspect(document, 'subject2', array['subject2'], true);
         call preprocess.add_document_aspect(document, 'title', array['title', 'title-translated'], false);
         call preprocess.add_document_aspect(document, 'author', array['author', 'author.fullname_comma'], true);
