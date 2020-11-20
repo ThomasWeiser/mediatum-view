@@ -3,7 +3,7 @@
 drop table if exists preprocess.mfts;  
 
 create table preprocess.mfts (
-	nid serial references mediatum.node(id) on delete cascade,
+	nid int4 references mediatum.node(id) on delete cascade,
     key text,
     value text,
     value_normalized text,

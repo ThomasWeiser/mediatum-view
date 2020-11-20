@@ -3,7 +3,7 @@
 drop table if exists preprocess.aspect;  
 
 create table preprocess.aspect (
-	nid serial references mediatum.node(id) on delete cascade,
+	nid int4 references mediatum.node(id) on delete cascade,
     name text,
     values text[],
 	tsvec tsvector null,
