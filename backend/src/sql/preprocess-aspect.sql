@@ -23,10 +23,11 @@ insert into preprocess.aspect_def values
 
 drop table if exists preprocess.aspect cascade;
 create table preprocess.aspect (
-	nid int4,
+	nid int4 references mediatum.node(id) on delete cascade,
     name text,
-    values text[],
-	tsvec tsvector null
+    values text[] not null,
+	tsvec tsvector not null,
+    primary key (nid, name)
 );
 
 
@@ -121,11 +122,6 @@ insert into preprocess.aspect (nid, name, values, tsvec)
 set session client_min_messages to notice;
 
 ------------------------------------
-
-alter table preprocess.aspect
-    add constraint aspect_pkey primary key (nid, name),
-    add constraint aspect_nid_fkey foreign key (nid) references node(id) on delete cascade
-;
 
 create index if not exists aspect_rum_tsvector_ops
     on preprocess.aspect
