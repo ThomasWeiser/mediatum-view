@@ -46,11 +46,20 @@ $$ language sql immutable strict;
 create or replace function preprocess.normalize_value (value text, normalize_year boolean)
     returns text as $$
     select
-        case when normalize_year then
-            (substring(left(value, 1048000) from '\d{4}'))
-        else
-            left(value, 1048000)
-        end
+        left (
+            substring(
+                substring (value,
+                    case when normalize_year then
+                        '\d{4}'
+                    else
+                        '.*'
+                    end
+                )
+                , '(\S.*\S)'
+            )
+            , 1048000
+        )
+        
 $$ language sql immutable strict;
 
 
