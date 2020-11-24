@@ -1,27 +1,39 @@
 
 
-drop table if exists preprocess.aspect;  
+drop table if exists preprocess.aspect_def cascade;
+create table preprocess.aspect_def (
+    name text primary key,
+    keys text[],
+    split_at_semicolon boolean,
+    normalize_year boolean
+);
+insert into preprocess.aspect_def values
+    ('type', array['type'], false, false),
+    ('origin', array['origin'], false, false),
+    ('subject', array['subject'], true, false),
+    ('subject2', array['subject2'], true, false),
+    ('title', array['title', 'title-translated'], false, false),
+    ('author', array['author', 'author.fullname_comma'], true, false),
+    ('person', array['author', 'author.fullname_comma', 'advisor', 'referee'], true, false),
+    ('keywords', array['keywords', 'keywords-translated'], true, false),
+    ('description', array['description', 'description-translated'], false, false),
+    ('year', array['year'], false, true)
+;
 
+
+drop table if exists preprocess.aspect cascade;
 create table preprocess.aspect (
-	nid int4 references mediatum.node(id) on delete cascade,
+	nid int4,
     name text,
     values text[],
-	tsvec tsvector null,
-    primary key (nid, name)
+	tsvec tsvector null
 );
-
-
-create or replace function preprocess.flatten_array (nested_array anyarray)
-    returns anyarray as $$
-	select array_agg(u)
-      from unnest() as u
-$$ language sql immutable;
 
 
 create or replace function preprocess.array_unique_stable (input_array anyarray)
     -- https://dba.stackexchange.com/a/211502
     returns anyarray as $$
-    select array_agg(element order by index)
+    select coalesce (array_agg(element order by index), '{}')
     from (
         select distinct on (element) element,index
         from unnest(input_array) with ordinality as p(element,index)
@@ -30,23 +42,31 @@ create or replace function preprocess.array_unique_stable (input_array anyarray)
 $$ language sql immutable strict;
 
 
-create or replace function preprocess.some_attributes_as_array (attrs jsonb, keys text[], split_at_semicolon boolean)
+create or replace function preprocess.normalize_value (value text, normalize_year boolean)
+    returns text as $$
+    select
+        case when normalize_year then
+            (substring(left(value, 1048000) from '\d{4}'))
+        else
+            left(value, 1048000)
+        end
+$$ language sql immutable strict;
+
+
+create or replace function preprocess.some_attributes_as_array (attrs jsonb, keys text[], split_at_semicolon boolean, normalize_year boolean)
     returns text[] as $$
     select preprocess.array_unique_stable(
         case when split_at_semicolon then
-            (   select array(
-                    select left(u, 1048000)
-                    from jsonb_each_text(attrs), unnest (regexp_split_to_array(value, ';')) as u
-                    where key = any (keys)
-                )
+            array(
+                select preprocess.normalize_value (unnested_value, normalize_year)
+                from jsonb_each_text(attrs), unnest (regexp_split_to_array(value, ';')) as unnested_value
+                where key = any (keys)
             )
         else
-            (   select array(
-                    -- Refactor string-normalizing function
-                    select left(value, 1048000)
-                    from jsonb_each_text(attrs) 
-                    where key = any (keys)
-                )
+            array(
+                select preprocess.normalize_value (value, normalize_year)
+                from jsonb_each_text(attrs) 
+                where key = any (keys)
             )
         end
     )
@@ -54,113 +74,58 @@ $$ language sql immutable strict;
 
 
 
-create or replace function preprocess.some_attributes_as_text (attrs jsonb, keys text[], split_at_semicolon boolean)
+create or replace function preprocess.some_attributes_as_text (attrs jsonb, keys text[], split_at_semicolon boolean, normalize_year boolean)
     returns text as $$
 	select
-        array_to_string(preprocess.some_attributes_as_array(attrs, keys, split_at_semicolon), ' ')
+        array_to_string(preprocess.some_attributes_as_array(attrs, keys, split_at_semicolon, normalize_year), ' ')
 $$ language sql immutable strict;
 
 
-create or replace function preprocess.some_attributes_as_tsvector (attrs jsonb, keys text[], split_at_semicolon boolean)
+create or replace function preprocess.some_attributes_as_tsvector (attrs jsonb, keys text[], split_at_semicolon boolean, normalize_year boolean)
     returns tsvector as $$
 	select
-        to_tsvector('english_german', preprocess.some_attributes_as_text(attrs, keys, split_at_semicolon))
+        to_tsvector('english_german', preprocess.some_attributes_as_text(attrs, keys, split_at_semicolon, normalize_year))
 $$ language sql immutable strict;
 
 
-create or replace procedure preprocess.add_document_aspect (document mediatum.node, name text, keys text[], split_at_semicolon boolean)
-    as $$
-        insert into preprocess.aspect (nid, name, values, tsvec)
-            select
-                document.id,
-                name,
-                preprocess.some_attributes_as_array(document.attrs, keys, split_at_semicolon) as values,
-                preprocess.some_attributes_as_tsvector(document.attrs, keys, split_at_semicolon) as tsvec
-        ;
-$$ language sql;
+drop view if exists preprocess.aspectview;
 
-create or replace procedure preprocess.add_document_aspect_year (document mediatum.node)
-    as $$
-        insert into preprocess.aspect (nid, name, values, tsvec)
-            select
-                document.id,
-                'year',
-                -- Try to extract a 4 digits year substring from different possible date formats used in attribute field "year"
-                array[substring((document.attrs ->> 'year') from '\d{4}')::int4],
-                to_tsvector('english_german', substring((document.attrs ->> 'year') from '\d{4}'))
-        ;
-$$ language sql;
+create view preprocess.aspectview as
+    select
+        document.id as nid,
+        aspect_def.name as name,
+        preprocess.some_attributes_as_array(document.attrs, aspect_def.keys, aspect_def.split_at_semicolon, aspect_def.normalize_year) as values,
+        preprocess.some_attributes_as_tsvector(document.attrs, aspect_def.keys, aspect_def.split_at_semicolon, aspect_def.normalize_year) as tsvec
+    from mediatum.node as document, preprocess.aspect_def
+    where document.schema is not null
+        and not aux.nodetype_is_container (document.type)
+;
 
 
-create or replace function preprocess.add_document_aspects (document mediatum.node)
-    returns void as $$
-        call preprocess.add_document_aspect(document, 'type', array['type'], false);
-        call preprocess.add_document_aspect(document, 'origin', array['origin'], false);
-        call preprocess.add_document_aspect(document, 'subject', array['subject'], true);
-        call preprocess.add_document_aspect(document, 'subject2', array['subject2'], true);
-        call preprocess.add_document_aspect(document, 'title', array['title', 'title-translated'], false);
-        call preprocess.add_document_aspect(document, 'author', array['author', 'author.fullname_comma'], true);
-        call preprocess.add_document_aspect(document, 'person', array['author', 'author.fullname_comma', 'advisor', 'referee'], true);
-        call preprocess.add_document_aspect(document, 'keywords', array['keywords', 'keywords-translated'], true);
-        call preprocess.add_document_aspect(document, 'description', array['description', 'description-translated'], false);
-        call preprocess.add_document_aspect_year(document);
-$$ language sql volatile;
+------------------------------------
 
-
-create or replace procedure preprocess.add_document_aspects_proc (document mediatum.node)
-    as $$
-        call preprocess.add_document_aspect(document, 'type', array['type'], false);
-        call preprocess.add_document_aspect(document, 'origin', array['origin'], false);
-        call preprocess.add_document_aspect(document, 'subject', array['subject'], true);
-        call preprocess.add_document_aspect(document, 'subject2', array['subject2'], true);
-        call preprocess.add_document_aspect(document, 'title', array['title', 'title-translated'], false);
-        call preprocess.add_document_aspect(document, 'author', array['author', 'author.fullname_comma'], true);
-        call preprocess.add_document_aspect(document, 'person', array['author', 'author.fullname_comma', 'advisor', 'referee'], true);
-        call preprocess.add_document_aspect(document, 'keywords', array['keywords', 'keywords-translated'], true);
-        call preprocess.add_document_aspect(document, 'description', array['description', 'description-translated'], false);
-        call preprocess.add_document_aspect_year(document);
-$$ language sql;
-
-
-create or replace procedure preprocess.populate_aspect_table_1 ()
-    as $$
-        select preprocess.add_document_aspects(node::mediatum.node)
-            from mediatum.node
-            where node.schema is not null
-                and not aux.nodetype_is_container (node.type)
-                and node.id > 601000 and node.id < 620000 -- For testing: process some well-known documents only
-        limit 4000 -- For testing: just process a small fraction of the data
-        ;
-$$ language sql;
-
-
-create or replace procedure preprocess.populate_aspect_table_2() 
-    as $$
-        declare current_node mediatum.node;
-        begin
-            for current_node in
-                select *
-                    from mediatum.node
-                    where node.schema is not null
-                        and not aux.nodetype_is_container (node.type)
-                        -- and node.id > 601000 and node.id < 620000 -- For testing: process some well-known documents only
-                -- limit 4000 -- For testing: just process a small fraction of the data
-            loop
-                call preprocess.add_document_aspects_proc(current_node);
-            end loop;
-        end;
-$$ language plpgsql;
-
+delete from preprocess.aspect;   
 
 -- Suppress notices about "Word is too long to be indexed. Words longer than 2047 characters are ignored."
 -- We don't mind that such long lexemes don't get indexed.
 set session client_min_messages to warning;
 
-delete from preprocess.aspect;   
-call preprocess.populate_aspect_table_2 ();
+insert into preprocess.aspect (nid, name, values, tsvec)
+    select nid, name, values, tsvec
+    from preprocess.aspectview
+    -- where nid > 601000 and nid < 602000 -- For testing: process some well-known documents only
+    -- limit 44000 -- For testing: process only a smaller number of rows
+;
 
 -- Reset message level to default
 set session client_min_messages to notice;
+
+------------------------------------
+
+alter table preprocess.aspect
+    add constraint aspect_pkey primary key (nid, name),
+    add constraint aspect_nid_fkey foreign key (nid) references node(id) on delete cascade
+;
 
 create index if not exists aspect_rum_tsvector_ops
     on preprocess.aspect
@@ -172,3 +137,5 @@ create index if not exists aspect_rum_tsvector_addon_ops
  using rum (tsvec rum_tsvector_addon_ops, name)
   with (attach ='name', to = 'tsvec')
  ;
+
+analyze preprocess.aspect;
