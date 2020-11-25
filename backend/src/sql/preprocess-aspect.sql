@@ -12,9 +12,9 @@ insert into preprocess.aspect_def values
     ('origin', array['origin'], false, false),
     ('subject', array['subject'], true, false),
     ('subject2', array['subject2'], true, false),
-    ('title', array['title', 'title-translated'], false, false),
-    ('author', array['author', 'author.fullname_comma'], true, false),
-    ('person', array['author', 'author.fullname_comma', 'advisor', 'referee'], true, false),
+    ('title', array['title', 'title-translated', 'title-contrib'], false, false),
+    ('author', array['author', 'author-contrib', 'author.fullname_comma'], true, false),
+    ('person', array['author', 'author-contrib', 'author.fullname_comma', 'advisor', 'referee'], true, false),
     ('keywords', array['keywords', 'keywords-translated'], true, false),
     ('description', array['description', 'description-translated'], false, false),
     ('year', array['year'], false, true)
