@@ -143,4 +143,7 @@ create index if not exists aspect_rum_tsvector_addon_ops
   with (attach ='name', to = 'tsvec')
  ;
 
+-- TODO: Create index on (name, values), using gin utilizing extension btree_gin
+--       See https://stackoverflow.com/q/31945601
+
 analyze preprocess.aspect;
