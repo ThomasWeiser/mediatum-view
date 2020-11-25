@@ -111,9 +111,14 @@ create view preprocess.aspect_view as
         aspect_def.name as name,
         preprocess.some_attributes_as_array(document.attrs, aspect_def.keys, aspect_def.split_at_semicolon, aspect_def.normalize_year) as values,
         preprocess.some_attributes_as_tsvector(document.attrs, aspect_def.keys, aspect_def.split_at_semicolon, aspect_def.normalize_year) as tsvec
-    from mediatum.node as document, preprocess.aspect_def
-    where document.schema is not null
-        and not aux.nodetype_is_container (document.type)
+    from
+        mediatum.node as document,
+        mediatum.nodetype,
+        preprocess.aspect_def
+    where
+        document.schema is not null
+        and document.type = nodetype.name
+        and not nodetype.is_container
 ;
 
 
