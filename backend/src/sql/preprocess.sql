@@ -93,6 +93,8 @@ create index if not exists ufts_rum_tsvector_addon_ops
   with (attach ='recency', to = 'tsvec');
 
 
+analyze preprocess.ufts;
+
 ------------------------------------------------------------------
 
 -- Possible index on table noderelation
