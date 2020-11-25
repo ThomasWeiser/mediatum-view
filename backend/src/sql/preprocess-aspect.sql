@@ -98,9 +98,9 @@ create or replace function preprocess.some_attributes_as_tsvector (attrs jsonb, 
 $$ language sql immutable strict;
 
 
-drop view if exists preprocess.aspectview;
+drop view if exists preprocess.aspect_view;
 
-create view preprocess.aspectview as
+create view preprocess.aspect_view as
     select
         document.id as nid,
         aspect_def.name as name,
@@ -122,7 +122,7 @@ set session client_min_messages to warning;
 
 insert into preprocess.aspect (nid, name, values, tsvec)
     select nid, name, values, tsvec
-    from preprocess.aspectview
+    from preprocess.aspect_view
     -- where nid > 601000 and nid < 602000 -- For testing: process some well-known documents only
     -- limit 44000 -- For testing: process only a smaller number of rows
 ;
