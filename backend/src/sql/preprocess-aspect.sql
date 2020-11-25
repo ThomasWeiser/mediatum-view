@@ -34,13 +34,15 @@ create table preprocess.aspect (
 create or replace function preprocess.prepare_values (values_array text[])
     -- 1. Eliminate duplicate values with stable sort order
     --    (cf https://dba.stackexchange.com/a/211502).
-    -- 2. If there are no values, return an array containing the empty string
+    -- 2. Remove null values (which come from empty attrs values)
+    -- 3. If there are no values, return an array containing the empty string
     --    (which denotes the special value "not specified").
     returns text[] as $$
     select coalesce (array_agg(element order by index), array[''])
     from (
         select distinct on (element) element,index
         from unnest(values_array) with ordinality as p(element,index)
+        where element is not null
         order by element,index
     ) sub
 $$ language sql immutable strict;
