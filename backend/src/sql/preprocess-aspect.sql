@@ -17,7 +17,7 @@ insert into preprocess.aspect_def values
     ('person', array['author', 'author-contrib', 'author.fullname_comma', 'advisor', 'referee'], true, false),
     ('keywords', array['keywords', 'keywords-translated'], true, false),
     ('description', array['description', 'description-translated'], false, false),
-    ('year', array['year'], false, true)
+    ('year', array['year', 'year-accepted'], false, true)
 ;
 
 
