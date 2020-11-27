@@ -97,7 +97,29 @@ create function aux.convert_to_or_query (query tsquery)
 $$ language sql strict immutable;
 
 
-create or replace function aux.aspect_tests (document_id int4, array_of_tests api.aspect_test[])
+create aggregate aux.tsquery_and_agg(tsquery) (
+  sfunc = tsquery_and,
+  stype = tsquery
+);
+
+
+create function aux.internalize_aspect_tests (array_of_tests api.aspect_test[])
+    returns aux.aspect_internal_tests as $$
+        select
+            ( (array_agg((test.name, test.value)::aux.aspect_internal_test_equality) 
+                filter (where operator = 'fts')
+              )::aux.aspect_internal_test_equality[]
+            , (array_agg((test.name, aux.custom_to_tsquery (test.value))::aux.aspect_internal_test_fts)
+                filter (where operator = 'equality')
+              )::aux.aspect_internal_test_fts[]
+            , (aux.tsquery_and_agg(aux.custom_to_tsquery (test.value)))::tsquery
+            )::aux.aspect_internal_tests
+        from
+            unnest (array_of_tests) as test
+$$ language sql strict immutable;
+
+
+create function aux.aspect_tests (document_id int4, array_of_tests api.aspect_test[])
     returns boolean as $$
     declare test api.aspect_test;
     begin
