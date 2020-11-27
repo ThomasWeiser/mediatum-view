@@ -97,6 +97,38 @@ create function aux.convert_to_or_query (query tsquery)
 $$ language sql strict immutable;
 
 
+create or replace function aux.aspect_tests (document_id int4, array_of_tests api.aspect_test[])
+    returns boolean as $$
+    declare test api.aspect_test;
+    begin
+        foreach test in array (coalesce (array_of_tests, array[]::api.aspect_test[]))
+        loop
+        	case test.operator
+                when 'equality' then
+	        		perform 1
+						from preprocess.aspect
+						where  aspect.nid = document_id
+							and (aspect.name = test.name)
+							and (array[test.value] <@ aspect.values);
+                    if not found then
+                        return false;
+                    end if;
+                when 'fts' then
+	        		perform 1
+						from preprocess.aspect
+						where  aspect.nid = document_id
+							and (aspect.name = test.name)
+							and aspect.tsvec @@ aux.custom_to_tsquery (test.value);
+                    if not found then
+                        return false;
+                    end if;
+           end case;
+        end loop;
+        return true;
+    end;
+$$ language plpgsql stable parallel safe;
+
+
 -- Strip whitescape from either end of the string.
 -- And replace NULL with the empty string.
 create or replace function aux.normalize_facet_value (value text)

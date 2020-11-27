@@ -6,6 +6,7 @@ create or replace function api.all_documents_docset
     ( folder_id int4
     , type text default 'use null instead of this surrogate dummy'
     , name text default 'use null instead of this surrogate dummy'
+    , aspect_tests api.aspect_test[] default '{}'
     , attribute_tests api.attribute_test[] default '{}'
     )
     returns api.docset as $$
@@ -20,6 +21,7 @@ create or replace function api.all_documents_docset
         where folder_id = node_lineage.ancestor
         and (all_documents_docset.type = 'use null instead of this surrogate dummy' or document.type = all_documents_docset.type)
         and (all_documents_docset.name = 'use null instead of this surrogate dummy' or document.name = all_documents_docset.name)
+        and (aspect_tests = '{}' or aux.aspect_tests (document.id, aspect_tests))
         and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
         ;
         return res;
@@ -27,7 +29,7 @@ create or replace function api.all_documents_docset
 $$ language plpgsql strict stable parallel safe;
 
 
-comment on function api.all_documents_docset (folder_id int4, type text, name text, attribute_tests api.attribute_test[]) is
+comment on function api.all_documents_docset (folder_id int4, type text, name text, aspect_tests api.aspect_test[], attribute_tests api.attribute_test[]) is
     'Perform a documents listing on a folder to provide a list of document ids, '
     'intended to be consumed by a facet-counting function.'
 ;
@@ -36,6 +38,7 @@ comment on function api.all_documents_docset (folder_id int4, type text, name te
 create or replace function aux.fts_documents_tsquery_docset
     ( folder_id int4
     , fts_query tsquery
+    , aspect_tests api.aspect_test[]
     , attribute_tests api.attribute_test[]
     )
     returns api.docset
@@ -67,6 +70,9 @@ create or replace function aux.fts_documents_tsquery_docset
                       from mediatum.noderelation
                       where nid = folder_id and cid = fts.id
                      )
+              and ( aspect_tests is null or 
+                    aux.aspect_tests (document.id, aspect_tests)
+                  )
               and ( attribute_tests is null or 
                     aux.jsonb_test_list (document.attrs, attribute_tests)
                   )
@@ -79,6 +85,7 @@ $$ language plpgsql stable parallel safe;
 create or replace function api.fts_documents_docset
     ( folder_id int4
     , text text
+    , aspect_tests api.aspect_test[] default '{}'
     , attribute_tests api.attribute_test[] default '{}'
     )
     returns api.docset
@@ -87,6 +94,7 @@ create or replace function api.fts_documents_docset
         return aux.fts_documents_tsquery_docset
           ( folder_id
           , aux.custom_to_tsquery (text)
+          , nullif(aspect_tests, '{}')
           , nullif(attribute_tests, '{}')
           );
     end;
@@ -95,6 +103,7 @@ $$ language plpgsql strict stable parallel safe;
 comment on function api.fts_documents_docset
     ( folder_id int4
     , text text
+    , aspect_tests api.aspect_test[]
     , attribute_tests api.attribute_test[]
     ) is
     'Perform a full-text search to provide a list of document ids, '
