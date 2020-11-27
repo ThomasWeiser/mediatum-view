@@ -209,8 +209,8 @@ create or replace function debug.fts_documents_page_static_sql
                 from aux.fts_documents_paginated
                     ( folder_id
                     , text
-                    , nullif(aspect_tests, '{}')
-                    , nullif(attribute_tests, '{}')
+                    , aspect_tests
+                    , attribute_tests
                     , sorting
                     , "limit", "offset"
                     )
@@ -256,8 +256,8 @@ create or replace function debug.fts_documents_page_plpgsql
             aux.fts_documents_paginated
                 ( folder_id
                 , text
-                , nullif(aspect_tests, '{}')
-                , nullif(attribute_tests, '{}')
+                , aspect_tests
+                , attribute_tests
                 , sorting
                 , "limit", "offset"
                 )
@@ -296,8 +296,8 @@ create or replace function api.fts_documents_page
             '    aux.fts_documents_paginated'
             '        ( $1'
             '        , $2'
-            '        , nullif($3, ''{}'')'
-            '        , nullif($4, ''{}'')'
+            '        , $3'
+            '        , $4'
             '        , $5'
             '        , $6, $7'
             '        )'

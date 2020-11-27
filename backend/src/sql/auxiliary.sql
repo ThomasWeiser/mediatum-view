@@ -101,7 +101,7 @@ create or replace function aux.aspect_tests (document_id int4, array_of_tests ap
     returns boolean as $$
     declare test api.aspect_test;
     begin
-        foreach test in array (coalesce (array_of_tests, array[]::api.aspect_test[]))
+        foreach test in array array_of_tests
         loop
         	case test.operator
                 when 'equality' then
@@ -126,7 +126,7 @@ create or replace function aux.aspect_tests (document_id int4, array_of_tests ap
         end loop;
         return true;
     end;
-$$ language plpgsql stable parallel safe;
+$$ language plpgsql stable strict parallel safe;
 
 
 -- Strip whitescape from either end of the string.

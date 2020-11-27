@@ -70,16 +70,16 @@ create or replace function aux.fts_documents_tsquery_docset
                       from mediatum.noderelation
                       where nid = folder_id and cid = fts.id
                      )
-              and ( aspect_tests is null or 
+              and ( aspect_tests = '{}' or 
                     aux.aspect_tests (document.id, aspect_tests)
                   )
-              and ( attribute_tests is null or 
+              and ( attribute_tests = '{}' or 
                     aux.jsonb_test_list (document.attrs, attribute_tests)
                   )
         ; 
         return res;
     end;
-$$ language plpgsql stable parallel safe;
+$$ language plpgsql strict stable parallel safe;
 
 
 create or replace function api.fts_documents_docset
@@ -94,8 +94,8 @@ create or replace function api.fts_documents_docset
         return aux.fts_documents_tsquery_docset
           ( folder_id
           , aux.custom_to_tsquery (text)
-          , nullif(aspect_tests, '{}')
-          , nullif(attribute_tests, '{}')
+          , aspect_tests
+          , attribute_tests
           );
     end;
 $$ language plpgsql strict stable parallel safe;
