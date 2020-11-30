@@ -108,7 +108,7 @@ $$ language sql stable parallel safe rows 100;
 create or replace function aux.fts_paginated
     ( folder_id int4
     , text text
-    , aspect_tests api.aspect_test[]
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     , sorting api.fts_sorting
     , "limit" integer
@@ -134,7 +134,8 @@ create or replace function aux.fts_paginated
             from aux.fts_limited
                 ( folder_id
                 , aux.custom_to_tsquery (text)
-                , aux.internalize_aspect_tests (aspect_tests)
+                    && aspect_internal_tests.combined_tsqu
+                , aspect_internal_tests
                 , attribute_tests
                 , sorting
                 , "limit" + "offset" + 1
@@ -178,7 +179,7 @@ create or replace function aux.fts_documents_paginated
         from aux.fts_paginated
             ( folder_id
             , text
-            , aspect_tests
+            , aux.internalize_aspect_tests (aspect_tests)
             , attribute_tests
             , sorting
             , "limit"
