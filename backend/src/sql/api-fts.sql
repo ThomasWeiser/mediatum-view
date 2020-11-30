@@ -6,7 +6,7 @@
 create or replace function aux.fts_limited_by_rank
     ( folder_id int4
     , fts_query tsquery
-    , aspect_tests api.aspect_test[]
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     , "limit" integer
     )
@@ -24,7 +24,7 @@ create or replace function aux.fts_limited_by_rank
         from preprocess.ufts
         where ufts.tsvec @@ fts_query
         and exists (select 1 from mediatum.noderelation where nid = folder_id and cid = ufts.nid)
-        and aux.aspect_tests (ufts.nid, aspect_tests)
+        and aux.check_aspect_internal_tests (ufts.nid, aspect_internal_tests)
         and exists
             (select 1
              from entity.document
@@ -43,7 +43,7 @@ $$ language sql stable parallel safe rows 100;
 create or replace function aux.fts_limited_by_date
     ( folder_id int4
     , fts_query tsquery
-    , aspect_tests api.aspect_test[]
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     , "limit" integer
     )
@@ -61,7 +61,7 @@ create or replace function aux.fts_limited_by_date
         from preprocess.ufts
         where ufts.tsvec @@ fts_query
         and exists (select 1 from mediatum.noderelation where nid = folder_id and cid = ufts.nid)           
-        and aux.aspect_tests (ufts.nid, aspect_tests)
+        and aux.check_aspect_internal_tests (ufts.nid, aspect_internal_tests)
         and exists
             (select 1
              from entity.document
@@ -81,7 +81,7 @@ $$ language sql stable parallel safe rows 100;
 create or replace function aux.fts_limited
     ( folder_id int4
     , fts_query tsquery
-    , aspect_tests api.aspect_test[]
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     , sorting api.fts_sorting
     , "limit" integer
@@ -95,12 +95,12 @@ create or replace function aux.fts_limited
     as $$
             select *
                 from aux.fts_limited_by_date(
-                        folder_id, fts_query, aspect_tests, attribute_tests, "limit")
+                        folder_id, fts_query, aspect_internal_tests, attribute_tests, "limit")
                 where sorting = 'by_date'
             union
             select *
                 from aux.fts_limited_by_rank(
-                        folder_id, fts_query, aspect_tests, attribute_tests, "limit")
+                        folder_id, fts_query, aspect_internal_tests, attribute_tests, "limit")
                 where sorting = 'by_rank'
 $$ language sql stable parallel safe rows 100;
 
@@ -134,7 +134,7 @@ create or replace function aux.fts_paginated
             from aux.fts_limited
                 ( folder_id
                 , aux.custom_to_tsquery (text)
-                , aspect_tests
+                , aux.internalize_aspect_tests (aspect_tests)
                 , attribute_tests
                 , sorting
                 , "limit" + "offset" + 1

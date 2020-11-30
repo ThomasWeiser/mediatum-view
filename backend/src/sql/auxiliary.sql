@@ -106,11 +106,17 @@ create aggregate aux.tsquery_and_agg(tsquery) (
 create function aux.internalize_aspect_tests (array_of_tests api.aspect_test[])
     returns aux.aspect_internal_tests as $$
         select
-            ( (array_agg((test.name, test.value)::aux.aspect_internal_test_equality) 
-                filter (where operator = 'fts')
+            ( coalesce(
+                (array_agg((test.name, test.value)::aux.aspect_internal_test_equality) 
+                    filter (where operator = 'equality')
+                ),
+                '{}'
               )::aux.aspect_internal_test_equality[]
-            , (array_agg((test.name, aux.custom_to_tsquery (test.value))::aux.aspect_internal_test_fts)
-                filter (where operator = 'equality')
+            , coalesce(
+                (array_agg((test.name, aux.custom_to_tsquery (test.value))::aux.aspect_internal_test_fts)
+                    filter (where operator = 'fts')
+                ),
+                '{}'
               )::aux.aspect_internal_test_fts[]
             , (aux.tsquery_and_agg(aux.custom_to_tsquery (test.value)))::tsquery
             )::aux.aspect_internal_tests
@@ -119,7 +125,40 @@ create function aux.internalize_aspect_tests (array_of_tests api.aspect_test[])
 $$ language sql strict immutable;
 
 
+create function aux.check_aspect_internal_tests (document_id int4, internal_tests aux.aspect_internal_tests)
+    returns boolean as $$
+    declare test_equality aux.aspect_internal_test_equality;
+    declare test_fts aux.aspect_internal_test_fts;
+    begin
+        foreach test_equality in array internal_tests.tests_equality
+        loop
+            perform 1
+                from preprocess.aspect
+                where  aspect.nid = document_id
+                    and (aspect.name = test_equality.name)
+                    and (array[test_equality.value] <@ aspect.values);
+            if not found then
+                return false;
+            end if;
+        end loop;
+        foreach test_fts in array internal_tests.tests_fts
+        loop
+            perform 1
+                from preprocess.aspect
+                where  aspect.nid = document_id
+                    and (aspect.name = test_fts.name)
+                    and aspect.tsvec @@ test_fts.tsqu;
+            if not found then
+                return false;
+            end if;
+        end loop;
+        return true;
+    end;
+$$ language plpgsql stable strict parallel safe;
+
+
 create function aux.aspect_tests (document_id int4, array_of_tests api.aspect_test[])
+    -- TODO Remove when docset functions are adapted to check_aspect_internal_tests
     returns boolean as $$
     declare test api.aspect_test;
     begin
