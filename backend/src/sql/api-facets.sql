@@ -2,84 +2,87 @@
 -- Publicly exposed GraphQL functions
 -- regarding facetted search.
 
-create or replace function api.all_documents_docset
-    ( folder_id int4
-    , type text default 'use null instead of this surrogate dummy'
-    , name text default 'use null instead of this surrogate dummy'
-    , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
-    )
-    returns api.docset as $$
-    declare res api.docset;
-    begin
-        select folder_id
-             , row(folder_id, count (document.id))::api.folder_count
-             , array_agg (document.id)
-        into res
-        from entity.document
-        join aux.node_lineage on document.id = node_lineage.descendant
-        where folder_id = node_lineage.ancestor
-        and (all_documents_docset.type = 'use null instead of this surrogate dummy' or document.type = all_documents_docset.type)
-        and (all_documents_docset.name = 'use null instead of this surrogate dummy' or document.name = all_documents_docset.name)
-        and (aspect_tests = '{}' or aux.aspect_tests (document.id, aspect_tests))
-        and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
-        ;
-        return res;
-    end;
-$$ language plpgsql strict stable parallel safe;
-
-
-comment on function api.all_documents_docset (folder_id int4, type text, name text, aspect_tests api.aspect_test[], attribute_tests api.attribute_test[]) is
-    'Perform a documents listing on a folder to provide a list of document ids, '
-    'intended to be consumed by a facet-counting function.'
-;
-
-
 create or replace function aux.fts_documents_tsquery_docset
     ( folder_id int4
     , fts_query tsquery
-    , aspect_tests api.aspect_test[]
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     )
     returns api.docset
     as $$ 
     declare res api.docset;
-    begin  
-        select folder_id
-             , row(folder_id, count (fts.id))::api.folder_count
-             , array_agg (fts.id)
-        into res
-        from ( select 
+    declare fts_query_with_aspect_terms tsquery =
+        fts_query && aspect_internal_tests.combined_tsqu;
+    begin
+        if fts_query_with_aspect_terms = ''::tsquery then
+            select folder_id
+                , row(folder_id, count (document.id))::api.folder_count
+                , array_agg (document.id)
+            into res
+            from entity.document
+            join aux.node_lineage on document.id = node_lineage.descendant
+            where folder_id = node_lineage.ancestor
+            and aux.check_aspect_internal_tests (document.id, aspect_internal_tests)
+            and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
+            ;
+        else
+            select folder_id
+                , row(folder_id, count (fts.id))::api.folder_count
+                , array_agg (fts.id)
+            into res
+            from ( select 
 
-                    -- Eleminating duplicates: Since we use the ufts table,
-                    -- which has at most one row per document, there cannot be any duplicates here.
-                    -- But, removing the "distinct" modifier here slows down the query by a factor of 3.
-                    -- The reason is currently unknown.
-                    -- I also tried to extract this sub-query as a function (using either sql or plpgsql),
-                    -- but could not get stable performance results with this approach.
-                    -- We should investigate the issue later. EXPLAIN is our friend here.
-                    -- For now we keep using a sub-query and using "distinct" in the sub-query.
-                    distinct
-                
-                    ufts.nid as id
-               from preprocess.ufts
-               where ufts.tsvec @@ fts_query
-             ) as fts
-        join entity.document on document.id = fts.id
-        where exists ( select 1
-                      from mediatum.noderelation
-                      where nid = folder_id and cid = fts.id
-                     )
-              and ( aspect_tests = '{}' or 
-                    aux.aspect_tests (document.id, aspect_tests)
-                  )
-              and ( attribute_tests = '{}' or 
-                    aux.jsonb_test_list (document.attrs, attribute_tests)
-                  )
-        ; 
+                        -- Eleminating duplicates: Since we use the ufts table,
+                        -- which has at most one row per document, there cannot be any duplicates here.
+                        -- But, removing the "distinct" modifier here slows down the query by a factor of 3.
+                        -- The reason is currently unknown.
+                        -- I also tried to extract this sub-query as a function (using either sql or plpgsql),
+                        -- but could not get stable performance results with this approach.
+                        -- We should investigate the issue later. EXPLAIN is our friend here.
+                        -- For now we keep using a sub-query and using "distinct" in the sub-query.
+                        distinct
+                    
+                        ufts.nid as id
+                from preprocess.ufts
+                where ufts.tsvec @@ fts_query_with_aspect_terms
+                ) as fts
+            join entity.document on document.id = fts.id
+            where exists ( select 1
+                        from mediatum.noderelation
+                        where nid = folder_id and cid = fts.id
+                        )
+                and aux.check_aspect_internal_tests (document.id, aspect_internal_tests)
+                and ( attribute_tests = '{}' or 
+                        aux.jsonb_test_list (document.attrs, attribute_tests)
+                    )
+            ;
+        end if;
         return res;
     end;
 $$ language plpgsql strict stable parallel safe;
+
+
+create or replace function api.all_documents_docset
+    ( folder_id int4
+    , aspect_tests api.aspect_test[] default '{}'
+    , attribute_tests api.attribute_test[] default '{}'
+    )
+    returns api.docset as $$
+    begin
+        return aux.fts_documents_tsquery_docset
+          ( folder_id
+          , ''::tsquery
+          , aux.internalize_aspect_tests (aspect_tests)
+          , attribute_tests
+          );
+    end;
+$$ language plpgsql strict stable parallel safe;
+
+
+comment on function api.all_documents_docset (folder_id int4, aspect_tests api.aspect_test[], attribute_tests api.attribute_test[]) is
+    'Perform a documents listing on a folder to provide a list of document ids, '
+    'intended to be consumed by a facet-counting function.'
+;
 
 
 create or replace function api.fts_documents_docset
@@ -94,7 +97,7 @@ create or replace function api.fts_documents_docset
         return aux.fts_documents_tsquery_docset
           ( folder_id
           , aux.custom_to_tsquery (text)
-          , aspect_tests
+          , aux.internalize_aspect_tests (aspect_tests)
           , attribute_tests
           );
     end;

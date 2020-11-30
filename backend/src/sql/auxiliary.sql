@@ -118,7 +118,10 @@ create function aux.internalize_aspect_tests (array_of_tests api.aspect_test[])
                 ),
                 '{}'
               )::aux.aspect_internal_test_fts[]
-            , (aux.tsquery_and_agg(aux.custom_to_tsquery (test.value)))::tsquery
+            , coalesce(
+                (aux.tsquery_and_agg(aux.custom_to_tsquery (test.value)))::tsquery,
+                ''::tsquery
+              )
             )::aux.aspect_internal_tests
         from
             unnest (array_of_tests) as test
@@ -151,39 +154,6 @@ create function aux.check_aspect_internal_tests (document_id int4, internal_test
             if not found then
                 return false;
             end if;
-        end loop;
-        return true;
-    end;
-$$ language plpgsql stable strict parallel safe;
-
-
-create function aux.aspect_tests (document_id int4, array_of_tests api.aspect_test[])
-    -- TODO Remove when docset functions are adapted to check_aspect_internal_tests
-    returns boolean as $$
-    declare test api.aspect_test;
-    begin
-        foreach test in array array_of_tests
-        loop
-        	case test.operator
-                when 'equality' then
-	        		perform 1
-						from preprocess.aspect
-						where  aspect.nid = document_id
-							and (aspect.name = test.name)
-							and (array[test.value] <@ aspect.values);
-                    if not found then
-                        return false;
-                    end if;
-                when 'fts' then
-	        		perform 1
-						from preprocess.aspect
-						where  aspect.nid = document_id
-							and (aspect.name = test.name)
-							and aspect.tsvec @@ aux.custom_to_tsquery (test.value);
-                    if not found then
-                        return false;
-                    end if;
-           end case;
         end loop;
         return true;
     end;
