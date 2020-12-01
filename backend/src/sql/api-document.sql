@@ -13,19 +13,31 @@ create or replace function aux.all_documents_limited
     )
     returns setof api.document
     as $$
-    select
-        (document.id, document.type, document.schema, document.name, document.orderpos, document.attrs)::api.document as document
-    from entity.document
-    join aux.node_lineage on document.id = node_lineage.descendant
-    where folder_id = node_lineage.ancestor
-    and (all_documents_limited.type is null or document.type = all_documents_limited.type)
-    and (all_documents_limited.name is null or document.name = all_documents_limited.name)
-    and aux.check_aspect_internal_tests (document.id, aspect_internal_tests)
-    and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
-    order by document.id desc
-    limit "limit"
-    ;
-$$ language sql stable rows 100;
+    -- 1. We use dynamic SQL here in order to avoid performance degradation from generic plan caching.
+    -- 2. TODO: If aspect tests are given, then perform a FTS on combined aspect values.
+    -- 3. TODO: Similar FTS queries currently run much faster. So, there may be some optimizations possible here.
+    --          Maybe like this: Inner query for sorting (index only access), outer query to access other document columns.
+	begin
+		return query execute
+        'select document.id, document.type, document.schema, document.name, document.orderpos, document.attrs'
+        '    from entity.document'
+        '    join aux.node_lineage on document.id = node_lineage.descendant'
+        '    where $1 = node_lineage.ancestor'
+        '    and ($2 is null or document.type = $2)'
+        '    and ($3 is null or document.name = $3)'
+        '    and aux.check_aspect_internal_tests (document.id, $4)'
+        '    and ($5 = ''{}'' or aux.jsonb_test_list (document.attrs, $5))'
+        '    order by document.id desc'
+        '    limit $6'
+        using
+            folder_id,
+            all_documents_limited.type,
+            all_documents_limited.name,
+            aspect_internal_tests,
+            attribute_tests,
+            "limit";
+    end;
+$$ language plpgsql stable parallel safe rows 100;
 
 
 create or replace function aux.all_documents_paginated
