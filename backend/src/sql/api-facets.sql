@@ -248,7 +248,7 @@ comment on function api.docset_facet_by_mask
 ;
 
 
-create or replace function api.docset_facet_by_apect
+create or replace function api.docset_facet_by_aspect
     ( docset api.docset
     , aspect_name text
     )
@@ -266,7 +266,7 @@ create or replace function api.docset_facet_by_apect
         ;
 $$ language sql strict stable parallel safe rows 50;
 
-comment on function api.docset_facet_by_apect
+comment on function api.docset_facet_by_aspect
     ( docset api.docset
     , aspect_name text
     ) is
@@ -436,3 +436,33 @@ comment on function api.all_documents_facet_by_mask_strict
     'Performance may be degraded. '
 ;
 
+
+create or replace function api.all_documents_facet_by_aspect
+    ( folder_id int4
+    , aspect_name text
+    , type text
+    , name text
+    , aspect_tests api.aspect_test[] default '{}'
+    , attribute_tests api.attribute_test[] default '{}'
+    )
+    returns setof api.facet_value as $$
+        select
+            value,
+            count(value)::integer
+        from
+            entity.document,
+            aux.node_lineage,
+            preprocess.aspect,
+            unnest (aspect.values) as value
+        where document.id = node_lineage.descendant
+        and aspect.nid = document.id
+        and aspect.name = aspect_name
+        and folder_id = node_lineage.ancestor
+        and (all_documents_facet_by_aspect.type is null or document.type = all_documents_facet_by_aspect.type)
+        and (all_documents_facet_by_aspect.name is null or document.name = all_documents_facet_by_aspect.name)
+        and aux.check_aspect_internal_tests (document.id, aux.internalize_aspect_tests (aspect_tests))
+        and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
+        group by value
+        order by count(value) desc, value
+        ;
+$$ language sql stable rows 10000;
