@@ -7,6 +7,7 @@ create or replace function aux.all_documents_limited
     ( folder_id int4
     , type text
     , name text
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     , "limit" integer
     )
@@ -19,6 +20,7 @@ create or replace function aux.all_documents_limited
     where folder_id = node_lineage.ancestor
     and (all_documents_limited.type is null or document.type = all_documents_limited.type)
     and (all_documents_limited.name is null or document.name = all_documents_limited.name)
+    and aux.check_aspect_internal_tests (document.id, aspect_internal_tests)
     and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
     order by document.id desc
     limit "limit"
@@ -30,6 +32,7 @@ create or replace function aux.all_documents_paginated
     ( folder_id int4
     , type text
     , name text
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     , "limit" integer
     , "offset" integer
@@ -55,6 +58,7 @@ create or replace function aux.all_documents_paginated
                 ( folder_id
                 , type
                 , name
+                , aspect_internal_tests
                 , attribute_tests
                 , "limit" + "offset" + 1
                 ) as f
@@ -68,6 +72,7 @@ create or replace function api.all_documents_page
     ( folder_id int4
     , type text default 'use null instead of this surrogate dummy'
     , name text default 'use null instead of this surrogate dummy'
+    , aspect_tests api.aspect_test[] default '{}'
     , attribute_tests api.attribute_test[] default '{}'
     , "limit" integer default 10
     , "offset" integer default 0
@@ -80,6 +85,7 @@ create or replace function api.all_documents_page
                     ( folder_id
                     , nullif(type, 'use null instead of this surrogate dummy')
                     , nullif(name, 'use null instead of this surrogate dummy')
+                    , aux.internalize_aspect_tests (aspect_tests)
                     , attribute_tests
                     , "limit", "offset"
                     )
@@ -122,8 +128,8 @@ As a consequnce it's currently not possible to to declare some of the parameters
 */
 
 
-comment on function api.all_documents_page (folder_id int4, type text, name text, attribute_tests api.attribute_test[], "limit" integer, "offset" integer) is
-    'Reads and enables pagination through all documents in a folder, optionally filtered by type and name and a list of attribute tests';
+comment on function api.all_documents_page (folder_id int4, type text, name text, aspect_tests api.aspect_test[] , attribute_tests api.attribute_test[], "limit" integer, "offset" integer) is
+    'Reads and enables pagination through all documents in a folder, optionally filtered by type and name and a list of aspect and attribute tests';
 
 
 create or replace function api.document_by_id

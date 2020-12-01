@@ -282,7 +282,8 @@ create or replace function api.all_documents_facet_by_key
     , key text
     , type text
     , name text
-    , attribute_tests api.attribute_test[]
+    , aspect_tests api.aspect_test[] default '{}'
+    , attribute_tests api.attribute_test[] default '{}'
     )
     returns setof api.facet_value as $$
         select
@@ -293,7 +294,8 @@ create or replace function api.all_documents_facet_by_key
         where folder_id = node_lineage.ancestor
         and (all_documents_facet_by_key.type is null or document.type = all_documents_facet_by_key.type)
         and (all_documents_facet_by_key.name is null or document.name = all_documents_facet_by_key.name)
-        and (attribute_tests is null or aux.jsonb_test_list (document.attrs, attribute_tests))
+        and aux.check_aspect_internal_tests (document.id, aux.internalize_aspect_tests (aspect_tests))
+        and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
         group by aux.normalize_facet_value(document.attrs ->> key)
         order by count(aux.normalize_facet_value(document.attrs ->> key)) desc, aux.normalize_facet_value(document.attrs ->> key)
         ;
@@ -304,6 +306,7 @@ comment on function api.all_documents_facet_by_key
     , key text
     , type text
     , name text
+    , aspect_tests api.aspect_test[]
     , attribute_tests api.attribute_test[]
     ) is
     'Gather the most frequent values of a facet within all documents of a folder. '
@@ -323,6 +326,7 @@ create or replace function api.all_documents_facet_by_key_strict
     , key text
     , type text default 'use null instead of this surrogate dummy'
     , name text default 'use null instead of this surrogate dummy'
+    , aspect_tests api.aspect_test[] default '{}'
     , attribute_tests api.attribute_test[] default '{}'
     )
     returns setof api.facet_value as $$
@@ -334,6 +338,7 @@ create or replace function api.all_documents_facet_by_key_strict
         where folder_id = node_lineage.ancestor
         and (all_documents_facet_by_key_strict.type = 'use null instead of this surrogate dummy' or document.type = all_documents_facet_by_key_strict.type)
         and (all_documents_facet_by_key_strict.name = 'use null instead of this surrogate dummy' or document.name = all_documents_facet_by_key_strict.name)
+        and aux.check_aspect_internal_tests (document.id, aux.internalize_aspect_tests (aspect_tests))
         and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
         group by aux.normalize_facet_value(document.attrs ->> key)
         order by count(aux.normalize_facet_value(document.attrs ->> key)) desc, aux.normalize_facet_value(document.attrs ->> key)
@@ -345,6 +350,7 @@ comment on function api.all_documents_facet_by_key_strict
     , key text
     , type text
     , name text
+    , aspect_tests api.aspect_test[]
     , attribute_tests api.attribute_test[]
     ) is
     '@deprecated '
@@ -359,7 +365,8 @@ create or replace function api.all_documents_facet_by_mask
     , maskitem_name text
     , type text
     , name text
-    , attribute_tests api.attribute_test[]
+    , aspect_tests api.aspect_test[] default '{}'
+    , attribute_tests api.attribute_test[] default '{}'
     )
     returns setof api.facet_value as $$
         select
@@ -370,7 +377,8 @@ create or replace function api.all_documents_facet_by_mask
         where folder_id = node_lineage.ancestor
         and (all_documents_facet_by_mask.type is null or v.document_type = all_documents_facet_by_mask.type)
         and (all_documents_facet_by_mask.name is null or v.document_name = all_documents_facet_by_mask.name)
-        and (attribute_tests is null or aux.jsonb_test_list (v.document_attrs, attribute_tests))
+        and aux.check_aspect_internal_tests (v.document_id, aux.internalize_aspect_tests (aspect_tests))
+        and (attribute_tests = '{}' or aux.jsonb_test_list (v.document_attrs, attribute_tests))
         and v.mask_name = all_documents_facet_by_mask.mask_name
         and v.maskitem_name = all_documents_facet_by_mask.maskitem_name
         group by aux.normalize_facet_value(v.value)
@@ -384,6 +392,7 @@ comment on function api.all_documents_facet_by_mask
     , maskitem_name text
     , type text
     , name text
+    , aspect_tests api.aspect_test[]
     , attribute_tests api.attribute_test[]
     ) is
     'Gather the most frequent values of a facet within all documents of a folder. '
@@ -403,6 +412,7 @@ create or replace function api.all_documents_facet_by_mask_strict
     , maskitem_name text
     , type text default 'use null instead of this surrogate dummy'
     , name text default 'use null instead of this surrogate dummy'
+    , aspect_tests api.aspect_test[] default '{}'
     , attribute_tests api.attribute_test[] default '{}'
     )
     returns setof api.facet_value as $$
@@ -414,6 +424,7 @@ create or replace function api.all_documents_facet_by_mask_strict
         where folder_id = node_lineage.ancestor
         and (all_documents_facet_by_mask_strict.type = 'use null instead of this surrogate dummy' or v.document_type = all_documents_facet_by_mask_strict.type)
         and (all_documents_facet_by_mask_strict.name = 'use null instead of this surrogate dummy' or v.document_name = all_documents_facet_by_mask_strict.name)
+        and aux.check_aspect_internal_tests (v.document_id, aux.internalize_aspect_tests (aspect_tests))
         and (attribute_tests = '{}' or aux.jsonb_test_list (v.document_attrs, attribute_tests))
         and v.mask_name = all_documents_facet_by_mask_strict.mask_name
         and v.maskitem_name = all_documents_facet_by_mask_strict.maskitem_name
@@ -428,6 +439,7 @@ comment on function api.all_documents_facet_by_mask_strict
     , maskitem_name text
     , type text
     , name text
+    , aspect_tests api.aspect_test[]
     , attribute_tests api.attribute_test[]
     ) is
     '@deprecated '
@@ -462,6 +474,7 @@ create or replace function api.all_documents_facet_by_aspect
         and (all_documents_facet_by_aspect.name is null or document.name = all_documents_facet_by_aspect.name)
         and aux.check_aspect_internal_tests (document.id, aux.internalize_aspect_tests (aspect_tests))
         and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
+
         group by value
         order by count(value) desc, value
         ;
