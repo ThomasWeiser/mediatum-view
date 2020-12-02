@@ -6,6 +6,7 @@ drop schema if exists debug cascade;
 
 create schema if not exists api;
 create schema if not exists debug;
+create schema if not exists aux;
 
 
 create type api.generic_node as
@@ -314,6 +315,45 @@ comment on column api.attribute_test.value is
     'Comparison value for the attribute to be tested';
 comment on column api.attribute_test.extra is
     'Second comparison value, used if operator may take two values, like "ilike" or "daterange"';
+
+
+create type api.aspect_test_operator as enum (
+    'equality', 'fts'
+);
+
+create type api.aspect_test as
+    ( name text
+    , operator api.aspect_test_operator
+    , value text
+    );
+
+comment on type api.aspect_test is
+    'Specification for testing  a single aspect value of a document';
+comment on column api.aspect_test.name is
+    'Name of the aspect to be tested';
+comment on column api.aspect_test.operator is
+    'The test to perform; maybe "equality" or "fts".';
+comment on column api.aspect_test.value is
+    'Comparison value or search term for the aspect to be tested';
+
+
+-- We define an internal representation of a user-defined set of aspect tests,
+-- which which allows for more efficient execution of the tests
+create type aux.aspect_internal_test_equality as
+    ( name text
+    , value text
+    );
+
+create type aux.aspect_internal_test_fts as
+    ( name text
+    , tsqu tsquery
+    );
+
+create type aux.aspect_internal_tests as
+    ( tests_equality aux.aspect_internal_test_equality[]
+    , tests_fts aux.aspect_internal_test_fts[]
+    , combined_tsqu tsquery
+    );
 
 
 create type api.document_result as

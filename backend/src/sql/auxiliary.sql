@@ -97,6 +97,69 @@ create function aux.convert_to_or_query (query tsquery)
 $$ language sql strict immutable;
 
 
+create aggregate aux.tsquery_and_agg(tsquery) (
+  sfunc = tsquery_and,
+  stype = tsquery
+);
+
+
+create function aux.internalize_aspect_tests (array_of_tests api.aspect_test[])
+    returns aux.aspect_internal_tests as $$
+        select
+            ( coalesce(
+                (array_agg((test.name, test.value)::aux.aspect_internal_test_equality) 
+                    filter (where operator = 'equality')
+                ),
+                '{}'
+              )::aux.aspect_internal_test_equality[]
+            , coalesce(
+                (array_agg((test.name, aux.custom_to_tsquery (test.value))::aux.aspect_internal_test_fts)
+                    filter (where operator = 'fts')
+                ),
+                '{}'
+              )::aux.aspect_internal_test_fts[]
+            , coalesce(
+                (aux.tsquery_and_agg(aux.custom_to_tsquery (test.value)))::tsquery,
+                ''::tsquery
+              )
+            )::aux.aspect_internal_tests
+        from
+            unnest (array_of_tests) as test
+$$ language sql strict immutable;
+
+
+create function aux.check_aspect_internal_tests (document_id int4, internal_tests aux.aspect_internal_tests)
+    returns boolean as $$
+    declare test_equality aux.aspect_internal_test_equality;
+    declare test_fts aux.aspect_internal_test_fts;
+    begin
+        foreach test_equality in array internal_tests.tests_equality
+        loop
+            perform 1
+                from preprocess.aspect
+                where  aspect.nid = document_id
+                    and (aspect.name = test_equality.name)
+                    and (array[test_equality.value] <@ aspect.values);
+            if not found then
+                return false;
+            end if;
+        end loop;
+        foreach test_fts in array internal_tests.tests_fts
+        loop
+            perform 1
+                from preprocess.aspect
+                where  aspect.nid = document_id
+                    and (aspect.name = test_fts.name)
+                    and aspect.tsvec @@ test_fts.tsqu;
+            if not found then
+                return false;
+            end if;
+        end loop;
+        return true;
+    end;
+$$ language plpgsql stable strict parallel safe;
+
+
 -- Strip whitescape from either end of the string.
 -- And replace NULL with the empty string.
 create or replace function aux.normalize_facet_value (value text)

@@ -7,29 +7,44 @@ create or replace function aux.all_documents_limited
     ( folder_id int4
     , type text
     , name text
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     , "limit" integer
     )
     returns setof api.document
     as $$
-    select
-        (document.id, document.type, document.schema, document.name, document.orderpos, document.attrs)::api.document as document
-    from entity.document
-    join aux.node_lineage on document.id = node_lineage.descendant
-    where folder_id = node_lineage.ancestor
-    and (all_documents_limited.type is null or document.type = all_documents_limited.type)
-    and (all_documents_limited.name is null or document.name = all_documents_limited.name)
-    and (attribute_tests is null or aux.jsonb_test_list (document.attrs, attribute_tests))
-    order by document.id desc
-    limit "limit"
-    ;
-$$ language sql stable rows 100;
+    -- 1. We use dynamic SQL here in order to avoid performance degradation from generic plan caching.
+    -- 2. TODO: If aspect tests are given, then perform a FTS on combined aspect values.
+    -- 3. TODO: Similar FTS queries currently run much faster. So, there may be some optimizations possible here.
+    --          Maybe like this: Inner query for sorting (index only access), outer query to access other document columns.
+	begin
+		return query execute
+        'select document.id, document.type, document.schema, document.name, document.orderpos, document.attrs'
+        '    from entity.document'
+        '    join aux.node_lineage on document.id = node_lineage.descendant'
+        '    where $1 = node_lineage.ancestor'
+        '    and ($2 is null or document.type = $2)'
+        '    and ($3 is null or document.name = $3)'
+        '    and aux.check_aspect_internal_tests (document.id, $4)'
+        '    and ($5 = ''{}'' or aux.jsonb_test_list (document.attrs, $5))'
+        '    order by document.id desc'
+        '    limit $6'
+        using
+            folder_id,
+            all_documents_limited.type,
+            all_documents_limited.name,
+            aspect_internal_tests,
+            attribute_tests,
+            "limit";
+    end;
+$$ language plpgsql stable parallel safe rows 100;
 
 
 create or replace function aux.all_documents_paginated
     ( folder_id int4
     , type text
     , name text
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     , "limit" integer
     , "offset" integer
@@ -55,6 +70,7 @@ create or replace function aux.all_documents_paginated
                 ( folder_id
                 , type
                 , name
+                , aspect_internal_tests
                 , attribute_tests
                 , "limit" + "offset" + 1
                 ) as f
@@ -68,6 +84,7 @@ create or replace function api.all_documents_page
     ( folder_id int4
     , type text default 'use null instead of this surrogate dummy'
     , name text default 'use null instead of this surrogate dummy'
+    , aspect_tests api.aspect_test[] default '{}'
     , attribute_tests api.attribute_test[] default '{}'
     , "limit" integer default 10
     , "offset" integer default 0
@@ -80,7 +97,8 @@ create or replace function api.all_documents_page
                     ( folder_id
                     , nullif(type, 'use null instead of this surrogate dummy')
                     , nullif(name, 'use null instead of this surrogate dummy')
-                    , nullif(attribute_tests, '{}')
+                    , aux.internalize_aspect_tests (aspect_tests)
+                    , attribute_tests
                     , "limit", "offset"
                     )
             )
@@ -122,8 +140,8 @@ As a consequnce it's currently not possible to to declare some of the parameters
 */
 
 
-comment on function api.all_documents_page (folder_id int4, type text, name text, attribute_tests api.attribute_test[], "limit" integer, "offset" integer) is
-    'Reads and enables pagination through all documents in a folder, optionally filtered by type and name and a list of attribute tests';
+comment on function api.all_documents_page (folder_id int4, type text, name text, aspect_tests api.aspect_test[] , attribute_tests api.attribute_test[], "limit" integer, "offset" integer) is
+    'Reads and enables pagination through all documents in a folder, optionally filtered by type and name and a list of aspect and attribute tests';
 
 
 create or replace function api.document_by_id

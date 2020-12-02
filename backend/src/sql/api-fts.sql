@@ -2,9 +2,11 @@
 -- Publicly exposed GraphQL functions
 -- regarding full-text search.
 
+
 create or replace function aux.fts_limited_by_rank
     ( folder_id int4
     , fts_query tsquery
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     , "limit" integer
     )
@@ -22,6 +24,7 @@ create or replace function aux.fts_limited_by_rank
         from preprocess.ufts
         where ufts.tsvec @@ fts_query
         and exists (select 1 from mediatum.noderelation where nid = folder_id and cid = ufts.nid)
+        and aux.check_aspect_internal_tests (ufts.nid, aspect_internal_tests)
         and exists
             (select 1
              from entity.document
@@ -40,6 +43,7 @@ $$ language sql stable parallel safe rows 100;
 create or replace function aux.fts_limited_by_date
     ( folder_id int4
     , fts_query tsquery
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     , "limit" integer
     )
@@ -57,6 +61,7 @@ create or replace function aux.fts_limited_by_date
         from preprocess.ufts
         where ufts.tsvec @@ fts_query
         and exists (select 1 from mediatum.noderelation where nid = folder_id and cid = ufts.nid)           
+        and aux.check_aspect_internal_tests (ufts.nid, aspect_internal_tests)
         and exists
             (select 1
              from entity.document
@@ -76,6 +81,7 @@ $$ language sql stable parallel safe rows 100;
 create or replace function aux.fts_limited
     ( folder_id int4
     , fts_query tsquery
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     , sorting api.fts_sorting
     , "limit" integer
@@ -89,12 +95,12 @@ create or replace function aux.fts_limited
     as $$
             select *
                 from aux.fts_limited_by_date(
-                        folder_id, fts_query, attribute_tests, "limit")
+                        folder_id, fts_query, aspect_internal_tests, attribute_tests, "limit")
                 where sorting = 'by_date'
             union
             select *
                 from aux.fts_limited_by_rank(
-                        folder_id, fts_query, attribute_tests, "limit")
+                        folder_id, fts_query, aspect_internal_tests, attribute_tests, "limit")
                 where sorting = 'by_rank'
 $$ language sql stable parallel safe rows 100;
 
@@ -102,6 +108,7 @@ $$ language sql stable parallel safe rows 100;
 create or replace function aux.fts_paginated
     ( folder_id int4
     , text text
+    , aspect_internal_tests aux.aspect_internal_tests
     , attribute_tests api.attribute_test[]
     , sorting api.fts_sorting
     , "limit" integer
@@ -127,6 +134,8 @@ create or replace function aux.fts_paginated
             from aux.fts_limited
                 ( folder_id
                 , aux.custom_to_tsquery (text)
+                    && aspect_internal_tests.combined_tsqu
+                , aspect_internal_tests
                 , attribute_tests
                 , sorting
                 , "limit" + "offset" + 1
@@ -139,6 +148,7 @@ $$ language sql stable parallel safe rows 10;
 create or replace function aux.fts_documents_paginated
     ( folder_id int4
     , text text
+    , aspect_tests api.aspect_test[]
     , attribute_tests api.attribute_test[]
     , sorting api.fts_sorting
     , "limit" integer
@@ -169,6 +179,7 @@ create or replace function aux.fts_documents_paginated
         from aux.fts_paginated
             ( folder_id
             , text
+            , aux.internalize_aspect_tests (aspect_tests)
             , attribute_tests
             , sorting
             , "limit"
@@ -186,6 +197,7 @@ $$ language sql stable parallel safe rows 100;
 create or replace function debug.fts_documents_page_static_sql
     ( folder_id int4
     , text text
+    , aspect_tests api.aspect_test[] default '{}'
     , attribute_tests api.attribute_test[] default '{}'
     , sorting api.fts_sorting default 'by_rank'
     , "limit" integer default 10
@@ -198,7 +210,8 @@ create or replace function debug.fts_documents_page_static_sql
                 from aux.fts_documents_paginated
                     ( folder_id
                     , text
-                    , nullif(attribute_tests, '{}')
+                    , aspect_tests
+                    , attribute_tests
                     , sorting
                     , "limit", "offset"
                     )
@@ -219,6 +232,7 @@ $$ language sql strict stable parallel safe;
 create or replace function debug.fts_documents_page_plpgsql
     ( folder_id int4
     , text text
+    , aspect_tests api.aspect_test[] default '{}'
     , attribute_tests api.attribute_test[] default '{}'
     , sorting api.fts_sorting default 'by_rank'
     , "limit" integer default 10
@@ -243,7 +257,8 @@ create or replace function debug.fts_documents_page_plpgsql
             aux.fts_documents_paginated
                 ( folder_id
                 , text
-                , nullif(attribute_tests, '{}')
+                , aspect_tests
+                , attribute_tests
                 , sorting
                 , "limit", "offset"
                 )
@@ -256,6 +271,7 @@ $$ language plpgsql strict stable parallel safe;
 create or replace function api.fts_documents_page
     ( folder_id int4
     , text text
+    , aspect_tests api.aspect_test[] default '{}'
     , attribute_tests api.attribute_test[] default '{}'
     , sorting api.fts_sorting default 'by_rank'
     , "limit" integer default 10
@@ -268,7 +284,7 @@ create or replace function api.fts_documents_page
         -- We use dynamic SQL execution here in order to avoid generic plan caching.
         execute
             'select'
-            '    $6,'
+            '    $7,'
             '    coalesce'
             '        ( bool_or (has_next_page)'
             '        , false'
@@ -281,20 +297,22 @@ create or replace function api.fts_documents_page
             '    aux.fts_documents_paginated'
             '        ( $1'
             '        , $2'
-            '        , nullif($3, ''{}'')'
+            '        , $3'
             '        , $4'
-            '        , $5, $6'
+            '        , $5'
+            '        , $6, $7'
             '        )'
             ';'
         into strict res
-        using folder_id, text, attribute_tests, sorting, "limit", "offset"
+        using folder_id, text, aspect_tests, attribute_tests, sorting, "limit", "offset"
         ;
         return res;
     end;
 $$ language plpgsql strict stable parallel safe;
 
-comment on function api.fts_documents_page (folder_id int4, text text, attribute_tests api.attribute_test[], sorting api.fts_sorting, "limit" integer, "offset" integer) is
-    'Perform a full-text-search on the documents of a folder, sorted by a search rank, optionally filtered by a list of attribute tests.'
+comment on function api.fts_documents_page (folder_id int4, text text, aspect_tests api.aspect_test[], attribute_tests api.attribute_test[], sorting api.fts_sorting, "limit" integer, "offset" integer) is
+    'Perform a full-text-search on the documents of a folder, sorted by a search rank,'
+    ' optionally filtered by a list of aspect tests and a list of attribute tests.'
     ' Sorting of the results is either "by_rank" (default) or "by_date".'
     ' For pagination you may specify a limit (defaults to 10) and an offset (defaults to 0).'
     ;
