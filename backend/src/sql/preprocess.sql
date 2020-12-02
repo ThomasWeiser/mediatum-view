@@ -6,7 +6,7 @@ create schema if not exists preprocess;
 
 
 create table preprocess.ufts (
-	nid serial not null primary key references mediatum.node(id) on delete cascade,
+	nid int4 primary key references mediatum.node(id) on delete cascade,
 	"year" int4 null,
 	recency int4 null,
 	tsvec tsvector null
@@ -92,6 +92,8 @@ create index if not exists ufts_rum_tsvector_addon_ops
  using rum (tsvec rum_tsvector_addon_ops, recency)
   with (attach ='recency', to = 'tsvec');
 
+
+analyze preprocess.ufts;
 
 ------------------------------------------------------------------
 
