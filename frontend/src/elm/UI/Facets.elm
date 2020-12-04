@@ -40,7 +40,7 @@ import Utils.Html
 type alias Context =
     { cache : Cache
     , presentation : Presentation
-    , facetKeys : List String
+    , facetAspects : List String
     }
 
 
@@ -48,26 +48,26 @@ type alias Context =
 type Return
     = NoReturn
     | Navigate Navigation
-    | ChangedFacetKeys (List String)
+    | ChangedFacetAspects (List String)
 
 
 {-| -}
 type alias Model =
-    { facetKeysInput : String
+    { facetAspectsInput : String
     }
 
 
 {-| -}
 type Msg
-    = SetFacetKeysInput String
+    = SetFacetAspectsInput String
     | SelectFacetValue String String
     | SelectFacetUnfilter String
 
 
 {-| -}
 initialModel : List String -> Model
-initialModel facetKeys =
-    { facetKeysInput = String.join " " facetKeys
+initialModel facetAspects =
+    { facetAspectsInput = String.join " " facetAspects
     }
 
 
@@ -75,28 +75,28 @@ initialModel facetKeys =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
-        SelectFacetValue key value ->
+        SelectFacetValue aspect value ->
             ( model
             , Cmd.none
             , Navigate
-                (Navigation.ShowListingWithAddedFacetFilter key value)
+                (Navigation.ShowListingWithAddedFacetFilter aspect value)
             )
 
-        SelectFacetUnfilter key ->
+        SelectFacetUnfilter aspect ->
             ( model
             , Cmd.none
             , Navigate
-                (Navigation.ShowListingWithRemovedFacetFilter key)
+                (Navigation.ShowListingWithRemovedFacetFilter aspect)
             )
 
-        SetFacetKeysInput facetKeysInput ->
-            ( { model | facetKeysInput = facetKeysInput }
+        SetFacetAspectsInput facetAspectsInput ->
+            ( { model | facetAspectsInput = facetAspectsInput }
             , Cmd.none
-            , facetKeysInput
+            , facetAspectsInput
                 |> String.Extra.clean
                 |> String.split " "
                 |> List.filter (String.Extra.isBlank >> not)
-                |> ChangedFacetKeys
+                |> ChangedFacetAspects
             )
 
 
@@ -105,19 +105,19 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.div []
         [ viewFacets context
-        , viewFacetKeysInput model
+        , viewFacetAspectsInput model
         ]
 
 
-viewFacetKeysInput : Model -> Html Msg
-viewFacetKeysInput model =
+viewFacetAspectsInput : Model -> Html Msg
+viewFacetAspectsInput model =
     Html.div []
         [ Html.input
-            [ Html.Attributes.class "facet-keys-input"
+            [ Html.Attributes.class "facet-aspects-input"
             , Html.Attributes.type_ "text"
-            , Html.Attributes.placeholder "Facet Keys ..."
-            , Html.Attributes.value model.facetKeysInput
-            , Utils.onChange SetFacetKeysInput
+            , Html.Attributes.placeholder "Facet Aspects ..."
+            , Html.Attributes.value model.facetAspectsInput
+            , Utils.onChange SetFacetAspectsInput
             ]
             []
         ]
@@ -131,7 +131,7 @@ viewFacets context =
                 [ Html.Attributes.class "facets-bar" ]
                 (List.map
                     (viewFacet context selection)
-                    context.facetKeys
+                    context.facetAspects
                 )
 
         _ ->
@@ -141,18 +141,18 @@ viewFacets context =
 
 
 viewFacet : Context -> Selection -> String -> Html Msg
-viewFacet context selection key =
+viewFacet context selection aspect =
     Html.nav
         [ Html.Attributes.class "facet-box" ]
         [ Html.div
             [ Html.Attributes.class "facet-name" ]
-            [ Html.text key ]
+            [ Html.text aspect ]
         , Html.div
             [ Html.Attributes.class "facet-values" ]
             [ case
                 Cache.get
                     context.cache.facetsValues
-                    ( selection, key )
+                    ( selection, aspect )
               of
                 RemoteData.NotAsked ->
                     -- Should never happen
@@ -166,15 +166,15 @@ viewFacet context selection key =
 
                 RemoteData.Success facetValues ->
                     viewFacetValues
-                        key
+                        aspect
                         facetValues
-                        (Dict.get key selection.facetFilters)
+                        (Dict.get aspect selection.facetFilters)
             ]
         ]
 
 
 viewFacetValues : String -> FacetValues -> Maybe String -> Html Msg
-viewFacetValues key facetValues maybeSelectedValue =
+viewFacetValues aspect facetValues maybeSelectedValue =
     Html.ul [] <|
         (if maybeSelectedValue == Nothing then
             Html.text ""
@@ -182,7 +182,7 @@ viewFacetValues key facetValues maybeSelectedValue =
          else
             Html.li
                 [ Html.Attributes.class "facet-value-line facet-remove-filter"
-                , Html.Events.onClick (SelectFacetUnfilter key)
+                , Html.Events.onClick (SelectFacetUnfilter aspect)
                 ]
                 [ Html.span
                     [ Html.Attributes.class "facet-value-text" ]
@@ -194,7 +194,7 @@ viewFacetValues key facetValues maybeSelectedValue =
                     Html.li
                         [ Html.Attributes.class "facet-value-line"
                         , Html.Attributes.classList [ ( "facet-value-selected", maybeSelectedValue == Just value ) ]
-                        , Html.Events.onClick (SelectFacetValue key value)
+                        , Html.Events.onClick (SelectFacetValue aspect value)
                         ]
                         [ Html.span
                             [ Html.Attributes.class "facet-value-text" ]

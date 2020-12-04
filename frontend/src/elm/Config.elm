@@ -1,14 +1,14 @@
 module Config exposing
     ( apiUrl, graphqlOperationNamePrefix
     , pageSize
-    , facetValuesToQuery, standardFacetKeys
+    , facetValuesToQuery, standardFacetAspects
     )
 
 {-| Configurable values
 
 @docs apiUrl, graphqlOperationNamePrefix
 @docs pageSize
-@docs facetValuesToQuery, standardFacetKeys
+@docs facetValuesToQuery, standardFacetAspects
 
 -}
 
@@ -47,6 +47,6 @@ facetValuesToQuery =
 
 
 {-| -}
-standardFacetKeys : List String
-standardFacetKeys =
+standardFacetAspects : List String
+standardFacetAspects =
     [ "type", "subject", "origin" ]

@@ -1,6 +1,6 @@
 module Api.Queries exposing
     ( toplevelFolders, folders, subfolders
-    , selectionDocumentsPage, selectionFolderCounts, selectionFacetByKey
+    , selectionDocumentsPage, selectionFolderCounts, selectionFacetByAspect
     , documentDetails
     , genericNode, authorSearch
     )
@@ -24,7 +24,7 @@ In reality it's just function calling.
 
 # Document Search and Facet Queries
 
-@docs selectionDocumentsPage, selectionFolderCounts, selectionFacetByKey
+@docs selectionDocumentsPage, selectionFolderCounts, selectionFacetByAspect
 
 
 # Document Queries
@@ -333,7 +333,7 @@ selectionFolderCounts selection =
 
 The selection may include a full-text-search, a list of filters and a list of facet filters.
 
-The facet in question is specified by the key of a document's attribute.
+The facet in question is specified by the name of the corresponding aspect.
 
 _GraphQL notation if no FTS is involved:_
 
@@ -342,7 +342,7 @@ _GraphQL notation if no FTS is involved:_
             folderId: $folderId
             attributeTests: $listOfAttributeTestsForFiltering
         ) {
-            ...facetByKey(key, limit)
+            ...facetByAspect(aspect, limit)
         }
     }
 
@@ -354,17 +354,17 @@ _GraphQL notation if FTS is involved:_
             text: $searchTerm
             attributeTests: $listOfAttributeTestsForFiltering
         ) {
-            ...facetByKey(key, limit)
+            ...facetByAspect(aspect, limit)
         }
     }
 
 -}
-selectionFacetByKey :
+selectionFacetByAspect :
     Selection
     -> String
     -> Int
     -> SelectionSet FacetValues Graphql.Operation.RootQuery
-selectionFacetByKey selection key limit =
+selectionFacetByAspect selection aspect limit =
     (case selection.selectMethod of
         SelectByFolderListing ->
             Mediatum.Query.allDocumentsDocset
@@ -378,7 +378,7 @@ selectionFacetByKey selection key limit =
                 , text = Types.SearchTerm.toString searchTerm
                 }
     )
-        (Api.Fragments.facetByKey key limit)
+        (Api.Fragments.facetByAspect aspect limit)
         |> SelectionSet.nonNullOrFail
 
 

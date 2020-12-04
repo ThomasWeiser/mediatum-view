@@ -1,6 +1,6 @@
 module Api.Fragments exposing
     ( folder, folderAndSubfolders, folderLineageFolders
-    , folderAndSubfolderCounts, folderCount, facetByKey
+    , folderAndSubfolderCounts, folderCount, facetByAspect
     , documentsPage, documentResult, documentByMask, documentResidence
     , graphqlDocumentObjects
     )
@@ -15,7 +15,7 @@ module Api.Fragments exposing
 
 # Fragments for Facet Queries
 
-@docs folderAndSubfolderCounts, folderCount, facetByKey
+@docs folderAndSubfolderCounts, folderCount, facetByAspect
 
 
 # Fragments for Document Results
@@ -252,28 +252,28 @@ folderCount =
             )
 
 
-{-| Selection set on a Docset to get the top values of a facet given by an attribute key.
+{-| Selection set on a Docset to get the top values of a facet given by an aspect name.
 
 _GraphQL notation:_
 
-    fragment facetByKey on Docset {
-        facetByKey(key: key, first: limit) {
+    fragment facetByAspect on Docset {
+        facetByAspect(aspectName: aspect, first: limit) {
             ...facetValues
         }
     }
 
 -}
-facetByKey : String -> Int -> SelectionSet FacetValues Mediatum.Object.Docset
-facetByKey key limit =
+facetByAspect : String -> Int -> SelectionSet FacetValues Mediatum.Object.Docset
+facetByAspect aspect limit =
     SelectionSet.succeed identity
         |> SelectionSet.with
-            (Mediatum.Object.Docset.facetByKey
+            (Mediatum.Object.Docset.facetByAspect
                 (\optionals ->
                     { optionals
                         | first = Present limit
                     }
                 )
-                { key = key }
+                { aspectName = aspect }
                 facetValues
             )
 

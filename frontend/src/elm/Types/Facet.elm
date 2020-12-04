@@ -16,7 +16,7 @@ type alias FacetValue =
     }
 
 
-{-| A list of facet values for a specific attribute key or metadata field.
+{-| A list of facet values for a specific aspect or metadata field.
 -}
 type alias FacetValues =
     -- Poss. "FacetFan" ?
