@@ -49,4 +49,4 @@ facetValuesToQuery =
 {-| -}
 standardFacetAspects : List String
 standardFacetAspects =
-    [ "type", "subject", "origin" ]
+    [ "type", "subject", "origin", "author", "person", "keywords", "year" ]
