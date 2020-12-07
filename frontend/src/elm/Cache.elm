@@ -227,8 +227,8 @@ statusOfNeed cache need =
             get cache.folderCounts selection
                 |> Needs.statusFromRemoteData
 
-        NeedFacet selection key ->
-            get cache.facetsValues ( selection, key )
+        NeedFacet selection aspect ->
+            get cache.facetsValues ( selection, aspect )
                 |> Needs.statusFromRemoteData
 
 
@@ -364,15 +364,15 @@ requestNeed need cache =
                 (Api.Queries.selectionFolderCounts selection)
             )
 
-        NeedFacet selection key ->
+        NeedFacet selection aspect ->
             ( { cache
                 | facetsValues =
-                    Sort.Dict.insert ( selection, key ) Loading cache.facetsValues
+                    Sort.Dict.insert ( selection, aspect ) Loading cache.facetsValues
               }
             , Api.sendQueryRequest
                 (Api.withOperationName "NeedFacet")
-                (ApiResponseFacet ( selection, key ))
-                (Api.Queries.selectionFacetByKey selection key Config.facetValuesToQuery)
+                (ApiResponseFacet ( selection, aspect ))
+                (Api.Queries.selectionFacetByAspect selection aspect Config.facetValuesToQuery)
             )
 
 
@@ -535,10 +535,10 @@ update msg cache =
             , Cmd.none
             )
 
-        ApiResponseFacet selectionAndKey result ->
+        ApiResponseFacet selectionAndAspect result ->
             ( { cache
                 | facetsValues =
-                    Sort.Dict.insert selectionAndKey (RemoteData.fromResult result) cache.facetsValues
+                    Sort.Dict.insert selectionAndAspect (RemoteData.fromResult result) cache.facetsValues
               }
             , Cmd.none
             )

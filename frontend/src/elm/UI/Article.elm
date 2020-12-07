@@ -100,7 +100,7 @@ initialModel presentation =
 
 {-| -}
 needs : List String -> Presentation -> Cache.Needs
-needs facetKeys presentation =
+needs facetAspects presentation =
     case presentation of
         GenericPresentation genericParameters ->
             case genericParameters of
@@ -133,7 +133,7 @@ needs facetKeys presentation =
                     (Types.Needs.atomic <| Cache.NeedFolderCounts selection)
                         :: List.map
                             (Types.Needs.atomic << Cache.NeedFacet selection)
-                            facetKeys
+                            facetAspects
                 )
 
 

@@ -61,7 +61,7 @@ type alias Model =
     , facets : UI.Facets.Model
     , controls : UI.Controls.Model
     , article : UI.Article.Model
-    , facetKeys : List String
+    , facetAspects : List String
     }
 
 
@@ -79,10 +79,10 @@ type Msg
 init : Model
 init =
     { tree = UI.Tree.initialModel
-    , facets = UI.Facets.initialModel Config.standardFacetKeys
+    , facets = UI.Facets.initialModel Config.standardFacetAspects
     , controls = UI.Controls.initialModel Route.initHome
     , article = UI.Article.initialModel (GenericPresentation Nothing)
-    , facetKeys = Config.standardFacetKeys
+    , facetAspects = Config.standardFacetAspects
     }
 
 
@@ -97,7 +97,7 @@ needs context model =
             , presentation = context.presentation
             }
             model.tree
-        , UI.Article.needs model.facetKeys context.presentation
+        , UI.Article.needs model.facetAspects context.presentation
         ]
 
 
@@ -152,20 +152,20 @@ update context msg model =
                     UI.Facets.update
                         { cache = context.cache
                         , presentation = context.presentation
-                        , facetKeys = model.facetKeys
+                        , facetAspects = model.facetAspects
                         }
                         subMsg
                         model.facets
             in
             ( { model
                 | facets = subModel
-                , facetKeys =
+                , facetAspects =
                     case subReturn of
-                        UI.Facets.ChangedFacetKeys newFacetKeys ->
-                            newFacetKeys
+                        UI.Facets.ChangedFacetAspects newFacetAspects ->
+                            newFacetAspects
 
                         _ ->
-                            model.facetKeys
+                            model.facetAspects
               }
             , Cmd.map FacetsMsg subCmd
             , case subReturn of
@@ -278,7 +278,7 @@ view context model =
                     UI.Facets.view
                         { cache = context.cache
                         , presentation = context.presentation
-                        , facetKeys = model.facetKeys
+                        , facetAspects = model.facetAspects
                         }
                         model.facets
                 ]

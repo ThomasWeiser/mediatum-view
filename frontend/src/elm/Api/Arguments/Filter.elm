@@ -1,6 +1,6 @@
 module Api.Arguments.Filter exposing
     ( filtersToAttributeTests
-    , facetFiltersToAttributeTests
+    , facetFiltersToAspectTests
     )
 
 {-| When using filters in a [`Selection`](Types-Selection) these filter
@@ -11,10 +11,11 @@ This module defines that translation for each of the provided filter.
 Used internally in module [`Api.Queries`](Api.Queries).
 
 @docs filtersToAttributeTests
-@docs facetFiltersToAttributeTests
+@docs facetFiltersToAspectTests
 
 -}
 
+import Api.Arguments.AspectTest
 import Api.Arguments.AttributeTest
 import Dict
 import Types.Range as Range
@@ -49,13 +50,13 @@ filterToAttributeTest filter =
 
 
 {-| -}
-facetFiltersToAttributeTests : FacetFilters -> List Api.Arguments.AttributeTest.Test
-facetFiltersToAttributeTests facetFilters =
+facetFiltersToAspectTests : FacetFilters -> List Api.Arguments.AspectTest.Test
+facetFiltersToAspectTests facetFilters =
     facetFilters
         |> Dict.toList
         |> List.map
-            (\( key, value ) ->
-                { key = key
-                , operation = Api.Arguments.AttributeTest.EqualityWithBlankNull value
+            (\( name, value ) ->
+                { name = name
+                , operation = Api.Arguments.AspectTest.Equality value
                 }
             )

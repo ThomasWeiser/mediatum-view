@@ -140,15 +140,15 @@ fuzzerFilter =
 fuzzerFacetFilters : Fuzzer FacetFilters
 fuzzerFacetFilters =
     Fuzz.map2 Tuple.pair
-        fuzzerFacetKey
+        fuzzerFacetName
         Fuzz.string
         |> shortList 3
         |> Fuzz.map Dict.fromList
 
 
-fuzzerFacetKey : Fuzzer String
-fuzzerFacetKey =
-    [ "type", "subject", "origin", "year-accepted", "author.firstname", "pdf_copy" ]
+fuzzerFacetName : Fuzzer String
+fuzzerFacetName =
+    [ "year", "author" ]
         |> List.map Fuzz.constant
         |> Fuzz.oneOf
 
