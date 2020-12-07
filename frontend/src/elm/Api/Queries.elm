@@ -38,6 +38,7 @@ In reality it's just function calling.
 
 -}
 
+import Api.Arguments.AspectTest
 import Api.Arguments.AttributeTest
 import Api.Arguments.Filter
 import Api.Fragments
@@ -211,6 +212,7 @@ _GraphQL notation if no FTS is involved:_
     query {
         allDocumentsPage(
             folderId: $folderId
+            aspectTests: $listOfAspectTestsForFiltering
             attributeTests: $listOfAttributeTestsForFiltering
             limit: $limitNumberUsedForPagination
             offset: $offsetNumberUsedForPagination
@@ -226,6 +228,7 @@ _GraphQL notation if FTS is involved:_
             folderId: $folderId
             text: $searchTerm
             orderBy: $RANKING_or_DATE
+            aspectTests: $listOfAspectTestsForFiltering
             attributeTests: $listOfAttributeTestsForFiltering
             limit: $limitNumberUsedForPagination
             offset: $offsetNumberUsedForPagination
@@ -289,6 +292,7 @@ _GraphQL notation if no FTS is involved:_
     query {
         allDocumentsDocset(
             folderId: $folderId
+            aspectTests: $listOfAspectTestsForFiltering
             attributeTests: $listOfAttributeTestsForFiltering
         ) {
             ...folderAndSubfolderCounts
@@ -301,6 +305,7 @@ _GraphQL notation if FTS is involved:_
         ftsDocumentsDocset(
             folderId: $folderId
             text: $searchTerm
+            aspectTests: $listOfAspectTestsForFiltering
             attributeTests: $listOfAttributeTestsForFiltering
         ) {
             ...folderAndSubfolderCounts
@@ -340,6 +345,7 @@ _GraphQL notation if no FTS is involved:_
     query {
         allDocumentsDocset(
             folderId: $folderId
+            aspectTests: $listOfAspectTestsForFiltering
             attributeTests: $listOfAttributeTestsForFiltering
         ) {
             ...facetByAspect(aspect, limit)
@@ -352,6 +358,7 @@ _GraphQL notation if FTS is involved:_
         ftsDocumentsDocset(
             folderId: $folderId
             text: $searchTerm
+            aspectTests: $listOfAspectTestsForFiltering
             attributeTests: $listOfAttributeTestsForFiltering
         ) {
             ...facetByAspect(aspect, limit)
@@ -475,6 +482,7 @@ selectionToFolderId selection =
 type alias OptionalArgumentsForSelection a =
     { a
         | attributeTests : OptionalArgument (List (Maybe Mediatum.InputObject.AttributeTestInput))
+        , aspectTests : OptionalArgument (List (Maybe Mediatum.InputObject.AspectTestInput))
     }
 
 
@@ -485,10 +493,12 @@ selectionToOptionalGraphqlArguments :
 selectionToOptionalGraphqlArguments selection optionals =
     { optionals
         | attributeTests =
-            (Api.Arguments.Filter.filtersToAttributeTests selection.filters
-                ++ Api.Arguments.Filter.facetFiltersToAttributeTests selection.facetFilters
-            )
+            Api.Arguments.Filter.filtersToAttributeTests selection.filters
                 |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
+                |> Present
+        , aspectTests =
+            Api.Arguments.Filter.facetFiltersToAspectTests selection.facetFilters
+                |> Api.Arguments.AspectTest.testsAsGraphqlArgument
                 |> Present
     }
 

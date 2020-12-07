@@ -3,6 +3,7 @@
     "summary": "Alternative API and client for mediaTUM ",
     "version": "1.0.0",
     "exposed-modules": [
+        "Api.Arguments.AspectTest",
         "Api.Arguments.AttributeTest",
         "Api.Arguments.Filter",
         "Api.Fragments",

@@ -122,7 +122,7 @@ elmParserYearRange =
 elmParserFacetFilter : ElmParser.Parser ( String, String )
 elmParserFacetFilter =
     let
-        isKeyCharacter c =
+        isAspectNameCharacter c =
             Char.isAlphaNum c || c == '_' || c == '.' || c == '-'
 
         isValueCharacter =
@@ -130,8 +130,8 @@ elmParserFacetFilter =
     in
     ElmParser.succeed Tuple.pair
         |= ElmParser.variable
-            { start = isKeyCharacter
-            , inner = isKeyCharacter
+            { start = isAspectNameCharacter
+            , inner = isAspectNameCharacter
             , reserved = Set.empty
             }
         |. ElmParser.symbol ":"

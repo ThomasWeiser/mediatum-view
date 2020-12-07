@@ -98,21 +98,21 @@ alterRoute cache navigation route =
         ShowListingWithFilters filters ->
             Types.Route.Filter.alterRoute filters listingRoute
 
-        ShowListingWithAddedFacetFilter key value ->
+        ShowListingWithAddedFacetFilter aspectName value ->
             { listingRoute
                 | parameters =
                     { parametersWithOffset0
                         | facetFilters =
-                            Dict.insert key value parameters.facetFilters
+                            Dict.insert aspectName value parameters.facetFilters
                     }
             }
 
-        ShowListingWithRemovedFacetFilter key ->
+        ShowListingWithRemovedFacetFilter aspectName ->
             { listingRoute
                 | parameters =
                     { parametersWithOffset0
                         | facetFilters =
-                            Dict.remove key parameters.facetFilters
+                            Dict.remove aspectName parameters.facetFilters
                     }
             }
 

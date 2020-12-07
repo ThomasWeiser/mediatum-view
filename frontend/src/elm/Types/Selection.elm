@@ -88,7 +88,7 @@ type FtsSorting
     | FtsByDate
 
 
-{-| A set of facet filters
+{-| A set of facet filters, mapping aspect names to aspect values.
 -}
 type alias FacetFilters =
     Dict.Dict String String
