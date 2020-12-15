@@ -74,6 +74,7 @@ create or replace function aux.all_documents_paginated
                 , attribute_tests
                 , "limit" + "offset" + 1
                 ) as f
+            order by f.id desc
             limit "limit"
             offset "offset";
         end;
