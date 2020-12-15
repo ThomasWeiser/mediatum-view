@@ -38,12 +38,19 @@ create or replace function preprocess.unified_tsvec_from_attrs_and_fulltext
         exc_hint text;
     begin
 	    return
-			setweight(to_tsvector('english_german', attrs), 'A')
+			setweight(
+                to_tsvector(
+                    'english_german',
+                    coalesce (attrs, '{}'::jsonb)
+                    ),
+                'A')
 			||
 			setweight(to_tsvector(
                 'english_german'
                 -- Limit the fulltext length to avoid "string is too long for tsvector (... bytes, max 1048575 bytes)"
-                , left(fulltext, 1048000)
+                , left(
+                    coalesce (fulltext, ''),
+                    1048000)
                 ), 'D');
 
         exception
