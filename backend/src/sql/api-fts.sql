@@ -140,6 +140,10 @@ create or replace function aux.fts_paginated
                 , sorting
                 , "limit" + "offset" + 1
                 ) as f
+            order by
+                case sorting when 'by_date' then f.recency
+                             when 'by_rank' then f.distance
+                end
             limit "limit"
             offset "offset"
 $$ language sql stable parallel safe rows 10;
