@@ -21,6 +21,7 @@ module UI.Facets exposing
 -}
 
 import Cache exposing (Cache)
+import Cache.Derive
 import Dict
 import Html exposing (Html)
 import Html.Attributes
@@ -151,7 +152,12 @@ viewFacet context selection aspect =
             [ Html.Attributes.class "facet-values" ]
             [ case Dict.get aspect selection.facetFilters of
                 Just selectedValue ->
-                    viewFacetSelection aspect selectedValue
+                    viewFacetSelection
+                        aspect
+                        selectedValue
+                        (Cache.Derive.getDocumentCount context.cache selection
+                            |> RemoteData.toMaybe
+                        )
 
                 Nothing ->
                     case
@@ -178,8 +184,8 @@ viewFacet context selection aspect =
         ]
 
 
-viewFacetSelection : String -> String -> Html Msg
-viewFacetSelection aspect selectedValue =
+viewFacetSelection : String -> String -> Maybe Int -> Html Msg
+viewFacetSelection aspect selectedValue maybeCount =
     Html.ul [] <|
         [ Html.li
             [ Html.Attributes.class "facet-value-line facet-remove-filter"
@@ -201,6 +207,14 @@ viewFacetSelection aspect selectedValue =
                   else
                     Html.text selectedValue
                 ]
+            , case maybeCount of
+                Just count ->
+                    Html.span
+                        [ Html.Attributes.class "facet-value-count" ]
+                        [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
+
+                Nothing ->
+                    Html.text ""
             ]
         ]
 
