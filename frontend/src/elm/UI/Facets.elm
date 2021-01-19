@@ -149,26 +149,58 @@ viewFacet context selection aspect =
             [ Html.text aspect ]
         , Html.div
             [ Html.Attributes.class "facet-values" ]
-            [ case
-                Cache.get
-                    context.cache.facetsValues
-                    ( selection, aspect )
-              of
-                RemoteData.NotAsked ->
-                    -- Should never happen
-                    UI.Icons.spinner
+            [ case Dict.get aspect selection.facetFilters of
+                Just selectedValue ->
+                    viewFacetSelection aspect selectedValue
 
-                RemoteData.Loading ->
-                    UI.Icons.spinner
+                Nothing ->
+                    case
+                        Cache.get
+                            context.cache.facetsValues
+                            ( selection, aspect )
+                    of
+                        RemoteData.NotAsked ->
+                            -- Should never happen
+                            UI.Icons.spinner
 
-                RemoteData.Failure error ->
-                    Utils.Html.viewApiError error
+                        RemoteData.Loading ->
+                            UI.Icons.spinner
 
-                RemoteData.Success facetValues ->
-                    viewFacetValues
-                        aspect
-                        facetValues
-                        (Dict.get aspect selection.facetFilters)
+                        RemoteData.Failure error ->
+                            Utils.Html.viewApiError error
+
+                        RemoteData.Success facetValues ->
+                            viewFacetValues
+                                aspect
+                                facetValues
+                                (Dict.get aspect selection.facetFilters)
+            ]
+        ]
+
+
+viewFacetSelection : String -> String -> Html Msg
+viewFacetSelection aspect selectedValue =
+    Html.ul [] <|
+        [ Html.li
+            [ Html.Attributes.class "facet-value-line facet-remove-filter"
+            , Html.Events.onClick (SelectFacetUnfilter aspect)
+            ]
+            [ Html.span
+                [ Html.Attributes.class "facet-value-text" ]
+                [ Html.i [] [ Html.text "<< All" ] ]
+            ]
+        , Html.li
+            [ Html.Attributes.class "facet-value-line"
+            , Html.Attributes.class "facet-value-selected"
+            ]
+            [ Html.span
+                [ Html.Attributes.class "facet-value-text" ]
+                [ if String.isEmpty selectedValue then
+                    Html.i [] [ Html.text "[not specified]" ]
+
+                  else
+                    Html.text selectedValue
+                ]
             ]
         ]
 
