@@ -4,7 +4,7 @@ module Cache exposing
     , updateWithModifiedDocument
     , ApiError, apiErrorToString
     , Msg(..), init, update
-    , orderingSelectionWindow, orderingSelectionFacet
+    , orderingSelectionWindow, orderingSelectionFacets
     )
 
 {-| Manage fetching and caching of all API data.
@@ -46,7 +46,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Internal functions exposed for testing only
 
-@docs orderingSelectionWindow, orderingSelectionFacet
+@docs orderingSelectionWindow, orderingSelectionFacets
 
 -}
 
@@ -65,7 +65,7 @@ import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (DocumentIdFromSearch, NodeType(..), Window)
-import Types.Facet exposing (FacetValues)
+import Types.Facet exposing (FacetValues, FacetsValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Needs as Needs
 import Types.SearchTerm exposing (SearchTerm)
@@ -109,7 +109,7 @@ type alias Cache =
     , residence : Sort.Dict.Dict DocumentId (ApiData Residence)
     , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
     , folderCounts : Sort.Dict.Dict Selection (ApiData FolderCounts)
-    , facetsValues : Sort.Dict.Dict ( Selection, String ) (ApiData FacetValues)
+    , facetsValues : Sort.Dict.Dict ( Selection, List String ) (ApiData FacetsValues)
     }
 
 
@@ -123,7 +123,7 @@ type Need
     | NeedDocumentFromSearch DocumentIdFromSearch
     | NeedDocumentsPage Selection Window
     | NeedFolderCounts Selection
-    | NeedFacet Selection String
+    | NeedFacets Selection (List String)
 
 
 {-| A collection of these needs.
@@ -151,7 +151,7 @@ init =
     , residence = Sort.Dict.empty (Utils.sorter Id.ordering)
     , documentsPages = Sort.Dict.empty (Utils.sorter orderingSelectionWindow)
     , folderCounts = Sort.Dict.empty (Utils.sorter Selection.orderingSelectionModuloSorting)
-    , facetsValues = Sort.Dict.empty (Utils.sorter orderingSelectionFacet)
+    , facetsValues = Sort.Dict.empty (Utils.sorter orderingSelectionFacets)
     }
 
 
@@ -179,7 +179,7 @@ type Msg
     | ApiResponseDocumentFromSearch DocumentIdFromSearch (Api.Response (Maybe ( Document, Maybe Residence )))
     | ApiResponseDocumentsPage ( Selection, Window ) (Api.Response DocumentsPage)
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
-    | ApiResponseFacet ( Selection, String ) (Api.Response FacetValues)
+    | ApiResponseFacets ( Selection, List String ) (Api.Response FacetsValues)
 
 
 {-| Check which of the needed data has not yet been requested.
@@ -227,8 +227,8 @@ statusOfNeed cache need =
             get cache.folderCounts selection
                 |> Needs.statusFromRemoteData
 
-        NeedFacet selection aspect ->
-            get cache.facetsValues ( selection, aspect )
+        NeedFacets selection aspects ->
+            get cache.facetsValues ( selection, aspects )
                 |> Needs.statusFromRemoteData
 
 
@@ -364,15 +364,15 @@ requestNeed need cache =
                 (Api.Queries.selectionFolderCounts selection)
             )
 
-        NeedFacet selection aspect ->
+        NeedFacets selection aspects ->
             ( { cache
                 | facetsValues =
-                    Sort.Dict.insert ( selection, aspect ) Loading cache.facetsValues
+                    Sort.Dict.insert ( selection, aspects ) Loading cache.facetsValues
               }
             , Api.sendQueryRequest
-                (Api.withOperationName "NeedFacet")
-                (ApiResponseFacet ( selection, aspect ))
-                (Api.Queries.selectionFacetByAspect selection aspect Config.facetValuesToQuery)
+                (Api.withOperationName "NeedFacets")
+                (ApiResponseFacets ( selection, aspects ))
+                (Api.Queries.selectionFacets selection aspects Config.facetValuesToQuery)
             )
 
 
@@ -535,10 +535,10 @@ update msg cache =
             , Cmd.none
             )
 
-        ApiResponseFacet selectionAndAspect result ->
+        ApiResponseFacets selectionAndAspects result ->
             ( { cache
                 | facetsValues =
-                    Sort.Dict.insert selectionAndAspect (RemoteData.fromResult result) cache.facetsValues
+                    Sort.Dict.insert selectionAndAspects (RemoteData.fromResult result) cache.facetsValues
               }
             , Cmd.none
             )
@@ -682,10 +682,13 @@ orderingSelectionWindow =
             (Ordering.byFieldWith Types.orderingWindow Tuple.second)
 
 
-{-| Ordering on the tuple type `( Selection, String )`
+{-| Ordering on the tuple type `( Selection, List String )`
 -}
-orderingSelectionFacet : Ordering ( Selection, String )
-orderingSelectionFacet =
+orderingSelectionFacets : Ordering ( Selection, List String )
+orderingSelectionFacets =
     Ordering.byFieldWith Selection.orderingSelectionModuloSorting Tuple.first
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith Ordering.natural Tuple.second)
+            (Ordering.byFieldWith
+                (Utils.lexicalOrdering Ordering.natural)
+                Tuple.second
+            )

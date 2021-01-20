@@ -163,7 +163,7 @@ viewFacet context selection aspect =
                     case
                         Cache.get
                             context.cache.facetsValues
-                            ( selection, aspect )
+                            ( selection, context.facetAspects )
                     of
                         RemoteData.NotAsked ->
                             -- Should never happen
@@ -175,10 +175,10 @@ viewFacet context selection aspect =
                         RemoteData.Failure error ->
                             Utils.Html.viewApiError error
 
-                        RemoteData.Success facetValues ->
+                        RemoteData.Success facetsValues ->
                             viewFacetValues
                                 aspect
-                                facetValues
+                                (Dict.get aspect facetsValues |> Maybe.withDefault [])
                                 (Dict.get aspect selection.facetFilters)
             ]
         ]
@@ -221,6 +221,7 @@ viewFacetSelection aspect selectedValue maybeCount =
 
 viewFacetValues : String -> FacetValues -> Maybe String -> Html Msg
 viewFacetValues aspect facetValues maybeSelectedValue =
+    -- TODO: Remove maybeSelectedValue
     Html.ul [] <|
         (if maybeSelectedValue == Nothing then
             Html.text ""

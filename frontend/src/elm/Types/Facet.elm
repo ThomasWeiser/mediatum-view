@@ -1,10 +1,12 @@
-module Types.Facet exposing (FacetValue, FacetValues)
+module Types.Facet exposing (FacetValue, FacetValues, FacetsValues)
 
 {-|
 
-@docs FacetValue, FacetValues
+@docs FacetValue, FacetValues, FacetsValues
 
 -}
+
+import Dict exposing (Dict)
 
 
 {-| A facet value is the value of an attribute and a count
@@ -21,3 +23,9 @@ type alias FacetValue =
 type alias FacetValues =
     -- Poss. "FacetFan" ?
     List FacetValue
+
+
+{-| A collection of facets, each with a list of facet values.
+-}
+type alias FacetsValues =
+    Dict String FacetValues

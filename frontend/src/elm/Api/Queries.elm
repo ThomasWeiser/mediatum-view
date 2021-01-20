@@ -1,6 +1,6 @@
 module Api.Queries exposing
     ( toplevelFolders, folders, subfolders
-    , selectionDocumentsPage, selectionFolderCounts, selectionFacetByAspect
+    , selectionDocumentsPage, selectionFolderCounts, selectionFacets
     , documentDetails
     , genericNode, authorSearch
     )
@@ -24,7 +24,7 @@ In reality it's just function calling.
 
 # Document Search and Facet Queries
 
-@docs selectionDocumentsPage, selectionFolderCounts, selectionFacetByAspect
+@docs selectionDocumentsPage, selectionFolderCounts, selectionFacets
 
 
 # Document Queries
@@ -63,7 +63,7 @@ import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
 import Types exposing (DocumentIdFromSearch, Window)
-import Types.Facet exposing (FacetValues)
+import Types.Facet exposing (FacetsValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm
 import Types.Selection exposing (FtsSorting(..), SelectMethod(..), Selection)
@@ -334,11 +334,11 @@ selectionFolderCounts selection =
         |> SelectionSet.nonNullOrFail
 
 
-{-| Get the list of values of a facet within a set of documents given by a selection.
+{-| Get the list of values of a list of facets within a set of documents given by a selection.
 
 The selection may include a full-text-search, a list of filters and a list of facet filters.
 
-The facet in question is specified by the name of the corresponding aspect.
+The facets in question are specified by are list of names of the corresponding aspects.
 
 _GraphQL notation if no FTS is involved:_
 
@@ -348,7 +348,8 @@ _GraphQL notation if no FTS is involved:_
             aspectTests: $listOfAspectTestsForFiltering
             attributeTests: $listOfAttributeTestsForFiltering
         ) {
-            ...facetByAspect(aspect, limit)
+            ...facetByAspect(aspect1, limit)
+            ...facetByAspect(aspect2, limit)
         }
     }
 
@@ -361,17 +362,18 @@ _GraphQL notation if FTS is involved:_
             aspectTests: $listOfAspectTestsForFiltering
             attributeTests: $listOfAttributeTestsForFiltering
         ) {
-            ...facetByAspect(aspect, limit)
+            ...facetByAspect(aspect1, limit)
+            ...facetByAspect(aspect2, limit)
         }
     }
 
 -}
-selectionFacetByAspect :
+selectionFacets :
     Selection
-    -> String
+    -> List String
     -> Int
-    -> SelectionSet FacetValues Graphql.Operation.RootQuery
-selectionFacetByAspect selection aspect limit =
+    -> SelectionSet FacetsValues Graphql.Operation.RootQuery
+selectionFacets selection aspects limit =
     (case selection.selectMethod of
         SelectByFolderListing ->
             Mediatum.Query.allDocumentsDocset
@@ -385,7 +387,16 @@ selectionFacetByAspect selection aspect limit =
                 , text = Types.SearchTerm.toString searchTerm
                 }
     )
-        (Api.Fragments.facetByAspect aspect limit)
+        (SelectionSet.dict
+            (List.map
+                (\aspect ->
+                    ( aspect
+                    , Api.Fragments.facetByAspect aspect limit
+                    )
+                )
+                aspects
+            )
+        )
         |> SelectionSet.nonNullOrFail
 
 
