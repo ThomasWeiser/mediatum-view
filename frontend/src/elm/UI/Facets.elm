@@ -179,7 +179,6 @@ viewFacet context selection aspect =
                             viewFacetValues
                                 aspect
                                 (Dict.get aspect facetsValues |> Maybe.withDefault [])
-                                (Dict.get aspect selection.facetFilters)
             ]
         ]
 
@@ -219,41 +218,26 @@ viewFacetSelection aspect selectedValue maybeCount =
         ]
 
 
-viewFacetValues : String -> FacetValues -> Maybe String -> Html Msg
-viewFacetValues aspect facetValues maybeSelectedValue =
-    -- TODO: Remove maybeSelectedValue
+viewFacetValues : String -> FacetValues -> Html Msg
+viewFacetValues aspect facetValues =
     Html.ul [] <|
-        (if maybeSelectedValue == Nothing then
-            Html.text ""
+        List.map
+            (\{ value, count } ->
+                Html.li
+                    [ Html.Attributes.class "facet-value-line"
+                    , Html.Events.onClick (SelectFacetValue aspect value)
+                    ]
+                    [ Html.span
+                        [ Html.Attributes.class "facet-value-text" ]
+                        [ if String.isEmpty value then
+                            Html.i [] [ Html.text "[not specified]" ]
 
-         else
-            Html.li
-                [ Html.Attributes.class "facet-value-line facet-remove-filter"
-                , Html.Events.onClick (SelectFacetUnfilter aspect)
-                ]
-                [ Html.span
-                    [ Html.Attributes.class "facet-value-text" ]
-                    [ Html.i [] [ Html.text "<< All" ] ]
-                ]
-        )
-            :: List.map
-                (\{ value, count } ->
-                    Html.li
-                        [ Html.Attributes.class "facet-value-line"
-                        , Html.Attributes.classList [ ( "facet-value-selected", maybeSelectedValue == Just value ) ]
-                        , Html.Events.onClick (SelectFacetValue aspect value)
+                          else
+                            Html.text value
                         ]
-                        [ Html.span
-                            [ Html.Attributes.class "facet-value-text" ]
-                            [ if String.isEmpty value then
-                                Html.i [] [ Html.text "[not specified]" ]
-
-                              else
-                                Html.text value
-                            ]
-                        , Html.span
-                            [ Html.Attributes.class "facet-value-count" ]
-                            [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
-                        ]
-                )
-                facetValues
+                    , Html.span
+                        [ Html.Attributes.class "facet-value-count" ]
+                        [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
+                    ]
+            )
+            facetValues
