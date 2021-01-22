@@ -150,8 +150,7 @@ folderCountsForQuery context =
             Nothing
 
         ListingPresentation selection window ->
-            Cache.get context.cache.folderCounts selection
-                |> RemoteData.withDefault FolderCounts.init
+            Cache.Derive.folderCountsOnPath context.cache selection
                 |> Just
 
 
