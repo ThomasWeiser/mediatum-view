@@ -12,6 +12,7 @@ module Cache.Derive exposing
     , getPath
     , getPathAsFarAsCached
     , isOnPath
+    , getDocumentCount
     )
 
 {-| Functions for getting/deriving some special data from the base tables in the cache.
@@ -37,14 +38,17 @@ module Cache.Derive exposing
 @docs getPath
 @docs getPathAsFarAsCached
 @docs isOnPath
+@docs getDocumentCount
 
 -}
 
 import Cache exposing (ApiData, Cache)
 import Maybe.Extra
 import RemoteData exposing (RemoteData(..))
+import Sort.Dict
 import Types exposing (FolderDisplay(..), NodeType(..))
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
+import Types.Selection as Selection exposing (Selection)
 
 
 {-| A specialization of [`RemoteData e a`](/packages/krisajenkins/remotedata/6.0.1/RemoteData#RemoteData)
@@ -193,3 +197,19 @@ isOnPath cache requestedId =
                         |> Maybe.Extra.join
                     )
         )
+
+
+{-| -}
+getDocumentCount : Cache -> Selection -> DerivedData Int
+getDocumentCount cache selection =
+    Cache.get cache.folderCounts selection
+        |> RemoteData.mapError CacheApiError
+        |> RemoteData.andThen
+            (\folderCounts ->
+                case Sort.Dict.get selection.scope folderCounts of
+                    Just count ->
+                        Success count
+
+                    Nothing ->
+                        Failure (CacheDerivationError "Missing count for scoped folder")
+            )

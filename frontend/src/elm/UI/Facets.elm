@@ -21,6 +21,7 @@ module UI.Facets exposing
 -}
 
 import Cache exposing (Cache)
+import Cache.Derive
 import Dict
 import Html exposing (Html)
 import Html.Attributes
@@ -149,64 +150,94 @@ viewFacet context selection aspect =
             [ Html.text aspect ]
         , Html.div
             [ Html.Attributes.class "facet-values" ]
-            [ case
-                Cache.get
-                    context.cache.facetsValues
-                    ( selection, aspect )
-              of
-                RemoteData.NotAsked ->
-                    -- Should never happen
-                    UI.Icons.spinner
-
-                RemoteData.Loading ->
-                    UI.Icons.spinner
-
-                RemoteData.Failure error ->
-                    Utils.Html.viewApiError error
-
-                RemoteData.Success facetValues ->
-                    viewFacetValues
+            [ case Dict.get aspect selection.facetFilters of
+                Just selectedValue ->
+                    viewFacetSelection
                         aspect
-                        facetValues
-                        (Dict.get aspect selection.facetFilters)
+                        selectedValue
+                        (Cache.Derive.getDocumentCount context.cache selection
+                            |> RemoteData.toMaybe
+                        )
+
+                Nothing ->
+                    case
+                        Cache.get
+                            context.cache.facetsValues
+                            ( selection, context.facetAspects )
+                    of
+                        RemoteData.NotAsked ->
+                            -- Should never happen
+                            UI.Icons.spinner
+
+                        RemoteData.Loading ->
+                            UI.Icons.spinner
+
+                        RemoteData.Failure error ->
+                            Utils.Html.viewApiError error
+
+                        RemoteData.Success facetsValues ->
+                            viewFacetValues
+                                aspect
+                                (Dict.get aspect facetsValues |> Maybe.withDefault [])
             ]
         ]
 
 
-viewFacetValues : String -> FacetValues -> Maybe String -> Html Msg
-viewFacetValues aspect facetValues maybeSelectedValue =
+viewFacetSelection : String -> String -> Maybe Int -> Html Msg
+viewFacetSelection aspect selectedValue maybeCount =
     Html.ul [] <|
-        (if maybeSelectedValue == Nothing then
-            Html.text ""
+        [ Html.li
+            [ Html.Attributes.class "facet-value-line facet-remove-filter"
+            , Html.Events.onClick (SelectFacetUnfilter aspect)
+            ]
+            [ Html.span
+                [ Html.Attributes.class "facet-value-text" ]
+                [ Html.i [] [ Html.text "<< All" ] ]
+            ]
+        , Html.li
+            [ Html.Attributes.class "facet-value-line"
+            , Html.Attributes.class "facet-value-selected"
+            ]
+            [ Html.span
+                [ Html.Attributes.class "facet-value-text" ]
+                [ if String.isEmpty selectedValue then
+                    Html.i [] [ Html.text "[not specified]" ]
 
-         else
-            Html.li
-                [ Html.Attributes.class "facet-value-line facet-remove-filter"
-                , Html.Events.onClick (SelectFacetUnfilter aspect)
+                  else
+                    Html.text selectedValue
                 ]
-                [ Html.span
-                    [ Html.Attributes.class "facet-value-text" ]
-                    [ Html.i [] [ Html.text "<< All" ] ]
-                ]
-        )
-            :: List.map
-                (\{ value, count } ->
-                    Html.li
-                        [ Html.Attributes.class "facet-value-line"
-                        , Html.Attributes.classList [ ( "facet-value-selected", maybeSelectedValue == Just value ) ]
-                        , Html.Events.onClick (SelectFacetValue aspect value)
-                        ]
-                        [ Html.span
-                            [ Html.Attributes.class "facet-value-text" ]
-                            [ if String.isEmpty value then
-                                Html.i [] [ Html.text "[not specified]" ]
+            , case maybeCount of
+                Just count ->
+                    Html.span
+                        [ Html.Attributes.class "facet-value-count" ]
+                        [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
 
-                              else
-                                Html.text value
-                            ]
-                        , Html.span
-                            [ Html.Attributes.class "facet-value-count" ]
-                            [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
+                Nothing ->
+                    Html.text ""
+            ]
+        ]
+
+
+viewFacetValues : String -> FacetValues -> Html Msg
+viewFacetValues aspect facetValues =
+    Html.ul [] <|
+        List.map
+            (\{ value, count } ->
+                Html.li
+                    [ Html.Attributes.class "facet-value-line"
+                    , Html.Events.onClick (SelectFacetValue aspect value)
+                    ]
+                    [ Html.span
+                        [ Html.Attributes.class "facet-value-text" ]
+                        [ if String.isEmpty value then
+                            Html.i [] [ Html.text "[not specified]" ]
+
+                          else
+                            Html.text value
                         ]
-                )
-                facetValues
+                    , Html.span
+                        [ Html.Attributes.class "facet-value-count" ]
+                        [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
+                    ]
+            )
+            facetValues

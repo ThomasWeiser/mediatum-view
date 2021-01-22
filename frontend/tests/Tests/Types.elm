@@ -11,7 +11,7 @@ module Tests.Types exposing
     , fuzzerOffset
     , fuzzerSearchMethod
     , fuzzerSelection
-    , fuzzerSelectionFacet
+    , fuzzerSelectionFacets
     , fuzzerSelectionWindow
     , fuzzerWindow
     , fuzzerYear
@@ -78,11 +78,11 @@ fuzzerSelectionWindow =
         fuzzerWindow
 
 
-fuzzerSelectionFacet : Fuzzer ( Selection, String )
-fuzzerSelectionFacet =
+fuzzerSelectionFacets : Fuzzer ( Selection, List String )
+fuzzerSelectionFacets =
     Fuzz.map2 Tuple.pair
         fuzzerSelection
-        fuzzerFacet
+        (shortList 3 fuzzerFacet)
 
 
 fuzzerFacet : Fuzzer String
