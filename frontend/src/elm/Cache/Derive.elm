@@ -13,6 +13,7 @@ module Cache.Derive exposing
     , getPathAsFarAsCached
     , isOnPath
     , getDocumentCount
+    , folderCountsOnPath
     )
 
 {-| Functions for getting/deriving some special data from the base tables in the cache.
@@ -39,10 +40,12 @@ module Cache.Derive exposing
 @docs getPathAsFarAsCached
 @docs isOnPath
 @docs getDocumentCount
+@docs folderCountsOnPath
 
 -}
 
 import Cache exposing (ApiData, Cache)
+import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
 import Maybe.Extra
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
@@ -213,3 +216,21 @@ getDocumentCount cache selection =
                     Nothing ->
                         Failure (CacheDerivationError "Missing count for scoped folder")
             )
+
+
+{-| Get the folder counts for the scoped folder of the selection and of all folders upwards to the root.
+-}
+folderCountsOnPath : Cache -> Selection -> FolderCounts
+folderCountsOnPath cache selection =
+    List.foldr
+        (\folderId folderCounts ->
+            Sort.Dict.foldl Sort.Dict.insert
+                (Cache.get
+                    cache.folderCounts
+                    { selection | scope = folderId }
+                    |> RemoteData.withDefault FolderCounts.init
+                )
+                folderCounts
+        )
+        FolderCounts.init
+        (getPathAsFarAsCached cache (Just selection.scope))
