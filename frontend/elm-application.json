@@ -27,6 +27,7 @@
         "Pagination.Relay.Connection",
         "Pagination.Relay.Page",
         "Pagination.Relay.Pagination",
+        "Types.Aspect",
         "Types.DebugInfo",
         "Types.Facet",
         "Types.Id",

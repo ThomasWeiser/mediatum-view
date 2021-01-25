@@ -14,11 +14,13 @@ import Dict
 import Maybe.Extra
 import Parser as ElmParser exposing ((|.), (|=))
 import Set
+import Sort.Dict
+import Types.Aspect as Aspect
 import Types.Id as Id exposing (NodeId)
 import Types.Range as Range
 import Types.Route as Route exposing (Route, RouteParameters, RoutePath(..))
 import Types.SearchTerm
-import Types.Selection exposing (FtsSorting(..))
+import Types.Selection as Selection exposing (FtsSorting(..))
 import Url exposing (Url)
 import Url.Builder as Builder
 import Url.Parser as Parser exposing ((</>), (<?>), Parser)
@@ -84,7 +86,8 @@ parserParameters =
                     >> Result.toMaybe
                 )
                 >> Maybe.Extra.values
-                >> Dict.fromList
+                >> List.map (Tuple.mapFirst Aspect.fromString)
+                >> Selection.facetFiltersFromList
             )
         )
         (QueryParser.int "offset"
@@ -191,11 +194,11 @@ toString route =
                     )
             ]
             ++ List.map
-                (\( key, value ) ->
+                (\( aspect, value ) ->
                     Builder.string "filter-by-facet"
-                        (key ++ ":" ++ value)
+                        (Aspect.toString aspect ++ ":" ++ value)
                 )
-                (Dict.toList route.parameters.facetFilters)
+                (Sort.Dict.toList route.parameters.facetFilters)
             ++ Maybe.Extra.values
                 [ buildParameterIfNotDefault
                     (Builder.int "offset")

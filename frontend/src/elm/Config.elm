@@ -12,6 +12,8 @@ module Config exposing
 
 -}
 
+import Types.Aspect as Aspect exposing (Aspect)
+
 
 {-| Endpoint for backend's GraphQL service.
 -}
@@ -47,6 +49,7 @@ facetValuesToQuery =
 
 
 {-| -}
-standardFacetAspects : List String
+standardFacetAspects : List Aspect
 standardFacetAspects =
     [ "type", "subject", "origin", "author", "person", "keywords", "year" ]
+        |> List.map Aspect.fromString

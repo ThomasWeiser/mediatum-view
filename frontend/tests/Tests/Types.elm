@@ -25,6 +25,7 @@ import TestUtils exposing (..)
 import Tests.Types.Range
 import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types exposing (DocumentIdFromSearch, Window)
+import Types.Aspect as Aspect exposing (Aspect)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm as SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (FacetFilters, Filter(..), FtsSorting(..), SelectMethod(..), Selection, SetOfFilters)
@@ -78,14 +79,14 @@ fuzzerSelectionWindow =
         fuzzerWindow
 
 
-fuzzerSelectionFacets : Fuzzer ( Selection, List String )
+fuzzerSelectionFacets : Fuzzer ( Selection, List Aspect )
 fuzzerSelectionFacets =
     Fuzz.map2 Tuple.pair
         fuzzerSelection
         (shortList 3 fuzzerFacet)
 
 
-fuzzerFacet : Fuzzer String
+fuzzerFacet : Fuzzer Aspect
 fuzzerFacet =
     Fuzz.oneOf
         [ [ "year"
@@ -95,6 +96,7 @@ fuzzerFacet =
             |> Fuzz.oneOf
         , Fuzz.string
         ]
+        |> Fuzz.map Aspect.fromString
 
 
 fuzzerSearchMethod : Fuzzer SelectMethod
@@ -139,16 +141,15 @@ fuzzerFilter =
 
 fuzzerFacetFilters : Fuzzer FacetFilters
 fuzzerFacetFilters =
-    Fuzz.map2 Tuple.pair
-        fuzzerFacetName
-        Fuzz.string
+    Fuzz.map2 Tuple.pair fuzzerFacetName Fuzz.string
         |> shortList 3
-        |> Fuzz.map Dict.fromList
+        |> Fuzz.map Types.Selection.facetFiltersFromList
 
 
-fuzzerFacetName : Fuzzer String
+fuzzerFacetName : Fuzzer Aspect
 fuzzerFacetName =
     [ "year", "author" ]
+        |> List.map Aspect.fromString
         |> List.map Fuzz.constant
         |> Fuzz.oneOf
 

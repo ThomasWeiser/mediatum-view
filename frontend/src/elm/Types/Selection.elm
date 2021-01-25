@@ -5,7 +5,7 @@ module Types.Selection exposing
     , SetOfFilters
     , Filter(..)
     , FilterHandle
-    , FacetFilters
+    , FacetFilters, initFacetFilters, facetFiltersFromList
     , filtersNone
     , insertFilter
     , removeFilter
@@ -31,7 +31,7 @@ module Types.Selection exposing
 @docs SetOfFilters
 @docs Filter
 @docs FilterHandle
-@docs FacetFilters
+@docs FacetFilters, initFacetFilters, facetFiltersFromList
 
 @docs filtersNone
 @docs insertFilter
@@ -60,6 +60,7 @@ Define orderings on these types so we can use them as keys in `Sort.Dict`.
 import Dict
 import Ordering exposing (Ordering)
 import Sort.Dict
+import Types.Aspect as Aspect exposing (Aspect)
 import Types.Id as Id exposing (FolderId)
 import Types.Range as Range exposing (Range)
 import Types.SearchTerm as SearchTerm exposing (SearchTerm)
@@ -91,7 +92,20 @@ type FtsSorting
 {-| A set of facet filters, mapping aspect names to aspect values.
 -}
 type alias FacetFilters =
-    Dict.Dict String String
+    Sort.Dict.Dict Aspect String
+
+
+{-| -}
+initFacetFilters : FacetFilters
+initFacetFilters =
+    Sort.Dict.empty (Utils.sorter Aspect.ordering)
+
+
+{-| -}
+facetFiltersFromList : List ( Aspect, String ) -> FacetFilters
+facetFiltersFromList list =
+    list
+        |> Sort.Dict.fromList (Utils.sorter Aspect.ordering)
 
 
 {-| A `SetOfFilters` may contain one single `FilterYearWithin` and one single `FilterTitleFts`.
@@ -297,5 +311,10 @@ orderingFilter =
 orderingFacetFilters : Ordering FacetFilters
 orderingFacetFilters =
     Ordering.byFieldWith
-        (Utils.lexicalOrdering Ordering.natural)
-        Dict.toList
+        (Utils.lexicalOrdering
+            (Utils.tupleOrdering
+                Aspect.ordering
+                Ordering.natural
+            )
+        )
+        Sort.Dict.toList

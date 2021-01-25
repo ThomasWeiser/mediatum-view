@@ -28,7 +28,7 @@ import Dict
 import Types.Id exposing (DocumentId, FolderId, NodeId)
 import Types.Range exposing (Range)
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (FacetFilters, FtsSorting(..))
+import Types.Selection as Selection exposing (FacetFilters, FtsSorting(..))
 
 
 {-| -}
@@ -92,7 +92,7 @@ emptyParameters =
     , ftsSorting = defaultFtsSorting
     , filterByYear = Nothing
     , filterByTitle = Nothing
-    , facetFilters = Dict.empty
+    , facetFilters = Selection.initFacetFilters
     , offset = 0
     , limit = defaultLimit
     }

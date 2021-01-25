@@ -17,7 +17,7 @@ Used internally in module [`Api.Queries`](Api.Queries).
 
 import Api.Arguments.AspectTest
 import Api.Arguments.AttributeTest
-import Dict
+import Sort.Dict
 import Types.Range as Range
 import Types.SearchTerm
 import Types.Selection exposing (FacetFilters, Filter(..), SetOfFilters)
@@ -53,10 +53,10 @@ filterToAttributeTest filter =
 facetFiltersToAspectTests : FacetFilters -> List Api.Arguments.AspectTest.Test
 facetFiltersToAspectTests facetFilters =
     facetFilters
-        |> Dict.toList
+        |> Sort.Dict.toList
         |> List.map
-            (\( name, value ) ->
-                { name = name
+            (\( aspect, value ) ->
+                { aspect = aspect
                 , operation = Api.Arguments.AspectTest.Equality value
                 }
             )

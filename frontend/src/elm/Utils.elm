@@ -11,7 +11,7 @@ module Utils exposing
     , mapEllipsis
     , remoteDataCheck
     , remoteDataMapFallible
-    , sorter, maybeOrdering, lexicalOrdering
+    , sorter, maybeOrdering, lexicalOrdering, tupleOrdering
     , noBreakSpace
     , onChange
     )
@@ -49,7 +49,7 @@ module Utils exposing
 
 # Ordering
 
-@docs sorter, maybeOrdering, lexicalOrdering
+@docs sorter, maybeOrdering, lexicalOrdering, tupleOrdering
 
 
 # Html
@@ -228,6 +228,15 @@ maybeOrdering compareBaseType maybeL maybeR =
 
         ( Just l, Just r ) ->
             compareBaseType l r
+
+
+{-| Lift orderings on two types to a Tuple of that types.
+-}
+tupleOrdering : (a -> a -> Order) -> (b -> b -> Order) -> ( a, b ) -> ( a, b ) -> Order
+tupleOrdering compareFirst compareSecond =
+    Ordering.byFieldWith compareFirst Tuple.first
+        |> Ordering.breakTiesWith
+            (Ordering.byFieldWith compareSecond Tuple.second)
 
 
 {-| Map elements while they map to a Just.
