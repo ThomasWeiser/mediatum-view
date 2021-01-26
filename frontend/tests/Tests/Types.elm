@@ -28,7 +28,7 @@ import Types exposing (DocumentIdFromSearch, Window)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm as SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (FacetFilters, Filter(..), FtsFilter, FtsFilters, FtsSorting(..), SelectMethod(..), Selection)
+import Types.Selection exposing (FacetFilters, FtsFilter, FtsFilters, FtsSorting(..), SelectMethod(..), Selection)
 
 
 fuzzerId : Fuzzer Int

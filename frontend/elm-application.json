@@ -44,7 +44,6 @@
         "UI.Article.Generic",
         "UI.Article.Listing",
         "UI.Article",
-        "UI.Controls.Filter",
         "UI.Controls",
         "UI.Facets",
         "UI.Icons",

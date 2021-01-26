@@ -2,25 +2,14 @@ module Types.Selection exposing
     ( Selection
     , SelectMethod(..)
     , FtsSorting(..)
-    , SetOfFilters
-    , Filter(..)
-    , FilterHandle
     , FacetFilters, initFacetFilters, facetFiltersFromList
     , FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
-    , filtersNone
-    , insertFilter
-    , removeFilter
-    , filtersToList
-    , filtersFromList
-    , filterHandle
-    , newFilterHandle
     , orderingSelection
     , orderingSelectionModuloSorting
     , orderingSelectMethod
     , orderingFtsSorting
     , orderingFtsFilters
     , orderingFacetFilters
-    , orderingFilterHandle
     )
 
 {-| A `Selection` is a specification of the possible parameters when querying a set of documents.
@@ -28,19 +17,8 @@ module Types.Selection exposing
 @docs Selection
 @docs SelectMethod
 @docs FtsSorting
-@docs SetOfFilters
-@docs Filter
-@docs FilterHandle
 @docs FacetFilters, initFacetFilters, facetFiltersFromList
 @docs FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
-
-@docs filtersNone
-@docs insertFilter
-@docs removeFilter
-@docs filtersToList
-@docs filtersFromList
-@docs filterHandle
-@docs newFilterHandle
 
 
 # Orderings
@@ -53,7 +31,6 @@ Define orderings on these types so we can use them as keys in `Sort.Dict`.
 @docs orderingFtsSorting
 @docs orderingFtsFilters
 @docs orderingFacetFilters
-@docs orderingFilterHandle
 
 -}
 
@@ -129,76 +106,6 @@ ftsFiltersFromList : List FtsFilter -> FtsFilters
 ftsFiltersFromList list =
     list
         |> Sort.Dict.fromList (Utils.sorter Aspect.ordering)
-
-
-{-| A `SetOfFilters` may contain one single `FilterYearWithin` and one single `FilterTitleFts`.
--}
-type SetOfFilters
-    = SetOfFilters (Sort.Dict.Dict FilterHandle Filter)
-
-
-{-| -}
-type Filter
-    = FilterYearWithin (Range Int)
-    | FilterTitleFts SearchTerm
-
-
-{-| A `FilterHandle` is a wrapped string used to reference a filter instance in the UI as well as in a `SetOfFilters`.
--}
-type FilterHandle
-    = FilterHandle String
-
-
-{-| -}
-filtersNone : SetOfFilters
-filtersNone =
-    SetOfFilters (Sort.Dict.empty (Utils.sorter orderingFilterHandle))
-
-
-{-| -}
-insertFilter : Filter -> SetOfFilters -> SetOfFilters
-insertFilter filter (SetOfFilters fs) =
-    SetOfFilters (Sort.Dict.insert (filterHandle filter) filter fs)
-
-
-{-| -}
-removeFilter : FilterHandle -> SetOfFilters -> SetOfFilters
-removeFilter handle (SetOfFilters fs) =
-    SetOfFilters (Sort.Dict.remove handle fs)
-
-
-{-| -}
-filtersToList : SetOfFilters -> List Filter
-filtersToList (SetOfFilters fs) =
-    Sort.Dict.values fs
-
-
-{-| -}
-filtersFromList : List Filter -> SetOfFilters
-filtersFromList listOfFilters =
-    listOfFilters
-        |> List.map (\filter -> ( filterHandle filter, filter ))
-        |> Sort.Dict.fromList (Utils.sorter orderingFilterHandle)
-        |> SetOfFilters
-
-
-{-| -}
-filterHandle : Filter -> FilterHandle
-filterHandle filter =
-    FilterHandle <|
-        case filter of
-            FilterYearWithin _ ->
-                "YearWithin"
-
-            FilterTitleFts searchTerm ->
-                "TitleFts"
-
-
-{-| Used for newly created filter editors.
--}
-newFilterHandle : String -> FilterHandle
-newFilterHandle filterTypeName =
-    FilterHandle ("new-" ++ filterTypeName)
 
 
 {-| -}
@@ -293,18 +200,6 @@ orderingFtsFilters =
             )
         )
         Sort.Dict.toList
-
-
-{-| -}
-
-
-
--- TODO Remove
-
-
-orderingFilterHandle : Ordering FilterHandle
-orderingFilterHandle (FilterHandle h1) (FilterHandle h2) =
-    compare h1 h2
 
 
 {-| -}

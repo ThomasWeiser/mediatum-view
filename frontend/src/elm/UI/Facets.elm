@@ -33,7 +33,7 @@ import Types.Aspect as Aspect exposing (Aspect)
 import Types.Facet exposing (FacetValues)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
-import Types.Selection exposing (Filter(..), FtsSorting(..), Selection)
+import Types.Selection exposing (Selection)
 import UI.Icons
 import Utils
 import Utils.Html

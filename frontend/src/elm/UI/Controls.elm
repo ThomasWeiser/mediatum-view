@@ -36,7 +36,7 @@ import Types.Presentation exposing (Presentation(..))
 import Types.Range as Range
 import Types.Route exposing (Route)
 import Types.SearchTerm as SearchTerm exposing (SearchTerm)
-import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsFilters, FtsSorting(..))
+import Types.Selection as Selection exposing (FtsFilters, FtsSorting(..))
 import UI.Icons
 import Utils
 import Utils.Html
