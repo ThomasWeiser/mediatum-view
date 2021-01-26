@@ -24,6 +24,7 @@ module UI.Controls exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
+import Config
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -69,7 +70,7 @@ type Msg
     = SetSearchTerm String
     | ClearSearchTerm
     | SetSorting FtsSorting
-      -- | AddFtsFilter Aspect
+    | AddFtsFilter Aspect
     | SetFtsFilterText Aspect String
     | RemoveFtsFilter Aspect
     | Submit
@@ -118,6 +119,17 @@ update context msg model =
 
         SetSorting ftsSorting ->
             ( { model | ftsSorting = ftsSorting }
+            , Cmd.none
+            , NoReturn
+            )
+
+        AddFtsFilter aspect ->
+            ( { model
+                | ftsFilterLines =
+                    model.ftsFilterLines
+                        |> Utils.setOnMapping Tuple.first
+                            ( aspect, "" )
+              }
             , Cmd.none
             , NoReturn
             )
@@ -267,12 +279,13 @@ viewFtsFilters model =
     Html.div [ Html.Attributes.class "filters-bar" ]
         [ viewExistingFtsFilters
             model.ftsFilterLines
+        , viewFtsAspectButtons model.ftsFilterLines
         ]
 
 
 viewExistingFtsFilters : List ( Aspect, String ) -> Html Msg
 viewExistingFtsFilters ftsFilterLines =
-    Html.span [] <|
+    Html.div [] <|
         List.map
             (\( aspect, searchText ) ->
                 viewExistingFtsFilter aspect searchText
@@ -282,7 +295,7 @@ viewExistingFtsFilters ftsFilterLines =
 
 viewExistingFtsFilter : Aspect -> String -> Html Msg
 viewExistingFtsFilter aspect searchText =
-    Html.span
+    Html.div
         [ Html.Attributes.class "search-bar"
 
         -- , Html.Attributes.classList [ ( "being-edited", beingEdited ) ]
@@ -310,3 +323,26 @@ viewExistingFtsFilter aspect searchText =
                 [ UI.Icons.clear ]
             ]
         ]
+
+
+viewFtsAspectButtons : List ( Aspect, String ) -> Html Msg
+viewFtsAspectButtons ftsFilterLines =
+    Html.div [] <|
+        List.filterMap
+            (\aspect ->
+                if Utils.findByMapping Tuple.first aspect ftsFilterLines == Nothing then
+                    Just <|
+                        Html.span
+                            [ Html.Attributes.class "" ]
+                            [ Html.button
+                                [ Html.Attributes.type_ "button"
+                                , Html.Attributes.class "add-filter-button"
+                                , Html.Events.onClick <| AddFtsFilter aspect
+                                ]
+                                [ Html.text <| Aspect.toString aspect ]
+                            ]
+
+                else
+                    Nothing
+            )
+            Config.standardFtsAspects
