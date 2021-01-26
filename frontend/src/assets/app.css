@@ -7,10 +7,12 @@ html {
 }
 body {
   margin: 0 1em;
-  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
   line-height: 1.5;
   padding: 0;
   color: #333;
+}
+body, input {
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
 }
 .page-container {
   height: 100vh;
@@ -67,7 +69,19 @@ article {
 
 .search-bar {
   display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.search-bar  .search-label {
+  width: 10em;
+}
+
+.search-bar .input-group {
+  flex: 1;
+  display: flex;
+  align-items: center;
   border: 1px solid #ccc;
+  /* margin-right: 1rem; */
 }
 .search-bar .search-input {
   flex: 1;
@@ -78,6 +92,19 @@ article {
   background: none;
   border: none;
 }
+/*
+.input-group > * {
+  border-radius: 0;
+}
+.input-group > *:first-child {
+  border-top-left-radius: .4rem;
+  border-bottom-left-radius: .4rem;
+}
+.input-group > *:last-child {
+  border-top-right-radius: .4rem;
+  border-bottom-right-radius: .4rem;
+}
+*/
 
 /* Remove some builtin-styles for input fields in webkit, chrome, ie */
 input:focus{
@@ -135,21 +162,6 @@ button.filter-button, .filter-inputs {
   border-color: #b4b977;
   */
   padding: 0.25rem .75rem;
-}
-
-.input-group {
-  margin-right: 1rem;
-}
-.input-group > * {
-  border-radius: 0;
-}
-.input-group > *:first-child {
-  border-top-left-radius: .4rem;
-  border-bottom-left-radius: .4rem;
-}
-.input-group > *:last-child {
-  border-top-right-radius: .4rem;
-  border-bottom-right-radius: .4rem;
 }
 
 

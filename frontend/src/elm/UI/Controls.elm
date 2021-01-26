@@ -195,43 +195,45 @@ viewSearch : Context -> Model -> Html Msg
 viewSearch context model =
     Html.form
         [ Html.Events.onSubmit Submit ]
-        [ Html.div [ Html.Attributes.class "search-bar input-group" ]
-            [ Html.input
-                [ Html.Attributes.class "search-input"
-                , Html.Attributes.type_ "search"
-                , Html.Attributes.placeholder
-                    (getSearchFieldPlaceholder context)
-                , Html.Attributes.value model.ftsTerm
-                , Html.Events.onInput SetSearchTerm
-                ]
-                []
-            , Html.button
-                [ Html.Attributes.type_ "button"
-                , Html.Attributes.class "clear-input"
-                , Utils.Html.displayNone (model.ftsTerm == "")
-                , Html.Events.onClick ClearSearchTerm
-                ]
-                [ UI.Icons.clear ]
-            , Html.button
-                [ Html.Attributes.type_ "submit"
-                , Html.Attributes.classList
-                    [ ( "selected"
-                      , model.ftsSorting == FtsByRank
-                      )
+        [ Html.div [ Html.Attributes.class "search-bar" ]
+            [ Html.span [ Html.Attributes.class "input-group" ]
+                [ Html.input
+                    [ Html.Attributes.class "search-input"
+                    , Html.Attributes.type_ "search"
+                    , Html.Attributes.placeholder
+                        (getSearchFieldPlaceholder context)
+                    , Html.Attributes.value model.ftsTerm
+                    , Html.Events.onInput SetSearchTerm
                     ]
-                , Html.Events.onClick (SetSorting FtsByRank)
-                ]
-                [ UI.Icons.search, Html.text " By Rank" ]
-            , Html.button
-                [ Html.Attributes.type_ "submit"
-                , Html.Attributes.classList
-                    [ ( "selected"
-                      , model.ftsSorting == FtsByDate
-                      )
+                    []
+                , Html.button
+                    [ Html.Attributes.type_ "button"
+                    , Html.Attributes.class "clear-input"
+                    , Utils.Html.displayNone (model.ftsTerm == "")
+                    , Html.Events.onClick ClearSearchTerm
                     ]
-                , Html.Events.onClick (SetSorting FtsByDate)
+                    [ UI.Icons.clear ]
+                , Html.button
+                    [ Html.Attributes.type_ "submit"
+                    , Html.Attributes.classList
+                        [ ( "selected"
+                          , model.ftsSorting == FtsByRank
+                          )
+                        ]
+                    , Html.Events.onClick (SetSorting FtsByRank)
+                    ]
+                    [ UI.Icons.search, Html.text " By Rank" ]
+                , Html.button
+                    [ Html.Attributes.type_ "submit"
+                    , Html.Attributes.classList
+                        [ ( "selected"
+                          , model.ftsSorting == FtsByDate
+                          )
+                        ]
+                    , Html.Events.onClick (SetSorting FtsByDate)
+                    ]
+                    [ UI.Icons.search, Html.text " By Date" ]
                 ]
-                [ UI.Icons.search, Html.text " By Date" ]
             ]
         ]
 
@@ -289,23 +291,31 @@ viewExistingFilters model ftsFilters =
 viewExistingFilter : Aspect -> SearchTerm -> Html Msg
 viewExistingFilter aspect searchTerm =
     Html.span
-        [ Html.Attributes.class "input-group"
+        [ Html.Attributes.class "search-bar"
 
         -- , Html.Attributes.classList [ ( "being-edited", beingEdited ) ]
         ]
-        [ Html.span
-            [ Html.Attributes.class "aspect-name" ]
+        [ Html.label
+            [ Html.Attributes.class "search-label" ]
             [ Html.text (Aspect.toString aspect) ]
-        , Html.text ": "
         , Html.span
-            [ Html.Attributes.class "aspect-search-term" ]
-            [ Html.text (SearchTerm.toString searchTerm) ]
-        , Html.button
-            [ Html.Attributes.type_ "button"
+            [ Html.Attributes.class "input-group" ]
+            [ Html.input
+                [ Html.Attributes.class "search-input"
+                , Html.Attributes.type_ "search"
+                , Html.Attributes.placeholder "Placeholder Todo"
+                , Html.Attributes.value (SearchTerm.toString searchTerm)
 
-            -- , Html.Attributes.disabled beingEdited
-            , Html.Events.onClick (RemoveFtsFilter aspect)
-            , Html.Attributes.class "filter-button"
+                -- , Html.Events.onInput SetSearchTerm
+                ]
+                []
+            , Html.button
+                [ Html.Attributes.type_ "button"
+
+                -- , Html.Attributes.disabled beingEdited
+                , Html.Events.onClick (RemoveFtsFilter aspect)
+                , Html.Attributes.class "filter-button"
+                ]
+                [ UI.Icons.clear ]
             ]
-            [ UI.Icons.clear ]
         ]
