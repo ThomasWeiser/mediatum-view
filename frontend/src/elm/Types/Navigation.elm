@@ -17,9 +17,8 @@ import Sort.Dict
 import Types.Aspect exposing (Aspect)
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.Route as Route exposing (Route)
-import Types.Route.Filter
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (FtsSorting, SetOfFilters)
+import Types.Selection exposing (FtsFilters, FtsSorting)
 
 
 {-| -}
@@ -28,7 +27,8 @@ type Navigation
     | ShowDocument FolderId DocumentId
     | ShowListingWithFolder FolderId
     | ShowListingWithSearch (Maybe SearchTerm) FtsSorting
-    | ShowListingWithFilters SetOfFilters
+    | ShowListingWithAddedFtsFilter Aspect SearchTerm
+    | ShowListingWithRemovedFtsFilter Aspect
     | ShowListingWithAddedFacetFilter Aspect String
     | ShowListingWithRemovedFacetFilter Aspect
     | SetOffset Int
@@ -97,8 +97,23 @@ alterRoute cache navigation route =
                     }
             }
 
-        ShowListingWithFilters filters ->
-            Types.Route.Filter.alterRoute filters listingRoute
+        ShowListingWithAddedFtsFilter aspect searchTerm ->
+            { listingRoute
+                | parameters =
+                    { parametersWithOffset0
+                        | ftsFilters =
+                            Sort.Dict.insert aspect searchTerm parameters.ftsFilters
+                    }
+            }
+
+        ShowListingWithRemovedFtsFilter aspect ->
+            { listingRoute
+                | parameters =
+                    { parametersWithOffset0
+                        | ftsFilters =
+                            Sort.Dict.remove aspect parameters.ftsFilters
+                    }
+            }
 
         ShowListingWithAddedFacetFilter aspect value ->
             { listingRoute

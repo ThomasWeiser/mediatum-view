@@ -4,7 +4,6 @@
     "version": "1.0.0",
     "exposed-modules": [
         "Api.Arguments.AspectTest",
-        "Api.Arguments.AttributeTest",
         "Api.Arguments.Filter",
         "Api.Fragments",
         "Api.Mutations",
@@ -35,7 +34,6 @@
         "Types.Needs",
         "Types.Presentation",
         "Types.Range",
-        "Types.Route.Filter",
         "Types.Route.Url",
         "Types.Route",
         "Types.SearchTerm",
@@ -47,7 +45,6 @@
         "UI.Article.Listing",
         "UI.Article",
         "UI.Controls.Filter",
-        "UI.Controls.FilterEditor",
         "UI.Controls",
         "UI.Facets",
         "UI.Icons",

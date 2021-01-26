@@ -30,15 +30,13 @@ import Html.Events
 import Maybe.Extra
 import RemoteData
 import Sort.Dict
+import Types.Aspect as Aspect exposing (Aspect)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
 import Types.Range as Range
 import Types.Route exposing (Route)
-import Types.Route.Filter
-import Types.SearchTerm as SearchTerm
-import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsSorting(..), SetOfFilters)
-import UI.Controls.Filter
-import UI.Controls.FilterEditor as FilterEditor
+import Types.SearchTerm as SearchTerm exposing (SearchTerm)
+import Types.Selection as Selection exposing (Filter(..), FilterHandle, FtsFilters, FtsSorting(..))
 import UI.Icons
 import Utils
 import Utils.Html
@@ -62,7 +60,6 @@ type Return
 type alias Model =
     { ftsTerm : String
     , ftsSorting : FtsSorting
-    , filterEditors : Sort.Dict.Dict FilterHandle FilterEditor.Model
     }
 
 
@@ -71,12 +68,11 @@ type Msg
     = SetSearchTerm String
     | ClearSearchTerm
     | SetSorting FtsSorting
-    | AddFilter UI.Controls.Filter.FilterType
-    | EditFilter Filter
-    | RemoveFilter Filter
+      -- | AddFtsFilter Aspect
+      -- | EditFtsFilter Aspect SearchTerm
+    | RemoveFtsFilter Aspect
     | Submit
     | SubmitExampleQuery
-    | FilterEditorMsg FilterHandle FilterEditor.Msg
 
 
 {-| -}
@@ -96,7 +92,6 @@ initialModel route =
             Just seachTerm ->
                 SearchTerm.toString seachTerm
     , ftsSorting = route.parameters.ftsSorting
-    , filterEditors = Sort.Dict.empty (Utils.sorter Selection.orderingFilterHandle)
     }
 
 
@@ -104,17 +99,8 @@ initialModel route =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     let
-        removeFilter filterHandle =
-            Types.Route.Filter.fromRoute context.route
-                |> Selection.removeFilter filterHandle
-                |> Navigation.ShowListingWithFilters
-                |> Navigate
-
-        insertFilter oldFilterHandlefilter newFilter =
-            Types.Route.Filter.fromRoute context.route
-                |> Selection.removeFilter oldFilterHandlefilter
-                |> Selection.insertFilter newFilter
-                |> Navigation.ShowListingWithFilters
+        insertFilter aspect searchTerm =
+            Navigation.ShowListingWithAddedFtsFilter aspect searchTerm
                 |> Navigate
     in
     case msg of
@@ -136,42 +122,36 @@ update context msg model =
             , NoReturn
             )
 
-        AddFilter filterType ->
-            let
-                ( filterEditorModel, filterEditorCmd ) =
-                    FilterEditor.init filterType.initControls
+        {- AddFtsFilter aspect ->
+               let
+                   ( filterEditorModel, filterEditorCmd ) =
+                       FilterEditor.init aspect
+               in
+               ( { model
+                   | filterEditors =
+                       Sort.Dict.insert aspect filterEditorModel model.filterEditors
+                 }
+               , filterEditorCmd |> Cmd.map (FilterEditorMsg aspect)
+               , NoReturn
+               )
 
-                newFilterHandle =
-                    Selection.newFilterHandle filterType.name
-            in
-            ( { model
-                | filterEditors =
-                    Sort.Dict.insert newFilterHandle filterEditorModel model.filterEditors
-              }
-            , filterEditorCmd |> Cmd.map (FilterEditorMsg newFilterHandle)
-            , NoReturn
-            )
-
-        EditFilter filter ->
-            let
-                ( filterEditorModel, filterEditorCmd ) =
-                    FilterEditor.init (UI.Controls.Filter.controlsFromFilter filter)
-
-                filterHandle =
-                    Selection.filterHandle filter
-            in
-            ( { model
-                | filterEditors =
-                    Sort.Dict.insert filterHandle filterEditorModel model.filterEditors
-              }
-            , filterEditorCmd |> Cmd.map (FilterEditorMsg filterHandle)
-            , NoReturn
-            )
-
-        RemoveFilter filter ->
+           EditFtsFilter aspect searchTerm ->
+               let
+                   ( filterEditorModel, filterEditorCmd ) =
+                       FilterEditor.init (UI.Controls.Filter.controlsFromFilter filter)
+               in
+               ( { model
+                   | filterEditors =
+                       Sort.Dict.insert aspect filterEditorModel model.filterEditors
+                 }
+               , filterEditorCmd |> Cmd.map (FilterEditorMsg aspect)
+               , NoReturn
+               )
+        -}
+        RemoveFtsFilter aspect ->
             ( model
             , Cmd.none
-            , removeFilter (Selection.filterHandle filter)
+            , Navigate (Navigation.ShowListingWithRemovedFtsFilter aspect)
             )
 
         Submit ->
@@ -185,74 +165,21 @@ update context msg model =
             )
 
         SubmitExampleQuery ->
-            let
-                filters =
-                    Selection.filtersNone
-                        |> Selection.insertFilter
-                            (FilterYearWithin (Range.fromTo ( 2000, 2010 )))
-                        |> Selection.insertFilter
-                            (FilterTitleFts
-                                (SearchTerm.fromStringWithDefault "no-default-needed" "with")
-                            )
-            in
             ( model
             , Cmd.none
             , [ Navigation.ShowListingWithSearch
                     (SearchTerm.fromString "variable")
                     context.route.parameters.ftsSorting
-              , Navigation.ShowListingWithFilters
-                    filters
+              , Navigation.ShowListingWithAddedFtsFilter
+                    (Aspect.fromString "person")
+                    (SearchTerm.fromStringWithDefault "no-default-needed" "Helmut")
+              , Navigation.ShowListingWithAddedFtsFilter
+                    (Aspect.fromString "title")
+                    (SearchTerm.fromStringWithDefault "no-default-needed" "with")
               ]
                 |> Navigation.ListOfNavigations
                 |> Navigate
             )
-
-        FilterEditorMsg filterHandle subMsg ->
-            case Sort.Dict.get filterHandle model.filterEditors of
-                Just filterEditor ->
-                    let
-                        ( subModel, subCmd, subReturn ) =
-                            FilterEditor.update subMsg filterEditor
-
-                        modelWithEditorClosed =
-                            { model
-                                | filterEditors =
-                                    Sort.Dict.remove filterHandle model.filterEditors
-                            }
-
-                        cmd =
-                            subCmd |> Cmd.map (FilterEditorMsg filterHandle)
-                    in
-                    case subReturn of
-                        FilterEditor.NoReturn ->
-                            ( { model
-                                | filterEditors =
-                                    Sort.Dict.insert filterHandle subModel model.filterEditors
-                              }
-                            , cmd
-                            , NoReturn
-                            )
-
-                        FilterEditor.Saved newFilter ->
-                            ( modelWithEditorClosed
-                            , cmd
-                            , insertFilter filterHandle newFilter
-                            )
-
-                        FilterEditor.Removed ->
-                            ( modelWithEditorClosed
-                            , cmd
-                            , removeFilter filterHandle
-                            )
-
-                        FilterEditor.Canceled ->
-                            ( modelWithEditorClosed
-                            , cmd
-                            , NoReturn
-                            )
-
-                Nothing ->
-                    ( model, Cmd.none, NoReturn )
 
 
 {-| -}
@@ -328,66 +255,56 @@ getSearchFieldPlaceholder context =
 viewFilters : Context -> Model -> Html Msg
 viewFilters context model =
     Html.div [ Html.Attributes.class "filters-bar" ]
-        [ Html.span [] <|
-            List.map
-                (\filterType ->
-                    Html.span
-                        [ Html.Attributes.class "input-group" ]
-                        [ Html.button
-                            [ Html.Attributes.type_ "button"
-                            , Html.Events.onClick <| AddFilter filterType
-                            , Html.Attributes.class "filter-button"
-                            ]
-                            [ Html.text <| filterType.name ++ "..." ]
-                        ]
-                )
-                UI.Controls.Filter.filterTypes
-        , viewExistingFilters
+        [ {- Html.span [] <|
+             List.map
+                 (\filterType ->
+                     Html.span
+                         [ Html.Attributes.class "input-group" ]
+                         [ Html.button
+                             [ Html.Attributes.type_ "button"
+                             , Html.Events.onClick <| AddFilter filterType
+                             , Html.Attributes.class "filter-button"
+                             ]
+                             [ Html.text <| filterType.name ++ "..." ]
+                         ]
+                 )
+                 UI.Controls.Filter.filterTypes ,
+          -}
+          viewExistingFilters
             model
-            (Types.Route.Filter.fromRoute context.route)
-        , Html.span [] <|
-            List.map
-                (\( filterHandle, filterEditor ) ->
-                    FilterEditor.view filterEditor
-                        |> Html.map (FilterEditorMsg filterHandle)
-                )
-                (Sort.Dict.toList model.filterEditors)
+            context.route.parameters.ftsFilters
         ]
 
 
-viewExistingFilters : Model -> SetOfFilters -> Html Msg
-viewExistingFilters model filters =
+viewExistingFilters : Model -> FtsFilters -> Html Msg
+viewExistingFilters model ftsFilters =
     Html.span [] <|
         List.map
-            (\filter ->
-                let
-                    beingEdited =
-                        Sort.Dict.memberOf
-                            model.filterEditors
-                            (Selection.filterHandle filter)
-                in
-                viewExistingFilter beingEdited filter
+            (\( aspect, searchTerm ) ->
+                viewExistingFilter aspect searchTerm
             )
-            (Selection.filtersToList filters)
+            (Sort.Dict.toList ftsFilters)
 
 
-viewExistingFilter : Bool -> Filter -> Html Msg
-viewExistingFilter beingEdited filter =
+viewExistingFilter : Aspect -> SearchTerm -> Html Msg
+viewExistingFilter aspect searchTerm =
     Html.span
         [ Html.Attributes.class "input-group"
-        , Html.Attributes.classList [ ( "being-edited", beingEdited ) ]
+
+        -- , Html.Attributes.classList [ ( "being-edited", beingEdited ) ]
         ]
-        [ Html.button
-            [ Html.Attributes.type_ "button"
-            , Html.Attributes.disabled beingEdited
-            , Html.Events.onClick (EditFilter filter)
-            , Html.Attributes.class "filter-button"
-            ]
-            (UI.Controls.Filter.viewFilterDescription filter)
+        [ Html.span
+            [ Html.Attributes.class "aspect-name" ]
+            [ Html.text (Aspect.toString aspect) ]
+        , Html.text ": "
+        , Html.span
+            [ Html.Attributes.class "aspect-search-term" ]
+            [ Html.text (SearchTerm.toString searchTerm) ]
         , Html.button
             [ Html.Attributes.type_ "button"
-            , Html.Attributes.disabled beingEdited
-            , Html.Events.onClick (RemoveFilter filter)
+
+            -- , Html.Attributes.disabled beingEdited
+            , Html.Events.onClick (RemoveFtsFilter aspect)
             , Html.Attributes.class "filter-button"
             ]
             [ UI.Icons.clear ]

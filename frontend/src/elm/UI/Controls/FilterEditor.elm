@@ -25,7 +25,6 @@ import Html.Events
 import Task
 import Time
 import Types.Selection exposing (Filter(..))
-import UI.Controls.Filter exposing (Controls(..))
 
 
 {-| -}
@@ -38,7 +37,7 @@ type Return
 
 {-| -}
 type alias Model =
-    { controls : Controls
+    { inputField : String
     , focusId : String
     }
 

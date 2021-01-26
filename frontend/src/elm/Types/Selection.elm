@@ -6,6 +6,7 @@ module Types.Selection exposing
     , Filter(..)
     , FilterHandle
     , FacetFilters, initFacetFilters, facetFiltersFromList
+    , FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
     , filtersNone
     , insertFilter
     , removeFilter
@@ -17,9 +18,8 @@ module Types.Selection exposing
     , orderingSelectionModuloSorting
     , orderingSelectMethod
     , orderingFtsSorting
+    , orderingFtsFilters
     , orderingFacetFilters
-    , orderingFilters
-    , orderingFilter
     , orderingFilterHandle
     )
 
@@ -32,6 +32,7 @@ module Types.Selection exposing
 @docs Filter
 @docs FilterHandle
 @docs FacetFilters, initFacetFilters, facetFiltersFromList
+@docs FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
 
 @docs filtersNone
 @docs insertFilter
@@ -50,9 +51,8 @@ Define orderings on these types so we can use them as keys in `Sort.Dict`.
 @docs orderingSelectionModuloSorting
 @docs orderingSelectMethod
 @docs orderingFtsSorting
+@docs orderingFtsFilters
 @docs orderingFacetFilters
-@docs orderingFilters
-@docs orderingFilter
 @docs orderingFilterHandle
 
 -}
@@ -71,7 +71,7 @@ import Utils
 type alias Selection =
     { scope : FolderId
     , selectMethod : SelectMethod
-    , filters : SetOfFilters
+    , ftsFilters : FtsFilters
     , facetFilters : FacetFilters
     }
 
@@ -104,6 +104,29 @@ initFacetFilters =
 {-| -}
 facetFiltersFromList : List ( Aspect, String ) -> FacetFilters
 facetFiltersFromList list =
+    list
+        |> Sort.Dict.fromList (Utils.sorter Aspect.ordering)
+
+
+{-| -}
+type alias FtsFilter =
+    ( Aspect, SearchTerm )
+
+
+{-| -}
+type alias FtsFilters =
+    Sort.Dict.Dict Aspect SearchTerm
+
+
+{-| -}
+initFtsFilters : FtsFilters
+initFtsFilters =
+    Sort.Dict.empty (Utils.sorter Aspect.ordering)
+
+
+{-| -}
+ftsFiltersFromList : List FtsFilter -> FtsFilters
+ftsFiltersFromList list =
     list
         |> Sort.Dict.fromList (Utils.sorter Aspect.ordering)
 
@@ -185,7 +208,7 @@ orderingSelection =
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingSelectMethod .selectMethod)
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith orderingFilters .filters)
+            (Ordering.byFieldWith orderingFtsFilters .ftsFilters)
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingFacetFilters .facetFilters)
 
@@ -197,7 +220,7 @@ orderingSelectionModuloSorting =
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingSelectMethodModuloSorting .selectMethod)
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith orderingFilters .filters)
+            (Ordering.byFieldWith orderingFtsFilters .ftsFilters)
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingFacetFilters .facetFilters)
 
@@ -260,51 +283,28 @@ orderingFtsSorting =
 
 
 {-| -}
-orderingFilters : Ordering SetOfFilters
-orderingFilters =
+orderingFtsFilters : Ordering FtsFilters
+orderingFtsFilters =
     Ordering.byFieldWith
-        (Utils.lexicalOrdering orderingTupleOfFilterHandleAndFilter)
-        (\(SetOfFilters fs1) -> Sort.Dict.toList fs1)
-
-
-orderingTupleOfFilterHandleAndFilter : Ordering ( FilterHandle, Filter )
-orderingTupleOfFilterHandleAndFilter =
-    Ordering.byFieldWith orderingFilterHandle Tuple.first
-        |> Ordering.breakTiesWith
-            (Ordering.byFieldWith orderingFilter Tuple.second)
+        (Utils.lexicalOrdering
+            (Utils.tupleOrdering
+                Aspect.ordering
+                SearchTerm.ordering
+            )
+        )
+        Sort.Dict.toList
 
 
 {-| -}
+
+
+
+-- TODO Remove
+
+
 orderingFilterHandle : Ordering FilterHandle
 orderingFilterHandle (FilterHandle h1) (FilterHandle h2) =
     compare h1 h2
-
-
-{-| -}
-orderingFilter : Ordering Filter
-orderingFilter =
-    Ordering.byRank
-        (\filter ->
-            case filter of
-                FilterYearWithin _ ->
-                    1
-
-                FilterTitleFts _ ->
-                    2
-        )
-        (\filterL filterR ->
-            case
-                ( filterL, filterR )
-            of
-                ( FilterYearWithin range1, FilterYearWithin range2 ) ->
-                    Range.compare range1 range2
-
-                ( FilterTitleFts sL, FilterTitleFts sR ) ->
-                    SearchTerm.ordering sL sR
-
-                _ ->
-                    Ordering.noConflicts
-        )
 
 
 {-| -}

@@ -39,7 +39,6 @@ In reality it's just function calling.
 -}
 
 import Api.Arguments.AspectTest
-import Api.Arguments.AttributeTest
 import Api.Arguments.Filter
 import Api.Fragments
 import Config
@@ -505,12 +504,10 @@ selectionToOptionalGraphqlArguments :
     -> OptionalArgumentsForSelection a
 selectionToOptionalGraphqlArguments selection optionals =
     { optionals
-        | attributeTests =
-            Api.Arguments.Filter.filtersToAttributeTests selection.filters
-                |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
-                |> Present
-        , aspectTests =
-            Api.Arguments.Filter.facetFiltersToAspectTests selection.facetFilters
+        | aspectTests =
+            List.append
+                (Api.Arguments.Filter.ftsFiltersToAspectTests selection.ftsFilters)
+                (Api.Arguments.Filter.facetFiltersToAspectTests selection.facetFilters)
                 |> Api.Arguments.AspectTest.testsAsGraphqlArgument
                 |> Present
     }

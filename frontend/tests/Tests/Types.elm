@@ -2,9 +2,9 @@ module Tests.Types exposing
     ( fuzzerDocumentId
     , fuzzerDocumentIdFromSearch
     , fuzzerFacetFilters
-    , fuzzerFilter
-    , fuzzerFilters
     , fuzzerFolderId
+    , fuzzerFtsFilter
+    , fuzzerFtsFilters
     , fuzzerFtsSorting
     , fuzzerLimit
     , fuzzerNodeId
@@ -28,7 +28,7 @@ import Types exposing (DocumentIdFromSearch, Window)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm as SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (FacetFilters, Filter(..), FtsSorting(..), SelectMethod(..), Selection, SetOfFilters)
+import Types.Selection exposing (FacetFilters, Filter(..), FtsFilter, FtsFilters, FtsSorting(..), SelectMethod(..), Selection)
 
 
 fuzzerId : Fuzzer Int
@@ -68,7 +68,7 @@ fuzzerSelection =
     Fuzz.map4 Selection
         fuzzerFolderId
         fuzzerSearchMethod
-        fuzzerFilters
+        fuzzerFtsFilters
         fuzzerFacetFilters
 
 
@@ -120,35 +120,30 @@ fuzzerFtsSorting =
         ]
 
 
-fuzzerFilters : Fuzzer SetOfFilters
-fuzzerFilters =
-    fuzzerFilter
+fuzzerFtsFilters : Fuzzer FtsFilters
+fuzzerFtsFilters =
+    fuzzerFtsFilter
         |> shortList 3
-        |> Fuzz.map Types.Selection.filtersFromList
+        |> Fuzz.map Types.Selection.ftsFiltersFromList
 
 
-fuzzerFilter : Fuzzer Filter
-fuzzerFilter =
-    Fuzz.oneOf
-        [ Fuzz.map
-            FilterYearWithin
-            (Tests.Types.Range.fuzzerRange fuzzerYear)
-        , Fuzz.map
-            FilterTitleFts
-            fuzzerSearchTerm
-        ]
+fuzzerFtsFilter : Fuzzer FtsFilter
+fuzzerFtsFilter =
+    Fuzz.map2 Tuple.pair
+        fuzzerAspectName
+        fuzzerSearchTerm
 
 
 fuzzerFacetFilters : Fuzzer FacetFilters
 fuzzerFacetFilters =
-    Fuzz.map2 Tuple.pair fuzzerFacetName Fuzz.string
+    Fuzz.map2 Tuple.pair fuzzerAspectName Fuzz.string
         |> shortList 3
         |> Fuzz.map Types.Selection.facetFiltersFromList
 
 
-fuzzerFacetName : Fuzzer Aspect
-fuzzerFacetName =
-    [ "year", "author" ]
+fuzzerAspectName : Fuzzer Aspect
+fuzzerAspectName =
+    [ "title", "author", "person" ]
         |> List.map Aspect.fromString
         |> List.map Fuzz.constant
         |> Fuzz.oneOf

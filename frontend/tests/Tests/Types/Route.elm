@@ -25,13 +25,7 @@ fuzzerRoute =
             |> Fuzz.andMap
                 (Fuzz.oneOf [ Fuzz.constant FtsByRank, Fuzz.constant FtsByDate ])
             |> Fuzz.andMap
-                (Tests.Types.Range.fuzzerRange fuzzerYear
-                    |> Fuzz.maybe
-                )
-            |> Fuzz.andMap
-                (fuzzerSearchTerm
-                    |> Fuzz.maybe
-                )
+                Tests.Types.fuzzerFtsFilters
             |> Fuzz.andMap
                 Tests.Types.fuzzerFacetFilters
             |> Fuzz.andMap

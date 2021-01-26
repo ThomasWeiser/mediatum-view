@@ -57,7 +57,7 @@ parseNodeId =
 
 parserParameters : QueryParser.Parser RouteParameters
 parserParameters =
-    QueryParser.map7 RouteParameters
+    QueryParser.map6 RouteParameters
         (QueryParser.string "fts-term"
             |> QueryParser.map
                 (Maybe.andThen Types.SearchTerm.fromString)
@@ -66,23 +66,30 @@ parserParameters =
             (Dict.fromList [ ( "by-rank", FtsByRank ), ( "by-date", FtsByDate ) ])
             |> queryParserWithDefault Route.defaultFtsSorting
         )
-        (QueryParser.string "filter-by-year"
-            |> QueryParser.map
-                (Maybe.andThen
-                    (ElmParser.run elmParserYearRange
-                        >> Result.toMaybe
-                        >> Maybe.map Range.fromMaybe
-                        >> Maybe.Extra.join
-                    )
+        (QueryParser.custom "filter-by-fts"
+            (List.map
+                (ElmParser.run elmParserFilter
+                    >> Result.toMaybe
                 )
-        )
-        (QueryParser.string "filter-by-title"
-            |> QueryParser.map
-                (Maybe.andThen Types.SearchTerm.fromString)
+                >> List.map
+                    (Maybe.andThen
+                        (\( aspectString, searchTermString ) ->
+                            Types.SearchTerm.fromString searchTermString
+                                |> Maybe.map
+                                    (\searchTerm ->
+                                        ( Aspect.fromString aspectString
+                                        , searchTerm
+                                        )
+                                    )
+                        )
+                    )
+                >> Maybe.Extra.values
+                >> Selection.ftsFiltersFromList
+            )
         )
         (QueryParser.custom "filter-by-facet"
             (List.map
-                (ElmParser.run elmParserFacetFilter
+                (ElmParser.run elmParserFilter
                     >> Result.toMaybe
                 )
                 >> Maybe.Extra.values
@@ -122,8 +129,8 @@ elmParserYearRange =
         |. ElmParser.end
 
 
-elmParserFacetFilter : ElmParser.Parser ( String, String )
-elmParserFacetFilter =
+elmParserFilter : ElmParser.Parser ( String, String )
+elmParserFilter =
     let
         isAspectNameCharacter c =
             Char.isAlphaNum c || c == '_' || c == '.' || c == '-'
@@ -138,6 +145,8 @@ elmParserFacetFilter =
             , reserved = Set.empty
             }
         |. ElmParser.symbol ":"
+        -- TODO: Review the following code. Seems a bit too permissive.
+        --       But note, that the URL design may change anyway.
         |= ElmParser.oneOf
             [ ElmParser.succeed ""
                 |. ElmParser.end
@@ -175,24 +184,13 @@ toString route =
                 (ftsSortingTostring >> Builder.string "fts-sorting")
                 Route.defaultFtsSorting
                 route.parameters.ftsSorting
-            , Maybe.map
-                (\range ->
-                    let
-                        ( maybeYear1, maybeYear2 ) =
-                            Range.toMaybe range
-                    in
-                    Builder.string "filter-by-year" <|
-                        Maybe.Extra.unwrap "" String.fromInt maybeYear1
-                            ++ "-"
-                            ++ Maybe.Extra.unwrap "" String.fromInt maybeYear2
-                )
-                route.parameters.filterByYear
-            , route.parameters.filterByTitle
-                |> Maybe.map
-                    (Types.SearchTerm.toString
-                        >> Builder.string "filter-by-title"
-                    )
             ]
+            ++ List.map
+                (\( aspect, searchTerm ) ->
+                    Builder.string "filter-by-fts"
+                        (Aspect.toString aspect ++ ":" ++ Types.SearchTerm.toString searchTerm)
+                )
+                (Sort.Dict.toList route.parameters.ftsFilters)
             ++ List.map
                 (\( aspect, value ) ->
                     Builder.string "filter-by-facet"
