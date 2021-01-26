@@ -7,6 +7,7 @@ module Utils exposing
     , prependIf
     , findMap
     , findAdjacent
+    , findByMapping, replaceOnMapping, setOnMapping
     , mapWhile
     , mapEllipsis
     , remoteDataCheck
@@ -37,6 +38,7 @@ module Utils exposing
 @docs prependIf
 @docs findMap
 @docs findAdjacent
+@docs findByMapping, replaceOnMapping, setOnMapping
 @docs mapWhile
 @docs mapEllipsis
 
@@ -63,6 +65,7 @@ import Char
 import Html
 import Html.Events
 import Json.Decode
+import List.Extra
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData)
 import Sort exposing (Sorter)
@@ -136,6 +139,45 @@ findMap mapping list =
 
                 Nothing ->
                     findMap mapping rest
+
+
+{-| Find an element of a list by comparing its mapped elements with a value.
+
+    findByMapping
+        .id
+        2
+        [ { id = 2, data = "two" }, { id = 5, data = "five" } ]
+        == { id = 2, data = "two" }
+
+-}
+findByMapping : (a -> b) -> b -> List a -> Maybe a
+findByMapping mapping mappedValue list =
+    List.Extra.find
+        (\elem -> mapping elem == mappedValue)
+        list
+
+
+{-| Replace all values that have the same mapping as the replacement value.
+-}
+replaceOnMapping : (a -> b) -> a -> List a -> List a
+replaceOnMapping mapping replacement list =
+    List.Extra.setIf
+        (\elem -> mapping elem == mapping replacement)
+        replacement
+        list
+
+
+{-| Replace all values that have the same mapping as the replacement value.
+If no matching element is found, the new value is added to the end of the list.
+-}
+setOnMapping : (a -> b) -> a -> List a -> List a
+setOnMapping mapping replacement list =
+    {- Easy, but not the most efficient implementation -}
+    if findByMapping mapping (mapping replacement) list == Nothing then
+        List.append list [ replacement ]
+
+    else
+        replaceOnMapping mapping replacement list
 
 
 {-| Find the first element that satisfies a predicate
