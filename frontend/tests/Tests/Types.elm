@@ -139,8 +139,8 @@ fuzzerFacetFilters =
     Fuzz.map2 Tuple.pair
         fuzzerAspectName
         -- Do we want to test values with newlines or not?
-        -- Fuzz.string
-        (Fuzz.string |> Fuzz.map (String.filter ((/=) '\n')))
+        Fuzz.string
+        -- (Fuzz.string |> Fuzz.map (String.filter ((/=) '\n')))
         |> shortList 3
         |> Fuzz.map Types.Selection.facetFiltersFromList
 

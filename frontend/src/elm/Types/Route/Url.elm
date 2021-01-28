@@ -100,18 +100,19 @@ parseQueryParameter ( name, value ) routeParameters =
                         { routeParameters | limit = intValue }
                     )
 
-        "filter-by-fts" ->
-            case Regex.find regexFilter value of
+        _ ->
+            -- Parse parameters like "search-title=foo" or "has-author=bar"
+            case Regex.find regexHasOrSearchAspect name of
                 [ { submatches } ] ->
                     case submatches of
-                        [ Just aspectName, maybeAspectValue ] ->
-                            case Maybe.andThen SearchTerm.fromString maybeAspectValue of
+                        [ Just "search", Just aspect ] ->
+                            case SearchTerm.fromString value of
                                 Just searchTerm ->
                                     Just
                                         { routeParameters
                                             | ftsFilters =
                                                 Sort.Dict.insert
-                                                    (Aspect.fromString aspectName)
+                                                    (Aspect.fromString aspect)
                                                     searchTerm
                                                     routeParameters.ftsFilters
                                         }
@@ -119,47 +120,7 @@ parseQueryParameter ( name, value ) routeParameters =
                                 Nothing ->
                                     Just routeParameters
 
-                        _ ->
-                            Nothing
-
-                _ ->
-                    Nothing
-
-        "filter-by-facet" ->
-            case Regex.find regexFilter value of
-                [ { submatches } ] ->
-                    case submatches of
-                        [ Just aspectName, maybeAspectValue ] ->
-                            Just
-                                { routeParameters
-                                    | facetFilters =
-                                        Sort.Dict.insert
-                                            (Aspect.fromString aspectName)
-                                            (maybeAspectValue |> Maybe.withDefault "")
-                                            routeParameters.facetFilters
-                                }
-
-                        _ ->
-                            Nothing
-
-                _ ->
-                    Nothing
-
-        _ ->
-            case Regex.find regexHasOrSearchAspect name of
-                [ { submatches } ] ->
-                    case ( submatches, SearchTerm.fromString value ) of
-                        ( [ Just "search", Just aspect ], Just searchTerm ) ->
-                            Just
-                                { routeParameters
-                                    | ftsFilters =
-                                        Sort.Dict.insert
-                                            (Aspect.fromString aspect)
-                                            searchTerm
-                                            routeParameters.ftsFilters
-                                }
-
-                        ( [ Just "has", Just aspect ], _ ) ->
+                        [ Just "has", Just aspect ] ->
                             Just
                                 { routeParameters
                                     | facetFilters =
@@ -173,6 +134,7 @@ parseQueryParameter ( name, value ) routeParameters =
                             Nothing
 
                 _ ->
+                    -- TODO Shall we really ignore all parameters with unknown keys?
                     Just routeParameters
 
 
@@ -217,14 +179,16 @@ toString route =
             ]
             ++ List.map
                 (\( aspect, searchTerm ) ->
-                    Builder.string "filter-by-fts"
-                        (Aspect.toString aspect ++ ":" ++ SearchTerm.toString searchTerm)
+                    Builder.string
+                        ("search-" ++ Aspect.toString aspect)
+                        (SearchTerm.toString searchTerm)
                 )
                 (Sort.Dict.toList route.parameters.ftsFilters)
             ++ List.map
                 (\( aspect, value ) ->
-                    Builder.string "filter-by-facet"
-                        (Aspect.toString aspect ++ ":" ++ value)
+                    Builder.string
+                        ("has-" ++ Aspect.toString aspect)
+                        value
                 )
                 (Sort.Dict.toList route.parameters.facetFilters)
             ++ Maybe.Extra.values
