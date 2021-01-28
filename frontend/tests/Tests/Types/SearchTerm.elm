@@ -50,6 +50,8 @@ fuzzerSearchTerm =
             |> List.map Fuzz.constant
             |> Fuzz.oneOf
         , Fuzz.string
+            |> Fuzz.map
+                (String.filter ((/=) '\n'))
         ]
         |> Fuzz.map
             (SearchTerm.fromStringWithDefault "baz")
