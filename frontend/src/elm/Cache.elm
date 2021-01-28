@@ -65,6 +65,7 @@ import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (DocumentIdFromSearch, NodeType(..), Window)
+import Types.Aspect as Aspect exposing (Aspect)
 import Types.Facet exposing (FacetValues, FacetsValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Needs as Needs
@@ -109,7 +110,7 @@ type alias Cache =
     , residence : Sort.Dict.Dict DocumentId (ApiData Residence)
     , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
     , folderCounts : Sort.Dict.Dict Selection (ApiData FolderCounts)
-    , facetsValues : Sort.Dict.Dict ( Selection, List String ) (ApiData FacetsValues)
+    , facetsValues : Sort.Dict.Dict ( Selection, List Aspect ) (ApiData FacetsValues)
     }
 
 
@@ -123,7 +124,7 @@ type Need
     | NeedDocumentFromSearch DocumentIdFromSearch
     | NeedDocumentsPage Selection Window
     | NeedFolderCounts Selection
-    | NeedFacets Selection (List String)
+    | NeedFacets Selection (List Aspect)
 
 
 {-| A collection of these needs.
@@ -179,7 +180,7 @@ type Msg
     | ApiResponseDocumentFromSearch DocumentIdFromSearch (Api.Response (Maybe ( Document, Maybe Residence )))
     | ApiResponseDocumentsPage ( Selection, Window ) (Api.Response DocumentsPage)
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
-    | ApiResponseFacets ( Selection, List String ) (Api.Response FacetsValues)
+    | ApiResponseFacets ( Selection, List Aspect ) (Api.Response FacetsValues)
 
 
 {-| Check which of the needed data has not yet been requested.
@@ -684,11 +685,11 @@ orderingSelectionWindow =
 
 {-| Ordering on the tuple type `( Selection, List String )`
 -}
-orderingSelectionFacets : Ordering ( Selection, List String )
+orderingSelectionFacets : Ordering ( Selection, List Aspect )
 orderingSelectionFacets =
     Ordering.byFieldWith Selection.orderingSelectionModuloSorting Tuple.first
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith
-                (Utils.lexicalOrdering Ordering.natural)
+                (Utils.lexicalOrdering Aspect.ordering)
                 Tuple.second
             )

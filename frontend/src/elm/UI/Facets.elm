@@ -27,11 +27,13 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import RemoteData
+import Sort.Dict
 import String.Extra
+import Types.Aspect as Aspect exposing (Aspect)
 import Types.Facet exposing (FacetValues)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
-import Types.Selection exposing (Filter(..), FtsSorting(..), Selection)
+import Types.Selection exposing (Selection)
 import UI.Icons
 import Utils
 import Utils.Html
@@ -41,7 +43,7 @@ import Utils.Html
 type alias Context =
     { cache : Cache
     , presentation : Presentation
-    , facetAspects : List String
+    , facetAspects : List Aspect
     }
 
 
@@ -49,7 +51,7 @@ type alias Context =
 type Return
     = NoReturn
     | Navigate Navigation
-    | ChangedFacetAspects (List String)
+    | ChangedFacetAspects (List Aspect)
 
 
 {-| -}
@@ -61,14 +63,17 @@ type alias Model =
 {-| -}
 type Msg
     = SetFacetAspectsInput String
-    | SelectFacetValue String String
-    | SelectFacetUnfilter String
+    | SelectFacetValue Aspect String
+    | SelectFacetUnfilter Aspect
 
 
 {-| -}
-initialModel : List String -> Model
+initialModel : List Aspect -> Model
 initialModel facetAspects =
-    { facetAspectsInput = String.join " " facetAspects
+    { facetAspectsInput =
+        facetAspects
+            |> List.map Aspect.toString
+            |> String.join " "
     }
 
 
@@ -97,6 +102,7 @@ update context msg model =
                 |> String.Extra.clean
                 |> String.split " "
                 |> List.filter (String.Extra.isBlank >> not)
+                |> List.map Aspect.fromString
                 |> ChangedFacetAspects
             )
 
@@ -141,16 +147,16 @@ viewFacets context =
                 ]
 
 
-viewFacet : Context -> Selection -> String -> Html Msg
+viewFacet : Context -> Selection -> Aspect -> Html Msg
 viewFacet context selection aspect =
     Html.nav
         [ Html.Attributes.class "facet-box" ]
         [ Html.div
             [ Html.Attributes.class "facet-name" ]
-            [ Html.text aspect ]
+            [ Html.text (Aspect.toString aspect) ]
         , Html.div
             [ Html.Attributes.class "facet-values" ]
-            [ case Dict.get aspect selection.facetFilters of
+            [ case Sort.Dict.get aspect selection.facetFilters of
                 Just selectedValue ->
                     viewFacetSelection
                         aspect
@@ -178,12 +184,14 @@ viewFacet context selection aspect =
                         RemoteData.Success facetsValues ->
                             viewFacetValues
                                 aspect
-                                (Dict.get aspect facetsValues |> Maybe.withDefault [])
+                                (Sort.Dict.get aspect facetsValues
+                                    |> Maybe.withDefault []
+                                )
             ]
         ]
 
 
-viewFacetSelection : String -> String -> Maybe Int -> Html Msg
+viewFacetSelection : Aspect -> String -> Maybe Int -> Html Msg
 viewFacetSelection aspect selectedValue maybeCount =
     Html.ul [] <|
         [ Html.li
@@ -218,7 +226,7 @@ viewFacetSelection aspect selectedValue maybeCount =
         ]
 
 
-viewFacetValues : String -> FacetValues -> Html Msg
+viewFacetValues : Aspect -> FacetValues -> Html Msg
 viewFacetValues aspect facetValues =
     Html.ul [] <|
         List.map

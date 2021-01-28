@@ -23,8 +23,7 @@ suite =
         , testOrderingProperties "SelectionFacets" fuzzerSelectionFacets Cache.orderingSelectionFacets
         , testOrderingProperties "SearchMethod" fuzzerSearchMethod Selection.orderingSelectMethod
         , testOrderingProperties "FtsSorting" fuzzerFtsSorting Selection.orderingFtsSorting
-        , testOrderingProperties "Filters" fuzzerFilters Selection.orderingFilters
-        , testOrderingProperties "Filter" fuzzerFilter Selection.orderingFilter
+        , testOrderingProperties "FtsFilters" fuzzerFtsFilters Selection.orderingFtsFilters
         , testOrderingProperties "FacetFilters" fuzzerFacetFilters Selection.orderingFacetFilters
         , testOrderingProperties "Window" fuzzerWindow Types.orderingWindow
         , testOrderingSelectionModuloSorting

@@ -135,6 +135,31 @@ suite =
                             Nothing
                 ]
             ]
+        , describe "setOnMapping" <|
+            let
+                setOnAdd2 : Int -> List Int -> List Int
+                setOnAdd2 =
+                    Utils.setOnMapping (\n -> n |> modBy 3)
+            in
+            [ test "adds value to empty list" <|
+                \() ->
+                    Expect.equal (setOnAdd2 7 []) [ 7 ]
+            , test "replaces all matching values" <|
+                \() ->
+                    Expect.equal
+                        (setOnAdd2 7 [ 0, 1, 2, 3, 4, 5, 6, 4, 5, 6 ])
+                        [ 0, 7, 2, 3, 7, 5, 6, 7, 5, 6 ]
+            , test "adds value to end of liat if no element matches on the mapping" <|
+                \() ->
+                    Expect.equal
+                        (setOnAdd2 7 [ 0, 2, 3, 2, 5 ])
+                        [ 0, 2, 3, 2, 5, 7 ]
+            , fuzz2 Fuzz.int (Fuzz.list Fuzz.int) "compare with alternative implementation" <|
+                \i l ->
+                    Expect.equal
+                        (setOnAdd2 i l)
+                        (setOnMappingAlternativeImplementation (\n -> n |> modBy 3) i l)
+            ]
         , describe "lexicalOrder"
             [ fuzz2 Fuzz.string Fuzz.string "order of random strings should match the order of the corresponding lists of chars" <|
                 \strL strR ->
@@ -239,3 +264,31 @@ findAdjacentAlternativeImplementation predicate list =
                             )
                         )
             )
+
+
+
+{- Alternative recursive implementation of setOnMapping.
+   It's not tail recursive, so not suitable for large lists.
+-}
+
+
+setOnMappingAlternativeImplementation : (a -> b) -> a -> List a -> List a
+setOnMappingAlternativeImplementation mapping replacement =
+    let
+        walk found list =
+            case list of
+                [] ->
+                    if found then
+                        []
+
+                    else
+                        [ replacement ]
+
+                element :: rest ->
+                    if mapping element == mapping replacement then
+                        replacement :: walk True rest
+
+                    else
+                        element :: walk found rest
+    in
+    walk False

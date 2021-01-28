@@ -1,16 +1,20 @@
 module Config exposing
     ( apiUrl, graphqlOperationNamePrefix
     , pageSize
-    , facetValuesToQuery, standardFacetAspects
+    , facetValuesToQuery
+    , standardFacetAspects, standardFtsAspects
     )
 
 {-| Configurable values
 
 @docs apiUrl, graphqlOperationNamePrefix
 @docs pageSize
-@docs facetValuesToQuery, standardFacetAspects
+@docs facetValuesToQuery
+@docs standardFacetAspects, standardFtsAspects
 
 -}
+
+import Types.Aspect as Aspect exposing (Aspect)
 
 
 {-| Endpoint for backend's GraphQL service.
@@ -47,6 +51,14 @@ facetValuesToQuery =
 
 
 {-| -}
-standardFacetAspects : List String
+standardFacetAspects : List Aspect
 standardFacetAspects =
     [ "type", "subject", "origin", "author", "person", "keywords", "year" ]
+        |> List.map Aspect.fromString
+
+
+{-| -}
+standardFtsAspects : List Aspect
+standardFtsAspects =
+    [ "type", "subject", "origin", "author", "person", "keywords", "year" ]
+        |> List.map Aspect.fromString

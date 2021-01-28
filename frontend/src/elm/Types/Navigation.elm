@@ -12,12 +12,12 @@ module Types.Navigation exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
-import Dict
+import Sort.Dict
+import Types.Aspect exposing (Aspect)
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.Route as Route exposing (Route)
-import Types.Route.Filter
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (FtsSorting, SetOfFilters)
+import Types.Selection exposing (FtsFilters, FtsSorting)
 
 
 {-| -}
@@ -25,10 +25,9 @@ type Navigation
     = ListOfNavigations (List Navigation)
     | ShowDocument FolderId DocumentId
     | ShowListingWithFolder FolderId
-    | ShowListingWithSearch (Maybe SearchTerm) FtsSorting
-    | ShowListingWithFilters SetOfFilters
-    | ShowListingWithAddedFacetFilter String String
-    | ShowListingWithRemovedFacetFilter String
+    | ShowListingWithSearchAndFtsFilter (Maybe SearchTerm) FtsSorting FtsFilters
+    | ShowListingWithAddedFacetFilter Aspect String
+    | ShowListingWithRemovedFacetFilter Aspect
     | SetOffset Int
     | SetLimit Int
 
@@ -86,33 +85,31 @@ alterRoute cache navigation route =
                         (folderId |> Id.asNodeId)
             }
 
-        ShowListingWithSearch maybeFtsTerm ftsSorting ->
+        ShowListingWithSearchAndFtsFilter maybeFtsTerm ftsSorting ftsFilters ->
             { listingRoute
                 | parameters =
                     { parametersWithOffset0
                         | ftsTerm = maybeFtsTerm
                         , ftsSorting = ftsSorting
+                        , ftsFilters = ftsFilters
                     }
             }
 
-        ShowListingWithFilters filters ->
-            Types.Route.Filter.alterRoute filters listingRoute
-
-        ShowListingWithAddedFacetFilter aspectName value ->
+        ShowListingWithAddedFacetFilter aspect value ->
             { listingRoute
                 | parameters =
                     { parametersWithOffset0
                         | facetFilters =
-                            Dict.insert aspectName value parameters.facetFilters
+                            Sort.Dict.insert aspect value parameters.facetFilters
                     }
             }
 
-        ShowListingWithRemovedFacetFilter aspectName ->
+        ShowListingWithRemovedFacetFilter aspect ->
             { listingRoute
                 | parameters =
                     { parametersWithOffset0
                         | facetFilters =
-                            Dict.remove aspectName parameters.facetFilters
+                            Sort.Dict.remove aspect parameters.facetFilters
                     }
             }
 

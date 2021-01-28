@@ -28,7 +28,7 @@ import Dict
 import Types.Id exposing (DocumentId, FolderId, NodeId)
 import Types.Range exposing (Range)
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (FacetFilters, FtsSorting(..))
+import Types.Selection as Selection exposing (FacetFilters, FtsFilters, FtsSorting(..))
 
 
 {-| -}
@@ -61,8 +61,7 @@ type RoutePath
 type alias RouteParameters =
     { ftsTerm : Maybe SearchTerm
     , ftsSorting : FtsSorting
-    , filterByYear : Maybe (Range Int)
-    , filterByTitle : Maybe SearchTerm
+    , ftsFilters : FtsFilters
     , facetFilters : FacetFilters
     , offset : Int
     , limit : Int
@@ -90,9 +89,8 @@ emptyParameters : RouteParameters
 emptyParameters =
     { ftsTerm = Nothing
     , ftsSorting = defaultFtsSorting
-    , filterByYear = Nothing
-    , filterByTitle = Nothing
-    , facetFilters = Dict.empty
+    , ftsFilters = Selection.initFtsFilters
+    , facetFilters = Selection.initFacetFilters
     , offset = 0
     , limit = defaultLimit
     }

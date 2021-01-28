@@ -60,6 +60,7 @@ import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection
 import String.Extra
 import Types exposing (FolderDisplay(..), WindowPage)
+import Types.Aspect as Aspect exposing (Aspect)
 import Types.Facet exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (FolderId, LineageIds)
 import Types.SearchTerm exposing (SearchTerm)
@@ -263,7 +264,7 @@ _GraphQL notation:_
     }
 
 -}
-facetByAspect : String -> Int -> SelectionSet FacetValues Mediatum.Object.Docset
+facetByAspect : Aspect -> Int -> SelectionSet FacetValues Mediatum.Object.Docset
 facetByAspect aspect limit =
     SelectionSet.succeed identity
         |> SelectionSet.with
@@ -273,7 +274,7 @@ facetByAspect aspect limit =
                         | first = Present limit
                     }
                 )
-                { aspectName = aspect }
+                { aspectName = Aspect.toString aspect }
                 facetValues
             )
 

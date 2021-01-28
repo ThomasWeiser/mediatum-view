@@ -1,9 +1,11 @@
 module Tests.Types.Route.Url exposing (suite)
 
 import Expect exposing (Expectation)
+import Sort.Dict
 import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Types.Route
+import Types.Aspect as Aspect exposing (Aspect)
 import Types.Id as Id
 import Types.Range as Range
 import Types.Route as Route
@@ -12,6 +14,10 @@ import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (FtsSorting(..))
 import Url
 import Utils
+
+
+
+-- TODO: Add tests and expectations about ftsFilters and facetFilters
 
 
 suite : Test
@@ -63,8 +69,8 @@ suite =
                         [ .path >> Expect.equal (Route.OneId (Id.fromInt 123))
                         , .parameters >> .ftsTerm >> nothing
                         , .parameters >> .ftsSorting >> Expect.equal Route.defaultFtsSorting
-                        , .parameters >> .filterByYear >> nothing
-                        , .parameters >> .filterByTitle >> nothing
+                        , .parameters >> .ftsFilters >> Sort.Dict.isEmpty >> Expect.true "Expecting emtpy set of ftsFilters"
+                        , .parameters >> .facetFilters >> Sort.Dict.isEmpty >> Expect.true "Expecting emtpy set of facetFilters"
                         , Types.Route.Url.toString >> Expect.equal "/123"
                         ]
             , testString "https://example.com/?fts-term=foo" <|
@@ -111,49 +117,52 @@ suite =
                         , .parameters >> .ftsTerm >> expectJustSearchTerm "foo"
                         , Types.Route.Url.toString >> Expect.equal "/123/456?fts-term=foo"
                         ]
-            , testString "https://example.com/200/?filter-by-year=2001-2011" <|
-                Url.fromString
-                    >> Maybe.andThen Types.Route.Url.parseUrl
-                    >> justAndThenAll
-                        [ .parameters >> .filterByYear >> Expect.equal (Just (Range.FromTo 2001 2011))
-                        , Types.Route.Url.toString >> Expect.equal "/200?filter-by-year=2001-2011"
-                        ]
-            , testString "https://example.com/201/?filter-by-year=2011-2001" <|
-                Url.fromString
-                    >> Maybe.andThen Types.Route.Url.parseUrl
-                    >> justAndThenAll
-                        [ .parameters >> .filterByYear >> Expect.equal (Just (Range.FromTo 2001 2011))
-                        , Types.Route.Url.toString >> Expect.equal "/201?filter-by-year=2001-2011"
-                        ]
-            , testString "https://example.com/202/?filter-by-year=2001-" <|
-                Url.fromString
-                    >> Maybe.andThen Types.Route.Url.parseUrl
-                    >> justAndThenAll
-                        [ .parameters >> .filterByYear >> Expect.equal (Just (Range.From 2001))
-                        , Types.Route.Url.toString >> Expect.equal "/202?filter-by-year=2001-"
-                        ]
-            , testString "https://example.com/203/?filter-by-year=-2011" <|
-                Url.fromString
-                    >> Maybe.andThen Types.Route.Url.parseUrl
-                    >> justAndThenAll
-                        [ .parameters >> .filterByYear >> Expect.equal (Just (Range.To 2011))
-                        , Types.Route.Url.toString >> Expect.equal "/203?filter-by-year=-2011"
-                        ]
-            , testString "https://example.com/204/?filter-by-year=-" <|
-                Url.fromString
-                    >> Maybe.andThen Types.Route.Url.parseUrl
-                    >> justAndThenAll
-                        [ .parameters >> .filterByYear >> Expect.equal Nothing
-                        , Types.Route.Url.toString >> Expect.equal "/204"
-                        ]
+
+            {- , testString "https://example.com/200/?filter-by-year=2001-2011" <|
+                   Url.fromString
+                       >> Maybe.andThen Types.Route.Url.parseUrl
+                       >> justAndThenAll
+                           [ .parameters >> .filterByYear >> Expect.equal (Just (Range.FromTo 2001 2011))
+                           , Types.Route.Url.toString >> Expect.equal "/200?filter-by-year=2001-2011"
+                           ]
+               , testString "https://example.com/201/?filter-by-year=2011-2001" <|
+                   Url.fromString
+                       >> Maybe.andThen Types.Route.Url.parseUrl
+                       >> justAndThenAll
+                           [ .parameters >> .filterByYear >> Expect.equal (Just (Range.FromTo 2001 2011))
+                           , Types.Route.Url.toString >> Expect.equal "/201?filter-by-year=2001-2011"
+                           ]
+               , testString "https://example.com/202/?filter-by-year=2001-" <|
+                   Url.fromString
+                       >> Maybe.andThen Types.Route.Url.parseUrl
+                       >> justAndThenAll
+                           [ .parameters >> .filterByYear >> Expect.equal (Just (Range.From 2001))
+                           , Types.Route.Url.toString >> Expect.equal "/202?filter-by-year=2001-"
+                           ]
+               , testString "https://example.com/203/?filter-by-year=-2011" <|
+                   Url.fromString
+                       >> Maybe.andThen Types.Route.Url.parseUrl
+                       >> justAndThenAll
+                           [ .parameters >> .filterByYear >> Expect.equal (Just (Range.To 2011))
+                           , Types.Route.Url.toString >> Expect.equal "/203?filter-by-year=-2011"
+                           ]
+               , testString "https://example.com/204/?filter-by-year=-" <|
+                   Url.fromString
+                       >> Maybe.andThen Types.Route.Url.parseUrl
+                       >> justAndThenAll
+                           [ .parameters >> .filterByYear >> Expect.equal Nothing
+                           , Types.Route.Url.toString >> Expect.equal "/204"
+                           ]
+            -}
             , describe "It should remove search terms that are empty or only whitespace"
-                [ testString "https://example.com/?fts-term=%20%20&filter-by-title=&filter-by-title=%20%20" <|
+                [ testString "https://example.com/?fts-term=%20%20&filter-by-fts=title%3A&filter-by-fts=title%3A%20%20" <|
                     Url.fromString
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
                             [ .path >> Expect.equal Route.NoId
                             , .parameters >> .ftsTerm >> nothing
-                            , .parameters >> .filterByTitle >> nothing
+                            , .parameters >> .ftsFilters >> Sort.Dict.isEmpty >> Expect.true "Expecting emtpy set of ftsFilters"
+                            , .parameters >> .facetFilters >> Sort.Dict.isEmpty >> Expect.true "Expecting emtpy set of facetFilters"
                             , Types.Route.Url.toString >> Expect.equal "/"
                             ]
                 ]
@@ -165,15 +174,14 @@ suite =
                         , .parameters >> .ftsTerm >> expectJustSearchTerm "foo bar"
                         , Types.Route.Url.toString >> Expect.equal "/789?fts-term=foo%20bar"
                         ]
-            , testString "https://example.com/789/?filter-by-year=2001-2011&filter-by-title=%20foo%20\"bar%20%20baz\"" <|
+            , testString "https://example.com/789/?filter-by-fts=title%3A%20foo%20\"bar%20%20baz\"" <|
                 Url.fromString
                     >> Maybe.andThen Types.Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId (Id.fromInt 789))
                         , .parameters >> .ftsTerm >> nothing
-                        , .parameters >> .filterByYear >> Expect.equal (Just (Range.FromTo 2001 2011))
-                        , .parameters >> .filterByTitle >> expectJustSearchTerm "foo \"bar baz\""
-                        , Types.Route.Url.toString >> Expect.equal "/789?filter-by-year=2001-2011&filter-by-title=foo%20%22bar%20baz%22"
+                        , .parameters >> .ftsFilters >> Sort.Dict.get (Aspect.fromString "title") >> expectJustSearchTerm "foo \"bar baz\""
+                        , Types.Route.Url.toString >> Expect.equal "/789?filter-by-fts=title%3Afoo%20%22bar%20baz%22"
                         ]
 
             {- I guess percent-coding should work within the path, but it doesn't

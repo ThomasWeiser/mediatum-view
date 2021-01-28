@@ -1,12 +1,19 @@
-module Types.Facet exposing (FacetValue, FacetValues, FacetsValues)
+module Types.Facet exposing
+    ( FacetValue, FacetValues, FacetsValues
+    , facetsValuesFromDict
+    )
 
 {-|
 
 @docs FacetValue, FacetValues, FacetsValues
+@docs facetsValuesFromDict
 
 -}
 
 import Dict exposing (Dict)
+import Sort.Dict
+import Types.Aspect as Aspect exposing (Aspect)
+import Utils
 
 
 {-| A facet value is the value of an attribute and a count
@@ -28,4 +35,14 @@ type alias FacetValues =
 {-| A collection of facets, each with a list of facet values.
 -}
 type alias FacetsValues =
-    Dict String FacetValues
+    Sort.Dict.Dict Aspect FacetValues
+
+
+{-| Construct from a simple dict coming from API
+-}
+facetsValuesFromDict : Dict String FacetValues -> FacetsValues
+facetsValuesFromDict dict =
+    dict
+        |> Dict.toList
+        |> List.map (Tuple.mapFirst Aspect.fromString)
+        |> Sort.Dict.fromList (Utils.sorter Aspect.ordering)

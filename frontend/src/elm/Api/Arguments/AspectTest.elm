@@ -15,11 +15,12 @@ Used internally in the `Api.*` modules.
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Mediatum.Enum.AspectTestOperator as Operator
 import Mediatum.InputObject exposing (AspectTestInput)
+import Types.Aspect as Aspect exposing (Aspect)
 
 
 {-| -}
 type alias Test =
-    { name : String
+    { aspect : Aspect
     , operation : Operation
     }
 
@@ -42,13 +43,13 @@ testInput : Test -> AspectTestInput
 testInput test =
     case test.operation of
         Equality value ->
-            { name = Present test.name
+            { name = Present <| Aspect.toString test.aspect
             , operator = Present Operator.Equality
             , value = Present value
             }
 
         Fts value ->
-            { name = Present test.name
+            { name = Present <| Aspect.toString test.aspect
             , operator = Present Operator.Fts
             , value = Present value
             }

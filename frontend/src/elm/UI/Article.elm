@@ -32,6 +32,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
 import RemoteData
+import Types.Aspect exposing (Aspect)
 import Types.Id exposing (FolderId)
 import Types.Navigation exposing (Navigation)
 import Types.Needs
@@ -99,7 +100,7 @@ initialModel presentation =
 
 
 {-| -}
-needs : List String -> Presentation -> Cache.Needs
+needs : List Aspect -> Presentation -> Cache.Needs
 needs facetAspects presentation =
     case presentation of
         GenericPresentation genericParameters ->

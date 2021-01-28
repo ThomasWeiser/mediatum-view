@@ -39,7 +39,6 @@ In reality it's just function calling.
 -}
 
 import Api.Arguments.AspectTest
-import Api.Arguments.AttributeTest
 import Api.Arguments.Filter
 import Api.Fragments
 import Config
@@ -63,7 +62,8 @@ import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
 import Types exposing (DocumentIdFromSearch, Window)
-import Types.Facet exposing (FacetsValues)
+import Types.Aspect as Aspect exposing (Aspect)
+import Types.Facet as Facet exposing (FacetsValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm
 import Types.Selection exposing (FtsSorting(..), SelectMethod(..), Selection)
@@ -370,7 +370,7 @@ _GraphQL notation if FTS is involved:_
 -}
 selectionFacets :
     Selection
-    -> List String
+    -> List Aspect
     -> Int
     -> SelectionSet FacetsValues Graphql.Operation.RootQuery
 selectionFacets selection aspects limit =
@@ -390,7 +390,7 @@ selectionFacets selection aspects limit =
         (SelectionSet.dict
             (List.map
                 (\aspect ->
-                    ( aspect
+                    ( Aspect.toString aspect
                     , Api.Fragments.facetByAspect aspect limit
                     )
                 )
@@ -398,6 +398,7 @@ selectionFacets selection aspects limit =
             )
         )
         |> SelectionSet.nonNullOrFail
+        |> SelectionSet.map Facet.facetsValuesFromDict
 
 
 {-| Get a page of documents found by searching on an author's name.
@@ -503,12 +504,10 @@ selectionToOptionalGraphqlArguments :
     -> OptionalArgumentsForSelection a
 selectionToOptionalGraphqlArguments selection optionals =
     { optionals
-        | attributeTests =
-            Api.Arguments.Filter.filtersToAttributeTests selection.filters
-                |> Api.Arguments.AttributeTest.testsAsGraphqlArgument
-                |> Present
-        , aspectTests =
-            Api.Arguments.Filter.facetFiltersToAspectTests selection.facetFilters
+        | aspectTests =
+            List.append
+                (Api.Arguments.Filter.ftsFiltersToAspectTests selection.ftsFilters)
+                (Api.Arguments.Filter.facetFiltersToAspectTests selection.facetFilters)
                 |> Api.Arguments.AspectTest.testsAsGraphqlArgument
                 |> Present
     }

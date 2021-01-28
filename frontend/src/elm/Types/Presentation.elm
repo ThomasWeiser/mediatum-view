@@ -36,7 +36,6 @@ import RemoteData
 import Types exposing (DocumentIdFromSearch, FolderDisplay(..), NodeType(..), Window)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Route as Route exposing (Route)
-import Types.Route.Filter
 import Types.Selection exposing (SelectMethod(..), Selection)
 
 
@@ -82,7 +81,7 @@ fromRoute cache route =
                             ListingPresentation
                                 { scope = folderId
                                 , selectMethod = SelectByFolderListing
-                                , filters = Types.Route.Filter.fromRoute route
+                                , ftsFilters = route.parameters.ftsFilters
                                 , facetFilters = route.parameters.facetFilters
                                 }
                                 windowOfRoute
@@ -91,7 +90,7 @@ fromRoute cache route =
                     ListingPresentation
                         { scope = folderId
                         , selectMethod = selectMethod
-                        , filters = Types.Route.Filter.fromRoute route
+                        , ftsFilters = route.parameters.ftsFilters
                         , facetFilters = route.parameters.facetFilters
                         }
                         windowOfRoute

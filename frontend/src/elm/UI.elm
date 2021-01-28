@@ -16,6 +16,7 @@ import Entities.Document exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Types.Aspect exposing (Aspect)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation exposing (Presentation(..))
@@ -61,7 +62,7 @@ type alias Model =
     , facets : UI.Facets.Model
     , controls : UI.Controls.Model
     , article : UI.Article.Model
-    , facetAspects : List String
+    , facetAspects : List Aspect
     }
 
 
