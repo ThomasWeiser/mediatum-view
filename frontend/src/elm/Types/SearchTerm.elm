@@ -1,7 +1,7 @@
 module Types.SearchTerm exposing
     ( SearchTerm
-    , fromString
-    , fromStringWithDefault
+    , fromString, fromStringWithDefault
+    , concatMaybes
     , toString
     , ordering
     )
@@ -12,8 +12,8 @@ module Types.SearchTerm exposing
 # Search term
 
 @docs SearchTerm
-@docs fromString
-@docs fromStringWithDefault
+@docs fromString, fromStringWithDefault
+@docs concatMaybes
 @docs toString
 @docs ordering
 
@@ -53,6 +53,24 @@ fromStringWithDefault : String -> String -> SearchTerm
 fromStringWithDefault default string =
     fromString string
         |> Maybe.withDefault (SearchTerm default)
+
+
+{-| Concat search terms, wrapped in Maybe
+-}
+concatMaybes : Maybe SearchTerm -> Maybe SearchTerm -> Maybe SearchTerm
+concatMaybes maybeSearchTerm1 maybeSearchTerm2 =
+    case ( maybeSearchTerm1, maybeSearchTerm2 ) of
+        ( Just (SearchTerm string1), Just (SearchTerm string2) ) ->
+            Just (SearchTerm (string1 ++ " " ++ string2))
+
+        ( Just searchTerm1, Nothing ) ->
+            Just searchTerm1
+
+        ( Nothing, Just searchTerm2 ) ->
+            Just searchTerm2
+
+        ( Nothing, Nothing ) ->
+            Nothing
 
 
 {-| -}
