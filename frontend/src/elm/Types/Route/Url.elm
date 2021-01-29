@@ -73,7 +73,7 @@ parseQuery =
 parseQueryParameter : ( String, String ) -> RouteParameters -> Maybe RouteParameters
 parseQueryParameter ( name, value ) routeParameters =
     case name of
-        "fts-term" ->
+        "search" ->
             Just
                 { routeParameters
                     | ftsTerm =
@@ -171,7 +171,7 @@ toString route =
             [ route.parameters.ftsTerm
                 |> Maybe.map
                     (SearchTerm.toString
-                        >> Builder.string "fts-term"
+                        >> Builder.string "search"
                     )
             , buildParameterIfNotDefault
                 (ftsSortingTostring >> Builder.string "sort-by")
