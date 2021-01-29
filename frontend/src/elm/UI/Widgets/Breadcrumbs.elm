@@ -24,7 +24,7 @@ import Types.Id exposing (FolderId)
 import Types.Navigation as Navigation
 import Types.Route exposing (Route)
 import Types.Route.Url
-import Utils
+import Utils.List
 
 
 {-| -}
@@ -52,7 +52,7 @@ view context maybeLineage =
                 (\lineage ->
                     lineage
                         |> List.reverse
-                        |> Utils.mapEllipsis
+                        |> Utils.List.mapEllipsis
                             ellipsis
                             (\folderId ->
                                 Cache.get context.cache.folders folderId

@@ -41,6 +41,7 @@ import Types.Selection as Selection exposing (FtsSorting(..))
 import UI.Icons
 import Utils
 import Utils.Html
+import Utils.List
 
 
 {-| -}
@@ -127,7 +128,7 @@ update context msg model =
             ( { model
                 | ftsFilterLines =
                     model.ftsFilterLines
-                        |> Utils.setOnMapping Tuple.first
+                        |> Utils.List.setOnMapping Tuple.first
                             ( aspect, "" )
               }
             , Cmd.none
@@ -138,7 +139,7 @@ update context msg model =
             ( { model
                 | ftsFilterLines =
                     model.ftsFilterLines
-                        |> Utils.setOnMapping Tuple.first
+                        |> Utils.List.setOnMapping Tuple.first
                             ( aspect, searchText )
               }
             , Cmd.none
@@ -173,9 +174,9 @@ update context msg model =
                         | ftsTerm = "variable"
                         , ftsFilterLines =
                             model.ftsFilterLines
-                                |> Utils.setOnMapping Tuple.first
+                                |> Utils.List.setOnMapping Tuple.first
                                     ( Aspect.fromString "person", "Helmut" )
-                                |> Utils.setOnMapping Tuple.first
+                                |> Utils.List.setOnMapping Tuple.first
                                     ( Aspect.fromString "title", "Method" )
                     }
             in
@@ -330,7 +331,7 @@ viewFtsAspectButtons ftsFilterLines =
     Html.div [] <|
         List.filterMap
             (\aspect ->
-                if Utils.findByMapping Tuple.first aspect ftsFilterLines == Nothing then
+                if Utils.List.findByMapping Tuple.first aspect ftsFilterLines == Nothing then
                     Just <|
                         Html.span
                             [ Html.Attributes.class "" ]

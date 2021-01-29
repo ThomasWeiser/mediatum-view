@@ -1,0 +1,178 @@
+module Utils.List exposing
+    ( prependIf
+    , findMap
+    , findAdjacent
+    , findByMapping, replaceOnMapping, setOnMapping
+    , mapWhile
+    , mapEllipsis
+    )
+
+{-|
+
+@docs prependIf
+@docs findMap
+@docs findAdjacent
+@docs findByMapping, replaceOnMapping, setOnMapping
+@docs mapWhile
+@docs mapEllipsis
+
+-}
+
+import List.Extra
+
+
+{-| Conditionally add an element to the front of a list.
+-}
+prependIf : a -> Bool -> List a -> List a
+prependIf element condition list =
+    if condition then
+        element :: list
+
+    else
+        list
+
+
+{-| Find the first element that maps to a `Just b` and return this mapping.
+If none match, return Nothing.
+-}
+findMap : (a -> Maybe b) -> List a -> Maybe b
+findMap mapping list =
+    case list of
+        [] ->
+            Nothing
+
+        first :: rest ->
+            case mapping first of
+                Just result ->
+                    Just result
+
+                Nothing ->
+                    findMap mapping rest
+
+
+{-| Find an element of a list by comparing its mapped elements with a value.
+
+    findByMapping
+        .id
+        2
+        [ { id = 2, data = "two" }, { id = 5, data = "five" } ]
+        == { id = 2, data = "two" }
+
+-}
+findByMapping : (a -> b) -> b -> List a -> Maybe a
+findByMapping mapping mappedValue list =
+    List.Extra.find
+        (\elem -> mapping elem == mappedValue)
+        list
+
+
+{-| Replace all values that have the same mapping as the replacement value.
+-}
+replaceOnMapping : (a -> b) -> a -> List a -> List a
+replaceOnMapping mapping replacement list =
+    List.Extra.setIf
+        (\elem -> mapping elem == mapping replacement)
+        replacement
+        list
+
+
+{-| Replace all values that have the same mapping as the replacement value.
+If no matching element is found, the new value is added to the end of the list.
+-}
+setOnMapping : (a -> b) -> a -> List a -> List a
+setOnMapping mapping replacement list =
+    {- Easy, but not the most efficient implementation -}
+    if findByMapping mapping (mapping replacement) list == Nothing then
+        List.append list [ replacement ]
+
+    else
+        replaceOnMapping mapping replacement list
+
+
+{-| Find the first element that satisfies a predicate
+and return the element with its direct neighbours.
+
+The type of the return value uses a `Maybe` for the neighbours
+(they may not exist if the matched element at the start or at the end of the list)
+as well as a `Maybe` for the return value at whole (no element may satisfy the predicate).
+
+-}
+findAdjacent : (a -> Bool) -> List a -> Maybe ( Maybe a, a, Maybe a )
+findAdjacent predicate list =
+    let
+        walk : a -> List a -> Maybe ( Maybe a, a, Maybe a )
+        walk head1 tail1 =
+            case tail1 of
+                [] ->
+                    Nothing
+
+                head2 :: tail2 ->
+                    if predicate head2 then
+                        Just ( Just head1, head2, List.head tail2 )
+
+                    else
+                        walk head2 tail2
+    in
+    case list of
+        [] ->
+            Nothing
+
+        head1 :: tail1 ->
+            if predicate head1 then
+                Just ( Nothing, head1, List.head tail1 )
+
+            else
+                walk head1 tail1
+
+
+{-| Map elements while they map to a Just.
+
+Return value is the mapped prefix of the list,
+and a Bool to indicate if elements were dropped due to mapping an element to Nothing.
+
+-}
+mapWhile : (a -> Maybe b) -> List a -> ( Bool, List b )
+mapWhile mapping list =
+    List.foldl
+        (\element ( isContinuous, resultSoFar ) ->
+            if isContinuous then
+                case mapping element of
+                    Just value ->
+                        ( True, value :: resultSoFar )
+
+                    Nothing ->
+                        ( False, resultSoFar )
+
+            else
+                ( False, resultSoFar )
+        )
+        ( True, [] )
+        list
+        |> Tuple.mapSecond List.reverse
+
+
+{-| Map elements while they map to a Just.
+
+On the first mapping to Nothing add a placeholder
+(think of an ellipsis) to the result and terminate.
+
+-}
+mapEllipsis : b -> (a -> Maybe b) -> List a -> List b
+mapEllipsis placeholderEllipsis mapping list =
+    List.foldl
+        (\element ( isContinuous, resultSoFar ) ->
+            if isContinuous then
+                case mapping element of
+                    Just value ->
+                        ( True, value :: resultSoFar )
+
+                    Nothing ->
+                        ( False, placeholderEllipsis :: resultSoFar )
+
+            else
+                ( False, resultSoFar )
+        )
+        ( True, [] )
+        list
+        |> Tuple.second
+        |> List.reverse

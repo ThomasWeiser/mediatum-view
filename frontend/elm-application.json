@@ -51,6 +51,7 @@
         "UI",
         "Utils.Graphql",
         "Utils.Html",
+        "Utils.List",
         "Utils"
     ]
 }
