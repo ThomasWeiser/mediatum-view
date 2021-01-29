@@ -24,6 +24,7 @@ import Url.Builder as Builder
 import Utils
 
 
+{-| -}
 parseUrl : Url -> Maybe Route
 parseUrl url =
     let
@@ -73,7 +74,13 @@ parseQueryParameter : ( String, String ) -> RouteParameters -> Maybe RouteParame
 parseQueryParameter ( name, value ) routeParameters =
     case name of
         "fts-term" ->
-            Just { routeParameters | ftsTerm = SearchTerm.fromString value }
+            Just
+                { routeParameters
+                    | ftsTerm =
+                        SearchTerm.concatMaybes
+                            routeParameters.ftsTerm
+                            (SearchTerm.fromString value)
+                }
 
         "fts-sorting" ->
             case value of
@@ -106,24 +113,25 @@ parseQueryParameter ( name, value ) routeParameters =
                 [ { submatches } ] ->
                     case submatches of
                         [ Just "search", Just aspect ] ->
-                            case SearchTerm.fromString value of
-                                Just searchTerm ->
-                                    Just
-                                        { routeParameters
-                                            | ftsFilters =
-                                                Sort.Dict.insert
-                                                    (Aspect.fromString aspect)
-                                                    searchTerm
-                                                    routeParameters.ftsFilters
-                                        }
-
-                                Nothing ->
-                                    Just routeParameters
+                            Just
+                                { routeParameters
+                                    | ftsFilters =
+                                        -- Multiple search terms on the same aspect are concatenated
+                                        Sort.Dict.update
+                                            (Aspect.fromString aspect)
+                                            (\maybeExistingSearchTerm ->
+                                                SearchTerm.concatMaybes
+                                                    maybeExistingSearchTerm
+                                                    (SearchTerm.fromString value)
+                                            )
+                                            routeParameters.ftsFilters
+                                }
 
                         [ Just "has", Just aspect ] ->
                             Just
                                 { routeParameters
                                     | facetFilters =
+                                        -- Multiple facet values on the same aspect: last value wins
                                         Sort.Dict.insert
                                             (Aspect.fromString aspect)
                                             value

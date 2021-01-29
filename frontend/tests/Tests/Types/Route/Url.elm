@@ -165,6 +165,23 @@ suite =
                             , .parameters >> .facetFilters >> Sort.Dict.get (Aspect.fromString "author") >> Expect.equal (Just " ")
                             ]
                 ]
+            , describe "Multiple search terms on the same aspect should be concatenated"
+                [ testString "https://example.com/?fts-term=f1&search-author=a1&fts-term=f2&search-author=a2" <|
+                    Url.fromString
+                        >> Maybe.andThen Types.Route.Url.parseUrl
+                        >> justAndThenAll
+                            [ .parameters >> .ftsTerm >> expectJustSearchTerm "f1 f2"
+                            , .parameters >> .ftsFilters >> Sort.Dict.get (Aspect.fromString "author") >> expectJustSearchTerm "a1 a2"
+                            ]
+                ]
+            , describe "On multiple values of a facet filter on the same aspect: the last value should win"
+                [ testString "https://example.com/213?has-title=t1&has-title=t2" <|
+                    Url.fromString
+                        >> Maybe.andThen Types.Route.Url.parseUrl
+                        >> justAndThenAll
+                            [ .parameters >> .facetFilters >> Sort.Dict.get (Aspect.fromString "title") >> Expect.equal (Just "t2")
+                            ]
+                ]
             , testString "https://example.com/789/?search-title=%20foo%20\"bar%20%20baz\"" <|
                 Url.fromString
                     >> Maybe.andThen Types.Route.Url.parseUrl
