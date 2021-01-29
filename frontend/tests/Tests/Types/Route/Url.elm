@@ -73,13 +73,13 @@ suite =
                         , .parameters >> .facetFilters >> Sort.Dict.isEmpty >> Expect.true "Expecting emtpy set of facetFilters"
                         , Types.Route.Url.toString >> Expect.equal "/123"
                         ]
-            , testString "https://example.com/?fts-term=foo" <|
+            , testString "https://example.com/?search=foo" <|
                 Url.fromString
                     >> Maybe.andThen Types.Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal Route.NoId
                         , .parameters >> .ftsTerm >> expectJustSearchTerm "foo"
-                        , Types.Route.Url.toString >> Expect.equal "/?fts-term=foo"
+                        , Types.Route.Url.toString >> Expect.equal "/?search=foo"
                         ]
             , testString "https://example.com/?sort-by=rank" <|
                 Url.fromString
@@ -109,16 +109,16 @@ suite =
                                     |> Utils.ifElse "/" "/?sort-by=date"
                                 )
                         ]
-            , testString "https://example.com/123/456?fts-term=foo" <|
+            , testString "https://example.com/123/456?search=foo" <|
                 Url.fromString
                     >> Maybe.andThen Types.Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.TwoIds (Id.fromInt 123) (Id.fromInt 456))
                         , .parameters >> .ftsTerm >> expectJustSearchTerm "foo"
-                        , Types.Route.Url.toString >> Expect.equal "/123/456?fts-term=foo"
+                        , Types.Route.Url.toString >> Expect.equal "/123/456?search=foo"
                         ]
             , describe "It should remove search terms that are empty"
-                [ testString "https://example.com/?fts-term=&offset=7" <|
+                [ testString "https://example.com/?search=&offset=7" <|
                     Url.fromString
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
@@ -128,17 +128,17 @@ suite =
                             ]
                 ]
             , describe "It should remove whitespace on both sides of a search term"
-                [ testString "https://example.com/789/?fts%2Dterm=%20foo%20%20bar%20" <|
+                [ testString "https://example.com/789/?search=%20foo%20%20bar%20" <|
                     Url.fromString
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
                             [ .path >> Expect.equal (Route.OneId (Id.fromInt 789))
                             , .parameters >> .ftsTerm >> expectJustSearchTerm "foo bar"
-                            , Types.Route.Url.toString >> Expect.equal "/789?fts-term=foo%20bar"
+                            , Types.Route.Url.toString >> Expect.equal "/789?search=foo%20bar"
                             ]
                 ]
             , describe "It should remove search terms that are only whitespace"
-                [ testString "https://example.com/?fts-term=%20%20&offset=7" <|
+                [ testString "https://example.com/?search=%20%20&offset=7" <|
                     Url.fromString
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
@@ -166,7 +166,7 @@ suite =
                             ]
                 ]
             , describe "Multiple search terms on the same aspect should be concatenated"
-                [ testString "https://example.com/?fts-term=f1&search-author=a1&fts-term=f2&search-author=a2" <|
+                [ testString "https://example.com/?search=f1&search-author=a1&search=f2&search-author=a2" <|
                     Url.fromString
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
