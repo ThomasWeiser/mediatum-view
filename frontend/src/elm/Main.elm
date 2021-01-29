@@ -62,7 +62,15 @@ init flags url navigationKey =
     ( { navigationKey = navigationKey
       , app = appModel
       }
-    , Cmd.map AppMsg appCmd
+    , Cmd.batch
+        [ Cmd.map AppMsg appCmd
+        , -- Normalize the URL:
+          -- Replace the externally provided URL with one
+          -- that reflects the resulting intial state.
+          Browser.Navigation.replaceUrl
+            navigationKey
+            (Types.Route.Url.toString appModel.route)
+        ]
     )
 
 
