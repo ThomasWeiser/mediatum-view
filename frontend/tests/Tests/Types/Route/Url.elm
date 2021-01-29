@@ -81,7 +81,7 @@ suite =
                         , .parameters >> .ftsTerm >> expectJustSearchTerm "foo"
                         , Types.Route.Url.toString >> Expect.equal "/?fts-term=foo"
                         ]
-            , testString "https://example.com/?fts-sorting=by-rank" <|
+            , testString "https://example.com/?sort-by=rank" <|
                 Url.fromString
                     >> Maybe.andThen Types.Route.Url.parseUrl
                     >> justAndThenAll
@@ -92,10 +92,10 @@ suite =
                             >> Expect.equal
                                 (Route.defaultFtsSorting
                                     == FtsByRank
-                                    |> Utils.ifElse "/" "/?fts-sorting=by-rank"
+                                    |> Utils.ifElse "/" "/?sort-by=rank"
                                 )
                         ]
-            , testString "https://example.com/?fts-sorting=by-date" <|
+            , testString "https://example.com/?sort-by=date" <|
                 Url.fromString
                     >> Maybe.andThen Types.Route.Url.parseUrl
                     >> justAndThenAll
@@ -106,7 +106,7 @@ suite =
                             >> Expect.equal
                                 (Route.defaultFtsSorting
                                     == FtsByDate
-                                    |> Utils.ifElse "/" "/?fts-sorting=by-date"
+                                    |> Utils.ifElse "/" "/?sort-by=date"
                                 )
                         ]
             , testString "https://example.com/123/456?fts-term=foo" <|

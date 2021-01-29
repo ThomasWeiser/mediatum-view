@@ -82,12 +82,12 @@ parseQueryParameter ( name, value ) routeParameters =
                             (SearchTerm.fromString value)
                 }
 
-        "fts-sorting" ->
+        "sort-by" ->
             case value of
-                "by-rank" ->
+                "rank" ->
                     Just { routeParameters | ftsSorting = FtsByRank }
 
-                "by-date" ->
+                "date" ->
                     Just { routeParameters | ftsSorting = FtsByDate }
 
                 _ ->
@@ -174,7 +174,7 @@ toString route =
                         >> Builder.string "fts-term"
                     )
             , buildParameterIfNotDefault
-                (ftsSortingTostring >> Builder.string "fts-sorting")
+                (ftsSortingTostring >> Builder.string "sort-by")
                 Route.defaultFtsSorting
                 route.parameters.ftsSorting
             ]
@@ -209,10 +209,10 @@ ftsSortingTostring : FtsSorting -> String
 ftsSortingTostring ftsSorting =
     case ftsSorting of
         FtsByRank ->
-            "by-rank"
+            "rank"
 
         FtsByDate ->
-            "by-date"
+            "date"
 
 
 buildParameterIfNotDefault : (a -> Builder.QueryParameter) -> a -> a -> Maybe Builder.QueryParameter
