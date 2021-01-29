@@ -345,4 +345,4 @@ viewFtsAspectButtons ftsFilterLines =
                 else
                     Nothing
             )
-            Config.standardFtsAspects
+            Config.validFtsAspects

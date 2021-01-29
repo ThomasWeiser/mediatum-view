@@ -56,6 +56,7 @@ init flags url navigationKey =
         ( appModel, appCmd ) =
             Types.Route.Url.parseUrl url
                 |> Maybe.withDefault Route.initHome
+                |> Route.sanitize
                 |> App.init
     in
     ( { navigationKey = navigationKey
@@ -87,6 +88,7 @@ update msg model =
                 route =
                     Types.Route.Url.parseUrl url
                         |> Maybe.withDefault Route.initHome
+                        |> Route.sanitize
 
                 ( subModel, subCmd ) =
                     model.app

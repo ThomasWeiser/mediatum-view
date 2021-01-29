@@ -2,7 +2,7 @@ module Config exposing
     ( apiUrl, graphqlOperationNamePrefix
     , pageSize
     , facetValuesToQuery
-    , standardFacetAspects, standardFtsAspects
+    , validFacetAspects, validFtsAspects
     )
 
 {-| Configurable values
@@ -10,7 +10,7 @@ module Config exposing
 @docs apiUrl, graphqlOperationNamePrefix
 @docs pageSize
 @docs facetValuesToQuery
-@docs standardFacetAspects, standardFtsAspects
+@docs validFacetAspects, validFtsAspects
 
 -}
 
@@ -51,14 +51,14 @@ facetValuesToQuery =
 
 
 {-| -}
-standardFacetAspects : List Aspect
-standardFacetAspects =
+validFacetAspects : List Aspect
+validFacetAspects =
     [ "type", "subject", "origin", "author", "person", "keywords", "year" ]
         |> List.map Aspect.fromString
 
 
 {-| -}
-standardFtsAspects : List Aspect
-standardFtsAspects =
+validFtsAspects : List Aspect
+validFtsAspects =
     [ "type", "subject", "origin", "author", "person", "keywords", "year" ]
         |> List.map Aspect.fromString
