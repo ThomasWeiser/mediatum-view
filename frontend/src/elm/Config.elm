@@ -60,5 +60,5 @@ validFacetAspects =
 {-| -}
 validFtsAspects : List Aspect
 validFtsAspects =
-    [ "type", "subject", "origin", "author", "person", "keywords", "year" ]
+    [ "title", "type", "subject", "origin", "author", "person", "keywords", "year" ]
         |> List.map Aspect.fromString
