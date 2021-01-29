@@ -138,13 +138,6 @@ parseQueryParameter ( name, value ) routeParameters =
                     Just routeParameters
 
 
-regexFilter : Regex.Regex
-regexFilter =
-    "^(\\w+):(.*)$"
-        |> Regex.fromStringWith { caseInsensitive = False, multiline = True }
-        |> Maybe.withDefault Regex.never
-
-
 regexHasOrSearchAspect : Regex.Regex
 regexHasOrSearchAspect =
     "^(has|search)-(\\w+)$"
