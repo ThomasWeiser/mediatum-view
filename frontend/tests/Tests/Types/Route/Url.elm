@@ -6,6 +6,7 @@ import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Types.Route
 import Types.Aspect as Aspect exposing (Aspect)
+import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id as Id
 import Types.Range as Range
 import Types.Route as Route
@@ -69,8 +70,8 @@ suite =
                         [ .path >> Expect.equal (Route.OneId (Id.fromInt 123))
                         , .parameters >> .ftsTerm >> nothing
                         , .parameters >> .ftsSorting >> Expect.equal Route.defaultFtsSorting
-                        , .parameters >> .ftsFilters >> Sort.Dict.isEmpty >> Expect.true "Expecting emtpy set of ftsFilters"
-                        , .parameters >> .facetFilters >> Sort.Dict.isEmpty >> Expect.true "Expecting emtpy set of facetFilters"
+                        , .parameters >> .ftsFilters >> FilterList.isEmpty >> Expect.true "Expecting emtpy set of ftsFilters"
+                        , .parameters >> .facetFilters >> FilterList.isEmpty >> Expect.true "Expecting emtpy set of facetFilters"
                         , Types.Route.Url.toString >> Expect.equal "/123"
                         ]
             , testString "https://example.com/?search=foo" <|
@@ -151,9 +152,9 @@ suite =
                     Url.fromString
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
-                            [ .parameters >> .ftsFilters >> Sort.Dict.get (Aspect.fromString "title") >> nothing
-                            , .parameters >> .ftsFilters >> Sort.Dict.get (Aspect.fromString "person") >> nothing
-                            , .parameters >> .ftsFilters >> Sort.Dict.get (Aspect.fromString "author") >> expectJustSearchTerm "foo"
+                            [ .parameters >> .ftsFilters >> FilterList.get (Aspect.fromString "title") >> nothing
+                            , .parameters >> .ftsFilters >> FilterList.get (Aspect.fromString "person") >> nothing
+                            , .parameters >> .ftsFilters >> FilterList.get (Aspect.fromString "author") >> expectJustSearchTerm "foo"
                             ]
                 ]
             , describe "It should keep facet filter values that are empty or contain whitespace"
@@ -161,8 +162,8 @@ suite =
                     Url.fromString
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
-                            [ .parameters >> .facetFilters >> Sort.Dict.get (Aspect.fromString "title") >> Expect.equal (Just "")
-                            , .parameters >> .facetFilters >> Sort.Dict.get (Aspect.fromString "author") >> Expect.equal (Just " ")
+                            [ .parameters >> .facetFilters >> FilterList.get (Aspect.fromString "title") >> Expect.equal (Just "")
+                            , .parameters >> .facetFilters >> FilterList.get (Aspect.fromString "author") >> Expect.equal (Just " ")
                             ]
                 ]
             , describe "Multiple search terms on the same aspect should be concatenated"
@@ -171,7 +172,7 @@ suite =
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
                             [ .parameters >> .ftsTerm >> expectJustSearchTerm "f1 f2"
-                            , .parameters >> .ftsFilters >> Sort.Dict.get (Aspect.fromString "author") >> expectJustSearchTerm "a1 a2"
+                            , .parameters >> .ftsFilters >> FilterList.get (Aspect.fromString "author") >> expectJustSearchTerm "a1 a2"
                             ]
                 ]
             , describe "On multiple values of a facet filter on the same aspect: the last value should win"
@@ -179,7 +180,7 @@ suite =
                     Url.fromString
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
-                            [ .parameters >> .facetFilters >> Sort.Dict.get (Aspect.fromString "title") >> Expect.equal (Just "t2")
+                            [ .parameters >> .facetFilters >> FilterList.get (Aspect.fromString "title") >> Expect.equal (Just "t2")
                             ]
                 ]
             , testString "https://example.com/789/?search-title=%20foo%20\"bar%20%20baz\"" <|
@@ -188,7 +189,7 @@ suite =
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId (Id.fromInt 789))
                         , .parameters >> .ftsTerm >> nothing
-                        , .parameters >> .ftsFilters >> Sort.Dict.get (Aspect.fromString "title") >> expectJustSearchTerm "foo \"bar baz\""
+                        , .parameters >> .ftsFilters >> FilterList.get (Aspect.fromString "title") >> expectJustSearchTerm "foo \"bar baz\""
                         , Types.Route.Url.toString >> Expect.equal "/789?search-title=foo%20%22bar%20baz%22"
                         ]
             , describe "Percent-coding should work also used in a path segment"

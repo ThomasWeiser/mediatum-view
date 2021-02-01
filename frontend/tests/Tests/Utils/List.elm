@@ -5,6 +5,7 @@ import Fuzz
 import List.Extra
 import Test exposing (..)
 import TestUtils exposing (..)
+import Utils
 import Utils.List
 
 
@@ -137,28 +138,79 @@ suite =
             ]
         , describe "setOnMapping" <|
             let
-                setOnAdd2 : Int -> List Int -> List Int
-                setOnAdd2 =
+                setOnMod3 : Int -> List Int -> List Int
+                setOnMod3 =
                     Utils.List.setOnMapping (\n -> n |> modBy 3)
             in
             [ test "adds value to empty list" <|
                 \() ->
-                    Expect.equal (setOnAdd2 7 []) [ 7 ]
+                    Expect.equal (setOnMod3 7 []) [ 7 ]
             , test "replaces all matching values" <|
                 \() ->
                     Expect.equal
-                        (setOnAdd2 7 [ 0, 1, 2, 3, 4, 5, 6, 4, 5, 6 ])
+                        (setOnMod3 7 [ 0, 1, 2, 3, 4, 5, 6, 4, 5, 6 ])
                         [ 0, 7, 2, 3, 7, 5, 6, 7, 5, 6 ]
-            , test "adds value to end of liat if no element matches on the mapping" <|
+            , test "adds value to end of list if no element matches on the mapping" <|
                 \() ->
                     Expect.equal
-                        (setOnAdd2 7 [ 0, 2, 3, 2, 5 ])
+                        (setOnMod3 7 [ 0, 2, 3, 2, 5 ])
                         [ 0, 2, 3, 2, 5, 7 ]
             , fuzz2 Fuzz.int (Fuzz.list Fuzz.int) "compare with alternative implementation" <|
                 \i l ->
                     Expect.equal
-                        (setOnAdd2 i l)
+                        (setOnMod3 i l)
                         (setOnMappingAlternativeImplementation (\n -> n |> modBy 3) i l)
+            ]
+        , describe "updateOnMapping" <|
+            let
+                updateOnMod3Is1 : (Maybe Int -> Maybe Int) -> List Int -> List Int
+                updateOnMod3Is1 update =
+                    Utils.List.updateOnMapping update (\n -> n |> modBy 3) 1
+
+                update666777 : Maybe Int -> Maybe Int
+                update666777 maybeX =
+                    maybeX == Nothing |> Utils.ifElse (Just 666) (Just 777)
+            in
+            [ describe "on empty list" <|
+                [ test "adds Just value to empty list" <|
+                    \() ->
+                        Expect.equal
+                            (updateOnMod3Is1 update666777 [])
+                            [ 666 ]
+                , test "adds no element on identity" <|
+                    \() ->
+                        Expect.equal (updateOnMod3Is1 identity []) []
+                ]
+            , test "replaces all matching values" <|
+                \() ->
+                    Expect.equal
+                        (updateOnMod3Is1 update666777 [ 0, 1, 2, 3, 4, 5, 6, 4, 5, 6, 7, 8 ])
+                        [ 0, 777, 2, 3, 777, 5, 6, 777, 5, 6, 777, 8 ]
+            , test "conditionally replaces all matching values" <|
+                \() ->
+                    Expect.equal
+                        (updateOnMod3Is1
+                            (\maybeX ->
+                                case maybeX of
+                                    Just x ->
+                                        x < 3 |> Utils.ifElse (Just (x + 100)) (Just (x + 200))
+
+                                    Nothing ->
+                                        Just -1
+                            )
+                            [ 0, 1, 2, 3, 4, 5, 6, 4, 5, 6, 7, 8 ]
+                        )
+                        [ 0, 101, 2, 3, 204, 5, 6, 204, 5, 6, 207, 8 ]
+            , test "adds value to end of list if no element matches on the mapping" <|
+                \() ->
+                    Expect.equal
+                        (updateOnMod3Is1 (always (Just 7)) [ 0, 2, 3, 2, 5 ])
+                        [ 0, 2, 3, 2, 5, 7 ]
+            , test "adds nothing to end of list if no element matches on the mapping" <|
+                \() ->
+                    Expect.equal
+                        (updateOnMod3Is1 (always Nothing) [ 0, 2, 3, 2, 5 ])
+                        [ 0, 2, 3, 2, 5 ]
             ]
         , describe "mapWhile" <|
             let

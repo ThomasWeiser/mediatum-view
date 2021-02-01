@@ -2,9 +2,8 @@ module Utils.List exposing
     ( prependIf
     , findMap
     , findAdjacent
-    , findByMapping, replaceOnMapping, setOnMapping
-    , mapWhile
-    , mapEllipsis
+    , findByMapping, filterByMapping, filterByNotMapping, replaceOnMapping, setOnMapping, updateOnMapping
+    , mapWhile, mapEllipsis
     )
 
 {-|
@@ -12,9 +11,8 @@ module Utils.List exposing
 @docs prependIf
 @docs findMap
 @docs findAdjacent
-@docs findByMapping, replaceOnMapping, setOnMapping
-@docs mapWhile
-@docs mapEllipsis
+@docs findByMapping, filterByMapping, filterByNotMapping, replaceOnMapping, setOnMapping, updateOnMapping
+@docs mapWhile, mapEllipsis
 
 -}
 
@@ -66,6 +64,24 @@ findByMapping mapping mappedValue list =
         list
 
 
+{-| Keep only elements that map to a given value
+-}
+filterByMapping : (a -> b) -> b -> List a -> List a
+filterByMapping mapping mappedValue list =
+    List.filter
+        (\elem -> mapping elem == mappedValue)
+        list
+
+
+{-| Keep only elements that don't map to a given value
+-}
+filterByNotMapping : (a -> b) -> b -> List a -> List a
+filterByNotMapping mapping mappedValue list =
+    List.filter
+        (\elem -> mapping elem /= mappedValue)
+        list
+
+
 {-| Replace all values that have the same mapping as the replacement value.
 -}
 replaceOnMapping : (a -> b) -> a -> List a -> List a
@@ -87,6 +103,34 @@ setOnMapping mapping replacement list =
 
     else
         replaceOnMapping mapping replacement list
+
+
+{-| Find all elements defined by a mapping value.
+Update or remove those values by an update function.
+If no matching element is found and the update function results in a Just,
+then add it as a new value to the end of the list.
+-}
+updateOnMapping : (Maybe a -> Maybe a) -> (a -> b) -> b -> List a -> List a
+updateOnMapping update mapping mappedValue list =
+    {- Easy, but not the most efficient implementation -}
+    if findByMapping mapping mappedValue list == Nothing then
+        case update Nothing of
+            Just newElement ->
+                List.append list [ newElement ]
+
+            Nothing ->
+                list
+
+    else
+        List.filterMap
+            (\elem ->
+                if mapping elem == mappedValue then
+                    update (Just elem)
+
+                else
+                    Just elem
+            )
+            list
 
 
 {-| Find the first element that satisfies a predicate

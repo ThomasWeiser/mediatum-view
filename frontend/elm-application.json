@@ -29,6 +29,7 @@
         "Types.Aspect",
         "Types.DebugInfo",
         "Types.Facet",
+        "Types.FilterList",
         "Types.Id",
         "Types.Navigation",
         "Types.Needs",

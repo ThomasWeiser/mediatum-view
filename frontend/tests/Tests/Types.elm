@@ -123,7 +123,7 @@ fuzzerFtsSorting =
 fuzzerFtsFilters : Fuzzer FtsFilters
 fuzzerFtsFilters =
     fuzzerFtsFilter
-        |> shortList 3
+        |> shortListUniqueBy (Tuple.first >> Aspect.toString) 4
         |> Fuzz.map Types.Selection.ftsFiltersFromList
 
 
@@ -138,16 +138,16 @@ fuzzerFacetFilters : Fuzzer FacetFilters
 fuzzerFacetFilters =
     Fuzz.map2 Tuple.pair
         fuzzerAspectName
-        -- Do we want to test values with newlines or not?
+        -- Do we want to test facet values with newlines or not?
         Fuzz.string
         -- (Fuzz.string |> Fuzz.map (String.filter ((/=) '\n')))
-        |> shortList 3
+        |> shortListUniqueBy (Tuple.first >> Aspect.toString) 4
         |> Fuzz.map Types.Selection.facetFiltersFromList
 
 
 fuzzerAspectName : Fuzzer Aspect
 fuzzerAspectName =
-    [ "title", "author", "person" ]
+    [ "title", "author", "person", "subject" ]
         |> List.map Aspect.fromString
         |> List.map Fuzz.constant
         |> Fuzz.oneOf

@@ -5,6 +5,7 @@ module TestUtils exposing
     , justAndThenAll
     , nothing
     , shortList
+    , shortListUniqueBy
     , testOrderingAntisymmetry
     , testOrderingProperties
     , testOrderingReflexivity
@@ -13,6 +14,7 @@ module TestUtils exposing
     , testString
     )
 
+import Dict
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer)
 import Test exposing (Test)
@@ -97,6 +99,27 @@ shortList maxLength fuzzerElement =
                 fuzzerElement
                 (shortList (maxLength - 1) fuzzerElement)
             ]
+
+
+{-| A fuzzer for short lists with some uniqueness on the elements.
+
+Works like `shortList`,
+except that there will be no multiple elements that map to the same key value.
+
+Note that the lists may get shorter than expected by dropping non-unique elements.
+
+-}
+shortListUniqueBy : (a -> comparable) -> Int -> Fuzzer a -> Fuzzer (List a)
+shortListUniqueBy keyMapping maxLength fuzzerElement =
+    shortList maxLength fuzzerElement
+        |> Fuzz.map
+            (\list ->
+                list
+                    |> List.map (\el -> ( keyMapping el, el ))
+                    |> Dict.fromList
+                    |> Dict.toList
+                    |> List.map Tuple.second
+            )
 
 
 {-| Test the required properties of a strict total ordering on a given type:

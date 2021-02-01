@@ -30,6 +30,7 @@ Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Ro
 import Config
 import Sort.Dict
 import Types.Aspect exposing (Aspect)
+import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection as Selection exposing (FacetFilters, FtsFilters, FtsSorting(..))
@@ -112,8 +113,10 @@ sanitize route =
     { path = route.path
     , parameters =
         { parameters
-            | ftsFilters = keepOnly Config.validFtsAspects parameters.ftsFilters
-            , facetFilters = keepOnly Config.validFacetAspects parameters.facetFilters
+            | ftsFilters =
+                FilterList.filterAspects Config.validFtsAspects parameters.ftsFilters
+            , facetFilters =
+                FilterList.filterAspects Config.validFacetAspects parameters.facetFilters
         }
     }
 

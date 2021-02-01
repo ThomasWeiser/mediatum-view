@@ -6,7 +6,7 @@ module Utils exposing
     , tupleRemoveThird
     , remoteDataCheck
     , remoteDataMapFallible
-    , sorter, maybeOrdering, lexicalOrdering, tupleOrdering
+    , sorter, maybeOrdering, lexicalOrdering, sortedOrdering, tupleOrdering
     , noBreakSpace
     , onChange
     )
@@ -35,7 +35,7 @@ module Utils exposing
 
 # Ordering
 
-@docs sorter, maybeOrdering, lexicalOrdering, tupleOrdering
+@docs sorter, maybeOrdering, lexicalOrdering, sortedOrdering, tupleOrdering
 
 
 # Html
@@ -125,6 +125,22 @@ lexicalOrdering compareElements listL listR =
 
                 EQ ->
                     lexicalOrdering compareElements tailL tailR
+
+
+{-| Lift an ordering on the element type to a list of that type.
+-}
+
+
+
+-- TODO: Suggest for elm-community/list-extra, and posssibly also for matthewsj/elm-ordering
+
+
+sortedOrdering : (a -> comparable) -> (a -> a -> Order) -> List a -> List a -> Order
+sortedOrdering sortKey compareElements listL listR =
+    lexicalOrdering
+        compareElements
+        (List.sortBy sortKey listL)
+        (List.sortBy sortKey listR)
 
 
 {-| Lift an ordering on a type to a Maybe of that type.

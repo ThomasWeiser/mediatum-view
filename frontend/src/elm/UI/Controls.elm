@@ -33,6 +33,7 @@ import Maybe.Extra
 import RemoteData
 import Sort.Dict
 import Types.Aspect as Aspect exposing (Aspect)
+import Types.FilterList as FilterList exposing (FilterList)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
 import Types.Route exposing (Route)
@@ -97,7 +98,7 @@ initialModel route =
     , ftsSorting = route.parameters.ftsSorting
     , ftsFilterLines =
         route.parameters.ftsFilters
-            |> Sort.Dict.toList
+            |> FilterList.toList
             |> List.map (Tuple.mapSecond SearchTerm.toString)
     }
 
