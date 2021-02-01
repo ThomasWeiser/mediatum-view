@@ -109,7 +109,8 @@ update aspect updateValue =
 -}
 ordering : Ordering v -> Ordering (FilterList v)
 ordering orderingValue =
-    Utils.lexicalOrdering
+    Utils.sortedOrdering
+        (Tuple.first >> Aspect.toString)
         (Utils.tupleOrdering
             Aspect.ordering
             orderingValue
