@@ -38,7 +38,6 @@ import Ordering exposing (Ordering)
 import Types.Aspect exposing (Aspect)
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id as Id exposing (FolderId)
-import Types.Range as Range exposing (Range)
 import Types.SearchTerm as SearchTerm exposing (SearchTerm)
 
 

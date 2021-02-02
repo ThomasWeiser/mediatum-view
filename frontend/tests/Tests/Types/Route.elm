@@ -2,7 +2,6 @@ module Tests.Types.Route exposing (fuzzerRoute)
 
 import Fuzz exposing (Fuzzer)
 import Tests.Types exposing (..)
-import Tests.Types.Range
 import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types.Route as Route exposing (Route, RouteParameters)
 import Types.Selection exposing (FtsSorting(..))

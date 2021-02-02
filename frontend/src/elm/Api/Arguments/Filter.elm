@@ -17,7 +17,6 @@ Used internally in module [`Api.Queries`](Api.Queries).
 
 import Api.Arguments.AspectTest
 import Types.FilterList as FilterList
-import Types.Range as Range
 import Types.SearchTerm
 import Types.Selection exposing (FacetFilters, FtsFilters)
 

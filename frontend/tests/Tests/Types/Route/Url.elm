@@ -8,7 +8,6 @@ import Tests.Types.Route
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id as Id
-import Types.Range as Range
 import Types.Route as Route
 import Types.Route.Url
 import Types.SearchTerm exposing (SearchTerm)
