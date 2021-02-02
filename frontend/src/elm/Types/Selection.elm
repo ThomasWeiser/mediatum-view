@@ -2,7 +2,7 @@ module Types.Selection exposing
     ( Selection
     , SelectMethod(..)
     , FtsSorting(..)
-    , FacetFilters, initFacetFilters, facetFiltersFromList
+    , FacetFilters, initFacetFilters
     , FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
     , orderingSelection
     , orderingSelectionModuloSorting
@@ -17,7 +17,7 @@ module Types.Selection exposing
 @docs Selection
 @docs SelectMethod
 @docs FtsSorting
-@docs FacetFilters, initFacetFilters, facetFiltersFromList
+@docs FacetFilters, initFacetFilters
 @docs FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
 
 
@@ -34,15 +34,12 @@ Define orderings on these types so we can use them as keys in `Sort.Dict`.
 
 -}
 
-import Dict
 import Ordering exposing (Ordering)
-import Sort.Dict
-import Types.Aspect as Aspect exposing (Aspect)
+import Types.Aspect exposing (Aspect)
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id as Id exposing (FolderId)
 import Types.Range as Range exposing (Range)
 import Types.SearchTerm as SearchTerm exposing (SearchTerm)
-import Utils
 
 
 {-| -}
@@ -77,12 +74,6 @@ type alias FacetFilters =
 initFacetFilters : FacetFilters
 initFacetFilters =
     FilterList.init
-
-
-{-| -}
-facetFiltersFromList : List ( Aspect, String ) -> FacetFilters
-facetFiltersFromList =
-    FilterList.fromList
 
 
 {-| -}
