@@ -278,11 +278,11 @@ suite =
                         (String.toList strL)
                         (String.toList strR)
                         |> Expect.equal (compare strL strR)
-            , testOrderingProperties
+            , testFineOrderingProperties
                 "with fuzzy list (short)"
                 (shortList 3 (Fuzz.intRange 0 2))
                 (Utils.List.lexicalOrdering compare)
-            , testOrderingProperties
+            , testFineOrderingProperties
                 "with fuzzy list (regular)"
                 (Fuzz.list Fuzz.int)
                 (Utils.List.lexicalOrdering compare)

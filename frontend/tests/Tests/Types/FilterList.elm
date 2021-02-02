@@ -75,7 +75,7 @@ suite =
                         , ( Aspect.fromString "C", 3 )
                         ]
             ]
-        , testOrderingProperties
+        , testCoarseOrderingProperties
             "FilterList"
             (fuzzerFilterList (Fuzz.intRange 0 3))
             (FilterList.ordering Ordering.natural)

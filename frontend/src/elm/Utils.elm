@@ -99,6 +99,7 @@ tupleRemoveThird ( a, b, _ ) =
 -- TODO: Suggest for elm-community/maybe-extra, and posssibly also for matthewsj/elm-ordering
 
 
+{-| -}
 maybeOrdering : (a -> a -> Order) -> Maybe a -> Maybe a -> Order
 maybeOrdering compareBaseType maybeL maybeR =
     case ( maybeL, maybeR ) of

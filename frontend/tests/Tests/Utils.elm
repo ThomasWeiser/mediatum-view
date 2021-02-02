@@ -10,7 +10,7 @@ suite : Test
 suite =
     describe "Utils"
         [ describe "maybeOrder"
-            [ testOrderingProperties
+            [ testFineOrderingProperties
                 "with maybe fuzzy element"
                 (Fuzz.maybe (Fuzz.intRange 0 2))
                 (Utils.maybeOrdering compare)

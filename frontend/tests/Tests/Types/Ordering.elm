@@ -14,18 +14,18 @@ import Types.Selection as Selection
 suite : Test
 suite =
     describe "Ordering"
-        [ testOrderingProperties "NodeId" fuzzerNodeId Id.ordering
-        , testOrderingProperties "FolderId" fuzzerFolderId Id.ordering
-        , testOrderingProperties "DocumentId" fuzzerDocumentId Id.ordering
-        , testOrderingProperties "Selection" fuzzerSelection Selection.orderingSelection
-        , testOrderingProperties "DocumentIdFromSearch" fuzzerDocumentIdFromSearch Types.orderingDocumentIdFromSearch
-        , testOrderingProperties "SelectionWindow" fuzzerSelectionWindow Cache.orderingSelectionWindow
-        , testOrderingProperties "SelectionFacets" fuzzerSelectionFacets Cache.orderingSelectionFacets
-        , testOrderingProperties "SearchMethod" fuzzerSearchMethod Selection.orderingSelectMethod
-        , testOrderingProperties "FtsSorting" fuzzerFtsSorting Selection.orderingFtsSorting
-        , testOrderingProperties "FtsFilters" fuzzerFtsFilters Selection.orderingFtsFilters
-        , testOrderingProperties "FacetFilters" fuzzerFacetFilters Selection.orderingFacetFilters
-        , testOrderingProperties "Window" fuzzerWindow Types.orderingWindow
+        [ testFineOrderingProperties "NodeId" fuzzerNodeId Id.ordering
+        , testFineOrderingProperties "FolderId" fuzzerFolderId Id.ordering
+        , testFineOrderingProperties "DocumentId" fuzzerDocumentId Id.ordering
+        , testFineOrderingProperties "Selection" fuzzerSelection Selection.orderingSelection
+        , testFineOrderingProperties "DocumentIdFromSearch" fuzzerDocumentIdFromSearch Types.orderingDocumentIdFromSearch
+        , testFineOrderingProperties "SelectionWindow" fuzzerSelectionWindow Cache.orderingSelectionWindow
+        , testCoarseOrderingProperties "SelectionFacets" fuzzerSelectionFacets Cache.orderingSelectionFacets
+        , testFineOrderingProperties "SearchMethod" fuzzerSearchMethod Selection.orderingSelectMethod
+        , testFineOrderingProperties "FtsSorting" fuzzerFtsSorting Selection.orderingFtsSorting
+        , testFineOrderingProperties "FtsFilters" fuzzerFtsFilters Selection.orderingFtsFilters
+        , testFineOrderingProperties "FacetFilters" fuzzerFacetFilters Selection.orderingFacetFilters
+        , testFineOrderingProperties "Window" fuzzerWindow Types.orderingWindow
         , testOrderingSelectionModuloSorting
         ]
 
@@ -33,7 +33,7 @@ suite =
 testOrderingSelectionModuloSorting : Test
 testOrderingSelectionModuloSorting =
     describe "Ordering Selection modulo sorting"
-        [ testPreorderingProperties "Selection modulo sorting" fuzzerSelection Selection.orderingSelectionModuloSorting
+        [ testCoarseOrderingProperties "Selection modulo sorting" fuzzerSelection Selection.orderingSelectionModuloSorting
         , fuzz2
             fuzzerSelection
             fuzzerSearchTerm

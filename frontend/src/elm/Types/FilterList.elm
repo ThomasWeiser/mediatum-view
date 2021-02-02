@@ -7,7 +7,16 @@ module Types.FilterList exposing
     , ordering
     )
 
-{-|
+{-| A list of fts- or facet-filters on aspects.
+
+Each aspect can occur only once.
+
+Insert-order is preserved.
+
+We keep the list also in a canonical order, i.e. sorted by aspect name.
+This ordering is exposed by the `ordering` function.
+It's used for cache lookups, as the cached API results are independent
+of the insert-order of the filter lists.
 
 @docs FilterList
 @docs init, fromList, toList

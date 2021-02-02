@@ -10,7 +10,7 @@ import Types.Range as Range exposing (Range)
 suite : Test
 suite =
     describe "Types.Range"
-        [ testOrderingProperties
+        [ testFineOrderingProperties
             "Range"
             (fuzzerRange (Fuzz.intRange 0 3))
             Range.compare

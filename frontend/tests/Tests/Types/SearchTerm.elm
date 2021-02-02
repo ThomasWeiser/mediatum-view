@@ -11,7 +11,7 @@ import Types.SearchTerm as SearchTerm exposing (SearchTerm)
 suite : Test
 suite =
     describe "Types.SearchTerm"
-        [ testOrderingProperties "SearchTerm" fuzzerSearchTerm SearchTerm.ordering
+        [ testFineOrderingProperties "SearchTerm" fuzzerSearchTerm SearchTerm.ordering
         , fuzz Fuzz.string "Random strings" <|
             \inputString ->
                 case SearchTerm.fromString inputString |> Maybe.map SearchTerm.toString of
