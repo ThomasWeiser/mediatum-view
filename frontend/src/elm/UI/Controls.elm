@@ -5,7 +5,7 @@ module UI.Controls exposing
     , Msg
     , submitExampleQuery
     , initialModel
-    , update
+    , updateFromRoute, update
     , view
     )
 
@@ -17,7 +17,7 @@ module UI.Controls exposing
 @docs Msg
 @docs submitExampleQuery
 @docs initialModel
-@docs update
+@docs updateFromRoute, update
 @docs view
 
 -}
@@ -33,6 +33,7 @@ import Maybe.Extra
 import RemoteData
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.FilterList as FilterList
+import Types.FtsFilterLine exposing (FtsFilterLines, mergeFtsFilterLines)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
 import Types.Route exposing (Route)
@@ -62,7 +63,7 @@ type Return
 type alias Model =
     { ftsTerm : String
     , ftsSorting : FtsSorting
-    , ftsFilterLines : List ( Aspect, String )
+    , ftsFilterLines : FtsFilterLines
     }
 
 
@@ -86,20 +87,33 @@ submitExampleQuery =
 
 
 {-| -}
-initialModel : Route -> Model
-initialModel route =
-    { ftsTerm =
-        case route.parameters.ftsTerm of
-            Nothing ->
-                ""
+initialModel : Model
+initialModel =
+    { ftsTerm = ""
+    , ftsSorting = Types.Route.defaultFtsSorting
+    , ftsFilterLines = []
+    }
 
-            Just seachTerm ->
-                SearchTerm.toString seachTerm
-    , ftsSorting = route.parameters.ftsSorting
-    , ftsFilterLines =
-        route.parameters.ftsFilters
-            |> FilterList.toList
-            |> List.map (Tuple.mapSecond SearchTerm.toString)
+
+{-| -}
+updateFromRoute : Route -> Model -> Model
+updateFromRoute route model =
+    { model
+        | ftsTerm =
+            case route.parameters.ftsTerm of
+                Nothing ->
+                    ""
+
+                Just seachTerm ->
+                    SearchTerm.toString seachTerm
+        , ftsSorting = route.parameters.ftsSorting
+        , ftsFilterLines =
+            mergeFtsFilterLines
+                (route.parameters.ftsFilters
+                    |> FilterList.toList
+                    |> List.map (Tuple.mapSecond SearchTerm.toString)
+                )
+                model.ftsFilterLines
     }
 
 
