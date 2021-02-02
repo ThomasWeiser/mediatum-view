@@ -1,7 +1,6 @@
 module Tests.Types.Range exposing (fuzzerRange, suite)
 
 import Basics.Extra
-import Expect
 import Fuzz exposing (Fuzzer)
 import Test exposing (..)
 import TestUtils exposing (..)
@@ -10,7 +9,7 @@ import Types.Range as Range exposing (Range)
 
 suite : Test
 suite =
-    describe "Data.Ordering"
+    describe "Types.Range"
         [ testOrderingProperties
             "Range"
             (fuzzerRange (Fuzz.intRange 0 3))
