@@ -270,6 +270,53 @@ suite =
                         (Utils.List.mapEllipsis 99 exampleMapping (List.range -100000 -1))
                         (List.map ((*) 10) (List.range -100000 -1))
             ]
+        , describe "lexicalOrder"
+            [ fuzz2 Fuzz.string Fuzz.string "order of random strings should match the order of the corresponding lists of chars" <|
+                \strL strR ->
+                    Utils.List.lexicalOrdering
+                        compare
+                        (String.toList strL)
+                        (String.toList strR)
+                        |> Expect.equal (compare strL strR)
+            , testOrderingProperties
+                "with fuzzy list (short)"
+                (shortList 3 (Fuzz.intRange 0 2))
+                (Utils.List.lexicalOrdering compare)
+            , testOrderingProperties
+                "with fuzzy list (regular)"
+                (Fuzz.list Fuzz.int)
+                (Utils.List.lexicalOrdering compare)
+            ]
+        , describe "sortedOrdering"
+            [ testPreorderingProperties
+                "with fuzzy list (short), key function = identity"
+                (shortList 3 (Fuzz.intRange 0 2))
+                (Utils.List.sortedOrdering identity compare)
+            , testPreorderingProperties
+                "with fuzzy list (short), key function = constant"
+                (shortList 3 (Fuzz.intRange 0 2))
+                (Utils.List.sortedOrdering (always 1) compare)
+            , testPreorderingProperties
+                "with fuzzy list (short), key function = modBy"
+                (shortList 3 (Fuzz.intRange 0 2))
+                (Utils.List.sortedOrdering (modBy 1) compare)
+            , testPreorderingProperties
+                "with fuzzy list (regular), key function = identity"
+                (Fuzz.list Fuzz.int)
+                (Utils.List.sortedOrdering identity compare)
+            , testPreorderingProperties
+                "with fuzzy list (regular), key function = constant"
+                (Fuzz.list Fuzz.int)
+                (Utils.List.sortedOrdering (always 1) compare)
+            , testPreorderingProperties
+                "with fuzzy list (regular), key function = modBy"
+                (Fuzz.list Fuzz.int)
+                (Utils.List.sortedOrdering (modBy 3) compare)
+            , testPreorderingProperties
+                "with fuzzy list of tuples, key function = modBy"
+                (Fuzz.list <| Fuzz.tuple ( Fuzz.intRange 0 5, Fuzz.intRange 0 5 ))
+                (Utils.List.sortedOrdering Tuple.first compare)
+            ]
         ]
 
 

@@ -72,6 +72,7 @@ import Types.Needs as Needs
 import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection as Selection exposing (SelectMethod(..), Selection)
 import Utils
+import Utils.List
 
 
 {-| A specialization of [`RemoteData e a`](/packages/krisajenkins/remotedata/6.0.1/RemoteData#RemoteData)
@@ -690,6 +691,6 @@ orderingSelectionFacets =
     Ordering.byFieldWith Selection.orderingSelectionModuloSorting Tuple.first
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith
-                (Utils.lexicalOrdering Aspect.ordering)
+                (Utils.List.lexicalOrdering Aspect.ordering)
                 Tuple.second
             )

@@ -4,6 +4,7 @@ module Utils.List exposing
     , findAdjacent
     , findByMapping, filterByMapping, filterByNotMapping, replaceOnMapping, setOnMapping, updateOnMapping
     , mapWhile, mapEllipsis
+    , lexicalOrdering, sortedOrdering
     )
 
 {-|
@@ -13,6 +14,7 @@ module Utils.List exposing
 @docs findAdjacent
 @docs findByMapping, filterByMapping, filterByNotMapping, replaceOnMapping, setOnMapping, updateOnMapping
 @docs mapWhile, mapEllipsis
+@docs lexicalOrdering, sortedOrdering
 
 -}
 
@@ -220,3 +222,45 @@ mapEllipsis placeholderEllipsis mapping list =
         list
         |> Tuple.second
         |> List.reverse
+
+
+{-| Lift an ordering on the element type to a list of that type.
+-}
+
+
+
+-- TODO: Suggest for elm-community/list-extra, and posssibly also for matthewsj/elm-ordering
+
+
+lexicalOrdering : (a -> a -> Order) -> List a -> List a -> Order
+lexicalOrdering compareElements listL listR =
+    case ( listL, listR ) of
+        ( [], [] ) ->
+            EQ
+
+        ( [], _ :: _ ) ->
+            LT
+
+        ( _ :: _, [] ) ->
+            GT
+
+        ( headL :: tailL, headR :: tailR ) ->
+            case compareElements headL headR of
+                LT ->
+                    LT
+
+                GT ->
+                    GT
+
+                EQ ->
+                    lexicalOrdering compareElements tailL tailR
+
+
+{-| Lift an ordering on the element type to a list of that type, modulo
+-}
+sortedOrdering : (a -> comparable) -> (a -> a -> Order) -> List a -> List a -> Order
+sortedOrdering sortKey compareElements listL listR =
+    lexicalOrdering
+        compareElements
+        (List.sortBy sortKey listL)
+        (List.sortBy sortKey listR)

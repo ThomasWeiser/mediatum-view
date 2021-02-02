@@ -6,7 +6,7 @@ module Utils exposing
     , tupleRemoveThird
     , remoteDataCheck
     , remoteDataMapFallible
-    , sorter, maybeOrdering, lexicalOrdering, sortedOrdering, tupleOrdering
+    , sorter, maybeOrdering, tupleOrdering
     , noBreakSpace
     , onChange
     )
@@ -35,7 +35,7 @@ module Utils exposing
 
 # Ordering
 
-@docs sorter, maybeOrdering, lexicalOrdering, sortedOrdering, tupleOrdering
+@docs sorter, maybeOrdering, tupleOrdering
 
 
 # Html
@@ -93,58 +93,6 @@ tupleAddThird c ( a, b ) =
 tupleRemoveThird : ( a, b, c ) -> ( a, b )
 tupleRemoveThird ( a, b, _ ) =
     ( a, b )
-
-
-{-| Lift an ordering on the element type to a list of that type.
--}
-
-
-
--- TODO: Suggest for elm-community/list-extra, and posssibly also for matthewsj/elm-ordering
-
-
-lexicalOrdering : (a -> a -> Order) -> List a -> List a -> Order
-lexicalOrdering compareElements listL listR =
-    case ( listL, listR ) of
-        ( [], [] ) ->
-            EQ
-
-        ( [], _ :: _ ) ->
-            LT
-
-        ( _ :: _, [] ) ->
-            GT
-
-        ( headL :: tailL, headR :: tailR ) ->
-            case compareElements headL headR of
-                LT ->
-                    LT
-
-                GT ->
-                    GT
-
-                EQ ->
-                    lexicalOrdering compareElements tailL tailR
-
-
-{-| Lift an ordering on the element type to a list of that type.
--}
-
-
-
--- TODO: Suggest for elm-community/list-extra, and posssibly also for matthewsj/elm-ordering
-
-
-sortedOrdering : (a -> comparable) -> (a -> a -> Order) -> List a -> List a -> Order
-sortedOrdering sortKey compareElements listL listR =
-    lexicalOrdering
-        compareElements
-        (List.sortBy sortKey listL)
-        (List.sortBy sortKey listR)
-
-
-{-| Lift an ordering on a type to a Maybe of that type.
--}
 
 
 
