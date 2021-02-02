@@ -3,7 +3,6 @@ module Tests.Types exposing
     , fuzzerDocumentIdFromSearch
     , fuzzerFacetFilters
     , fuzzerFolderId
-    , fuzzerFtsFilter
     , fuzzerFtsFilters
     , fuzzerFtsSorting
     , fuzzerLimit
@@ -17,18 +16,15 @@ module Tests.Types exposing
     , fuzzerYear
     )
 
-import Dict
-import Expect
 import Fuzz exposing (Fuzzer)
 import Test exposing (..)
 import TestUtils exposing (..)
-import Tests.Types.Range
+import Tests.Types.FilterList exposing (fuzzerFilterList)
 import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types exposing (DocumentIdFromSearch, Window)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.SearchTerm as SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (FacetFilters, FtsFilter, FtsFilters, FtsSorting(..), SelectMethod(..), Selection)
+import Types.Selection exposing (FacetFilters, FtsFilters, FtsSorting(..), SelectMethod(..), Selection)
 
 
 fuzzerId : Fuzzer Int
@@ -122,35 +118,16 @@ fuzzerFtsSorting =
 
 fuzzerFtsFilters : Fuzzer FtsFilters
 fuzzerFtsFilters =
-    fuzzerFtsFilter
-        |> shortListUniqueBy (Tuple.first >> Aspect.toString) 4
-        |> Fuzz.map Types.Selection.ftsFiltersFromList
-
-
-fuzzerFtsFilter : Fuzzer FtsFilter
-fuzzerFtsFilter =
-    Fuzz.map2 Tuple.pair
-        fuzzerAspectName
+    fuzzerFilterList
         fuzzerSearchTerm
 
 
 fuzzerFacetFilters : Fuzzer FacetFilters
 fuzzerFacetFilters =
-    Fuzz.map2 Tuple.pair
-        fuzzerAspectName
+    fuzzerFilterList
         -- Do we want to test facet values with newlines or not?
-        Fuzz.string
         -- (Fuzz.string |> Fuzz.map (String.filter ((/=) '\n')))
-        |> shortListUniqueBy (Tuple.first >> Aspect.toString) 4
-        |> Fuzz.map Types.Selection.facetFiltersFromList
-
-
-fuzzerAspectName : Fuzzer Aspect
-fuzzerAspectName =
-    [ "title", "author", "person", "subject" ]
-        |> List.map Aspect.fromString
-        |> List.map Fuzz.constant
-        |> Fuzz.oneOf
+        Fuzz.string
 
 
 fuzzerWindow : Fuzzer Window
