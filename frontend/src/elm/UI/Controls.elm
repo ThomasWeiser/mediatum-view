@@ -31,7 +31,6 @@ import Html.Events
 import List.Extra
 import Maybe.Extra
 import RemoteData
-import Sort.Dict
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Navigation as Navigation exposing (Navigation)
@@ -156,10 +155,17 @@ update context msg model =
                                 (Tuple.first >> (==) aspect)
                                 model.ftsFilterLines
                     }
+
+                filterIsInRoute =
+                    FilterList.get aspect context.route.parameters.ftsFilters /= Nothing
             in
             ( model1
             , Cmd.none
-            , navigate model1
+            , if filterIsInRoute then
+                navigate model1
+
+              else
+                NoReturn
             )
 
         Submit ->
@@ -310,7 +316,7 @@ viewExistingFtsFilter aspect searchText =
             [ Html.input
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
-                , Html.Attributes.placeholder "Placeholder Todo"
+                , Html.Attributes.placeholder <| "Search " ++ Aspect.toString aspect
                 , Html.Attributes.value searchText
                 , Html.Events.onInput (SetFtsFilterText aspect)
                 ]
