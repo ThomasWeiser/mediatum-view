@@ -80,10 +80,10 @@ type Msg
 init : Model
 init =
     { tree = UI.Tree.initialModel
-    , facets = UI.Facets.initialModel Config.standardFacetAspects
+    , facets = UI.Facets.initialModel Config.validFacetAspects
     , controls = UI.Controls.initialModel Route.initHome
     , article = UI.Article.initialModel (GenericPresentation Nothing)
-    , facetAspects = Config.standardFacetAspects
+    , facetAspects = Config.validFacetAspects
     }
 
 

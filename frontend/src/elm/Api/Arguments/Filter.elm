@@ -16,8 +16,7 @@ Used internally in module [`Api.Queries`](Api.Queries).
 -}
 
 import Api.Arguments.AspectTest
-import Sort.Dict
-import Types.Range as Range
+import Types.FilterList as FilterList
 import Types.SearchTerm
 import Types.Selection exposing (FacetFilters, FtsFilters)
 
@@ -26,7 +25,7 @@ import Types.Selection exposing (FacetFilters, FtsFilters)
 ftsFiltersToAspectTests : FtsFilters -> List Api.Arguments.AspectTest.Test
 ftsFiltersToAspectTests ftsFilters =
     ftsFilters
-        |> Sort.Dict.toList
+        |> FilterList.toList
         |> List.map
             (\( aspect, searchTerm ) ->
                 { aspect = aspect
@@ -41,7 +40,7 @@ ftsFiltersToAspectTests ftsFilters =
 facetFiltersToAspectTests : FacetFilters -> List Api.Arguments.AspectTest.Test
 facetFiltersToAspectTests facetFilters =
     facetFilters
-        |> Sort.Dict.toList
+        |> FilterList.toList
         |> List.map
             (\( aspect, value ) ->
                 { aspect = aspect

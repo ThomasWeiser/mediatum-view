@@ -29,11 +29,11 @@
         "Types.Aspect",
         "Types.DebugInfo",
         "Types.Facet",
+        "Types.FilterList",
         "Types.Id",
         "Types.Navigation",
         "Types.Needs",
         "Types.Presentation",
-        "Types.Range",
         "Types.Route.Url",
         "Types.Route",
         "Types.SearchTerm",
@@ -48,9 +48,11 @@
         "UI.Facets",
         "UI.Icons",
         "UI.Tree",
+        "UI.Widgets.Breadcrumbs",
         "UI",
         "Utils.Graphql",
         "Utils.Html",
+        "Utils.List",
         "Utils"
     ]
 }

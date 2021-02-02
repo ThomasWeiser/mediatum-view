@@ -33,6 +33,7 @@ import Maybe.Extra
 import RemoteData
 import Sort.Dict
 import Types.Aspect as Aspect exposing (Aspect)
+import Types.FilterList as FilterList exposing (FilterList)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
 import Types.Route exposing (Route)
@@ -41,6 +42,7 @@ import Types.Selection as Selection exposing (FtsSorting(..))
 import UI.Icons
 import Utils
 import Utils.Html
+import Utils.List
 
 
 {-| -}
@@ -96,7 +98,7 @@ initialModel route =
     , ftsSorting = route.parameters.ftsSorting
     , ftsFilterLines =
         route.parameters.ftsFilters
-            |> Sort.Dict.toList
+            |> FilterList.toList
             |> List.map (Tuple.mapSecond SearchTerm.toString)
     }
 
@@ -127,7 +129,7 @@ update context msg model =
             ( { model
                 | ftsFilterLines =
                     model.ftsFilterLines
-                        |> Utils.setOnMapping Tuple.first
+                        |> Utils.List.setOnMapping Tuple.first
                             ( aspect, "" )
               }
             , Cmd.none
@@ -138,7 +140,7 @@ update context msg model =
             ( { model
                 | ftsFilterLines =
                     model.ftsFilterLines
-                        |> Utils.setOnMapping Tuple.first
+                        |> Utils.List.setOnMapping Tuple.first
                             ( aspect, searchText )
               }
             , Cmd.none
@@ -173,9 +175,9 @@ update context msg model =
                         | ftsTerm = "variable"
                         , ftsFilterLines =
                             model.ftsFilterLines
-                                |> Utils.setOnMapping Tuple.first
+                                |> Utils.List.setOnMapping Tuple.first
                                     ( Aspect.fromString "person", "Helmut" )
-                                |> Utils.setOnMapping Tuple.first
+                                |> Utils.List.setOnMapping Tuple.first
                                     ( Aspect.fromString "title", "Method" )
                     }
             in
@@ -330,7 +332,7 @@ viewFtsAspectButtons ftsFilterLines =
     Html.div [] <|
         List.filterMap
             (\aspect ->
-                if Utils.findByMapping Tuple.first aspect ftsFilterLines == Nothing then
+                if Utils.List.findByMapping Tuple.first aspect ftsFilterLines == Nothing then
                     Just <|
                         Html.span
                             [ Html.Attributes.class "" ]
@@ -345,4 +347,4 @@ viewFtsAspectButtons ftsFilterLines =
                 else
                     Nothing
             )
-            Config.standardFtsAspects
+            Config.validFtsAspects

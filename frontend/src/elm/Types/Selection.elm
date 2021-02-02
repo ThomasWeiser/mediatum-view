@@ -2,7 +2,7 @@ module Types.Selection exposing
     ( Selection
     , SelectMethod(..)
     , FtsSorting(..)
-    , FacetFilters, initFacetFilters, facetFiltersFromList
+    , FacetFilters, initFacetFilters
     , FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
     , orderingSelection
     , orderingSelectionModuloSorting
@@ -17,7 +17,7 @@ module Types.Selection exposing
 @docs Selection
 @docs SelectMethod
 @docs FtsSorting
-@docs FacetFilters, initFacetFilters, facetFiltersFromList
+@docs FacetFilters, initFacetFilters
 @docs FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
 
 
@@ -34,14 +34,11 @@ Define orderings on these types so we can use them as keys in `Sort.Dict`.
 
 -}
 
-import Dict
 import Ordering exposing (Ordering)
-import Sort.Dict
-import Types.Aspect as Aspect exposing (Aspect)
+import Types.Aspect exposing (Aspect)
+import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id as Id exposing (FolderId)
-import Types.Range as Range exposing (Range)
 import Types.SearchTerm as SearchTerm exposing (SearchTerm)
-import Utils
 
 
 {-| -}
@@ -69,20 +66,13 @@ type FtsSorting
 {-| A set of facet filters, mapping aspect names to aspect values.
 -}
 type alias FacetFilters =
-    Sort.Dict.Dict Aspect String
+    FilterList String
 
 
 {-| -}
 initFacetFilters : FacetFilters
 initFacetFilters =
-    Sort.Dict.empty (Utils.sorter Aspect.ordering)
-
-
-{-| -}
-facetFiltersFromList : List ( Aspect, String ) -> FacetFilters
-facetFiltersFromList list =
-    list
-        |> Sort.Dict.fromList (Utils.sorter Aspect.ordering)
+    FilterList.init
 
 
 {-| -}
@@ -92,20 +82,19 @@ type alias FtsFilter =
 
 {-| -}
 type alias FtsFilters =
-    Sort.Dict.Dict Aspect SearchTerm
+    FilterList SearchTerm
 
 
 {-| -}
 initFtsFilters : FtsFilters
 initFtsFilters =
-    Sort.Dict.empty (Utils.sorter Aspect.ordering)
+    FilterList.init
 
 
 {-| -}
 ftsFiltersFromList : List FtsFilter -> FtsFilters
-ftsFiltersFromList list =
-    list
-        |> Sort.Dict.fromList (Utils.sorter Aspect.ordering)
+ftsFiltersFromList =
+    FilterList.fromList
 
 
 {-| -}
@@ -192,24 +181,12 @@ orderingFtsSorting =
 {-| -}
 orderingFtsFilters : Ordering FtsFilters
 orderingFtsFilters =
-    Ordering.byFieldWith
-        (Utils.lexicalOrdering
-            (Utils.tupleOrdering
-                Aspect.ordering
-                SearchTerm.ordering
-            )
-        )
-        Sort.Dict.toList
+    FilterList.ordering
+        SearchTerm.ordering
 
 
 {-| -}
 orderingFacetFilters : Ordering FacetFilters
 orderingFacetFilters =
-    Ordering.byFieldWith
-        (Utils.lexicalOrdering
-            (Utils.tupleOrdering
-                Aspect.ordering
-                Ordering.natural
-            )
-        )
-        Sort.Dict.toList
+    FilterList.ordering
+        Ordering.natural

@@ -15,6 +15,7 @@ import Maybe.Extra
 import Regex
 import Sort.Dict
 import Types.Aspect as Aspect
+import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id as Id exposing (NodeId)
 import Types.Route as Route exposing (Route, RouteParameters, RoutePath(..))
 import Types.SearchTerm as SearchTerm
@@ -117,7 +118,7 @@ parseQueryParameter ( name, value ) routeParameters =
                                 { routeParameters
                                     | ftsFilters =
                                         -- Multiple search terms on the same aspect are concatenated
-                                        Sort.Dict.update
+                                        FilterList.update
                                             (Aspect.fromString aspect)
                                             (\maybeExistingSearchTerm ->
                                                 SearchTerm.concatMaybes
@@ -132,9 +133,9 @@ parseQueryParameter ( name, value ) routeParameters =
                                 { routeParameters
                                     | facetFilters =
                                         -- Multiple facet values on the same aspect: last value wins
-                                        Sort.Dict.insert
+                                        FilterList.update
                                             (Aspect.fromString aspect)
-                                            value
+                                            (always (Just value))
                                             routeParameters.facetFilters
                                 }
 
@@ -184,14 +185,14 @@ toString route =
                         ("search-" ++ Aspect.toString aspect)
                         (SearchTerm.toString searchTerm)
                 )
-                (Sort.Dict.toList route.parameters.ftsFilters)
+                (FilterList.toList route.parameters.ftsFilters)
             ++ List.map
                 (\( aspect, value ) ->
                     Builder.string
                         ("has-" ++ Aspect.toString aspect)
                         value
                 )
-                (Sort.Dict.toList route.parameters.facetFilters)
+                (FilterList.toList route.parameters.facetFilters)
             ++ Maybe.Extra.values
                 [ buildParameterIfNotDefault
                     (Builder.int "offset")

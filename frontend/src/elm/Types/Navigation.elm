@@ -14,6 +14,7 @@ import Cache exposing (Cache)
 import Cache.Derive
 import Sort.Dict
 import Types.Aspect exposing (Aspect)
+import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.Route as Route exposing (Route)
 import Types.SearchTerm exposing (SearchTerm)
@@ -100,7 +101,7 @@ alterRoute cache navigation route =
                 | parameters =
                     { parametersWithOffset0
                         | facetFilters =
-                            Sort.Dict.insert aspect value parameters.facetFilters
+                            FilterList.insert aspect value parameters.facetFilters
                     }
             }
 
@@ -109,7 +110,7 @@ alterRoute cache navigation route =
                 | parameters =
                     { parametersWithOffset0
                         | facetFilters =
-                            Sort.Dict.remove aspect parameters.facetFilters
+                            FilterList.remove aspect parameters.facetFilters
                     }
             }
 

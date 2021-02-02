@@ -5,14 +5,13 @@ module TestUtils exposing
     , justAndThenAll
     , nothing
     , shortList
-    , testOrderingAntisymmetry
-    , testOrderingProperties
-    , testOrderingReflexivity
-    , testOrderingTransitivity
-    , testPreorderingProperties
+    , shortListUniqueBy
+    , testCoarseOrderingProperties
+    , testFineOrderingProperties
     , testString
     )
 
+import Dict
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer)
 import Test exposing (Test)
@@ -99,25 +98,52 @@ shortList maxLength fuzzerElement =
             ]
 
 
-{-| Test the required properties of a strict total ordering on a given type:
-reflexivity, antisymmetry and transitivity
+{-| A fuzzer for short lists with some uniqueness on the elements.
+
+Works like `shortList`,
+except that there will be no multiple elements that map to the same key value.
+
+Note that the lists may get shorter than expected by dropping non-unique elements.
+
 -}
-testOrderingProperties : String -> Fuzzer a -> (a -> a -> Order) -> Test
-testOrderingProperties name fuzzer ordering =
+shortListUniqueBy : (a -> comparable) -> Int -> Fuzzer a -> Fuzzer (List a)
+shortListUniqueBy keyMapping maxLength fuzzerElement =
+    shortList maxLength fuzzerElement
+        |> Fuzz.map
+            (\list ->
+                list
+                    |> List.map (\el -> ( keyMapping el, el ))
+                    |> Dict.fromList
+                    |> Dict.toList
+                    |> List.map Tuple.second
+            )
+
+
+{-| Test the required properties of a strict total ordering on a given type.
+
+"Fine": EQ must mean equality, i.e. not more than value per equivalence class.
+
+-}
+testFineOrderingProperties : String -> Fuzzer a -> (a -> a -> Order) -> Test
+testFineOrderingProperties name fuzzer ordering =
     Test.describe name
         [ testOrderingReflexivity "reflexivity" fuzzer ordering
-        , testOrderingAntisymmetry "antisymmetry" fuzzer ordering
+        , testOrderingSymmetry "symmetry" fuzzer ordering
+        , testOrderingEquality "equality" fuzzer ordering
         , testOrderingTransitivity "transitivity" fuzzer ordering
         ]
 
 
-{-| Test the required properties of a total preordering on a given type:
-reflexivity and transitivity
+{-| Test the required properties of a strict total ordering on a given type.
+
+"Coarse": EQ may group more than one values together into one equivalence class.
+
 -}
-testPreorderingProperties : String -> Fuzzer a -> (a -> a -> Order) -> Test
-testPreorderingProperties name fuzzer ordering =
+testCoarseOrderingProperties : String -> Fuzzer a -> (a -> a -> Order) -> Test
+testCoarseOrderingProperties name fuzzer ordering =
     Test.describe name
         [ testOrderingReflexivity "reflexivity" fuzzer ordering
+        , testOrderingSymmetry "symmetry" fuzzer ordering
         , testOrderingTransitivity "transitivity" fuzzer ordering
         ]
 
@@ -134,13 +160,37 @@ testOrderingReflexivity name fuzzer ordering =
 
 {-| Test the antisymmetry of an ordering on a given type
 -}
-testOrderingAntisymmetry : String -> Fuzzer a -> (a -> a -> Order) -> Test
-testOrderingAntisymmetry name fuzzer ordering =
+testOrderingEquality : String -> Fuzzer a -> (a -> a -> Order) -> Test
+testOrderingEquality name fuzzer ordering =
     Test.fuzz2 fuzzer fuzzer name <|
         \value1 value2 ->
             ordering value1 value2
                 == EQ
                 |> Expect.equal (value1 == value2)
+
+
+{-| Test the transitivity of an ordering on a given type
+-}
+testOrderingSymmetry : String -> Fuzzer a -> (a -> a -> Order) -> Test
+testOrderingSymmetry name fuzzer ordering =
+    Test.fuzz2 fuzzer fuzzer name <|
+        \value1 value2 ->
+            let
+                order12 =
+                    ordering value1 value2
+
+                order21 =
+                    ordering value2 value1
+            in
+            case order12 of
+                LT ->
+                    order21 |> Expect.equal GT
+
+                EQ ->
+                    order21 |> Expect.equal EQ
+
+                GT ->
+                    order21 |> Expect.equal LT
 
 
 {-| Test the transitivity of an ordering on a given type

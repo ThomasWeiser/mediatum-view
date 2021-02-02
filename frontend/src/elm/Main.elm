@@ -56,12 +56,21 @@ init flags url navigationKey =
         ( appModel, appCmd ) =
             Types.Route.Url.parseUrl url
                 |> Maybe.withDefault Route.initHome
+                |> Route.sanitize
                 |> App.init
     in
     ( { navigationKey = navigationKey
       , app = appModel
       }
-    , Cmd.map AppMsg appCmd
+    , Cmd.batch
+        [ Cmd.map AppMsg appCmd
+        , -- Normalize the URL:
+          -- Replace the externally provided URL with one
+          -- that reflects the resulting intial state.
+          Browser.Navigation.replaceUrl
+            navigationKey
+            (Types.Route.Url.toString appModel.route)
+        ]
     )
 
 
@@ -87,6 +96,7 @@ update msg model =
                 route =
                     Types.Route.Url.parseUrl url
                         |> Maybe.withDefault Route.initHome
+                        |> Route.sanitize
 
                 ( subModel, subCmd ) =
                     model.app

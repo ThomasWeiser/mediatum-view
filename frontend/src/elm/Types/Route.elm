@@ -6,6 +6,7 @@ module Types.Route exposing
     , RouteParameters
     , initHome
     , initDocumentInFolder
+    , sanitize
     )
 
 {-| Each correctly formed URL corresponds to a unique value of type [`Route`](#Route).
@@ -22,11 +23,15 @@ Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Ro
 @docs initHome
 @docs initDocumentInFolder
 
+@docs sanitize
+
 -}
 
-import Dict
+import Config
+import Sort.Dict
+import Types.Aspect exposing (Aspect)
+import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id exposing (DocumentId, FolderId, NodeId)
-import Types.Range exposing (Range)
 import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection as Selection exposing (FacetFilters, FtsFilters, FtsSorting(..))
 
@@ -94,3 +99,31 @@ emptyParameters =
     , offset = 0
     , limit = defaultLimit
     }
+
+
+{-| Make sure the route does not contain any unwanted details.
+In particular, make sure that the aspects used for fts filters or facet filters are valid.
+-}
+sanitize : Route -> Route
+sanitize route =
+    let
+        parameters =
+            route.parameters
+    in
+    { path = route.path
+    , parameters =
+        { parameters
+            | ftsFilters =
+                FilterList.filterAspects Config.validFtsAspects parameters.ftsFilters
+            , facetFilters =
+                FilterList.filterAspects Config.validFacetAspects parameters.facetFilters
+        }
+    }
+
+
+keepOnly : List Aspect -> Sort.Dict.Dict Aspect v -> Sort.Dict.Dict Aspect v
+keepOnly validAspects =
+    Sort.Dict.keepIf
+        (\aspect _ ->
+            List.member aspect validAspects
+        )
