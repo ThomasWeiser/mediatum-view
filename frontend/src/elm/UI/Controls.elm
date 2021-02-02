@@ -32,7 +32,7 @@ import List.Extra
 import Maybe.Extra
 import RemoteData
 import Types.Aspect as Aspect exposing (Aspect)
-import Types.FilterList as FilterList exposing (FilterList)
+import Types.FilterList as FilterList
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
 import Types.Route exposing (Route)
@@ -74,6 +74,7 @@ type Msg
     | AddFtsFilter Aspect
     | SetFtsFilterText Aspect String
     | RemoveFtsFilter Aspect
+    | RemoveFacetFilter Aspect
     | Submit
     | SubmitExampleQuery
 
@@ -168,6 +169,13 @@ update context msg model =
                 NoReturn
             )
 
+        RemoveFacetFilter aspect ->
+            ( model
+            , Cmd.none
+            , Navigate
+                (Navigation.ShowListingWithRemovedFacetFilter aspect)
+            )
+
         Submit ->
             ( model
             , Cmd.none
@@ -218,6 +226,7 @@ view context model =
             [ Html.Events.onSubmit Submit ]
             [ viewSearch context model
             , viewFtsFilters model
+            , viewFacetFilters context
             ]
         ]
 
@@ -296,13 +305,13 @@ viewExistingFtsFilters ftsFilterLines =
     Html.div [] <|
         List.map
             (\( aspect, searchText ) ->
-                viewExistingFtsFilter aspect searchText
+                viewFtsFilter aspect searchText
             )
             ftsFilterLines
 
 
-viewExistingFtsFilter : Aspect -> String -> Html Msg
-viewExistingFtsFilter aspect searchText =
+viewFtsFilter : Aspect -> String -> Html Msg
+viewFtsFilter aspect searchText =
     Html.div
         [ Html.Attributes.class "search-bar"
 
@@ -354,3 +363,38 @@ viewFtsAspectButtons ftsFilterLines =
                     Nothing
             )
             Config.validFtsAspects
+
+
+viewFacetFilters : Context -> Html Msg
+viewFacetFilters context =
+    Html.div [ Html.Attributes.class "filters-bar" ]
+        (context.route.parameters.facetFilters
+            |> FilterList.toList
+            |> List.map viewFacetFilter
+        )
+
+
+viewFacetFilter : Selection.FacetFilter -> Html Msg
+viewFacetFilter ( aspect, value ) =
+    Html.div
+        [ Html.Attributes.class "search-bar"
+        ]
+        [ Html.label
+            [ Html.Attributes.class "search-label" ]
+            [ Html.text (Aspect.toString aspect) ]
+        , Html.span
+            [ Html.Attributes.class "input-group" ]
+            [ Html.div
+                [ Html.Attributes.class "search-input"
+                ]
+                [ Html.text value ]
+            , Html.button
+                [ Html.Attributes.type_ "button"
+
+                -- , Html.Attributes.disabled beingEdited
+                , Html.Events.onClick (RemoveFacetFilter aspect)
+                , Html.Attributes.class "filter-button"
+                ]
+                [ UI.Icons.clear ]
+            ]
+        ]
