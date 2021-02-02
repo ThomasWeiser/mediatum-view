@@ -18,6 +18,7 @@ module Types.FilterList exposing
 
 -}
 
+import List.Extra
 import Maybe exposing (Maybe)
 import Ordering exposing (Ordering)
 import Types.Aspect as Aspect exposing (Aspect)
@@ -53,7 +54,11 @@ canonize listInInsertOrder =
 {-| -}
 fromList : List ( Aspect, v ) -> FilterList v
 fromList list =
-    canonize list
+    list
+        |> List.reverse
+        |> List.Extra.uniqueBy (Tuple.first >> Aspect.toString)
+        |> List.reverse
+        |> canonize
 
 
 {-| -}
@@ -104,10 +109,6 @@ remove aspect filterList =
             Tuple.first
             aspect
         |> canonize
-
-
-
--- TODO Test
 
 
 {-| Loopup an aspect in the `FilterList`, and update (i.e. map or insert or remove) its value.
