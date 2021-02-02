@@ -6,11 +6,6 @@ module UI.Widgets.Breadcrumbs exposing
 {-|
 
 @docs Context
-@docs Return
-@docs Model
-@docs Msg
-@docs initialModel
-@docs update
 @docs view
 
 -}
