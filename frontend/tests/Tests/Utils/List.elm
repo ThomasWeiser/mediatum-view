@@ -287,36 +287,6 @@ suite =
                 (Fuzz.list Fuzz.int)
                 (Utils.List.lexicalOrdering compare)
             ]
-        , describe "sortedOrdering"
-            [ testPreorderingProperties
-                "with fuzzy list (short), key function = identity"
-                (shortList 3 (Fuzz.intRange 0 2))
-                (Utils.List.sortedOrdering identity compare)
-            , testPreorderingProperties
-                "with fuzzy list (short), key function = constant"
-                (shortList 3 (Fuzz.intRange 0 2))
-                (Utils.List.sortedOrdering (always 1) compare)
-            , testPreorderingProperties
-                "with fuzzy list (short), key function = modBy"
-                (shortList 3 (Fuzz.intRange 0 2))
-                (Utils.List.sortedOrdering (modBy 1) compare)
-            , testPreorderingProperties
-                "with fuzzy list (regular), key function = identity"
-                (Fuzz.list Fuzz.int)
-                (Utils.List.sortedOrdering identity compare)
-            , testPreorderingProperties
-                "with fuzzy list (regular), key function = constant"
-                (Fuzz.list Fuzz.int)
-                (Utils.List.sortedOrdering (always 1) compare)
-            , testPreorderingProperties
-                "with fuzzy list (regular), key function = modBy"
-                (Fuzz.list Fuzz.int)
-                (Utils.List.sortedOrdering (modBy 3) compare)
-            , testPreorderingProperties
-                "with fuzzy list of tuples, key function = modBy"
-                (Fuzz.list <| Fuzz.tuple ( Fuzz.intRange 0 5, Fuzz.intRange 0 5 ))
-                (Utils.List.sortedOrdering Tuple.first compare)
-            ]
         ]
 
 

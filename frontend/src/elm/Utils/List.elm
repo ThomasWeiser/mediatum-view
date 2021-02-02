@@ -4,7 +4,7 @@ module Utils.List exposing
     , findAdjacent
     , findByMapping, filterByMapping, filterByNotMapping, replaceOnMapping, setOnMapping, updateOnMapping
     , mapWhile, mapEllipsis
-    , lexicalOrdering, sortedOrdering
+    , lexicalOrdering
     )
 
 {-|
@@ -14,7 +14,7 @@ module Utils.List exposing
 @docs findAdjacent
 @docs findByMapping, filterByMapping, filterByNotMapping, replaceOnMapping, setOnMapping, updateOnMapping
 @docs mapWhile, mapEllipsis
-@docs lexicalOrdering, sortedOrdering
+@docs lexicalOrdering
 
 -}
 
@@ -254,13 +254,3 @@ lexicalOrdering compareElements listL listR =
 
                 EQ ->
                     lexicalOrdering compareElements tailL tailR
-
-
-{-| Lift an ordering on the element type to a list of that type, modulo
--}
-sortedOrdering : (a -> comparable) -> (a -> a -> Order) -> List a -> List a -> Order
-sortedOrdering sortKey compareElements listL listR =
-    lexicalOrdering
-        compareElements
-        (List.sortBy sortKey listL)
-        (List.sortBy sortKey listR)
