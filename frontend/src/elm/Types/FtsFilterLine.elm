@@ -1,6 +1,7 @@
 module Types.FtsFilterLine exposing
     ( FtsFilterLine
     , mergeFtsFilterLines
+    , isEmptyAndNotInList
     , FtsFilterLines
     )
 
@@ -8,12 +9,11 @@ module Types.FtsFilterLine exposing
 
 @docs FtsFilterLine, FtsFilterLinesx
 @docs mergeFtsFilterLines
-@docs Model
+@docs isEmptyAndNotInList
 
 -}
 
 import Types.Aspect exposing (Aspect)
-import Utils
 
 
 type alias FtsFilterLine =
@@ -25,7 +25,7 @@ type alias FtsFilterLines =
 
 
 mergeFtsFilterLines : FtsFilterLines -> FtsFilterLines -> FtsFilterLines
-mergeFtsFilterLines fromRoute currentModel =
+mergeFtsFilterLines fromRoute uiModel =
     let
         step : FtsFilterLines -> FtsFilterLines -> FtsFilterLines
         step r m =
@@ -38,11 +38,11 @@ mergeFtsFilterLines fromRoute currentModel =
 
                 ( [], _ ) ->
                     List.filter
-                        (isNotInListAndEmpty fromRoute)
+                        (isEmptyAndNotInList fromRoute)
                         m
 
                 ( r1 :: rs, m1 :: ms ) ->
-                    if isInList currentModel {- oder m ? -} r1 then
+                    if isInList uiModel {- oder m ? -} r1 then
                         if isSameAspect r1 m1 then
                             r1 :: step rs ms
 
@@ -70,11 +70,11 @@ mergeFtsFilterLines fromRoute currentModel =
                         r1 :: step rs m
 
         result =
-            step fromRoute currentModel
+            step fromRoute uiModel
 
         _ =
             ( Debug.log "fromRoute" fromRoute
-            , Debug.log "model0" currentModel
+            , Debug.log "model0" uiModel
             , Debug.log "model1" result
             )
     in
@@ -96,8 +96,8 @@ isSameAspect line1 line2 =
     Tuple.first line1 == Tuple.first line2
 
 
-isNotInListAndEmpty : FtsFilterLines -> FtsFilterLine -> Bool
-isNotInListAndEmpty fromRoute line =
+isEmptyAndNotInList : FtsFilterLines -> FtsFilterLine -> Bool
+isEmptyAndNotInList fromRoute line =
     isEmpty line
         && not (isInList fromRoute line)
 

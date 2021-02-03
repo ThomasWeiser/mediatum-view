@@ -1,5 +1,6 @@
 module TestUtils exposing
-    ( fixpoint
+    ( expectationList
+    , fixpoint
     , just
     , justAndThen
     , justAndThenAll
@@ -77,6 +78,18 @@ nothing maybeSubject =
 fixpoint : (a -> a) -> a -> Expectation
 fixpoint mapping subject =
     Expect.equal subject (mapping subject)
+
+
+{-| Passes if all expectations from a list pass. Otherwise fail on first failure.
+-}
+expectationList : List Expectation -> Expectation
+expectationList expectations =
+    Expect.all
+        (Expect.pass
+            {- Expect.all would fail on empty list -} :: expectations
+            |> List.map always
+        )
+        ()
 
 
 {-| Given a fuzzer of a type, create a fuzzer of a list of that type.
