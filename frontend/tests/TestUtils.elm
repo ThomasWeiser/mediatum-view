@@ -7,14 +7,16 @@ module TestUtils exposing
     , nothing
     , shortList
     , shortListUniqueBy
+    , shortListWithFactor
+    , shortListWithFactorUniqueBy
     , testCoarseOrderingProperties
     , testFineOrderingProperties
     , testString
     )
 
-import Dict
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer)
+import List.Extra
 import Test exposing (Test)
 
 
@@ -121,15 +123,51 @@ Note that the lists may get shorter than expected by dropping non-unique element
 -}
 shortListUniqueBy : (a -> comparable) -> Int -> Fuzzer a -> Fuzzer (List a)
 shortListUniqueBy keyMapping maxLength fuzzerElement =
-    shortList maxLength fuzzerElement
-        |> Fuzz.map
-            (\list ->
-                list
-                    |> List.map (\el -> ( keyMapping el, el ))
-                    |> Dict.fromList
-                    |> Dict.toList
-                    |> List.map Tuple.second
-            )
+    shortList maxLength
+        fuzzerElement
+        |> Fuzz.map (List.Extra.uniqueBy keyMapping)
+
+
+{-| Given a fuzzer of a type, create a fuzzer of a list of that type with a given maximum length.
+
+The distribution of the length of the lists is affected by the given factor, which must be between 0.0 and 1.0.
+
+A smaller factor generates more shorter lists.
+
+  - Factor 0.0: Always produces empty lists.
+  - Factor 0.5: Same bahviour as function `shortList`.
+  - Factor 1.0: Always produces lists of the given maximum length.
+
+-}
+shortListWithFactor : Float -> Int -> Fuzzer a -> Fuzzer (List a)
+shortListWithFactor factor maxLength fuzzerElement =
+    if maxLength <= 0 then
+        Fuzz.constant []
+
+    else
+        Fuzz.frequency
+            [ ( 1.0 - factor, Fuzz.constant [] )
+            , ( factor
+              , Fuzz.map2
+                    (::)
+                    fuzzerElement
+                    (shortListWithFactor factor (maxLength - 1) fuzzerElement)
+              )
+            ]
+
+
+{-| A fuzzer for short lists with some uniqueness on the elements.
+
+Works like `shortListWithFactor`,
+except that there will be no multiple elements that map to the same key value.
+
+Note that the lists may get shorter than expected by dropping non-unique elements.
+
+-}
+shortListWithFactorUniqueBy : (a -> comparable) -> Float -> Int -> Fuzzer a -> Fuzzer (List a)
+shortListWithFactorUniqueBy keyMapping factor maxLength fuzzerElement =
+    shortListWithFactor factor maxLength fuzzerElement
+        |> Fuzz.map (List.Extra.uniqueBy keyMapping)
 
 
 {-| Test the required properties of a strict total ordering on a given type.

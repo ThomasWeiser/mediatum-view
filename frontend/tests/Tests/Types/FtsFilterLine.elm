@@ -190,7 +190,7 @@ fuzzerFilterLinesFromRoute =
                 , x ++ "n"
                 )
             )
-        |> shortListUniqueBy (Tuple.first >> Aspect.toString) 6
+        |> shortListWithFactorUniqueBy (Tuple.first >> Aspect.toString) 0.8 6
         |> Fuzz.map (Debug.log "fuzzerFilterLinesFromRoute")
 
 
@@ -204,7 +204,7 @@ fuzzerFilterLinesUiModel =
         )
         fuzzerAspectName
         Fuzz.bool
-        |> shortListUniqueBy (Tuple.first >> Aspect.toString) 7
+        |> shortListWithFactorUniqueBy (Tuple.first >> Aspect.toString) 0.8 7
 
 
 fuzzerAspectName : Fuzzer String
