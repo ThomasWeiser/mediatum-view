@@ -137,15 +137,12 @@ suite =
                         newUiModel =
                             -- List.reverse <| -- For testing the test: provoke failures
                             mergeFtsFilterLines fromRoute uiModel
-
-                        newUiModelAspects =
-                            newUiModel |> List.map Tuple.first
                     in
                     expectationList
                         (List.Extra.lift2
-                            (\( ( m1aspect, _ ), ( m2aspect, m2value ) ) ( n1aspect, n2aspect ) ->
+                            (\( ( m1aspect, _ ), ( m2aspect, _ ) ) ( ( n1aspect, n1value ), ( n2aspect, _ ) ) ->
                                 if
-                                    String.isEmpty m2value
+                                    String.isEmpty n1value
                                         && (m1aspect == n2aspect)
                                         && (m2aspect == n1aspect)
                                 then
@@ -156,14 +153,14 @@ suite =
                                             ++ Aspect.toString m1aspect
                                             ++ " in newUiModel ["
                                             ++ String.join ","
-                                                (List.map Aspect.toString newUiModelAspects)
+                                                (List.map (Tuple.first >> Aspect.toString) newUiModel)
                                             ++ "]"
 
                                 else
                                     Expect.pass
                             )
                             (List.Extra.uniquePairs uiModel)
-                            (List.Extra.uniquePairs newUiModelAspects)
+                            (List.Extra.uniquePairs newUiModel)
                         )
             ]
         ]
