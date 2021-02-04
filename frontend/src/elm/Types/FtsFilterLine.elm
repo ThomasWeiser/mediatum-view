@@ -42,12 +42,12 @@ mergeFtsFilterLines fromRoute uiModel =
                         m
 
                 ( r1 :: rs, m1 :: ms ) ->
-                    if isInList uiModel {- oder m ? -} r1 then
+                    if isInList uiModel r1 then
                         if isSameAspect r1 m1 then
                             r1 :: step rs ms
 
                         else
-                            case ( isInList fromRoute {- oder r ? -} m1, isEmpty m1 ) of
+                            case ( isInList fromRoute m1, isEmpty m1 ) of
                                 ( True, True ) ->
                                     r1 :: step rs m
 
@@ -71,12 +71,6 @@ mergeFtsFilterLines fromRoute uiModel =
 
         result =
             step fromRoute uiModel
-
-        _ =
-            ( Debug.log "fromRoute" fromRoute
-            , Debug.log "model0" uiModel
-            , Debug.log "model1" result
-            )
     in
     result
 
