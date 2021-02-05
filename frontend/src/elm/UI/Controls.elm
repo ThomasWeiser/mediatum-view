@@ -171,17 +171,10 @@ update context msg model =
                                 (Tuple.first >> (==) aspect)
                                 model.ftsFilterLines
                     }
-
-                filterIsInRoute =
-                    FilterList.get aspect context.route.parameters.ftsFilters /= Nothing
             in
             ( model1
             , Cmd.none
-            , if filterIsInRoute then
-                navigate model1
-
-              else
-                NoReturn
+            , navigate model1
             )
 
         RemoveFacetFilter aspect ->
