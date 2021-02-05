@@ -5,7 +5,7 @@ module UI.Controls exposing
     , Msg
     , submitExampleQuery
     , initialModel
-    , update
+    , updateFromRoute, update
     , view
     )
 
@@ -17,7 +17,7 @@ module UI.Controls exposing
 @docs Msg
 @docs submitExampleQuery
 @docs initialModel
-@docs update
+@docs updateFromRoute, update
 @docs view
 
 -}
@@ -31,11 +31,11 @@ import Html.Events
 import List.Extra
 import Maybe.Extra
 import RemoteData
-import Sort.Dict
 import Types.Aspect as Aspect exposing (Aspect)
-import Types.FilterList as FilterList exposing (FilterList)
+import Types.FilterList as FilterList
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
+import Types.RearrangeableEditList exposing (RearrangeableEditList, rearrange)
 import Types.Route exposing (Route)
 import Types.SearchTerm as SearchTerm
 import Types.Selection as Selection exposing (FtsSorting(..))
@@ -63,7 +63,7 @@ type Return
 type alias Model =
     { ftsTerm : String
     , ftsSorting : FtsSorting
-    , ftsFilterLines : List ( Aspect, String )
+    , ftsFilterLines : RearrangeableEditList Aspect String
     }
 
 
@@ -75,6 +75,7 @@ type Msg
     | AddFtsFilter Aspect
     | SetFtsFilterText Aspect String
     | RemoveFtsFilter Aspect
+    | RemoveFacetFilter Aspect
     | Submit
     | SubmitExampleQuery
 
@@ -86,20 +87,34 @@ submitExampleQuery =
 
 
 {-| -}
-initialModel : Route -> Model
-initialModel route =
-    { ftsTerm =
-        case route.parameters.ftsTerm of
-            Nothing ->
-                ""
+initialModel : Model
+initialModel =
+    { ftsTerm = ""
+    , ftsSorting = Types.Route.defaultFtsSorting
+    , ftsFilterLines = []
+    }
 
-            Just seachTerm ->
-                SearchTerm.toString seachTerm
-    , ftsSorting = route.parameters.ftsSorting
-    , ftsFilterLines =
-        route.parameters.ftsFilters
-            |> FilterList.toList
-            |> List.map (Tuple.mapSecond SearchTerm.toString)
+
+{-| -}
+updateFromRoute : Route -> Model -> Model
+updateFromRoute route model =
+    { model
+        | ftsTerm =
+            case route.parameters.ftsTerm of
+                Nothing ->
+                    ""
+
+                Just seachTerm ->
+                    SearchTerm.toString seachTerm
+        , ftsSorting = route.parameters.ftsSorting
+        , ftsFilterLines =
+            rearrange
+                (Tuple.second >> String.isEmpty)
+                (route.parameters.ftsFilters
+                    |> FilterList.toList
+                    |> List.map (Tuple.mapSecond SearchTerm.toString)
+                )
+                model.ftsFilterLines
     }
 
 
@@ -162,6 +177,13 @@ update context msg model =
             , navigate model1
             )
 
+        RemoveFacetFilter aspect ->
+            ( model
+            , Cmd.none
+            , Navigate
+                (Navigation.ShowListingWithRemovedFacetFilter aspect)
+            )
+
         Submit ->
             ( model
             , Cmd.none
@@ -212,6 +234,7 @@ view context model =
             [ Html.Events.onSubmit Submit ]
             [ viewSearch context model
             , viewFtsFilters model
+            , viewFacetFilters context
             ]
         ]
 
@@ -290,13 +313,13 @@ viewExistingFtsFilters ftsFilterLines =
     Html.div [] <|
         List.map
             (\( aspect, searchText ) ->
-                viewExistingFtsFilter aspect searchText
+                viewFtsFilter aspect searchText
             )
             ftsFilterLines
 
 
-viewExistingFtsFilter : Aspect -> String -> Html Msg
-viewExistingFtsFilter aspect searchText =
+viewFtsFilter : Aspect -> String -> Html Msg
+viewFtsFilter aspect searchText =
     Html.div
         [ Html.Attributes.class "search-bar"
 
@@ -310,7 +333,7 @@ viewExistingFtsFilter aspect searchText =
             [ Html.input
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
-                , Html.Attributes.placeholder "Placeholder Todo"
+                , Html.Attributes.placeholder <| "Search " ++ Aspect.toString aspect
                 , Html.Attributes.value searchText
                 , Html.Events.onInput (SetFtsFilterText aspect)
                 ]
@@ -348,3 +371,38 @@ viewFtsAspectButtons ftsFilterLines =
                     Nothing
             )
             Config.validFtsAspects
+
+
+viewFacetFilters : Context -> Html Msg
+viewFacetFilters context =
+    Html.div [ Html.Attributes.class "filters-bar" ]
+        (context.route.parameters.facetFilters
+            |> FilterList.toList
+            |> List.map viewFacetFilter
+        )
+
+
+viewFacetFilter : Selection.FacetFilter -> Html Msg
+viewFacetFilter ( aspect, value ) =
+    Html.div
+        [ Html.Attributes.class "search-bar"
+        ]
+        [ Html.label
+            [ Html.Attributes.class "search-label" ]
+            [ Html.text (Aspect.toString aspect) ]
+        , Html.span
+            [ Html.Attributes.class "input-group" ]
+            [ Html.div
+                [ Html.Attributes.class "search-input"
+                ]
+                [ Html.text value ]
+            , Html.button
+                [ Html.Attributes.type_ "button"
+
+                -- , Html.Attributes.disabled beingEdited
+                , Html.Events.onClick (RemoveFacetFilter aspect)
+                , Html.Attributes.class "filter-button"
+                ]
+                [ UI.Icons.clear ]
+            ]
+        ]

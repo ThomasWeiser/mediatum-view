@@ -81,7 +81,7 @@ init : Model
 init =
     { tree = UI.Tree.initialModel
     , facets = UI.Facets.initialModel Config.validFacetAspects
-    , controls = UI.Controls.initialModel Route.initHome
+    , controls = UI.Controls.initialModel
     , article = UI.Article.initialModel (GenericPresentation Nothing)
     , facetAspects = Config.validFacetAspects
     }
@@ -107,7 +107,7 @@ needs context model =
 updateOnChangedRoute : Context -> Model -> Model
 updateOnChangedRoute context model =
     { model
-        | controls = UI.Controls.initialModel context.route
+        | controls = UI.Controls.updateFromRoute context.route model.controls
         , tree = UI.Tree.expandPresentationFolder model.tree
     }
 

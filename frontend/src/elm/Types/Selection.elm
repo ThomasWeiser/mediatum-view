@@ -2,7 +2,7 @@ module Types.Selection exposing
     ( Selection
     , SelectMethod(..)
     , FtsSorting(..)
-    , FacetFilters, initFacetFilters
+    , FacetFilter, FacetFilters, initFacetFilters
     , FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
     , orderingSelection
     , orderingSelectionModuloSorting
@@ -17,7 +17,7 @@ module Types.Selection exposing
 @docs Selection
 @docs SelectMethod
 @docs FtsSorting
-@docs FacetFilters, initFacetFilters
+@docs FacetFilter, FacetFilters, initFacetFilters
 @docs FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
 
 
@@ -61,6 +61,11 @@ type SelectMethod
 type FtsSorting
     = FtsByRank
     | FtsByDate
+
+
+{-| -}
+type alias FacetFilter =
+    ( Aspect, String )
 
 
 {-| A set of facet filters, mapping aspect names to aspect values.
