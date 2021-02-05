@@ -33,9 +33,9 @@ import Maybe.Extra
 import RemoteData
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.FilterList as FilterList
-import Types.FtsFilterLine exposing (FtsFilterLines, mergeFtsFilterLines)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
+import Types.RearrangeableEditList exposing (RearrangeableEditList, rearrange)
 import Types.Route exposing (Route)
 import Types.SearchTerm as SearchTerm
 import Types.Selection as Selection exposing (FtsSorting(..))
@@ -63,7 +63,7 @@ type Return
 type alias Model =
     { ftsTerm : String
     , ftsSorting : FtsSorting
-    , ftsFilterLines : FtsFilterLines
+    , ftsFilterLines : RearrangeableEditList Aspect String
     }
 
 
@@ -108,7 +108,8 @@ updateFromRoute route model =
                     SearchTerm.toString seachTerm
         , ftsSorting = route.parameters.ftsSorting
         , ftsFilterLines =
-            mergeFtsFilterLines
+            rearrange
+                (Tuple.second >> String.isEmpty)
                 (route.parameters.ftsFilters
                     |> FilterList.toList
                     |> List.map (Tuple.mapSecond SearchTerm.toString)
