@@ -34,9 +34,10 @@ import Cache.Derive
 import Maybe.Extra
 import RemoteData
 import Types exposing (DocumentIdFromSearch, FolderDisplay(..), NodeType(..), Window)
+import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Route as Route exposing (Route)
-import Types.Selection exposing (SelectMethod(..), Selection)
+import Types.Selection exposing (Selection)
 
 
 {-| -}
@@ -71,44 +72,29 @@ fromRoute : Cache -> Route -> Presentation
 fromRoute cache route =
     let
         folderPresentation folderId folderType =
-            case selectMethodOfRoute of
-                SelectByFolderListing ->
-                    case folderType of
-                        DisplayAsCollection ->
-                            CollectionPresentation folderId
+            if
+                route.parameters.globalSearch
+                    == Nothing
+                    && FilterList.isEmpty route.parameters.ftsFilters
+                    && folderType
+                    == DisplayAsCollection
+            then
+                CollectionPresentation folderId
 
-                        DisplayAsDirectory ->
-                            ListingPresentation
-                                { scope = folderId
-                                , selectMethod = SelectByFolderListing
-                                , ftsFilters = route.parameters.ftsFilters
-                                , facetFilters = route.parameters.facetFilters
-                                }
-                                windowOfRoute
-
-                selectMethod ->
-                    ListingPresentation
-                        { scope = folderId
-                        , selectMethod = selectMethod
-                        , ftsFilters = route.parameters.ftsFilters
-                        , facetFilters = route.parameters.facetFilters
-                        }
-                        windowOfRoute
+            else
+                ListingPresentation
+                    { scope = folderId
+                    , globalSearch = route.parameters.globalSearch
+                    , ftsFilters = route.parameters.ftsFilters
+                    , facetFilters = route.parameters.facetFilters
+                    , sorting = route.parameters.sorting
+                    }
+                    windowOfRoute
 
         windowOfRoute =
             { offset = route.parameters.offset
             , limit = route.parameters.limit
             }
-
-        selectMethodOfRoute =
-            case route.parameters.ftsTerm of
-                Nothing ->
-                    SelectByFolderListing
-
-                Just ftsTerm ->
-                    SelectByFullTextSearch
-                        ftsTerm
-                        route.parameters.ftsSorting
     in
     case route.path of
         Route.NoId ->
@@ -135,7 +121,7 @@ fromRoute cache route =
                     DocumentPresentation Nothing
                         (DocumentIdFromSearch
                             (nodeId |> Id.asDocumentId)
-                            route.parameters.ftsTerm
+                            route.parameters.globalSearch
                         )
 
                 Just (NodeIsFolder folderType) ->
@@ -155,7 +141,7 @@ fromRoute cache route =
                         (Just (nodeIdOne |> Id.asFolderId))
                         (DocumentIdFromSearch
                             (nodeIdTwo |> Id.asDocumentId)
-                            route.parameters.ftsTerm
+                            route.parameters.globalSearch
                         )
 
                 _ ->
@@ -165,7 +151,7 @@ fromRoute cache route =
                             , Just
                                 (DocumentIdFromSearch
                                     (nodeIdTwo |> Id.asDocumentId)
-                                    route.parameters.ftsTerm
+                                    route.parameters.globalSearch
                                 )
                             )
                         )

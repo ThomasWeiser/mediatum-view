@@ -52,6 +52,7 @@ import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import List.Nonempty exposing (Nonempty)
+import Maybe.Extra
 import Mediatum.Enum.FtsSorting
 import Mediatum.InputObject
 import Mediatum.Object
@@ -64,9 +65,10 @@ import Pagination.Relay.Pagination
 import Types exposing (DocumentIdFromSearch, Window)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Facet as Facet exposing (FacetsValues)
+import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm
-import Types.Selection exposing (FtsSorting(..), SelectMethod(..), Selection)
+import Types.Selection exposing (Selection, Sorting(..))
 
 
 {-| Get the root folders and their sub-folders.
@@ -245,38 +247,40 @@ selectionDocumentsPage :
 selectionDocumentsPage window selection =
     let
         ( query, maybeSearchTerm ) =
-            case selection.selectMethod of
-                SelectByFolderListing ->
-                    ( Mediatum.Query.allDocumentsPage
-                        (selectionToOptionalGraphqlArguments selection
-                            >> windowToOptionalGraphqlArguments window
-                        )
-                        { folderId = selectionToFolderId selection }
-                    , Nothing
+            if selection.globalSearch == Nothing && FilterList.isEmpty selection.ftsFilters then
+                ( Mediatum.Query.allDocumentsPage
+                    (selectionToOptionalGraphqlArguments selection
+                        >> windowToOptionalGraphqlArguments window
                     )
+                    { folderId = selectionToFolderId selection }
+                , Nothing
+                )
 
-                SelectByFullTextSearch searchTerm ftsSorting ->
-                    ( Mediatum.Query.ftsDocumentsPage
-                        (\optionals ->
-                            { optionals
-                                | sorting =
-                                    Present
-                                        (case ftsSorting of
-                                            FtsByRank ->
-                                                Mediatum.Enum.FtsSorting.ByRank
+            else
+                ( Mediatum.Query.ftsDocumentsPage
+                    (\optionals ->
+                        { optionals
+                            | sorting =
+                                Present
+                                    (case selection.sorting of
+                                        ByRank ->
+                                            Mediatum.Enum.FtsSorting.ByRank
 
-                                            FtsByDate ->
-                                                Mediatum.Enum.FtsSorting.ByDate
-                                        )
-                            }
-                                |> selectionToOptionalGraphqlArguments selection
-                                |> windowToOptionalGraphqlArguments window
-                        )
-                        { folderId = selectionToFolderId selection
-                        , text = Types.SearchTerm.toString searchTerm
+                                        ByDate ->
+                                            Mediatum.Enum.FtsSorting.ByDate
+                                    )
                         }
-                    , Just searchTerm
+                            |> selectionToOptionalGraphqlArguments selection
+                            |> windowToOptionalGraphqlArguments window
                     )
+                    { folderId = selectionToFolderId selection
+                    , text =
+                        -- The text parameter is mandatory in the current API.
+                        -- Nonetheless we can set is to the empty string as long as we have some ftsFilters.
+                        Maybe.Extra.unwrap "" Types.SearchTerm.toString selection.globalSearch
+                    }
+                , selection.globalSearch
+                )
     in
     query
         (Api.Fragments.documentsPage "nodesmall" maybeSearchTerm)
@@ -317,18 +321,20 @@ selectionFolderCounts :
     Selection
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
 selectionFolderCounts selection =
-    (case selection.selectMethod of
-        SelectByFolderListing ->
-            Mediatum.Query.allDocumentsDocset
-                (selectionToOptionalGraphqlArguments selection)
-                { folderId = selectionToFolderId selection }
+    (if selection.globalSearch == Nothing && FilterList.isEmpty selection.ftsFilters then
+        Mediatum.Query.allDocumentsDocset
+            (selectionToOptionalGraphqlArguments selection)
+            { folderId = selectionToFolderId selection }
 
-        SelectByFullTextSearch searchTerm ftsSorting ->
-            Mediatum.Query.ftsDocumentsDocset
-                (selectionToOptionalGraphqlArguments selection)
-                { folderId = selectionToFolderId selection
-                , text = Types.SearchTerm.toString searchTerm
-                }
+     else
+        Mediatum.Query.ftsDocumentsDocset
+            (selectionToOptionalGraphqlArguments selection)
+            { folderId = selectionToFolderId selection
+            , text =
+                -- The text parameter is mandatory in the current API.
+                -- Nonetheless we can set is to the empty string as long as we have some ftsFilters.
+                Maybe.Extra.unwrap "" Types.SearchTerm.toString selection.globalSearch
+            }
     )
         Api.Fragments.folderAndSubfolderCounts
         |> SelectionSet.nonNullOrFail
@@ -374,18 +380,20 @@ selectionFacets :
     -> Int
     -> SelectionSet FacetsValues Graphql.Operation.RootQuery
 selectionFacets selection aspects limit =
-    (case selection.selectMethod of
-        SelectByFolderListing ->
-            Mediatum.Query.allDocumentsDocset
-                (selectionToOptionalGraphqlArguments selection)
-                { folderId = selectionToFolderId selection }
+    (if selection.globalSearch == Nothing && FilterList.isEmpty selection.ftsFilters then
+        Mediatum.Query.allDocumentsDocset
+            (selectionToOptionalGraphqlArguments selection)
+            { folderId = selectionToFolderId selection }
 
-        SelectByFullTextSearch searchTerm ftsSorting ->
-            Mediatum.Query.ftsDocumentsDocset
-                (selectionToOptionalGraphqlArguments selection)
-                { folderId = selectionToFolderId selection
-                , text = Types.SearchTerm.toString searchTerm
-                }
+     else
+        Mediatum.Query.ftsDocumentsDocset
+            (selectionToOptionalGraphqlArguments selection)
+            { folderId = selectionToFolderId selection
+            , text =
+                -- The text parameter is mandatory in the current API.
+                -- Nonetheless we can set is to the empty string as long as we have some ftsFilters.
+                Maybe.Extra.unwrap "" Types.SearchTerm.toString selection.globalSearch
+            }
     )
         (SelectionSet.dict
             (List.map
@@ -503,14 +511,18 @@ selectionToOptionalGraphqlArguments :
     -> OptionalArgumentsForSelection a
     -> OptionalArgumentsForSelection a
 selectionToOptionalGraphqlArguments selection optionals =
-    { optionals
-        | aspectTests =
-            List.append
-                (Api.Arguments.Filter.ftsFiltersToAspectTests selection.ftsFilters)
-                (Api.Arguments.Filter.facetFiltersToAspectTests selection.facetFilters)
-                |> Api.Arguments.AspectTest.testsAsGraphqlArgument
-                |> Present
-    }
+    if FilterList.isEmpty selection.ftsFilters && FilterList.isEmpty selection.facetFilters then
+        optionals
+
+    else
+        { optionals
+            | aspectTests =
+                List.append
+                    (Api.Arguments.Filter.ftsFiltersToAspectTests selection.ftsFilters)
+                    (Api.Arguments.Filter.facetFiltersToAspectTests selection.facetFilters)
+                    |> Api.Arguments.AspectTest.testsAsGraphqlArgument
+                    |> Present
+        }
 
 
 type alias OptionalArgumentsForWindow a =

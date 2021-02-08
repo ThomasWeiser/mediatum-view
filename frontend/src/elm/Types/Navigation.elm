@@ -12,13 +12,12 @@ module Types.Navigation exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
-import Sort.Dict
 import Types.Aspect exposing (Aspect)
 import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.Route as Route exposing (Route)
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (FtsFilters, FtsSorting)
+import Types.Selection exposing (FtsFilters, GlobalSearch, Sorting)
 
 
 {-| -}
@@ -26,7 +25,7 @@ type Navigation
     = ListOfNavigations (List Navigation)
     | ShowDocument FolderId DocumentId
     | ShowListingWithFolder FolderId
-    | ShowListingWithSearchAndFtsFilter (Maybe SearchTerm) FtsSorting FtsFilters
+    | ShowListingWithSearchAndFtsFilter GlobalSearch Sorting FtsFilters
     | ShowListingWithAddedFacetFilter Aspect String
     | ShowListingWithRemovedFacetFilter Aspect
     | SetOffset Int
@@ -86,12 +85,12 @@ alterRoute cache navigation route =
                         (folderId |> Id.asNodeId)
             }
 
-        ShowListingWithSearchAndFtsFilter maybeFtsTerm ftsSorting ftsFilters ->
+        ShowListingWithSearchAndFtsFilter globalSearch sorting ftsFilters ->
             { listingRoute
                 | parameters =
                     { parametersWithOffset0
-                        | ftsTerm = maybeFtsTerm
-                        , ftsSorting = ftsSorting
+                        | globalSearch = globalSearch
+                        , sorting = sorting
                         , ftsFilters = ftsFilters
                     }
             }

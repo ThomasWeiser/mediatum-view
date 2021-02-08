@@ -70,7 +70,7 @@ import Types.Facet exposing (FacetValues, FacetsValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Needs as Needs
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection as Selection exposing (SelectMethod(..), Selection)
+import Types.Selection as Selection exposing (Selection)
 import Utils
 import Utils.List
 

@@ -1,7 +1,6 @@
 module Tests.Types.Route.Url exposing (suite)
 
 import Expect exposing (Expectation)
-import Sort.Dict
 import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Types.Route
@@ -11,7 +10,7 @@ import Types.Id as Id
 import Types.Route as Route
 import Types.Route.Url
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (FtsSorting(..))
+import Types.Selection exposing (Sorting(..))
 import Url
 import Utils
 
@@ -59,7 +58,7 @@ suite =
                     >> Maybe.andThen Types.Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal Route.NoId
-                        , .parameters >> .ftsTerm >> nothing
+                        , .parameters >> .globalSearch >> nothing
                         , Types.Route.Url.toString >> Expect.equal "/"
                         ]
             , testString "https://example.com/123" <|
@@ -67,8 +66,8 @@ suite =
                     >> Maybe.andThen Types.Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId (Id.fromInt 123))
-                        , .parameters >> .ftsTerm >> nothing
-                        , .parameters >> .ftsSorting >> Expect.equal Route.defaultFtsSorting
+                        , .parameters >> .globalSearch >> nothing
+                        , .parameters >> .sorting >> Expect.equal Route.defaultSorting
                         , .parameters >> .ftsFilters >> FilterList.isEmpty >> Expect.true "Expecting emtpy set of ftsFilters"
                         , .parameters >> .facetFilters >> FilterList.isEmpty >> Expect.true "Expecting emtpy set of facetFilters"
                         , Types.Route.Url.toString >> Expect.equal "/123"
@@ -78,7 +77,7 @@ suite =
                     >> Maybe.andThen Types.Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal Route.NoId
-                        , .parameters >> .ftsTerm >> expectJustSearchTerm "foo"
+                        , .parameters >> .globalSearch >> expectJustSearchTerm "foo"
                         , Types.Route.Url.toString >> Expect.equal "/?search=foo"
                         ]
             , testString "https://example.com/?sort-by=rank" <|
@@ -86,12 +85,12 @@ suite =
                     >> Maybe.andThen Types.Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal Route.NoId
-                        , .parameters >> .ftsTerm >> nothing
-                        , .parameters >> .ftsSorting >> Expect.equal FtsByRank
+                        , .parameters >> .globalSearch >> nothing
+                        , .parameters >> .sorting >> Expect.equal ByRank
                         , Types.Route.Url.toString
                             >> Expect.equal
-                                (Route.defaultFtsSorting
-                                    == FtsByRank
+                                (Route.defaultSorting
+                                    == ByRank
                                     |> Utils.ifElse "/" "/?sort-by=rank"
                                 )
                         ]
@@ -100,12 +99,12 @@ suite =
                     >> Maybe.andThen Types.Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal Route.NoId
-                        , .parameters >> .ftsTerm >> nothing
-                        , .parameters >> .ftsSorting >> Expect.equal FtsByDate
+                        , .parameters >> .globalSearch >> nothing
+                        , .parameters >> .sorting >> Expect.equal ByDate
                         , Types.Route.Url.toString
                             >> Expect.equal
-                                (Route.defaultFtsSorting
-                                    == FtsByDate
+                                (Route.defaultSorting
+                                    == ByDate
                                     |> Utils.ifElse "/" "/?sort-by=date"
                                 )
                         ]
@@ -114,7 +113,7 @@ suite =
                     >> Maybe.andThen Types.Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.TwoIds (Id.fromInt 123) (Id.fromInt 456))
-                        , .parameters >> .ftsTerm >> expectJustSearchTerm "foo"
+                        , .parameters >> .globalSearch >> expectJustSearchTerm "foo"
                         , Types.Route.Url.toString >> Expect.equal "/123/456?search=foo"
                         ]
             , describe "It should remove search terms that are empty"
@@ -122,7 +121,7 @@ suite =
                     Url.fromString
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
-                            [ .parameters >> .ftsTerm >> nothing
+                            [ .parameters >> .globalSearch >> nothing
                             , .parameters >> .offset >> Expect.equal 7
                             , Types.Route.Url.toString >> Expect.equal "/?offset=7"
                             ]
@@ -133,7 +132,7 @@ suite =
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
                             [ .path >> Expect.equal (Route.OneId (Id.fromInt 789))
-                            , .parameters >> .ftsTerm >> expectJustSearchTerm "foo bar"
+                            , .parameters >> .globalSearch >> expectJustSearchTerm "foo bar"
                             , Types.Route.Url.toString >> Expect.equal "/789?search=foo%20bar"
                             ]
                 ]
@@ -142,7 +141,7 @@ suite =
                     Url.fromString
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
-                            [ .parameters >> .ftsTerm >> nothing
+                            [ .parameters >> .globalSearch >> nothing
                             , .parameters >> .offset >> Expect.equal 7
                             ]
                 ]
@@ -170,7 +169,7 @@ suite =
                     Url.fromString
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
-                            [ .parameters >> .ftsTerm >> expectJustSearchTerm "f1 f2"
+                            [ .parameters >> .globalSearch >> expectJustSearchTerm "f1 f2"
                             , .parameters >> .ftsFilters >> FilterList.get (Aspect.fromString "author") >> expectJustSearchTerm "a1 a2"
                             ]
                 ]
@@ -187,7 +186,7 @@ suite =
                     >> Maybe.andThen Types.Route.Url.parseUrl
                     >> justAndThenAll
                         [ .path >> Expect.equal (Route.OneId (Id.fromInt 789))
-                        , .parameters >> .ftsTerm >> nothing
+                        , .parameters >> .globalSearch >> nothing
                         , .parameters >> .ftsFilters >> FilterList.get (Aspect.fromString "title") >> expectJustSearchTerm "foo \"bar baz\""
                         , Types.Route.Url.toString >> Expect.equal "/789?search-title=foo%20%22bar%20baz%22"
                         ]
@@ -197,7 +196,7 @@ suite =
                         >> Maybe.andThen Types.Route.Url.parseUrl
                         >> justAndThenAll
                             [ .path >> Expect.equal (Route.OneId (Id.fromInt 456))
-                            , .parameters >> .ftsTerm >> nothing
+                            , .parameters >> .globalSearch >> nothing
                             ]
                 ]
             ]

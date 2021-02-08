@@ -4,14 +4,14 @@ module Tests.Types exposing
     , fuzzerFacetFilters
     , fuzzerFolderId
     , fuzzerFtsFilters
-    , fuzzerFtsSorting
+    , fuzzerGlobalSearch
     , fuzzerLimit
     , fuzzerNodeId
     , fuzzerOffset
-    , fuzzerSearchMethod
     , fuzzerSelection
     , fuzzerSelectionFacets
     , fuzzerSelectionWindow
+    , fuzzerSorting
     , fuzzerWindow
     , fuzzerYear
     )
@@ -24,7 +24,7 @@ import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types exposing (DocumentIdFromSearch, Window)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.Selection exposing (FacetFilters, FtsFilters, FtsSorting(..), SelectMethod(..), Selection)
+import Types.Selection exposing (FacetFilters, FtsFilters, GlobalSearch, Selection, Sorting(..))
 
 
 fuzzerId : Fuzzer Int
@@ -61,11 +61,12 @@ fuzzerDocumentIdFromSearch =
 
 fuzzerSelection : Fuzzer Selection
 fuzzerSelection =
-    Fuzz.map4 Selection
+    Fuzz.map5 Selection
         fuzzerFolderId
-        fuzzerSearchMethod
+        fuzzerGlobalSearch
         fuzzerFtsFilters
         fuzzerFacetFilters
+        fuzzerSorting
 
 
 fuzzerSelectionWindow : Fuzzer ( Selection, Window )
@@ -95,24 +96,19 @@ fuzzerFacet =
         |> Fuzz.map Aspect.fromString
 
 
-fuzzerSearchMethod : Fuzzer SelectMethod
-fuzzerSearchMethod =
+fuzzerGlobalSearch : Fuzzer GlobalSearch
+fuzzerGlobalSearch =
     Fuzz.frequency
-        [ ( 1, Fuzz.constant SelectByFolderListing )
-        , ( 5
-          , Fuzz.map2
-                SelectByFullTextSearch
-                fuzzerSearchTerm
-                fuzzerFtsSorting
-          )
+        [ ( 1, Fuzz.constant Nothing )
+        , ( 1, Fuzz.map Just fuzzerSearchTerm )
         ]
 
 
-fuzzerFtsSorting : Fuzzer FtsSorting
-fuzzerFtsSorting =
+fuzzerSorting : Fuzzer Sorting
+fuzzerSorting =
     Fuzz.oneOf
-        [ Fuzz.constant FtsByRank
-        , Fuzz.constant FtsByDate
+        [ Fuzz.constant ByRank
+        , Fuzz.constant ByDate
         ]
 
 
