@@ -25,7 +25,7 @@ type Navigation
     = ListOfNavigations (List Navigation)
     | ShowDocument FolderId DocumentId
     | ShowListingWithFolder FolderId
-    | ShowListingWithSearchAndFtsFilter GlobalFts Sorting FtsFilters
+    | ShowListingWithSearchAndFtsFilter GlobalFts FtsFilters Sorting
     | ShowListingWithAddedFacetFilter Aspect String
     | ShowListingWithRemovedFacetFilter Aspect
     | SetOffset Int
@@ -85,7 +85,7 @@ alterRoute cache navigation route =
                         (folderId |> Id.asNodeId)
             }
 
-        ShowListingWithSearchAndFtsFilter globalFts sorting ftsFilters ->
+        ShowListingWithSearchAndFtsFilter globalFts ftsFilters sorting ->
             { listingRoute
                 | parameters =
                     { parametersWithOffset0

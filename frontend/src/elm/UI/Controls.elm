@@ -62,8 +62,8 @@ type Return
 {-| -}
 type alias Model =
     { globalFtsText : String
-    , sorting : Sorting
     , ftsFilterLines : RearrangeableEditList Aspect String
+    , sorting : Sorting
     }
 
 
@@ -71,11 +71,11 @@ type alias Model =
 type Msg
     = SetGlobalFtsText String
     | ClearGlobalFtsText
-    | SetSorting Sorting
     | AddFtsFilter Aspect
     | SetFtsFilterText Aspect String
     | RemoveFtsFilter Aspect
     | RemoveFacetFilter Aspect
+    | SetSorting Sorting
     | Submit
     | SubmitExampleQuery
 
@@ -90,8 +90,8 @@ submitExampleQuery =
 initialModel : Model
 initialModel =
     { globalFtsText = ""
-    , sorting = Types.Route.defaultSorting
     , ftsFilterLines = []
+    , sorting = Types.Route.defaultSorting
     }
 
 
@@ -106,7 +106,6 @@ updateFromRoute route model =
 
                 Just seachTerm ->
                     SearchTerm.toString seachTerm
-        , sorting = route.parameters.sorting
         , ftsFilterLines =
             rearrange
                 (Tuple.second >> String.isEmpty)
@@ -115,6 +114,7 @@ updateFromRoute route model =
                     |> List.map (Tuple.mapSecond SearchTerm.toString)
                 )
                 model.ftsFilterLines
+        , sorting = route.parameters.sorting
     }
 
 
@@ -130,12 +130,6 @@ update context msg model =
 
         ClearGlobalFtsText ->
             ( { model | globalFtsText = "" }
-            , Cmd.none
-            , NoReturn
-            )
-
-        SetSorting sorting ->
-            ( { model | sorting = sorting }
             , Cmd.none
             , NoReturn
             )
@@ -184,6 +178,12 @@ update context msg model =
                 (Navigation.ShowListingWithRemovedFacetFilter aspect)
             )
 
+        SetSorting sorting ->
+            ( { model | sorting = sorting }
+            , Cmd.none
+            , NoReturn
+            )
+
         Submit ->
             ( model
             , Cmd.none
@@ -214,7 +214,6 @@ navigate model =
     Navigate
         (Navigation.ShowListingWithSearchAndFtsFilter
             (SearchTerm.fromString model.globalFtsText)
-            model.sorting
             (model.ftsFilterLines
                 |> List.filterMap
                     (\( aspect, searchText ) ->
@@ -223,6 +222,7 @@ navigate model =
                     )
                 |> Selection.ftsFiltersFromList
             )
+            model.sorting
         )
 
 
