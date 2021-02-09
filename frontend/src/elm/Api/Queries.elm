@@ -247,7 +247,7 @@ selectionDocumentsPage :
 selectionDocumentsPage window selection =
     let
         ( query, maybeSearchTerm ) =
-            if selection.globalSearch == Nothing && FilterList.isEmpty selection.ftsFilters then
+            if selection.globalFts == Nothing && FilterList.isEmpty selection.ftsFilters then
                 ( Mediatum.Query.allDocumentsPage
                     (selectionToOptionalGraphqlArguments selection
                         >> windowToOptionalGraphqlArguments window
@@ -277,9 +277,9 @@ selectionDocumentsPage window selection =
                     , text =
                         -- The text parameter is mandatory in the current API.
                         -- Nonetheless we can set is to the empty string as long as we have some ftsFilters.
-                        Maybe.Extra.unwrap "" Types.SearchTerm.toString selection.globalSearch
+                        Maybe.Extra.unwrap "" Types.SearchTerm.toString selection.globalFts
                     }
-                , selection.globalSearch
+                , selection.globalFts
                 )
     in
     query
@@ -321,7 +321,7 @@ selectionFolderCounts :
     Selection
     -> SelectionSet FolderCounts Graphql.Operation.RootQuery
 selectionFolderCounts selection =
-    (if selection.globalSearch == Nothing && FilterList.isEmpty selection.ftsFilters then
+    (if selection.globalFts == Nothing && FilterList.isEmpty selection.ftsFilters then
         Mediatum.Query.allDocumentsDocset
             (selectionToOptionalGraphqlArguments selection)
             { folderId = selectionToFolderId selection }
@@ -333,7 +333,7 @@ selectionFolderCounts selection =
             , text =
                 -- The text parameter is mandatory in the current API.
                 -- Nonetheless we can set is to the empty string as long as we have some ftsFilters.
-                Maybe.Extra.unwrap "" Types.SearchTerm.toString selection.globalSearch
+                Maybe.Extra.unwrap "" Types.SearchTerm.toString selection.globalFts
             }
     )
         Api.Fragments.folderAndSubfolderCounts
@@ -380,7 +380,7 @@ selectionFacets :
     -> Int
     -> SelectionSet FacetsValues Graphql.Operation.RootQuery
 selectionFacets selection aspects limit =
-    (if selection.globalSearch == Nothing && FilterList.isEmpty selection.ftsFilters then
+    (if selection.globalFts == Nothing && FilterList.isEmpty selection.ftsFilters then
         Mediatum.Query.allDocumentsDocset
             (selectionToOptionalGraphqlArguments selection)
             { folderId = selectionToFolderId selection }
@@ -392,7 +392,7 @@ selectionFacets selection aspects limit =
             , text =
                 -- The text parameter is mandatory in the current API.
                 -- Nonetheless we can set is to the empty string as long as we have some ftsFilters.
-                Maybe.Extra.unwrap "" Types.SearchTerm.toString selection.globalSearch
+                Maybe.Extra.unwrap "" Types.SearchTerm.toString selection.globalFts
             }
     )
         (SelectionSet.dict

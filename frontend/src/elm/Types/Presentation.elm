@@ -73,7 +73,7 @@ fromRoute cache route =
     let
         folderPresentation folderId folderType =
             if
-                route.parameters.globalSearch
+                route.parameters.globalFts
                     == Nothing
                     && FilterList.isEmpty route.parameters.ftsFilters
                     && folderType
@@ -84,7 +84,7 @@ fromRoute cache route =
             else
                 ListingPresentation
                     { scope = folderId
-                    , globalSearch = route.parameters.globalSearch
+                    , globalFts = route.parameters.globalFts
                     , ftsFilters = route.parameters.ftsFilters
                     , facetFilters = route.parameters.facetFilters
                     , sorting = route.parameters.sorting
@@ -121,7 +121,7 @@ fromRoute cache route =
                     DocumentPresentation Nothing
                         (DocumentIdFromSearch
                             (nodeId |> Id.asDocumentId)
-                            route.parameters.globalSearch
+                            route.parameters.globalFts
                         )
 
                 Just (NodeIsFolder folderType) ->
@@ -141,7 +141,7 @@ fromRoute cache route =
                         (Just (nodeIdOne |> Id.asFolderId))
                         (DocumentIdFromSearch
                             (nodeIdTwo |> Id.asDocumentId)
-                            route.parameters.globalSearch
+                            route.parameters.globalFts
                         )
 
                 _ ->
@@ -151,7 +151,7 @@ fromRoute cache route =
                             , Just
                                 (DocumentIdFromSearch
                                     (nodeIdTwo |> Id.asDocumentId)
-                                    route.parameters.globalSearch
+                                    route.parameters.globalFts
                                 )
                             )
                         )

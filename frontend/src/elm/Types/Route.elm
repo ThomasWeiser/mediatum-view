@@ -33,7 +33,7 @@ import Types.Aspect exposing (Aspect)
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection as Selection exposing (FacetFilters, FtsFilters, GlobalSearch, Sorting(..))
+import Types.Selection as Selection exposing (FacetFilters, FtsFilters, GlobalFts, Sorting(..))
 
 
 {-| -}
@@ -64,7 +64,7 @@ type RoutePath
 
 {-| -}
 type alias RouteParameters =
-    { globalSearch : GlobalSearch
+    { globalFts : GlobalFts
     , sorting : Sorting
     , ftsFilters : FtsFilters
     , facetFilters : FacetFilters
@@ -92,7 +92,7 @@ initDocumentInFolder folderId documentId =
 
 emptyParameters : RouteParameters
 emptyParameters =
-    { globalSearch = Nothing
+    { globalFts = Nothing
     , sorting = defaultSorting
     , ftsFilters = Selection.initFtsFilters
     , facetFilters = Selection.initFacetFilters

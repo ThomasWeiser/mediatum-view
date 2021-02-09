@@ -4,7 +4,7 @@ module Tests.Types exposing
     , fuzzerFacetFilters
     , fuzzerFolderId
     , fuzzerFtsFilters
-    , fuzzerGlobalSearch
+    , fuzzerGlobalFts
     , fuzzerLimit
     , fuzzerNodeId
     , fuzzerOffset
@@ -24,7 +24,7 @@ import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types exposing (DocumentIdFromSearch, Window)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.Selection exposing (FacetFilters, FtsFilters, GlobalSearch, Selection, Sorting(..))
+import Types.Selection exposing (FacetFilters, FtsFilters, GlobalFts, Selection, Sorting(..))
 
 
 fuzzerId : Fuzzer Int
@@ -63,7 +63,7 @@ fuzzerSelection : Fuzzer Selection
 fuzzerSelection =
     Fuzz.map5 Selection
         fuzzerFolderId
-        fuzzerGlobalSearch
+        fuzzerGlobalFts
         fuzzerFtsFilters
         fuzzerFacetFilters
         fuzzerSorting
@@ -96,8 +96,8 @@ fuzzerFacet =
         |> Fuzz.map Aspect.fromString
 
 
-fuzzerGlobalSearch : Fuzzer GlobalSearch
-fuzzerGlobalSearch =
+fuzzerGlobalFts : Fuzzer GlobalFts
+fuzzerGlobalFts =
     Fuzz.frequency
         [ ( 1, Fuzz.constant Nothing )
         , ( 1, Fuzz.map Just fuzzerSearchTerm )

@@ -17,7 +17,7 @@ fuzzerRoute =
         )
         (Fuzz.constant RouteParameters
             |> Fuzz.andMap
-                fuzzerGlobalSearch
+                fuzzerGlobalFts
             |> Fuzz.andMap
                 fuzzerSorting
             |> Fuzz.andMap

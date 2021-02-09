@@ -1,12 +1,12 @@
 module Types.Selection exposing
     ( Selection
-    , GlobalSearch
+    , GlobalFts
     , FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
     , FacetFilter, FacetFilters, initFacetFilters
     , Sorting(..)
     , orderingSelection
     , orderingSelectionModuloSorting
-    , orderingGlobalSearch
+    , orderingGlobalFts
     , orderingFtsFilters
     , orderingFacetFilters
     , orderingSorting
@@ -15,7 +15,7 @@ module Types.Selection exposing
 {-| A `Selection` is a specification of the possible parameters when querying a set of documents.
 
 @docs Selection
-@docs GlobalSearch
+@docs GlobalFts
 @docs FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
 @docs FacetFilter, FacetFilters, initFacetFilters
 @docs Sorting
@@ -27,7 +27,7 @@ Define orderings on these types so we can use them as keys in `Sort.Dict`.
 
 @docs orderingSelection
 @docs orderingSelectionModuloSorting
-@docs orderingGlobalSearch
+@docs orderingGlobalFts
 @docs orderingFtsFilters
 @docs orderingFacetFilters
 @docs orderingSorting
@@ -45,7 +45,7 @@ import Utils
 {-| -}
 type alias Selection =
     { scope : FolderId
-    , globalSearch : GlobalSearch
+    , globalFts : GlobalFts
     , ftsFilters : FtsFilters
     , facetFilters : FacetFilters
     , sorting : Sorting
@@ -53,7 +53,7 @@ type alias Selection =
 
 
 {-| -}
-type alias GlobalSearch =
+type alias GlobalFts =
     Maybe SearchTerm
 
 
@@ -107,7 +107,7 @@ orderingSelection : Ordering Selection
 orderingSelection =
     Ordering.byFieldWith Id.ordering .scope
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith orderingGlobalSearch .globalSearch)
+            (Ordering.byFieldWith orderingGlobalFts .globalFts)
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingFtsFilters .ftsFilters)
         |> Ordering.breakTiesWith
@@ -121,7 +121,7 @@ orderingSelectionModuloSorting : Ordering Selection
 orderingSelectionModuloSorting =
     Ordering.byFieldWith Id.ordering .scope
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith orderingGlobalSearch .globalSearch)
+            (Ordering.byFieldWith orderingGlobalFts .globalFts)
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingFtsFilters .ftsFilters)
         |> Ordering.breakTiesWith
@@ -129,8 +129,8 @@ orderingSelectionModuloSorting =
 
 
 {-| -}
-orderingGlobalSearch : Ordering (Maybe SearchTerm)
-orderingGlobalSearch =
+orderingGlobalFts : Ordering (Maybe SearchTerm)
+orderingGlobalFts =
     Utils.maybeOrdering SearchTerm.ordering
 
 

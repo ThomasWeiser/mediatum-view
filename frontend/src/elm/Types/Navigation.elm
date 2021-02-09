@@ -17,7 +17,7 @@ import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.Route as Route exposing (Route)
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection exposing (FtsFilters, GlobalSearch, Sorting)
+import Types.Selection exposing (FtsFilters, GlobalFts, Sorting)
 
 
 {-| -}
@@ -25,7 +25,7 @@ type Navigation
     = ListOfNavigations (List Navigation)
     | ShowDocument FolderId DocumentId
     | ShowListingWithFolder FolderId
-    | ShowListingWithSearchAndFtsFilter GlobalSearch Sorting FtsFilters
+    | ShowListingWithSearchAndFtsFilter GlobalFts Sorting FtsFilters
     | ShowListingWithAddedFacetFilter Aspect String
     | ShowListingWithRemovedFacetFilter Aspect
     | SetOffset Int
@@ -85,11 +85,11 @@ alterRoute cache navigation route =
                         (folderId |> Id.asNodeId)
             }
 
-        ShowListingWithSearchAndFtsFilter globalSearch sorting ftsFilters ->
+        ShowListingWithSearchAndFtsFilter globalFts sorting ftsFilters ->
             { listingRoute
                 | parameters =
                     { parametersWithOffset0
-                        | globalSearch = globalSearch
+                        | globalFts = globalFts
                         , sorting = sorting
                         , ftsFilters = ftsFilters
                     }

@@ -76,9 +76,9 @@ parseQueryParameter ( name, value ) routeParameters =
         "search" ->
             Just
                 { routeParameters
-                    | globalSearch =
+                    | globalFts =
                         SearchTerm.concatMaybes
-                            routeParameters.globalSearch
+                            routeParameters.globalFts
                             (SearchTerm.fromString value)
                 }
 
@@ -168,7 +168,7 @@ toString route =
                 [ id1 |> Id.toString, id2 |> Id.toString ]
         )
         (Maybe.Extra.values
-            [ route.parameters.globalSearch
+            [ route.parameters.globalFts
                 |> Maybe.map
                     (SearchTerm.toString
                         >> Builder.string "search"

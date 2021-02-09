@@ -61,7 +61,7 @@ type Return
 
 {-| -}
 type alias Model =
-    { globalSearchText : String
+    { globalFtsText : String
     , sorting : Sorting
     , ftsFilterLines : RearrangeableEditList Aspect String
     }
@@ -69,8 +69,8 @@ type alias Model =
 
 {-| -}
 type Msg
-    = SetGlobalSearchText String
-    | ClearGlobalSearchText
+    = SetGlobalFtsText String
+    | ClearGlobalFtsText
     | SetSorting Sorting
     | AddFtsFilter Aspect
     | SetFtsFilterText Aspect String
@@ -89,7 +89,7 @@ submitExampleQuery =
 {-| -}
 initialModel : Model
 initialModel =
-    { globalSearchText = ""
+    { globalFtsText = ""
     , sorting = Types.Route.defaultSorting
     , ftsFilterLines = []
     }
@@ -99,8 +99,8 @@ initialModel =
 updateFromRoute : Route -> Model -> Model
 updateFromRoute route model =
     { model
-        | globalSearchText =
-            case route.parameters.globalSearch of
+        | globalFtsText =
+            case route.parameters.globalFts of
                 Nothing ->
                     ""
 
@@ -122,14 +122,14 @@ updateFromRoute route model =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
-        SetGlobalSearchText globalSearchText ->
-            ( { model | globalSearchText = globalSearchText }
+        SetGlobalFtsText globalFtsText ->
+            ( { model | globalFtsText = globalFtsText }
             , Cmd.none
             , NoReturn
             )
 
-        ClearGlobalSearchText ->
-            ( { model | globalSearchText = "" }
+        ClearGlobalFtsText ->
+            ( { model | globalFtsText = "" }
             , Cmd.none
             , NoReturn
             )
@@ -194,7 +194,7 @@ update context msg model =
             let
                 model1 =
                     { model
-                        | globalSearchText = "variable"
+                        | globalFtsText = "variable"
                         , ftsFilterLines =
                             model.ftsFilterLines
                                 |> Utils.List.setOnMapping Tuple.first
@@ -213,7 +213,7 @@ navigate : Model -> Return
 navigate model =
     Navigate
         (Navigation.ShowListingWithSearchAndFtsFilter
-            (SearchTerm.fromString model.globalSearchText)
+            (SearchTerm.fromString model.globalFtsText)
             model.sorting
             (model.ftsFilterLines
                 |> List.filterMap
@@ -248,15 +248,15 @@ viewSearch context model =
                 , Html.Attributes.type_ "search"
                 , Html.Attributes.placeholder
                     (getSearchFieldPlaceholder context)
-                , Html.Attributes.value model.globalSearchText
-                , Html.Events.onInput SetGlobalSearchText
+                , Html.Attributes.value model.globalFtsText
+                , Html.Events.onInput SetGlobalFtsText
                 ]
                 []
             , Html.button
                 [ Html.Attributes.type_ "button"
                 , Html.Attributes.class "clear-input"
-                , Utils.Html.displayNone (model.globalSearchText == "")
-                , Html.Events.onClick ClearGlobalSearchText
+                , Utils.Html.displayNone (model.globalFtsText == "")
+                , Html.Events.onClick ClearGlobalFtsText
                 ]
                 [ UI.Icons.clear ]
             , Html.button
