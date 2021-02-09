@@ -1,6 +1,6 @@
 module Types.Route exposing
     ( defaultLimit
-    , defaultFtsSorting
+    , defaultSorting
     , Route
     , RoutePath(..)
     , RouteParameters
@@ -14,7 +14,7 @@ module Types.Route exposing
 Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Route-Url).
 
 @docs defaultLimit
-@docs defaultFtsSorting
+@docs defaultSorting
 
 @docs Route
 @docs RoutePath
@@ -33,7 +33,7 @@ import Types.Aspect exposing (Aspect)
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
-import Types.Selection as Selection exposing (FacetFilters, FtsFilters, FtsSorting(..))
+import Types.Selection as Selection exposing (FacetFilters, FtsFilters, GlobalFts, Sorting(..))
 
 
 {-| -}
@@ -43,9 +43,9 @@ defaultLimit =
 
 
 {-| -}
-defaultFtsSorting : FtsSorting
-defaultFtsSorting =
-    FtsByRank
+defaultSorting : Sorting
+defaultSorting =
+    ByRank
 
 
 {-| -}
@@ -64,8 +64,8 @@ type RoutePath
 
 {-| -}
 type alias RouteParameters =
-    { ftsTerm : Maybe SearchTerm
-    , ftsSorting : FtsSorting
+    { globalFts : GlobalFts
+    , sorting : Sorting
     , ftsFilters : FtsFilters
     , facetFilters : FacetFilters
     , offset : Int
@@ -92,8 +92,8 @@ initDocumentInFolder folderId documentId =
 
 emptyParameters : RouteParameters
 emptyParameters =
-    { ftsTerm = Nothing
-    , ftsSorting = defaultFtsSorting
+    { globalFts = Nothing
+    , sorting = defaultSorting
     , ftsFilters = Selection.initFtsFilters
     , facetFilters = Selection.initFacetFilters
     , offset = 0

@@ -13,13 +13,12 @@ module Types.Route.Url exposing
 import Erl
 import Maybe.Extra
 import Regex
-import Sort.Dict
 import Types.Aspect as Aspect
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id as Id exposing (NodeId)
 import Types.Route as Route exposing (Route, RouteParameters, RoutePath(..))
 import Types.SearchTerm as SearchTerm
-import Types.Selection exposing (FtsSorting(..))
+import Types.Selection exposing (Sorting(..))
 import Url exposing (Url)
 import Url.Builder as Builder
 import Utils
@@ -77,19 +76,19 @@ parseQueryParameter ( name, value ) routeParameters =
         "search" ->
             Just
                 { routeParameters
-                    | ftsTerm =
+                    | globalFts =
                         SearchTerm.concatMaybes
-                            routeParameters.ftsTerm
+                            routeParameters.globalFts
                             (SearchTerm.fromString value)
                 }
 
         "sort-by" ->
             case value of
                 "rank" ->
-                    Just { routeParameters | ftsSorting = FtsByRank }
+                    Just { routeParameters | sorting = ByRank }
 
                 "date" ->
-                    Just { routeParameters | ftsSorting = FtsByDate }
+                    Just { routeParameters | sorting = ByDate }
 
                 _ ->
                     Nothing
@@ -169,15 +168,15 @@ toString route =
                 [ id1 |> Id.toString, id2 |> Id.toString ]
         )
         (Maybe.Extra.values
-            [ route.parameters.ftsTerm
+            [ route.parameters.globalFts
                 |> Maybe.map
                     (SearchTerm.toString
                         >> Builder.string "search"
                     )
             , buildParameterIfNotDefault
-                (ftsSortingTostring >> Builder.string "sort-by")
-                Route.defaultFtsSorting
-                route.parameters.ftsSorting
+                (sortingTostring >> Builder.string "sort-by")
+                Route.defaultSorting
+                route.parameters.sorting
             ]
             ++ List.map
                 (\( aspect, searchTerm ) ->
@@ -206,13 +205,13 @@ toString route =
         )
 
 
-ftsSortingTostring : FtsSorting -> String
-ftsSortingTostring ftsSorting =
+sortingTostring : Sorting -> String
+sortingTostring ftsSorting =
     case ftsSorting of
-        FtsByRank ->
+        ByRank ->
             "rank"
 
-        FtsByDate ->
+        ByDate ->
             "date"
 
 

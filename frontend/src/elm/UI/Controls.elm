@@ -38,10 +38,9 @@ import Types.Presentation exposing (Presentation(..))
 import Types.RearrangeableEditList exposing (RearrangeableEditList, rearrange)
 import Types.Route exposing (Route)
 import Types.SearchTerm as SearchTerm
-import Types.Selection as Selection exposing (FtsSorting(..))
+import Types.Selection as Selection exposing (Sorting(..))
 import UI.Icons
 import Utils
-import Utils.Html
 import Utils.List
 
 
@@ -61,21 +60,21 @@ type Return
 
 {-| -}
 type alias Model =
-    { ftsTerm : String
-    , ftsSorting : FtsSorting
+    { globalFtsText : String
     , ftsFilterLines : RearrangeableEditList Aspect String
+    , sorting : Sorting
     }
 
 
 {-| -}
 type Msg
-    = SetSearchTerm String
-    | ClearSearchTerm
-    | SetSorting FtsSorting
+    = SetGlobalFtsText String
+    | ClearGlobalFtsText
     | AddFtsFilter Aspect
     | SetFtsFilterText Aspect String
     | RemoveFtsFilter Aspect
     | RemoveFacetFilter Aspect
+    | SetSorting Sorting
     | Submit
     | SubmitExampleQuery
 
@@ -89,9 +88,9 @@ submitExampleQuery =
 {-| -}
 initialModel : Model
 initialModel =
-    { ftsTerm = ""
-    , ftsSorting = Types.Route.defaultFtsSorting
+    { globalFtsText = ""
     , ftsFilterLines = []
+    , sorting = Types.Route.defaultSorting
     }
 
 
@@ -99,14 +98,13 @@ initialModel =
 updateFromRoute : Route -> Model -> Model
 updateFromRoute route model =
     { model
-        | ftsTerm =
-            case route.parameters.ftsTerm of
+        | globalFtsText =
+            case route.parameters.globalFts of
                 Nothing ->
                     ""
 
                 Just seachTerm ->
                     SearchTerm.toString seachTerm
-        , ftsSorting = route.parameters.ftsSorting
         , ftsFilterLines =
             rearrange
                 (Tuple.second >> String.isEmpty)
@@ -115,6 +113,7 @@ updateFromRoute route model =
                     |> List.map (Tuple.mapSecond SearchTerm.toString)
                 )
                 model.ftsFilterLines
+        , sorting = route.parameters.sorting
     }
 
 
@@ -122,22 +121,20 @@ updateFromRoute route model =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
-        SetSearchTerm ftsTerm ->
-            ( { model | ftsTerm = ftsTerm }
+        SetGlobalFtsText globalFtsText ->
+            ( { model | globalFtsText = globalFtsText }
             , Cmd.none
             , NoReturn
             )
 
-        ClearSearchTerm ->
-            ( { model | ftsTerm = "" }
+        ClearGlobalFtsText ->
+            let
+                model1 =
+                    { model | globalFtsText = "" }
+            in
+            ( model1
             , Cmd.none
-            , NoReturn
-            )
-
-        SetSorting ftsSorting ->
-            ( { model | ftsSorting = ftsSorting }
-            , Cmd.none
-            , NoReturn
+            , navigate model1
             )
 
         AddFtsFilter aspect ->
@@ -184,6 +181,12 @@ update context msg model =
                 (Navigation.ShowListingWithRemovedFacetFilter aspect)
             )
 
+        SetSorting sorting ->
+            ( { model | sorting = sorting }
+            , Cmd.none
+            , NoReturn
+            )
+
         Submit ->
             ( model
             , Cmd.none
@@ -194,7 +197,7 @@ update context msg model =
             let
                 model1 =
                     { model
-                        | ftsTerm = "variable"
+                        | globalFtsText = "variable"
                         , ftsFilterLines =
                             model.ftsFilterLines
                                 |> Utils.List.setOnMapping Tuple.first
@@ -213,8 +216,7 @@ navigate : Model -> Return
 navigate model =
     Navigate
         (Navigation.ShowListingWithSearchAndFtsFilter
-            (SearchTerm.fromString model.ftsTerm)
-            model.ftsSorting
+            (SearchTerm.fromString model.globalFtsText)
             (model.ftsFilterLines
                 |> List.filterMap
                     (\( aspect, searchText ) ->
@@ -223,6 +225,7 @@ navigate model =
                     )
                 |> Selection.ftsFiltersFromList
             )
+            model.sorting
         )
 
 
@@ -235,6 +238,7 @@ view context model =
             [ viewSearch context model
             , viewFtsFilters model
             , viewFacetFilters context
+            , viewSearchButtons model
             ]
         ]
 
@@ -242,44 +246,53 @@ view context model =
 viewSearch : Context -> Model -> Html Msg
 viewSearch context model =
     Html.div [ Html.Attributes.class "search-bar" ]
-        [ Html.span [ Html.Attributes.class "input-group" ]
+        [ Html.label
+            [ Html.Attributes.class "search-label" ]
+            [ Html.text "metadata & fulltext" ]
+        , Html.span [ Html.Attributes.class "input-group" ]
             [ Html.input
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
                 , Html.Attributes.placeholder
                     (getSearchFieldPlaceholder context)
-                , Html.Attributes.value model.ftsTerm
-                , Html.Events.onInput SetSearchTerm
+                , Html.Attributes.value model.globalFtsText
+                , Html.Events.onInput SetGlobalFtsText
                 ]
                 []
             , Html.button
                 [ Html.Attributes.type_ "button"
                 , Html.Attributes.class "clear-input"
-                , Utils.Html.displayNone (model.ftsTerm == "")
-                , Html.Events.onClick ClearSearchTerm
+                , Html.Attributes.disabled (model.globalFtsText == "")
+                , Html.Events.onClick ClearGlobalFtsText
                 ]
                 [ UI.Icons.clear ]
-            , Html.button
-                [ Html.Attributes.type_ "submit"
-                , Html.Attributes.classList
-                    [ ( "selected"
-                      , model.ftsSorting == FtsByRank
-                      )
-                    ]
-                , Html.Events.onClick (SetSorting FtsByRank)
-                ]
-                [ UI.Icons.search, Html.text " By Rank" ]
-            , Html.button
-                [ Html.Attributes.type_ "submit"
-                , Html.Attributes.classList
-                    [ ( "selected"
-                      , model.ftsSorting == FtsByDate
-                      )
-                    ]
-                , Html.Events.onClick (SetSorting FtsByDate)
-                ]
-                [ UI.Icons.search, Html.text " By Date" ]
             ]
+        ]
+
+
+viewSearchButtons : Model -> Html Msg
+viewSearchButtons model =
+    Html.div [ Html.Attributes.class "submit-buttons" ]
+        [ Html.button
+            [ Html.Attributes.type_ "submit"
+            , Html.Attributes.classList
+                [ ( "selected"
+                  , model.sorting == ByRank
+                  )
+                ]
+            , Html.Events.onClick (SetSorting ByRank)
+            ]
+            [ UI.Icons.search, Html.text " By Rank" ]
+        , Html.button
+            [ Html.Attributes.type_ "submit"
+            , Html.Attributes.classList
+                [ ( "selected"
+                  , model.sorting == ByDate
+                  )
+                ]
+            , Html.Events.onClick (SetSorting ByDate)
+            ]
+            [ UI.Icons.search, Html.text " By Date" ]
         ]
 
 

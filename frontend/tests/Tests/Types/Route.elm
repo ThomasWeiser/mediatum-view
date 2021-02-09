@@ -2,9 +2,8 @@ module Tests.Types.Route exposing (fuzzerRoute)
 
 import Fuzz exposing (Fuzzer)
 import Tests.Types exposing (..)
-import Tests.Types.SearchTerm exposing (fuzzerSearchTerm)
 import Types.Route as Route exposing (Route, RouteParameters)
-import Types.Selection exposing (FtsSorting(..))
+import Types.Selection exposing (Sorting(..))
 
 
 fuzzerRoute : Fuzzer Route
@@ -18,11 +17,9 @@ fuzzerRoute =
         )
         (Fuzz.constant RouteParameters
             |> Fuzz.andMap
-                (fuzzerSearchTerm
-                    |> Fuzz.maybe
-                )
+                fuzzerGlobalFts
             |> Fuzz.andMap
-                (Fuzz.oneOf [ Fuzz.constant FtsByRank, Fuzz.constant FtsByDate ])
+                fuzzerSorting
             |> Fuzz.andMap
                 Tests.Types.fuzzerFtsFilters
             |> Fuzz.andMap

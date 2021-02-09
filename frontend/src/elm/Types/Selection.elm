@@ -1,24 +1,24 @@
 module Types.Selection exposing
     ( Selection
-    , SelectMethod(..)
-    , FtsSorting(..)
-    , FacetFilter, FacetFilters, initFacetFilters
+    , GlobalFts
     , FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
+    , FacetFilter, FacetFilters, initFacetFilters
+    , Sorting(..)
     , orderingSelection
     , orderingSelectionModuloSorting
-    , orderingSelectMethod
-    , orderingFtsSorting
+    , orderingGlobalFts
     , orderingFtsFilters
     , orderingFacetFilters
+    , orderingSorting
     )
 
 {-| A `Selection` is a specification of the possible parameters when querying a set of documents.
 
 @docs Selection
-@docs SelectMethod
-@docs FtsSorting
-@docs FacetFilter, FacetFilters, initFacetFilters
+@docs GlobalFts
 @docs FtsFilter, FtsFilters, initFtsFilters, ftsFiltersFromList
+@docs FacetFilter, FacetFilters, initFacetFilters
+@docs Sorting
 
 
 # Orderings
@@ -27,10 +27,10 @@ Define orderings on these types so we can use them as keys in `Sort.Dict`.
 
 @docs orderingSelection
 @docs orderingSelectionModuloSorting
-@docs orderingSelectMethod
-@docs orderingFtsSorting
+@docs orderingGlobalFts
 @docs orderingFtsFilters
 @docs orderingFacetFilters
+@docs orderingSorting
 
 -}
 
@@ -39,28 +39,28 @@ import Types.Aspect exposing (Aspect)
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id as Id exposing (FolderId)
 import Types.SearchTerm as SearchTerm exposing (SearchTerm)
+import Utils
 
 
 {-| -}
 type alias Selection =
     { scope : FolderId
-    , selectMethod : SelectMethod
+    , globalFts : GlobalFts
     , ftsFilters : FtsFilters
     , facetFilters : FacetFilters
+    , sorting : Sorting
     }
 
 
-{-| Do we want a full-text search or do we want to list a directory of documents?
--}
-type SelectMethod
-    = SelectByFolderListing
-    | SelectByFullTextSearch SearchTerm FtsSorting
+{-| -}
+type alias GlobalFts =
+    Maybe SearchTerm
 
 
 {-| -}
-type FtsSorting
-    = FtsByRank
-    | FtsByDate
+type Sorting
+    = ByRank
+    | ByDate
 
 
 {-| -}
@@ -107,11 +107,13 @@ orderingSelection : Ordering Selection
 orderingSelection =
     Ordering.byFieldWith Id.ordering .scope
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith orderingSelectMethod .selectMethod)
+            (Ordering.byFieldWith orderingGlobalFts .globalFts)
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingFtsFilters .ftsFilters)
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingFacetFilters .facetFilters)
+        |> Ordering.breakTiesWith
+            (Ordering.byFieldWith orderingSorting .sorting)
 
 
 {-| -}
@@ -119,7 +121,7 @@ orderingSelectionModuloSorting : Ordering Selection
 orderingSelectionModuloSorting =
     Ordering.byFieldWith Id.ordering .scope
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith orderingSelectMethodModuloSorting .selectMethod)
+            (Ordering.byFieldWith orderingGlobalFts .globalFts)
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith orderingFtsFilters .ftsFilters)
         |> Ordering.breakTiesWith
@@ -127,60 +129,16 @@ orderingSelectionModuloSorting =
 
 
 {-| -}
-orderingSelectMethod : Ordering SelectMethod
-orderingSelectMethod =
-    Ordering.byRank
-        (\selectMethod ->
-            case selectMethod of
-                SelectByFolderListing ->
-                    1
-
-                SelectByFullTextSearch _ _ ->
-                    2
-        )
-        (\searchMethodL searchMethodR ->
-            case
-                ( searchMethodL, searchMethodR )
-            of
-                ( SelectByFullTextSearch searchTermL ftsSortingL, SelectByFullTextSearch searchTermR ftsSortingR ) ->
-                    SearchTerm.ordering searchTermL searchTermR
-                        |> Ordering.ifStillTiedThen
-                            (orderingFtsSorting ftsSortingL ftsSortingR)
-
-                _ ->
-                    Ordering.noConflicts
-        )
+orderingGlobalFts : Ordering (Maybe SearchTerm)
+orderingGlobalFts =
+    Utils.maybeOrdering SearchTerm.ordering
 
 
 {-| -}
-orderingSelectMethodModuloSorting : Ordering SelectMethod
-orderingSelectMethodModuloSorting =
-    Ordering.byRank
-        (\selectMethod ->
-            case selectMethod of
-                SelectByFolderListing ->
-                    1
-
-                SelectByFullTextSearch _ _ ->
-                    2
-        )
-        (\searchMethodL searchMethodR ->
-            case
-                ( searchMethodL, searchMethodR )
-            of
-                ( SelectByFullTextSearch searchTermL ftsSortingL, SelectByFullTextSearch searchTermR ftsSortingR ) ->
-                    SearchTerm.ordering searchTermL searchTermR
-
-                _ ->
-                    Ordering.noConflicts
-        )
-
-
-{-| -}
-orderingFtsSorting : Ordering FtsSorting
-orderingFtsSorting =
+orderingSorting : Ordering Sorting
+orderingSorting =
     Ordering.explicit
-        [ FtsByRank, FtsByDate ]
+        [ ByRank, ByDate ]
 
 
 {-| -}
