@@ -41,7 +41,6 @@ import Types.SearchTerm as SearchTerm
 import Types.Selection as Selection exposing (Sorting(..))
 import UI.Icons
 import Utils
-import Utils.Html
 import Utils.List
 
 
@@ -129,9 +128,13 @@ update context msg model =
             )
 
         ClearGlobalFtsText ->
-            ( { model | globalFtsText = "" }
+            let
+                model1 =
+                    { model | globalFtsText = "" }
+            in
+            ( model1
             , Cmd.none
-            , NoReturn
+            , navigate model1
             )
 
         AddFtsFilter aspect ->
