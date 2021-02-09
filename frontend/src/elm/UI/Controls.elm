@@ -235,6 +235,7 @@ view context model =
             [ viewSearch context model
             , viewFtsFilters model
             , viewFacetFilters context
+            , viewSearchButtons model
             ]
         ]
 
@@ -242,7 +243,10 @@ view context model =
 viewSearch : Context -> Model -> Html Msg
 viewSearch context model =
     Html.div [ Html.Attributes.class "search-bar" ]
-        [ Html.span [ Html.Attributes.class "input-group" ]
+        [ Html.label
+            [ Html.Attributes.class "search-label" ]
+            [ Html.text "metadata & fulltext" ]
+        , Html.span [ Html.Attributes.class "input-group" ]
             [ Html.input
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
@@ -255,31 +259,37 @@ viewSearch context model =
             , Html.button
                 [ Html.Attributes.type_ "button"
                 , Html.Attributes.class "clear-input"
-                , Utils.Html.displayNone (model.globalFtsText == "")
+                , Html.Attributes.disabled (model.globalFtsText == "")
                 , Html.Events.onClick ClearGlobalFtsText
                 ]
                 [ UI.Icons.clear ]
-            , Html.button
-                [ Html.Attributes.type_ "submit"
-                , Html.Attributes.classList
-                    [ ( "selected"
-                      , model.sorting == ByRank
-                      )
-                    ]
-                , Html.Events.onClick (SetSorting ByRank)
-                ]
-                [ UI.Icons.search, Html.text " By Rank" ]
-            , Html.button
-                [ Html.Attributes.type_ "submit"
-                , Html.Attributes.classList
-                    [ ( "selected"
-                      , model.sorting == ByDate
-                      )
-                    ]
-                , Html.Events.onClick (SetSorting ByDate)
-                ]
-                [ UI.Icons.search, Html.text " By Date" ]
             ]
+        ]
+
+
+viewSearchButtons : Model -> Html Msg
+viewSearchButtons model =
+    Html.div [ Html.Attributes.class "submit-buttons" ]
+        [ Html.button
+            [ Html.Attributes.type_ "submit"
+            , Html.Attributes.classList
+                [ ( "selected"
+                  , model.sorting == ByRank
+                  )
+                ]
+            , Html.Events.onClick (SetSorting ByRank)
+            ]
+            [ UI.Icons.search, Html.text " By Rank" ]
+        , Html.button
+            [ Html.Attributes.type_ "submit"
+            , Html.Attributes.classList
+                [ ( "selected"
+                  , model.sorting == ByDate
+                  )
+                ]
+            , Html.Events.onClick (SetSorting ByDate)
+            ]
+            [ UI.Icons.search, Html.text " By Date" ]
         ]
 
 

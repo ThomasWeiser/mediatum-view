@@ -92,6 +92,9 @@ article {
   background: none;
   border: none;
 }
+.submit-buttons {
+  text-align: right;
+}
 /*
 .input-group > * {
   border-radius: 0;
