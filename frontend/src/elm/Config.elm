@@ -1,6 +1,5 @@
 module Config exposing
     ( apiUrl, graphqlOperationNamePrefix
-    , pageSize
     , facetValuesToQuery
     , validFacetAspects, validFtsAspects
     )
@@ -8,7 +7,6 @@ module Config exposing
 {-| Configurable values
 
 @docs apiUrl, graphqlOperationNamePrefix
-@docs pageSize
 @docs facetValuesToQuery
 @docs validFacetAspects, validFtsAspects
 
@@ -32,14 +30,6 @@ For operation names see: <https://graphql.org/learn/queries/#operation-name>
 graphqlOperationNamePrefix : String
 graphqlOperationNamePrefix =
     "mediatumView_"
-
-
-{-| Number of results per page used for pagination.
-Currently hard-coded.
--}
-pageSize : Int
-pageSize =
-    10
 
 
 {-| Number of results per page used for pagination.

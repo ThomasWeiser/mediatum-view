@@ -21,6 +21,7 @@ import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation exposing (Presentation(..))
 import Types.Route as Route exposing (Route)
+import Types.ServerConfig as ServerConfig exposing (ServerConfig)
 import UI.Article
 import UI.Controls
 import UI.Facets
@@ -31,7 +32,8 @@ import UI.Tree
 {-| Context data provided by the parent module [`App`](App). Used by several functions here.
 -}
 type alias Context =
-    { cache : Cache
+    { serverConfig : ServerConfig
+    , cache : Cache
     , route : Route
     , presentation : Presentation
     }
@@ -204,7 +206,8 @@ update context msg model =
             let
                 ( subModel, subCmd, subReturn ) =
                     UI.Article.update
-                        { cache = context.cache
+                        { serverConfig = context.serverConfig
+                        , cache = context.cache
                         , route = context.route
                         , presentation = context.presentation
                         }
@@ -270,7 +273,8 @@ view context model =
                         }
                         model.tree
                         (UI.Article.folderCountsForQuery
-                            { cache = context.cache
+                            { serverConfig = context.serverConfig
+                            , cache = context.cache
                             , route = context.route
                             , presentation = context.presentation
                             }
@@ -285,7 +289,8 @@ view context model =
                 ]
             , Html.map ArticleMsg <|
                 UI.Article.view
-                    { cache = context.cache
+                    { serverConfig = context.serverConfig
+                    , cache = context.cache
                     , route = context.route
                     , presentation = context.presentation
                     }

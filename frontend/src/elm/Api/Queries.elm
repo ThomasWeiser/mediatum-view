@@ -1,5 +1,6 @@
 module Api.Queries exposing
-    ( toplevelFolders, folders, subfolders
+    ( serverConfig
+    , toplevelFolders, folders, subfolders
     , selectionDocumentsPage, selectionFolderCounts, selectionFacets
     , documentDetails
     , genericNode, authorSearch
@@ -15,6 +16,11 @@ for nested subqueries.
 We will use the GraphQL fragment notation for denoting this embedding.
 In reality it's just function calling.
 (The `elm-graphql` package won't use the fragment notation.)
+
+
+# Server Config
+
+@docs serverConfig
 
 
 # Folder Queries
@@ -56,6 +62,8 @@ import Maybe.Extra
 import Mediatum.Enum.FtsSorting
 import Mediatum.InputObject
 import Mediatum.Object
+import Mediatum.Object.Config
+import Mediatum.Object.ConfigDefault
 import Mediatum.Object.FoldersConnection
 import Mediatum.Object.GenericNode
 import Mediatum.Query
@@ -69,6 +77,47 @@ import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm
 import Types.Selection exposing (Selection, Sorting(..))
+import Types.ServerConfig as ServerConfig exposing (ServerConfig)
+
+
+{-| -}
+serverConfig : SelectionSet ServerConfig Graphql.Operation.RootQuery
+serverConfig =
+    Mediatum.Query.config
+        (\optionals ->
+            { optionals
+                | application = Present "hsb" -- TODO Move this string constant to some gonfig file
+            }
+        )
+        (SelectionSet.succeed ServerConfig.ServerConfig
+            |> SelectionSet.with
+                (Mediatum.Object.Config.defaults
+                    (SelectionSet.succeed ServerConfig.Defaults
+                        |> SelectionSet.with
+                            (Mediatum.Object.ConfigDefault.limit
+                                |> SelectionSet.nonNullOrFail
+                            )
+                        |> SelectionSet.with
+                            (Mediatum.Object.ConfigDefault.sortBy
+                                |> SelectionSet.nonNullOrFail
+                                |> SelectionSet.mapOrFail
+                                    (\sortByString ->
+                                        case sortByString of
+                                            "rank" ->
+                                                Ok ByRank
+
+                                            "date" ->
+                                                Ok ByDate
+
+                                            _ ->
+                                                Err ("unknown sortBy value: " ++ sortByString)
+                                    )
+                            )
+                    )
+                    |> SelectionSet.nonNullOrFail
+                )
+        )
+        |> SelectionSet.nonNullOrFail
 
 
 {-| Get the root folders and their sub-folders.
@@ -436,15 +485,16 @@ _GraphQL notation:_
 
 -}
 authorSearch :
-    Maybe (Pagination.Relay.Page.Page Document)
+    ServerConfig.Defaults
+    -> Maybe (Pagination.Relay.Page.Page Document)
     -> Pagination.Relay.Pagination.Position
     -> FolderId
     -> String
     -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-authorSearch referencePage paginationPosition folderId searchString =
+authorSearch serverConfigDefaults referencePage paginationPosition folderId searchString =
     Mediatum.Query.authorSearch
         (Pagination.Relay.Pagination.paginationArguments
-            Config.pageSize
+            serverConfigDefaults.pageSize
             referencePage
             paginationPosition
         )

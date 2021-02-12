@@ -40,13 +40,15 @@ import Types.Navigation as Navigation exposing (Navigation)
 import Types.Route as Route
 import Types.Route.Url
 import Types.Selection exposing (Selection)
+import Types.ServerConfig as ServerConfig exposing (ServerConfig)
 import UI.Icons
 import Utils.Html
 
 
 {-| -}
 type alias Context =
-    { cache : Cache
+    { serverConfig : ServerConfig
+    , cache : Cache
     , selection : Selection
     , window : Window
     }
@@ -230,9 +232,10 @@ viewDocument context number document =
             , Html.a
                 [ Html.Attributes.class "metadatatype"
                 , Route.initDocumentInFolder
+                    context.serverConfig.defaults
                     context.selection.scope
                     document.id
-                    |> Types.Route.Url.toString
+                    |> Types.Route.Url.toString context.serverConfig.defaults
                     |> Html.Attributes.href
                 ]
                 [ Html.text document.metadatatypeName ]

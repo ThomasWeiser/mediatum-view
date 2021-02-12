@@ -1,6 +1,5 @@
 module Types.Route exposing
-    ( defaultLimit
-    , defaultSorting
+    ( defaultSorting
     , Route
     , RoutePath(..)
     , RouteParameters
@@ -34,12 +33,7 @@ import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection as Selection exposing (FacetFilters, FtsFilters, GlobalFts, Sorting(..))
-
-
-{-| -}
-defaultLimit : Int
-defaultLimit =
-    10
+import Types.ServerConfig as ServerConfig exposing (ServerConfig)
 
 
 {-| -}
@@ -74,30 +68,30 @@ type alias RouteParameters =
 
 
 {-| -}
-initHome : Route
-initHome =
+initHome : ServerConfig.Defaults -> Route
+initHome serverConfigDefaults =
     { path = NoId
-    , parameters = emptyParameters
+    , parameters = emptyParameters serverConfigDefaults
     }
 
 
 {-| A route to a document within a folder without any further parameters.
 -}
-initDocumentInFolder : FolderId -> DocumentId -> Route
-initDocumentInFolder folderId documentId =
+initDocumentInFolder : ServerConfig.Defaults -> FolderId -> DocumentId -> Route
+initDocumentInFolder serverConfigDefaults folderId documentId =
     { path = TwoIds (Types.Id.asNodeId folderId) (Types.Id.asNodeId documentId)
-    , parameters = emptyParameters
+    , parameters = emptyParameters serverConfigDefaults
     }
 
 
-emptyParameters : RouteParameters
-emptyParameters =
+emptyParameters : ServerConfig.Defaults -> RouteParameters
+emptyParameters serverConfigDefaults =
     { globalFts = Nothing
     , sorting = defaultSorting
     , ftsFilters = Selection.initFtsFilters
     , facetFilters = Selection.initFacetFilters
     , offset = 0
-    , limit = defaultLimit
+    , limit = serverConfigDefaults.pageSize
     }
 
 

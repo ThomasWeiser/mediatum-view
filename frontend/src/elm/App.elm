@@ -1,12 +1,13 @@
 module App exposing
     ( Return(..), Model, Msg
-    , init, requestNeeds, updateRoute, update, view
+    , initEmptyModel, requestNeeds, update, view
+    , initFromServerConfigAndRoute, updateModelFromRoute
     )
 
 {-| Top-level module managing the interaction of the `Route`, the `Cache` and the `UI` components.
 
 @docs Return, Model, Msg
-@docs init, requestNeeds, updateRoute, update, view
+@docs initEmptyModel, initFromRoute, requestNeeds, updateRoute, update, view
 
 -}
 
@@ -18,6 +19,7 @@ import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation as Presentation exposing (Presentation(..))
 import Types.Route as Route exposing (Route)
+import Types.ServerConfig as ServerConfig exposing (ServerConfig)
 import UI
 
 
@@ -40,7 +42,8 @@ Finally there is some [`DebugInfo`](Types-DebugInfo) here for inspection by the 
 
 -}
 type alias Model =
-    { route : Route
+    { serverConfig : ServerConfig
+    , route : Route
     , cache : Cache
     , presentation : Presentation
     , ui : UI.Model
@@ -57,24 +60,38 @@ type Msg
     | UIMsg UI.Msg
 
 
+{-| Initialize the model with no knowledge of route or content.
+-}
+initEmptyModel : Model
+initEmptyModel =
+    { serverConfig = ServerConfig.init
+    , route = Route.initHome ServerConfig.init.defaults
+    , cache = Cache.init
+    , presentation = GenericPresentation Nothing
+    , ui = UI.init
+    , debugInfo = { needs = debugInfo Types.Needs.none }
+    }
+
+
 {-| Initialize the model with the given route and request the corresponding needs.
 -}
-init : Route -> ( Model, Cmd Msg )
-init route =
-    { route = Route.initHome
+initFromServerConfigAndRoute : ServerConfig -> Route -> ( Model, Cmd Msg )
+initFromServerConfigAndRoute serverConfig route =
+    { serverConfig = serverConfig
+    , route = Route.initHome serverConfig.defaults
     , cache = Cache.init
     , presentation = GenericPresentation Nothing
     , ui = UI.init
     , debugInfo = { needs = debugInfo Types.Needs.none }
     }
         |> requestNeeds
-        |> Cmd.Extra.andThen (updateRoute route >> Cmd.Extra.withNoCmd)
+        |> Cmd.Extra.andThen (updateModelFromRoute route >> Cmd.Extra.withNoCmd)
 
 
 {-| Store a changed route and update the UI accordingly.
 -}
-updateRoute : Route -> Model -> Model
-updateRoute route model =
+updateModelFromRoute : Route -> Model -> Model
+updateModelFromRoute route model =
     let
         model1 =
             { model | route = route }
@@ -161,7 +178,7 @@ update msg model =
                                 navigation
                                 model1.route
                     in
-                    ( updateRoute route model1
+                    ( updateModelFromRoute route model1
                     , ReflectRoute route
                     )
     in
@@ -233,7 +250,8 @@ view model =
 
 uiContext : Model -> UI.Context
 uiContext model =
-    { cache = model.cache
+    { serverConfig = model.serverConfig
+    , cache = model.cache
     , route = model.route
     , presentation = model.presentation
     }

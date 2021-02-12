@@ -19,13 +19,15 @@ import Types.Id exposing (FolderId)
 import Types.Navigation as Navigation
 import Types.Route exposing (Route)
 import Types.Route.Url
+import Types.ServerConfig as ServerConfig exposing (ServerConfig)
 import Utils.List
 
 
 {-| -}
 type alias Context c =
     { c
-        | cache : Cache
+        | serverConfig : ServerConfig
+        , cache : Cache
         , route : Route
     }
 
@@ -59,7 +61,7 @@ view context maybeLineage =
                                                     |> Navigation.alterRoute
                                                         context.cache
                                                         (Navigation.ShowListingWithFolder folderId)
-                                                    |> Types.Route.Url.toString
+                                                    |> Types.Route.Url.toString context.serverConfig.defaults
                                                     |> Html.Attributes.href
                                                 ]
                                                 [ Html.text folder.name ]

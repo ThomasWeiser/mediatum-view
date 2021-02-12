@@ -19,14 +19,15 @@ import Types.Id as Id exposing (NodeId)
 import Types.Route as Route exposing (Route, RouteParameters, RoutePath(..))
 import Types.SearchTerm as SearchTerm
 import Types.Selection exposing (Sorting(..))
+import Types.ServerConfig as ServerConfig
 import Url exposing (Url)
 import Url.Builder as Builder
 import Utils
 
 
 {-| -}
-parseUrl : Url -> Maybe Route
-parseUrl url =
+parseUrl : ServerConfig.Defaults -> Url -> Maybe Route
+parseUrl serverConfigDefaults url =
     let
         erl : Erl.Url
         erl =
@@ -34,7 +35,7 @@ parseUrl url =
     in
     Maybe.map2 Route
         (parsePath erl.path)
-        (parseQuery erl.query)
+        (parseQuery erl.query (Route.initHome serverConfigDefaults |> .parameters))
 
 
 parsePath : List String -> Maybe RoutePath
@@ -61,13 +62,14 @@ idFromString =
             (Utils.ensure Id.isValidId)
 
 
-parseQuery : List ( String, String ) -> Maybe RouteParameters
-parseQuery =
+parseQuery : List ( String, String ) -> RouteParameters -> Maybe RouteParameters
+parseQuery listOfParameters initRouteParameters =
     List.foldl
         (\param ->
             Maybe.andThen (parseQueryParameter param)
         )
-        (Just (.parameters Route.initHome))
+        (Just initRouteParameters)
+        listOfParameters
 
 
 parseQueryParameter : ( String, String ) -> RouteParameters -> Maybe RouteParameters
@@ -154,8 +156,8 @@ regexHasOrSearchAspect =
 
 
 {-| -}
-toString : Route -> String
-toString route =
+toString : ServerConfig.Defaults -> Route -> String
+toString serverConfigDefaults route =
     Builder.absolute
         (case route.path of
             NoId ->
@@ -199,7 +201,7 @@ toString route =
                     route.parameters.offset
                 , buildParameterIfNotDefault
                     (Builder.int "limit")
-                    Route.defaultLimit
+                    serverConfigDefaults.pageSize
                     route.parameters.limit
                 ]
         )
