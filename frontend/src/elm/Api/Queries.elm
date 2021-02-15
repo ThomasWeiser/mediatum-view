@@ -66,7 +66,6 @@ import Mediatum.Object.FoldersConnection
 import Mediatum.Object.GenericNode
 import Mediatum.Object.Setup
 import Mediatum.Object.SetupConfig
-import Mediatum.Object.SetupServer
 import Mediatum.Query
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
@@ -90,20 +89,6 @@ serverSetup =
         , clientVersion = "1.0"
         }
         (SelectionSet.succeed ServerSetup.ServerSetup
-            |> SelectionSet.with
-                (Mediatum.Object.Setup.server
-                    (SelectionSet.succeed ServerSetup.Server
-                        |> SelectionSet.with
-                            (Mediatum.Object.SetupServer.apiVersion
-                                |> SelectionSet.nonNullOrFail
-                            )
-                        |> SelectionSet.with
-                            (Mediatum.Object.SetupServer.serverName
-                                |> SelectionSet.nonNullOrFail
-                            )
-                    )
-                    |> SelectionSet.nonNullOrFail
-                )
             |> SelectionSet.with
                 (Mediatum.Object.Setup.config
                     (SelectionSet.succeed ServerSetup.Config

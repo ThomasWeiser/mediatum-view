@@ -3,22 +3,11 @@
 -- regarding configuration
 
 create type api.setup as
-    ( "application" text
+    ( application text
     , client_name text
     , client_version text
     );
 -- TODO: Hide these fields of api.setup from API at this level.
-
-create type api.setup_client as
-    ( "application" text
-    , client_name text
-    , client_version text
-    );
-
-create type api.setup_server as
-    ( api_version integer
-    , server_name text
-    );
 
 create type api.ltext as
     ( en text
@@ -59,27 +48,6 @@ create or replace function api.setup
 	    end case;
     end;
 $$ language plpgsql strict stable;
-
-create or replace function api.setup_client
-    ( setup api.setup
-    )
-    returns api.setup_client
-    as $$
-    select
-        setup."application" as "application",
-        setup.client_name as client_name,
-        setup.client_version as client_version
-$$ language sql stable;
-
-create or replace function api.setup_server
-    ( setup api.setup
-    )
-    returns api.setup_server
-    as $$
-    select
-        1 as api_version,
-        'mediatum' as server_name
-$$ language sql stable;
 
 create or replace function api.setup_config
     ( setup api.setup
