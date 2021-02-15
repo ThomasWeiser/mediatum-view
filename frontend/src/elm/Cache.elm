@@ -53,7 +53,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 import Api
 import Api.Queries
 import Basics.Extra
-import Config
+import Constants
 import Entities.Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder)
@@ -66,6 +66,7 @@ import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (DocumentIdFromSearch, NodeType(..), Window)
 import Types.Aspect as Aspect exposing (Aspect)
+import Types.Config exposing (Config)
 import Types.Facet exposing (FacetValues, FacetsValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Needs as Needs
@@ -187,11 +188,11 @@ type Msg
 {-| Check which of the needed data has not yet been requested.
 Submit API requests to get that data and mark the corresponding cache entries as `RemoteData.Loading`.
 -}
-targetNeeds : Needs -> Cache -> ( Cache, Cmd Msg )
-targetNeeds needs cache =
+targetNeeds : Config -> Needs -> Cache -> ( Cache, Cmd Msg )
+targetNeeds config needs cache =
     Needs.target
         (statusOfNeed cache)
-        requestNeed
+        (requestNeed config)
         needs
         cache
 
@@ -241,8 +242,8 @@ Will be called only for needs that are known not to be in progress or fulfilled 
 Also mark the corresponding cache entries as `RemoteData.Loading`.
 
 -}
-requestNeed : Need -> Cache -> ( Cache, Cmd Msg )
-requestNeed need cache =
+requestNeed : Config -> Need -> Cache -> ( Cache, Cmd Msg )
+requestNeed config need cache =
     case need of
         NeedRootFolderIds ->
             ( { cache
@@ -374,7 +375,7 @@ requestNeed need cache =
             , Api.sendQueryRequest
                 (Api.withOperationName "NeedFacets")
                 (ApiResponseFacets ( selection, aspects ))
-                (Api.Queries.selectionFacets selection aspects Config.facetValuesToQuery)
+                (Api.Queries.selectionFacets selection aspects config.numberOfFacetValues)
             )
 
 
@@ -393,8 +394,8 @@ updateWithModifiedDocument document cache =
 
 {-| Digest a Msg (i.e. a response from the API layer) and update the data in the cache accordingly.
 -}
-update : Msg -> Cache -> ( Cache, Cmd Msg )
-update msg cache =
+update : Config -> Msg -> Cache -> ( Cache, Cmd Msg )
+update config msg cache =
     case msg of
         ApiResponseToplevelFolders (Ok listOfRootFoldersWithSubfolders) ->
             ( let
@@ -485,11 +486,12 @@ update msg cache =
                     in
                     cache1
                         |> insertAsFolders folders
-                        |> targetNeeds
+                        |> targetNeeds config
                             (Needs.atomic (NeedSubfolders (List.map .id folders)))
 
                 GenericNode.IsDocument ( document, residence ) ->
                     updateWithDocumentAndResidence
+                        config
                         (DocumentIdFromSearch document.id Nothing)
                         (Just ( document, Just residence ))
                         cache1
@@ -509,6 +511,7 @@ update msg cache =
 
         ApiResponseDocumentFromSearch documentIdFromSearch (Ok maybeDocumentAndResidence) ->
             updateWithDocumentAndResidence
+                config
                 documentIdFromSearch
                 maybeDocumentAndResidence
                 cache
@@ -547,11 +550,12 @@ update msg cache =
 
 
 updateWithDocumentAndResidence :
-    DocumentIdFromSearch
+    Config
+    -> DocumentIdFromSearch
     -> Maybe ( Document, Maybe Residence )
     -> Cache
     -> ( Cache, Cmd Msg )
-updateWithDocumentAndResidence documentIdFromSearch maybeDocumentAndResidence cache =
+updateWithDocumentAndResidence config documentIdFromSearch maybeDocumentAndResidence cache =
     let
         cache1 =
             case maybeDocumentAndResidence of
@@ -591,6 +595,7 @@ updateWithDocumentAndResidence documentIdFromSearch maybeDocumentAndResidence ca
                     cache1
     in
     targetNeeds
+        config
         (case maybeDocumentAndResidence of
             Just ( _, Just residence ) ->
                 Needs.atomic

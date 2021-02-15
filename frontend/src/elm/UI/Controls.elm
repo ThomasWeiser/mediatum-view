@@ -24,7 +24,7 @@ module UI.Controls exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
-import Config
+import Constants
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -32,6 +32,7 @@ import List.Extra
 import Maybe.Extra
 import RemoteData
 import Types.Aspect as Aspect exposing (Aspect)
+import Types.Config as Config exposing (Config)
 import Types.FilterList as FilterList
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
@@ -86,11 +87,11 @@ submitExampleQuery =
 
 
 {-| -}
-initialModel : Model
-initialModel =
+initialModel : Config -> Model
+initialModel config =
     { globalFtsText = ""
     , ftsFilterLines = []
-    , sorting = Types.Route.defaultSorting
+    , sorting = config.defaultSorting
     }
 
 
@@ -383,7 +384,7 @@ viewFtsAspectButtons ftsFilterLines =
                 else
                     Nothing
             )
-            Config.validFtsAspects
+            Constants.validFtsAspects
 
 
 viewFacetFilters : Context -> Html Msg

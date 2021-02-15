@@ -11,17 +11,17 @@ module UI exposing
 -}
 
 import Cache exposing (Cache)
-import Config
+import Constants
 import Entities.Document exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Types.Aspect exposing (Aspect)
+import Types.Config as Config exposing (Config)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation exposing (Presentation(..))
 import Types.Route as Route exposing (Route)
-import Types.ServerConfig as ServerConfig exposing (ServerConfig)
 import UI.Article
 import UI.Controls
 import UI.Facets
@@ -32,7 +32,7 @@ import UI.Tree
 {-| Context data provided by the parent module [`App`](App). Used by several functions here.
 -}
 type alias Context =
-    { serverConfig : ServerConfig
+    { config : Config
     , cache : Cache
     , route : Route
     , presentation : Presentation
@@ -79,13 +79,13 @@ type Msg
 
 {-| Initial model
 -}
-init : Model
-init =
+init : Config -> Model
+init config =
     { tree = UI.Tree.initialModel
-    , facets = UI.Facets.initialModel Config.validFacetAspects
-    , controls = UI.Controls.initialModel
+    , facets = UI.Facets.initialModel Constants.validFacetAspects
+    , controls = UI.Controls.initialModel config
     , article = UI.Article.initialModel (GenericPresentation Nothing)
-    , facetAspects = Config.validFacetAspects
+    , facetAspects = Constants.validFacetAspects
     }
 
 
@@ -206,7 +206,7 @@ update context msg model =
             let
                 ( subModel, subCmd, subReturn ) =
                     UI.Article.update
-                        { serverConfig = context.serverConfig
+                        { config = context.config
                         , cache = context.cache
                         , route = context.route
                         , presentation = context.presentation
@@ -273,7 +273,7 @@ view context model =
                         }
                         model.tree
                         (UI.Article.folderCountsForQuery
-                            { serverConfig = context.serverConfig
+                            { config = context.config
                             , cache = context.cache
                             , route = context.route
                             , presentation = context.presentation
@@ -289,7 +289,7 @@ view context model =
                 ]
             , Html.map ArticleMsg <|
                 UI.Article.view
-                    { serverConfig = context.serverConfig
+                    { config = context.config
                     , cache = context.cache
                     , route = context.route
                     , presentation = context.presentation

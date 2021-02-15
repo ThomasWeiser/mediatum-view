@@ -16,14 +16,15 @@ module Main exposing (main)
 -}
 
 import Api
-import Api.Queries exposing (serverConfig)
+import Api.Queries
 import App
 import Browser
 import Browser.Navigation
 import Html
+import Types.Config as Config exposing (Config)
 import Types.Route as Route
 import Types.Route.Url
-import Types.ServerConfig exposing (ServerConfig)
+import Types.ServerSetup exposing (ServerSetup)
 import Url exposing (Url)
 
 
@@ -48,7 +49,7 @@ main =
 
 
 type Msg
-    = ApiResponseServerConfig Url (Api.Response ServerConfig)
+    = ApiResponseServerSetup Url (Api.Response ServerSetup)
     | UrlRequest Browser.UrlRequest
     | UrlChanged Url.Url
     | AppMsg App.Msg
@@ -60,22 +61,22 @@ init flags url navigationKey =
       , app = App.initEmptyModel
       }
     , Api.sendQueryRequest
-        (Api.withOperationName "GetServerConfig")
-        (ApiResponseServerConfig url)
-        Api.Queries.serverConfig
+        (Api.withOperationName "GetServerSetup")
+        (ApiResponseServerSetup url)
+        Api.Queries.serverSetup
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ApiResponseServerConfig url (Ok serverConfig) ->
+        ApiResponseServerSetup url (Ok serverSetup) ->
             let
                 ( appModel, appCmd ) =
-                    Types.Route.Url.parseUrl serverConfig.defaults url
-                        |> Maybe.withDefault (Route.initHome serverConfig.defaults)
+                    Types.Route.Url.parseUrl Config.init url
+                        |> Maybe.withDefault (Route.initHome Config.init)
                         |> Route.sanitize
-                        |> App.initFromServerConfigAndRoute serverConfig
+                        |> App.initFromServerSetupAndRoute serverSetup
             in
             ( { model
                 | app = appModel
@@ -87,11 +88,11 @@ update msg model =
                   -- that reflects the resulting intial state.
                   Browser.Navigation.replaceUrl
                     model.navigationKey
-                    (Types.Route.Url.toString serverConfig.defaults appModel.route)
+                    (Types.Route.Url.toString Config.init appModel.route)
                 ]
             )
 
-        ApiResponseServerConfig url (Err error) ->
+        ApiResponseServerSetup url (Err error) ->
             -- TODO
             ( model, Cmd.none )
 
@@ -112,8 +113,8 @@ update msg model =
         UrlChanged url ->
             let
                 route =
-                    Types.Route.Url.parseUrl model.app.serverConfig.defaults url
-                        |> Maybe.withDefault (Route.initHome model.app.serverConfig.defaults)
+                    Types.Route.Url.parseUrl model.app.config url
+                        |> Maybe.withDefault (Route.initHome model.app.config)
                         |> Route.sanitize
 
                 ( subModel, subCmd ) =
@@ -145,7 +146,7 @@ update msg model =
                     App.ReflectRoute route ->
                         Browser.Navigation.pushUrl
                             model.navigationKey
-                            (Types.Route.Url.toString subModel2.serverConfig.defaults route)
+                            (Types.Route.Url.toString subModel2.config route)
 
                     App.NoReturn ->
                         Cmd.none

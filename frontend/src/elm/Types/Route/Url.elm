@@ -14,20 +14,20 @@ import Erl
 import Maybe.Extra
 import Regex
 import Types.Aspect as Aspect
+import Types.Config exposing (Config)
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id as Id exposing (NodeId)
 import Types.Route as Route exposing (Route, RouteParameters, RoutePath(..))
 import Types.SearchTerm as SearchTerm
 import Types.Selection exposing (Sorting(..))
-import Types.ServerConfig as ServerConfig
 import Url exposing (Url)
 import Url.Builder as Builder
 import Utils
 
 
 {-| -}
-parseUrl : ServerConfig.Defaults -> Url -> Maybe Route
-parseUrl serverConfigDefaults url =
+parseUrl : Config -> Url -> Maybe Route
+parseUrl config url =
     let
         erl : Erl.Url
         erl =
@@ -35,7 +35,7 @@ parseUrl serverConfigDefaults url =
     in
     Maybe.map2 Route
         (parsePath erl.path)
-        (parseQuery erl.query (Route.initHome serverConfigDefaults |> .parameters))
+        (parseQuery erl.query (Route.initHome config |> .parameters))
 
 
 parsePath : List String -> Maybe RoutePath
@@ -156,8 +156,8 @@ regexHasOrSearchAspect =
 
 
 {-| -}
-toString : ServerConfig.Defaults -> Route -> String
-toString serverConfigDefaults route =
+toString : Config -> Route -> String
+toString config route =
     Builder.absolute
         (case route.path of
             NoId ->
@@ -177,7 +177,7 @@ toString serverConfigDefaults route =
                     )
             , buildParameterIfNotDefault
                 (sortingTostring >> Builder.string "sort-by")
-                Route.defaultSorting
+                config.defaultSorting
                 route.parameters.sorting
             ]
             ++ List.map
@@ -201,7 +201,7 @@ toString serverConfigDefaults route =
                     route.parameters.offset
                 , buildParameterIfNotDefault
                     (Builder.int "limit")
-                    serverConfigDefaults.pageSize
+                    config.defaultPageSize
                     route.parameters.limit
                 ]
         )

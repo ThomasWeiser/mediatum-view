@@ -27,7 +27,7 @@ The available queries and mutations are located in the modules
 
 -}
 
-import Config
+import Constants
 import Graphql.Http
 import Graphql.Operation
 import Graphql.SelectionSet exposing (SelectionSet)
@@ -83,7 +83,7 @@ sendQueryRequest :
     -> Cmd msg
 sendQueryRequest operationName tagger selectionSet =
     selectionSet
-        |> Graphql.Http.queryRequest Config.apiUrl
+        |> Graphql.Http.queryRequest Constants.apiUrl
         |> Graphql.Http.withOperationName operationName
         |> Graphql.Http.send
             (Result.mapError Utils.Graphql.stripError >> tagger)
@@ -101,7 +101,7 @@ sendMutationRequest :
     -> Cmd msg
 sendMutationRequest operationName tagger selectionSet =
     selectionSet
-        |> Graphql.Http.mutationRequest Config.apiUrl
+        |> Graphql.Http.mutationRequest Constants.apiUrl
         |> Graphql.Http.withOperationName operationName
         |> Graphql.Http.send
             (Result.mapError Utils.Graphql.stripError >> tagger)
@@ -111,4 +111,4 @@ sendMutationRequest operationName tagger selectionSet =
 -}
 withOperationName : String -> String
 withOperationName name =
-    Config.graphqlOperationNamePrefix ++ name
+    Constants.graphqlOperationNamePrefix ++ name

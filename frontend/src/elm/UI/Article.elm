@@ -24,7 +24,6 @@ module UI.Article exposing
 
 -}
 
-import Api.Queries exposing (serverConfig)
 import Cache exposing (Cache)
 import Cache.Derive
 import Entities.Document exposing (Document)
@@ -34,12 +33,12 @@ import Html.Attributes
 import Maybe.Extra
 import RemoteData
 import Types.Aspect exposing (Aspect)
+import Types.Config as Config exposing (Config)
 import Types.Id exposing (FolderId)
 import Types.Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation as Presentation exposing (Presentation(..))
 import Types.Route exposing (Route)
-import Types.ServerConfig as ServerConfig exposing (ServerConfig)
 import UI.Article.Collection
 import UI.Article.Details
 import UI.Article.Generic
@@ -50,7 +49,7 @@ import Utils
 
 {-| -}
 type alias Context =
-    { serverConfig : ServerConfig
+    { config : Config
     , cache : Cache
     , route : Route
     , presentation : Presentation
@@ -186,7 +185,7 @@ update context msg model =
             let
                 ( subModel1, subCmd, subReturn ) =
                     UI.Article.Listing.update
-                        { serverConfig = context.serverConfig
+                        { config = context.config
                         , cache = context.cache
                         , selection = selection
                         , window = window
@@ -210,7 +209,7 @@ update context msg model =
             let
                 ( subModel1, subCmd, subReturn ) =
                     UI.Article.Details.update
-                        { serverConfig = context.serverConfig
+                        { config = context.config
                         , cache = context.cache
                         , route = context.route
                         , documentIdFromSearch = documentIdFromSearch
@@ -277,7 +276,7 @@ viewContent context model =
 
         ( ListingModel subModel, ListingPresentation selection window ) ->
             UI.Article.Listing.view
-                { serverConfig = context.serverConfig
+                { config = context.config
                 , cache = context.cache
                 , selection = selection
                 , window = window
@@ -287,7 +286,7 @@ viewContent context model =
 
         ( DetailsModel subModel, DocumentPresentation maybeFolderId documentIdFromSearch ) ->
             UI.Article.Details.view
-                { serverConfig = context.serverConfig
+                { config = context.config
                 , cache = context.cache
                 , route = context.route
                 , documentIdFromSearch = documentIdFromSearch

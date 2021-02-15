@@ -1,13 +1,11 @@
-module Config exposing
+module Constants exposing
     ( apiUrl, graphqlOperationNamePrefix
-    , facetValuesToQuery
     , validFacetAspects, validFtsAspects
     )
 
 {-| Configurable values
 
 @docs apiUrl, graphqlOperationNamePrefix
-@docs facetValuesToQuery
 @docs validFacetAspects, validFtsAspects
 
 -}
@@ -30,14 +28,6 @@ For operation names see: <https://graphql.org/learn/queries/#operation-name>
 graphqlOperationNamePrefix : String
 graphqlOperationNamePrefix =
     "mediatumView_"
-
-
-{-| Number of results per page used for pagination.
-Currently hard-coded.
--}
-facetValuesToQuery : Int
-facetValuesToQuery =
-    20
 
 
 {-| -}

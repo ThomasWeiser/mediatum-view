@@ -1,6 +1,5 @@
 module Types.Route exposing
-    ( defaultSorting
-    , Route
+    ( Route
     , RoutePath(..)
     , RouteParameters
     , initHome
@@ -26,20 +25,14 @@ Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Ro
 
 -}
 
-import Config
+import Constants
 import Sort.Dict
 import Types.Aspect exposing (Aspect)
+import Types.Config as Config exposing (Config)
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection as Selection exposing (FacetFilters, FtsFilters, GlobalFts, Sorting(..))
-import Types.ServerConfig as ServerConfig exposing (ServerConfig)
-
-
-{-| -}
-defaultSorting : Sorting
-defaultSorting =
-    ByRank
 
 
 {-| -}
@@ -68,30 +61,30 @@ type alias RouteParameters =
 
 
 {-| -}
-initHome : ServerConfig.Defaults -> Route
-initHome serverConfigDefaults =
+initHome : Config -> Route
+initHome config =
     { path = NoId
-    , parameters = emptyParameters serverConfigDefaults
+    , parameters = emptyParameters config
     }
 
 
 {-| A route to a document within a folder without any further parameters.
 -}
-initDocumentInFolder : ServerConfig.Defaults -> FolderId -> DocumentId -> Route
-initDocumentInFolder serverConfigDefaults folderId documentId =
+initDocumentInFolder : Config -> FolderId -> DocumentId -> Route
+initDocumentInFolder config folderId documentId =
     { path = TwoIds (Types.Id.asNodeId folderId) (Types.Id.asNodeId documentId)
-    , parameters = emptyParameters serverConfigDefaults
+    , parameters = emptyParameters config
     }
 
 
-emptyParameters : ServerConfig.Defaults -> RouteParameters
-emptyParameters serverConfigDefaults =
+emptyParameters : Config -> RouteParameters
+emptyParameters config =
     { globalFts = Nothing
-    , sorting = defaultSorting
+    , sorting = config.defaultSorting
     , ftsFilters = Selection.initFtsFilters
     , facetFilters = Selection.initFacetFilters
     , offset = 0
-    , limit = serverConfigDefaults.pageSize
+    , limit = config.defaultPageSize
     }
 
 
@@ -108,9 +101,9 @@ sanitize route =
     , parameters =
         { parameters
             | ftsFilters =
-                FilterList.filterAspects Config.validFtsAspects parameters.ftsFilters
+                FilterList.filterAspects Constants.validFtsAspects parameters.ftsFilters
             , facetFilters =
-                FilterList.filterAspects Config.validFacetAspects parameters.facetFilters
+                FilterList.filterAspects Constants.validFacetAspects parameters.facetFilters
         }
     }
 

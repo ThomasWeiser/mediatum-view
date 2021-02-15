@@ -1,5 +1,5 @@
 module Api.Queries exposing
-    ( serverConfig
+    ( serverSetup
     , toplevelFolders, folders, subfolders
     , selectionDocumentsPage, selectionFolderCounts, selectionFacets
     , documentDetails
@@ -20,7 +20,7 @@ In reality it's just function calling.
 
 # Server Config
 
-@docs serverConfig
+@docs serverSetup
 
 
 # Folder Queries
@@ -47,7 +47,7 @@ In reality it's just function calling.
 import Api.Arguments.AspectTest
 import Api.Arguments.Filter
 import Api.Fragments
-import Config
+import Constants
 import Entities.Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder, LineageFolders)
@@ -62,10 +62,11 @@ import Maybe.Extra
 import Mediatum.Enum.FtsSorting
 import Mediatum.InputObject
 import Mediatum.Object
-import Mediatum.Object.Config
-import Mediatum.Object.ConfigDefault
 import Mediatum.Object.FoldersConnection
 import Mediatum.Object.GenericNode
+import Mediatum.Object.Setup
+import Mediatum.Object.SetupConfig
+import Mediatum.Object.SetupServer
 import Mediatum.Query
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
@@ -77,42 +78,53 @@ import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm
 import Types.Selection exposing (Selection, Sorting(..))
-import Types.ServerConfig as ServerConfig exposing (ServerConfig)
+import Types.ServerSetup as ServerSetup exposing (ServerSetup)
 
 
 {-| -}
-serverConfig : SelectionSet ServerConfig Graphql.Operation.RootQuery
-serverConfig =
-    Mediatum.Query.config
-        (\optionals ->
-            { optionals
-                | application = Present "hsb" -- TODO Move this string constant to some gonfig file
-            }
-        )
-        (SelectionSet.succeed ServerConfig.ServerConfig
+serverSetup : SelectionSet ServerSetup Graphql.Operation.RootQuery
+serverSetup =
+    Mediatum.Query.setup
+        { application = "hsb"
+        , clientName = "mediatum-view-web"
+        , clientVersion = "1.0"
+        }
+        (SelectionSet.succeed ServerSetup.ServerSetup
             |> SelectionSet.with
-                (Mediatum.Object.Config.defaults
-                    (SelectionSet.succeed ServerConfig.Defaults
+                (Mediatum.Object.Setup.server
+                    (SelectionSet.succeed ServerSetup.Server
                         |> SelectionSet.with
-                            (Mediatum.Object.ConfigDefault.limit
+                            (Mediatum.Object.SetupServer.apiVersion
                                 |> SelectionSet.nonNullOrFail
                             )
                         |> SelectionSet.with
-                            (Mediatum.Object.ConfigDefault.sortBy
+                            (Mediatum.Object.SetupServer.serverName
                                 |> SelectionSet.nonNullOrFail
-                                |> SelectionSet.mapOrFail
-                                    (\sortByString ->
-                                        case sortByString of
-                                            "rank" ->
-                                                Ok ByRank
+                            )
+                    )
+                    |> SelectionSet.nonNullOrFail
+                )
+            |> SelectionSet.with
+                (Mediatum.Object.Setup.config
+                    (SelectionSet.succeed ServerSetup.Config
+                        |> SelectionSet.with
+                            Mediatum.Object.SetupConfig.defaultPageSize
+                        |> SelectionSet.with
+                            (Mediatum.Object.SetupConfig.defaultSorting
+                                |> SelectionSet.map
+                                    (Maybe.map
+                                        (\apiEnum ->
+                                            case apiEnum of
+                                                Mediatum.Enum.FtsSorting.ByRank ->
+                                                    ByRank
 
-                                            "date" ->
-                                                Ok ByDate
-
-                                            _ ->
-                                                Err ("unknown sortBy value: " ++ sortByString)
+                                                Mediatum.Enum.FtsSorting.ByDate ->
+                                                    ByDate
+                                        )
                                     )
                             )
+                        |> SelectionSet.with
+                            Mediatum.Object.SetupConfig.numberOfFacetValues
                     )
                     |> SelectionSet.nonNullOrFail
                 )
@@ -485,16 +497,16 @@ _GraphQL notation:_
 
 -}
 authorSearch :
-    ServerConfig.Defaults
+    Int
     -> Maybe (Pagination.Relay.Page.Page Document)
     -> Pagination.Relay.Pagination.Position
     -> FolderId
     -> String
     -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-authorSearch serverConfigDefaults referencePage paginationPosition folderId searchString =
+authorSearch pageSize referencePage paginationPosition folderId searchString =
     Mediatum.Query.authorSearch
         (Pagination.Relay.Pagination.paginationArguments
-            serverConfigDefaults.pageSize
+            pageSize
             referencePage
             paginationPosition
         )
