@@ -22,6 +22,7 @@ import Cache exposing (Cache)
 import Entities.Folder as Folder
 import Html exposing (Html)
 import RemoteData
+import Types.Config exposing (Config)
 import Types.Id exposing (FolderId)
 import UI.Icons
 import Utils.Html
@@ -29,7 +30,8 @@ import Utils.Html
 
 {-| -}
 type alias Context =
-    { cache : Cache
+    { config : Config
+    , cache : Cache
     , folderId : FolderId
     }
 

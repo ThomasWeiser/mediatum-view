@@ -30,6 +30,7 @@ import RemoteData
 import Sort.Dict
 import String.Extra
 import Types.Aspect as Aspect exposing (Aspect)
+import Types.Config exposing (Config)
 import Types.Facet exposing (FacetValues)
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Navigation as Navigation exposing (Navigation)
@@ -42,7 +43,8 @@ import Utils.Html
 
 {-| -}
 type alias Context =
-    { cache : Cache
+    { config : Config
+    , cache : Cache
     , presentation : Presentation
     , facetAspects : List Aspect
     }

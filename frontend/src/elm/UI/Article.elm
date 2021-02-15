@@ -33,7 +33,7 @@ import Html.Attributes
 import Maybe.Extra
 import RemoteData
 import Types.Aspect exposing (Aspect)
-import Types.Config as Config exposing (Config)
+import Types.Config exposing (Config)
 import Types.Id exposing (FolderId)
 import Types.Navigation exposing (Navigation)
 import Types.Needs
@@ -260,7 +260,8 @@ viewContent context model =
     case ( model.content, context.presentation ) of
         ( GenericModel subModel, GenericPresentation genericParameters ) ->
             UI.Article.Generic.view
-                { cache = context.cache
+                { config = context.config
+                , cache = context.cache
                 , genericParameters = genericParameters
                 }
                 subModel
@@ -268,7 +269,8 @@ viewContent context model =
 
         ( CollectionModel subModel, CollectionPresentation folderId ) ->
             UI.Article.Collection.view
-                { cache = context.cache
+                { config = context.config
+                , cache = context.cache
                 , folderId = folderId
                 }
                 subModel

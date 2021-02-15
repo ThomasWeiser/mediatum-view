@@ -35,7 +35,7 @@ import Maybe.Extra
 import Regex
 import RemoteData
 import Types exposing (Window)
-import Types.Config as Config exposing (Config)
+import Types.Config exposing (Config)
 import Types.Id exposing (DocumentId)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Route as Route

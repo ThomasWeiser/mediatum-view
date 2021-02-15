@@ -33,7 +33,7 @@ import List.Nonempty
 import Maybe.Extra
 import RemoteData
 import Types exposing (DocumentIdFromSearch)
-import Types.Config as Config exposing (Config)
+import Types.Config exposing (Config)
 import Types.Id as Id exposing (DocumentId)
 import Types.Route exposing (Route)
 import UI.Icons

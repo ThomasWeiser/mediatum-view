@@ -23,6 +23,7 @@ import Cache.Derive
 import Html exposing (Html)
 import RemoteData exposing (RemoteData(..))
 import Types exposing (DocumentIdFromSearch, NodeType(..))
+import Types.Config exposing (Config)
 import Types.Id as Id exposing (NodeId)
 import UI.Icons
 import Utils
@@ -31,7 +32,8 @@ import Utils.Html
 
 {-| -}
 type alias Context =
-    { cache : Cache
+    { config : Config
+    , cache : Cache
     , genericParameters : Maybe ( NodeId, Maybe DocumentIdFromSearch )
     }
 

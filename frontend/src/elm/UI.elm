@@ -96,7 +96,8 @@ needs context model =
     Types.Needs.batch
         [ Types.Needs.atomic Cache.NeedRootFolderIds
         , UI.Tree.needs
-            { cache = context.cache
+            { config = context.config
+            , cache = context.cache
             , presentation = context.presentation
             }
             model.tree
@@ -133,7 +134,8 @@ update context msg model =
             let
                 ( subModel, subReturn ) =
                     UI.Tree.update
-                        { cache = context.cache
+                        { config = context.config
+                        , cache = context.cache
                         , presentation = context.presentation
                         }
                         subMsg
@@ -153,7 +155,8 @@ update context msg model =
             let
                 ( subModel, subCmd, subReturn ) =
                     UI.Facets.update
-                        { cache = context.cache
+                        { config = context.config
+                        , cache = context.cache
                         , presentation = context.presentation
                         , facetAspects = model.facetAspects
                         }
@@ -183,7 +186,8 @@ update context msg model =
             let
                 ( subModel, subCmd, subReturn ) =
                     UI.Controls.update
-                        { route = context.route
+                        { config = context.config
+                        , route = context.route
                         , cache = context.cache
                         , presentation = context.presentation
                         }
@@ -257,7 +261,8 @@ view context model =
                     ]
                 ]
             , UI.Controls.view
-                { route = context.route
+                { config = context.config
+                , route = context.route
                 , cache = context.cache
                 , presentation = context.presentation
                 }
@@ -268,7 +273,8 @@ view context model =
             [ Html.aside []
                 [ Html.map TreeMsg <|
                     UI.Tree.view
-                        { cache = context.cache
+                        { config = context.config
+                        , cache = context.cache
                         , presentation = context.presentation
                         }
                         model.tree
@@ -281,7 +287,8 @@ view context model =
                         )
                 , Html.map FacetsMsg <|
                     UI.Facets.view
-                        { cache = context.cache
+                        { config = context.config
+                        , cache = context.cache
                         , presentation = context.presentation
                         , facetAspects = model.facetAspects
                         }

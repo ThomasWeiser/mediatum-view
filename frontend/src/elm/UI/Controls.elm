@@ -32,7 +32,7 @@ import List.Extra
 import Maybe.Extra
 import RemoteData
 import Types.Aspect as Aspect exposing (Aspect)
-import Types.Config as Config exposing (Config)
+import Types.Config exposing (Config)
 import Types.FilterList as FilterList
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
@@ -47,7 +47,8 @@ import Utils.List
 
 {-| -}
 type alias Context =
-    { route : Route
+    { config : Config
+    , route : Route
     , cache : Cache
     , presentation : Presentation
     }
