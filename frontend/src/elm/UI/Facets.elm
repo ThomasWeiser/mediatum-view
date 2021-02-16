@@ -31,7 +31,7 @@ import Sort.Dict
 import String.Extra
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
-import Types.Facet exposing (FacetValues)
+import Types.FacetValue exposing (FacetValues)
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))

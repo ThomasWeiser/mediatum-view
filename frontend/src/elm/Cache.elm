@@ -67,7 +67,7 @@ import Sort.Dict
 import Types exposing (DocumentIdFromSearch, NodeType(..), Window)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
-import Types.Facet exposing (FacetValues, FacetsValues)
+import Types.FacetValue exposing (FacetValues, FacetsValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Needs as Needs
 import Types.SearchTerm exposing (SearchTerm)

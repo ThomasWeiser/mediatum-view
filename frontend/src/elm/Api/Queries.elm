@@ -72,7 +72,7 @@ import Pagination.Relay.Page
 import Pagination.Relay.Pagination
 import Types exposing (DocumentIdFromSearch, Window)
 import Types.Aspect as Aspect exposing (Aspect)
-import Types.Facet as Facet exposing (FacetsValues)
+import Types.FacetValue as Facet exposing (FacetsValues)
 import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm

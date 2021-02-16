@@ -61,7 +61,7 @@ import Pagination.Relay.Connection as Connection
 import String.Extra
 import Types exposing (FolderDisplay(..), WindowPage)
 import Types.Aspect as Aspect exposing (Aspect)
-import Types.Facet exposing (FacetValue, FacetValues)
+import Types.FacetValue exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (FolderId, LineageIds)
 import Types.SearchTerm exposing (SearchTerm)
 import Utils
