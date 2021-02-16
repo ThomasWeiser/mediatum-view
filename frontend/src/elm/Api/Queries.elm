@@ -116,59 +116,13 @@ serverSetup =
                             Mediatum.Object.SetupConfig.numberOfFacetValues
                         |> SelectionSet.with
                             (Mediatum.Object.SetupConfig.staticFtsAspects
-                                (SelectionSet.succeed FtsAspect
-                                    |> SelectionSet.with
-                                        (Mediatum.Object.FtsAspectConfig.aspect
-                                            |> SelectionSet.nonNullOrFail
-                                            |> SelectionSet.map Aspect.fromString
-                                        )
-                                    |> SelectionSet.with
-                                        (Mediatum.Object.FtsAspectConfig.label
-                                            Api.Fragments.translations
-                                            |> SelectionSet.nonNullOrFail
-                                        )
-                                )
-                                |> SelectionSet.mapOrFail
-                                    (\maybeListMaybe ->
-                                        case
-                                            Maybe.map Maybe.Extra.combine maybeListMaybe
-                                        of
-                                            Nothing ->
-                                                Ok Nothing
-
-                                            Just (Just l) ->
-                                                Ok (Just l)
-
-                                            Just Nothing ->
-                                                Err "Expected only non-null list elements but found a null."
-                                    )
+                                Api.Fragments.ftsAspectConfig
+                                |> Api.Fragments.nonNullElementsOfMaybeListOrFail
                             )
                         |> SelectionSet.with
                             (Mediatum.Object.SetupConfig.staticFacetAspects
-                                (SelectionSet.succeed FacetAspect
-                                    |> SelectionSet.with
-                                        (Mediatum.Object.FacetAspectConfig.aspect
-                                            |> SelectionSet.nonNullOrFail
-                                            |> SelectionSet.map Aspect.fromString
-                                        )
-                                    |> SelectionSet.with
-                                        (Mediatum.Object.FacetAspectConfig.label
-                                            Api.Fragments.translations
-                                            |> SelectionSet.nonNullOrFail
-                                        )
-                                )
-                                |> SelectionSet.mapOrFail
-                                    (\maybeListMaybe ->
-                                        case Maybe.map Maybe.Extra.combine maybeListMaybe of
-                                            Nothing ->
-                                                Ok Nothing
-
-                                            Just (Just l) ->
-                                                Ok (Just l)
-
-                                            Just Nothing ->
-                                                Err "Expected only non-null list elements but found a null."
-                                    )
+                                Api.Fragments.facetAspectConfig
+                                |> Api.Fragments.nonNullElementsOfMaybeListOrFail
                             )
                     )
                     |> SelectionSet.nonNullOrFail

@@ -1,8 +1,9 @@
 module Api.Fragments exposing
-    ( translations
+    ( translation, ftsAspectConfig, facetAspectConfig
     , folder, folderAndSubfolders, folderLineageFolders
     , folderAndSubfolderCounts, folderCount, facetByAspect
     , documentsPage, documentResult, documentByMask, documentResidence
+    , nonNullElementsOfMaybeListOrFail
     , graphqlDocumentObjects
     )
 
@@ -11,7 +12,7 @@ module Api.Fragments exposing
 
 # Fragments of Config
 
-@docs translations
+@docs translation, ftsAspectConfig, facetAspectConfig
 
 
 # Fragments on Folder
@@ -27,6 +28,11 @@ module Api.Fragments exposing
 # Fragments for Document Results
 
 @docs documentsPage, documentResult, documentByMask, documentResidence
+
+
+# Utils for SelectionSet
+
+@docs nonNullElementsOfMaybeListOrFail
 
 
 # Relay Connection Utility
@@ -54,12 +60,14 @@ import Mediatum.Object.DocumentResult
 import Mediatum.Object.DocumentResultPage
 import Mediatum.Object.DocumentsConnection
 import Mediatum.Object.DocumentsEdge
+import Mediatum.Object.FacetAspectConfig
 import Mediatum.Object.FacetValue
 import Mediatum.Object.FacetValuesConnection
 import Mediatum.Object.Folder
 import Mediatum.Object.FolderCount
 import Mediatum.Object.FolderCountsConnection
 import Mediatum.Object.FoldersConnection
+import Mediatum.Object.FtsAspectConfig
 import Mediatum.Object.Metadatatype
 import Mediatum.Object.PageInfo
 import Mediatum.Object.Translation
@@ -68,6 +76,8 @@ import Pagination.Relay.Connection as Connection
 import String.Extra
 import Types exposing (FolderDisplay(..), WindowPage)
 import Types.Aspect as Aspect exposing (Aspect)
+import Types.Config.FacetAspect exposing (FacetAspect)
+import Types.Config.FtsAspect exposing (FtsAspect)
 import Types.FacetValue exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (FolderId, LineageIds)
 import Types.Localization as Localization
@@ -75,18 +85,72 @@ import Types.SearchTerm exposing (SearchTerm)
 import Utils
 
 
+{-| Selection set on a FtsAspectConfig to get a FtsAspect
+
+_GraphQL notation:_
+
+    fragment ftsAspectConfig on FtsAspectConfig
+        aspect
+        label {
+            ...translation
+        }
+    }
+
+-}
+ftsAspectConfig : SelectionSet FtsAspect Mediatum.Object.FtsAspectConfig
+ftsAspectConfig =
+    SelectionSet.succeed FtsAspect
+        |> SelectionSet.with
+            (Mediatum.Object.FtsAspectConfig.aspect
+                |> SelectionSet.nonNullOrFail
+                |> SelectionSet.map Aspect.fromString
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.FtsAspectConfig.label
+                translation
+                |> SelectionSet.nonNullOrFail
+            )
+
+
+{-| Selection set on a FacetAspectConfig to get a FacetAspect
+
+_GraphQL notation:_
+
+    fragment facetAspectConfig on FacetAspectConfig
+        aspect
+        label {
+            ...translation
+        }
+    }
+
+-}
+facetAspectConfig : SelectionSet FacetAspect Mediatum.Object.FacetAspectConfig
+facetAspectConfig =
+    SelectionSet.succeed FacetAspect
+        |> SelectionSet.with
+            (Mediatum.Object.FacetAspectConfig.aspect
+                |> SelectionSet.nonNullOrFail
+                |> SelectionSet.map Aspect.fromString
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.FacetAspectConfig.label
+                translation
+                |> SelectionSet.nonNullOrFail
+            )
+
+
 {-| Selection set on a FolderCount to get the count of the selected documents within the folder.
 
 _GraphQL notation:_
 
-    fragment translations on Translations
+    fragment translation on Translation
         en
         de
     }
 
 -}
-translations : SelectionSet Localization.Translations Mediatum.Object.Translation
-translations =
+translation : SelectionSet Localization.Translations Mediatum.Object.Translation
+translation =
     SelectionSet.succeed Localization.Translations
         |> SelectionSet.with
             (Mediatum.Object.Translation.en
@@ -521,6 +585,28 @@ documentResidence =
         folderLineageIds
         |> SelectionSet.nonNullOrFail
         |> SelectionSet.nonNullElementsOrFail
+
+
+{-| Similar to Graphql.SelectionSet.nonNullElementsOrFail, but the list is and remains wrapped in a Maybe.
+-}
+nonNullElementsOfMaybeListOrFail :
+    SelectionSet (Maybe (List (Maybe decodesTo))) scope
+    -> SelectionSet (Maybe (List decodesTo)) scope
+nonNullElementsOfMaybeListOrFail =
+    SelectionSet.mapOrFail
+        (\maybeListMaybe ->
+            case
+                Maybe.map Maybe.Extra.combine maybeListMaybe
+            of
+                Nothing ->
+                    Ok Nothing
+
+                Just (Just l) ->
+                    Ok (Just l)
+
+                Just Nothing ->
+                    Err "Expected only non-null list elements but found a null."
+        )
 
 
 {-| Decode a JSON string returned from a query that denotes the mata-values of a document.
