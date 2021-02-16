@@ -9,19 +9,19 @@ create type api.setup as
     );
 -- TODO: Hide these fields of api.setup from API at this level.
 
-create type api.ltext as
+create type api.translations as
     ( en text
     , de text
     );
 
 create type api.fts_aspect_config as
     ( aspect text
-    , label api.ltext
+    , label api.translations
     );
 
 create type api.facet_aspect_config as
     ( aspect text
-    , label api.ltext
+    , label api.translations
     );
 
 create type api.setup_config as
@@ -59,11 +59,11 @@ create or replace function api.setup_config
     	'by_rank'::api.fts_sorting as default_sorting,
         20 as number_of_facet_values,
         (select array(
-            select (aspect, (label->>'en', label->>'de')::api.ltext)::api.fts_aspect_config
+            select (aspect, (label->>'en', label->>'de')::api.translations)::api.fts_aspect_config
             from config.aspect_fts
         )) as static_fts_aspects,
         (select array(
-            select (aspect, (label->>'en', label->>'de')::api.ltext)::api.facet_aspect_config
+            select (aspect, (label->>'en', label->>'de')::api.translations)::api.facet_aspect_config
             from config.aspect_facet
         )) as static_facet_aspects
 $$ language sql stable;
