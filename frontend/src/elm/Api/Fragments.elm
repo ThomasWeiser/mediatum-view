@@ -1,11 +1,17 @@
 module Api.Fragments exposing
-    ( folder, folderAndSubfolders, folderLineageFolders
+    ( translations
+    , folder, folderAndSubfolders, folderLineageFolders
     , folderAndSubfolderCounts, folderCount, facetByAspect
     , documentsPage, documentResult, documentByMask, documentResidence
     , graphqlDocumentObjects
     )
 
 {-| Definitions of GraphQL subqueries used in the toplevel queries.
+
+
+# Fragments of Config
+
+@docs translations
 
 
 # Fragments on Folder
@@ -56,6 +62,7 @@ import Mediatum.Object.FolderCountsConnection
 import Mediatum.Object.FoldersConnection
 import Mediatum.Object.Metadatatype
 import Mediatum.Object.PageInfo
+import Mediatum.Object.Translation
 import Mediatum.Scalar
 import Pagination.Relay.Connection as Connection
 import String.Extra
@@ -63,8 +70,32 @@ import Types exposing (FolderDisplay(..), WindowPage)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.FacetValue exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (FolderId, LineageIds)
+import Types.Localization as Localization
 import Types.SearchTerm exposing (SearchTerm)
 import Utils
+
+
+{-| Selection set on a FolderCount to get the count of the selected documents within the folder.
+
+_GraphQL notation:_
+
+    fragment translations on Translations
+        en
+        de
+    }
+
+-}
+translations : SelectionSet Localization.Translations Mediatum.Object.Translation
+translations =
+    SelectionSet.succeed Localization.Translations
+        |> SelectionSet.with
+            (Mediatum.Object.Translation.en
+                |> SelectionSet.nonNullOrFail
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.Translation.de
+                |> SelectionSet.nonNullOrFail
+            )
 
 
 {-| Selection set on a [`Folder`](Entities-Folder) to get basic properties of the folder.

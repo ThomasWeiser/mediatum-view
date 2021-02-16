@@ -1,8 +1,14 @@
-module Types.Config exposing (Config, init, updateFromServerSetup)
+module Types.Config exposing
+    ( Config
+    , init
+    , updateFromServerSetup
+    )
 
 {-| Configuration values provided by the server
 -}
 
+import Types.Config.FacetAspect exposing (FacetAspect)
+import Types.Config.FtsAspect exposing (FtsAspect)
 import Types.Selection as Selection
 import Types.ServerSetup exposing (ServerSetup)
 
@@ -13,6 +19,8 @@ type alias Config =
     { defaultPageSize : Int
     , defaultSorting : Selection.Sorting
     , numberOfFacetValues : Int
+    , ftsAspects : List FtsAspect
+    , facetAspects : List FacetAspect
     }
 
 
@@ -23,6 +31,8 @@ init =
     { defaultPageSize = 10
     , defaultSorting = Selection.ByRank
     , numberOfFacetValues = 20
+    , ftsAspects = []
+    , facetAspects = []
     }
 
 
@@ -35,4 +45,8 @@ updateFromServerSetup serverSetup config =
             serverSetup.config.defaultSorting |> Maybe.withDefault config.defaultSorting
         , numberOfFacetValues =
             serverSetup.config.numberOfFacetValues |> Maybe.withDefault config.numberOfFacetValues
+        , ftsAspects =
+            serverSetup.config.staticFtsAspects |> Maybe.withDefault []
+        , facetAspects =
+            serverSetup.config.staticFacetAspects |> Maybe.withDefault []
     }

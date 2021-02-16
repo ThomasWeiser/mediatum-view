@@ -62,7 +62,9 @@ import Maybe.Extra
 import Mediatum.Enum.FtsSorting
 import Mediatum.InputObject
 import Mediatum.Object
+import Mediatum.Object.FacetAspectConfig
 import Mediatum.Object.FoldersConnection
+import Mediatum.Object.FtsAspectConfig
 import Mediatum.Object.GenericNode
 import Mediatum.Object.Setup
 import Mediatum.Object.SetupConfig
@@ -72,6 +74,8 @@ import Pagination.Relay.Page
 import Pagination.Relay.Pagination
 import Types exposing (DocumentIdFromSearch, Window)
 import Types.Aspect as Aspect exposing (Aspect)
+import Types.Config.FacetAspect exposing (FacetAspect)
+import Types.Config.FtsAspect exposing (FtsAspect)
 import Types.FacetValue as Facet exposing (FacetsValues)
 import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
@@ -110,6 +114,62 @@ serverSetup =
                             )
                         |> SelectionSet.with
                             Mediatum.Object.SetupConfig.numberOfFacetValues
+                        |> SelectionSet.with
+                            (Mediatum.Object.SetupConfig.staticFtsAspects
+                                (SelectionSet.succeed FtsAspect
+                                    |> SelectionSet.with
+                                        (Mediatum.Object.FtsAspectConfig.aspect
+                                            |> SelectionSet.nonNullOrFail
+                                            |> SelectionSet.map Aspect.fromString
+                                        )
+                                    |> SelectionSet.with
+                                        (Mediatum.Object.FtsAspectConfig.label
+                                            Api.Fragments.translations
+                                            |> SelectionSet.nonNullOrFail
+                                        )
+                                )
+                                |> SelectionSet.mapOrFail
+                                    (\maybeListMaybe ->
+                                        case
+                                            Maybe.map Maybe.Extra.combine maybeListMaybe
+                                        of
+                                            Nothing ->
+                                                Ok Nothing
+
+                                            Just (Just l) ->
+                                                Ok (Just l)
+
+                                            Just Nothing ->
+                                                Err "Expected only non-null list elements but found a null."
+                                    )
+                            )
+                        |> SelectionSet.with
+                            (Mediatum.Object.SetupConfig.staticFacetAspects
+                                (SelectionSet.succeed FacetAspect
+                                    |> SelectionSet.with
+                                        (Mediatum.Object.FacetAspectConfig.aspect
+                                            |> SelectionSet.nonNullOrFail
+                                            |> SelectionSet.map Aspect.fromString
+                                        )
+                                    |> SelectionSet.with
+                                        (Mediatum.Object.FacetAspectConfig.label
+                                            Api.Fragments.translations
+                                            |> SelectionSet.nonNullOrFail
+                                        )
+                                )
+                                |> SelectionSet.mapOrFail
+                                    (\maybeListMaybe ->
+                                        case Maybe.map Maybe.Extra.combine maybeListMaybe of
+                                            Nothing ->
+                                                Ok Nothing
+
+                                            Just (Just l) ->
+                                                Ok (Just l)
+
+                                            Just Nothing ->
+                                                Err "Expected only non-null list elements but found a null."
+                                    )
+                            )
                     )
                     |> SelectionSet.nonNullOrFail
                 )
