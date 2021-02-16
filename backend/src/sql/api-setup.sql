@@ -15,12 +15,12 @@ create type api.ltext as
     );
 
 create type api.fts_aspect_config as
-    ( name text
+    ( aspect text
     , label api.ltext
     );
 
 create type api.facet_aspect_config as
-    ( name text
+    ( aspect text
     , label api.ltext
     );
 
@@ -58,6 +58,12 @@ create or replace function api.setup_config
     	10 as default_page_size,
     	'by_rank'::api.fts_sorting as default_sorting,
         20 as number_of_facet_values,
-        '{}'::api.fts_aspect_config[] as static_fts_aspects,
-        '{}'::api.facet_aspect_config[] as static_facet_aspects
+        (select array(
+            select (aspect, (label->>'en', label->>'de')::api.ltext)::api.fts_aspect_config
+            from config.aspect_fts
+        )) as static_fts_aspects,
+        (select array(
+            select (aspect, (label->>'en', label->>'de')::api.ltext)::api.facet_aspect_config
+            from config.aspect_facet
+        )) as static_facet_aspects
 $$ language sql stable;
