@@ -91,7 +91,7 @@ serverSetup =
         (SelectionSet.succeed ServerSetup.ServerSetup
             |> SelectionSet.with
                 (Mediatum.Object.Setup.config
-                    (SelectionSet.succeed ServerSetup.Config
+                    (SelectionSet.succeed ServerSetup.ServerConfig
                         |> SelectionSet.with
                             Mediatum.Object.SetupConfig.defaultPageSize
                         |> SelectionSet.with

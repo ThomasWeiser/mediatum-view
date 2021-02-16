@@ -1,4 +1,4 @@
-module Types.ServerSetup exposing (Config, ServerSetup)
+module Types.ServerSetup exposing (ServerConfig, ServerSetup)
 
 {-| Configuration values provided by the server
 -}
@@ -7,11 +7,11 @@ import Types.Selection as Selection
 
 
 type alias ServerSetup =
-    { config : Config
+    { config : ServerConfig
     }
 
 
-type alias Config =
+type alias ServerConfig =
     { defaultPageSize : Maybe Int
     , defaultSorting : Maybe Selection.Sorting
     , numberOfFacetValues : Maybe Int
