@@ -24,7 +24,6 @@ module UI.Controls exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
-import Constants
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -33,7 +32,10 @@ import Maybe.Extra
 import RemoteData
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
+import Types.Config.FacetAspect as FacetAspect exposing (FacetAspect)
+import Types.Config.FtsAspect as FtsAspect exposing (FtsAspect)
 import Types.FilterList as FilterList
+import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
 import Types.RearrangeableEditList exposing (RearrangeableEditList, rearrange)
@@ -238,7 +240,7 @@ view context model =
         [ Html.form
             [ Html.Events.onSubmit Submit ]
             [ viewSearch context model
-            , viewFtsFilters model
+            , viewFtsFilters context.config model
             , viewFacetFilters context
             , viewSearchButtons model
             ]
@@ -314,27 +316,26 @@ getSearchFieldPlaceholder context =
             (\folderName -> "Search in " ++ folderName)
 
 
-viewFtsFilters : Model -> Html Msg
-viewFtsFilters model =
+viewFtsFilters : Config -> Model -> Html Msg
+viewFtsFilters config model =
     Html.div [ Html.Attributes.class "filters-bar" ]
-        [ viewExistingFtsFilters
-            model.ftsFilterLines
-        , viewFtsAspectButtons model.ftsFilterLines
+        [ viewExistingFtsFilters config model.ftsFilterLines
+        , viewFtsAspectButtons config.ftsAspects model.ftsFilterLines
         ]
 
 
-viewExistingFtsFilters : List ( Aspect, String ) -> Html Msg
-viewExistingFtsFilters ftsFilterLines =
+viewExistingFtsFilters : Config -> List ( Aspect, String ) -> Html Msg
+viewExistingFtsFilters config ftsFilterLines =
     Html.div [] <|
         List.map
             (\( aspect, searchText ) ->
-                viewFtsFilter aspect searchText
+                viewFtsFilter config aspect searchText
             )
             ftsFilterLines
 
 
-viewFtsFilter : Aspect -> String -> Html Msg
-viewFtsFilter aspect searchText =
+viewFtsFilter : Config -> Aspect -> String -> Html Msg
+viewFtsFilter config aspect searchText =
     Html.div
         [ Html.Attributes.class "search-bar"
 
@@ -342,13 +343,17 @@ viewFtsFilter aspect searchText =
         ]
         [ Html.label
             [ Html.Attributes.class "search-label" ]
-            [ Html.text (Aspect.toString aspect) ]
+            [ Html.text
+                (FtsAspect.getLabelOrAspectName Localization.LangDe aspect config.ftsAspects)
+            ]
         , Html.span
             [ Html.Attributes.class "input-group" ]
             [ Html.input
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
-                , Html.Attributes.placeholder <| "Search " ++ Aspect.toString aspect
+                , Html.Attributes.placeholder <|
+                    "Search "
+                        ++ FtsAspect.getLabelOrAspectName Localization.LangDe aspect config.ftsAspects
                 , Html.Attributes.value searchText
                 , Html.Events.onInput (SetFtsFilterText aspect)
                 ]
@@ -365,11 +370,11 @@ viewFtsFilter aspect searchText =
         ]
 
 
-viewFtsAspectButtons : List ( Aspect, String ) -> Html Msg
-viewFtsAspectButtons ftsFilterLines =
+viewFtsAspectButtons : List FtsAspect -> List ( Aspect, String ) -> Html Msg
+viewFtsAspectButtons listOfFtsAspects ftsFilterLines =
     Html.div [] <|
         List.filterMap
-            (\aspect ->
+            (\{ aspect, label } ->
                 if Utils.List.findByMapping Tuple.first aspect ftsFilterLines == Nothing then
                     Just <|
                         Html.span
@@ -379,13 +384,13 @@ viewFtsAspectButtons ftsFilterLines =
                                 , Html.Attributes.class "add-filter-button"
                                 , Html.Events.onClick <| AddFtsFilter aspect
                                 ]
-                                [ Html.text <| Aspect.toString aspect ]
+                                [ Html.text (Localization.translation Localization.LangDe label) ]
                             ]
 
                 else
                     Nothing
             )
-            Constants.validFtsAspects
+            listOfFtsAspects
 
 
 viewFacetFilters : Context -> Html Msg
@@ -393,18 +398,20 @@ viewFacetFilters context =
     Html.div [ Html.Attributes.class "filters-bar" ]
         (context.route.parameters.facetFilters
             |> FilterList.toList
-            |> List.map viewFacetFilter
+            |> List.map (viewFacetFilter context.config)
         )
 
 
-viewFacetFilter : Selection.FacetFilter -> Html Msg
-viewFacetFilter ( aspect, value ) =
+viewFacetFilter : Config -> Selection.FacetFilter -> Html Msg
+viewFacetFilter config ( aspect, value ) =
     Html.div
         [ Html.Attributes.class "search-bar"
         ]
         [ Html.label
             [ Html.Attributes.class "search-label" ]
-            [ Html.text (Aspect.toString aspect) ]
+            [ Html.text
+                (FacetAspect.getLabelOrAspectName Localization.LangDe aspect config.facetAspects)
+            ]
         , Html.span
             [ Html.Attributes.class "input-group" ]
             [ Html.div

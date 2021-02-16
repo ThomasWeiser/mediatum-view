@@ -33,6 +33,7 @@ graphqlOperationNamePrefix =
 {-| -}
 validFacetAspects : List Aspect
 validFacetAspects =
+    -- TODO: Remove!
     [ "type", "subject", "origin", "author", "person", "keywords", "year" ]
         |> List.map Aspect.fromString
 
@@ -40,5 +41,6 @@ validFacetAspects =
 {-| -}
 validFtsAspects : List Aspect
 validFtsAspects =
+    -- TODO: Remove!
     [ "title", "type", "subject", "origin", "author", "person", "keywords", "year" ]
         |> List.map Aspect.fromString

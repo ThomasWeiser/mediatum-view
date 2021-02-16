@@ -31,8 +31,10 @@ import Sort.Dict
 import String.Extra
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
+import Types.Config.FacetAspect as FacetAspect exposing (FacetAspect)
 import Types.FacetValue exposing (FacetValues)
 import Types.FilterList as FilterList exposing (FilterList)
+import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
 import Types.Selection exposing (Selection)
@@ -156,7 +158,9 @@ viewFacet context selection aspect =
         [ Html.Attributes.class "facet-box" ]
         [ Html.div
             [ Html.Attributes.class "facet-name" ]
-            [ Html.text (Aspect.toString aspect) ]
+            [ Html.text
+                (FacetAspect.getLabelOrAspectName Localization.LangDe aspect context.config.facetAspects)
+            ]
         , Html.div
             [ Html.Attributes.class "facet-values" ]
             [ case FilterList.get aspect selection.facetFilters of
