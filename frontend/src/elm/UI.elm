@@ -11,13 +11,13 @@ module UI exposing
 -}
 
 import Cache exposing (Cache)
-import Constants
 import Entities.Document exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Types.Aspect exposing (Aspect)
 import Types.Config as Config exposing (Config)
+import Types.Config.FacetAspect as FacetAspect
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation exposing (Presentation(..))
@@ -64,7 +64,6 @@ type alias Model =
     , facets : UI.Facets.Model
     , controls : UI.Controls.Model
     , article : UI.Article.Model
-    , facetAspects : List Aspect
     }
 
 
@@ -82,10 +81,9 @@ type Msg
 init : Config -> Model
 init config =
     { tree = UI.Tree.initialModel
-    , facets = UI.Facets.initialModel Constants.validFacetAspects
+    , facets = UI.Facets.initialModel
     , controls = UI.Controls.initialModel config
     , article = UI.Article.initialModel (GenericPresentation Nothing)
-    , facetAspects = Constants.validFacetAspects
     }
 
 
@@ -101,7 +99,9 @@ needs context model =
             , presentation = context.presentation
             }
             model.tree
-        , UI.Article.needs model.facetAspects context.presentation
+        , UI.Article.needs
+            (FacetAspect.aspects context.config.facetAspects)
+            context.presentation
         ]
 
 
@@ -158,20 +158,12 @@ update context msg model =
                         { config = context.config
                         , cache = context.cache
                         , presentation = context.presentation
-                        , facetAspects = model.facetAspects
                         }
                         subMsg
                         model.facets
             in
             ( { model
                 | facets = subModel
-                , facetAspects =
-                    case subReturn of
-                        UI.Facets.ChangedFacetAspects newFacetAspects ->
-                            newFacetAspects
-
-                        _ ->
-                            model.facetAspects
               }
             , Cmd.map FacetsMsg subCmd
             , case subReturn of
@@ -290,7 +282,6 @@ view context model =
                         { config = context.config
                         , cache = context.cache
                         , presentation = context.presentation
-                        , facetAspects = model.facetAspects
                         }
                         model.facets
                 ]

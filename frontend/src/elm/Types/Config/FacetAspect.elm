@@ -1,4 +1,4 @@
-module Types.Config.FacetAspect exposing (FacetAspect, get, getLabelOrAspectName)
+module Types.Config.FacetAspect exposing (FacetAspect, aspects, get, getLabelOrAspectName)
 
 {-| TODO
 -}
@@ -28,3 +28,8 @@ getLabelOrAspectName language aspect facetAspects =
             (\facetAspect ->
                 Localization.translation language facetAspect.label
             )
+
+
+aspects : List FacetAspect -> List Aspect
+aspects =
+    List.map .aspect

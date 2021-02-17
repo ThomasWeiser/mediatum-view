@@ -48,7 +48,6 @@ type alias Context =
     { config : Config
     , cache : Cache
     , presentation : Presentation
-    , facetAspects : List Aspect
     }
 
 
@@ -56,30 +55,23 @@ type alias Context =
 type Return
     = NoReturn
     | Navigate Navigation
-    | ChangedFacetAspects (List Aspect)
 
 
 {-| -}
 type alias Model =
-    { facetAspectsInput : String
-    }
+    ()
 
 
 {-| -}
 type Msg
-    = SetFacetAspectsInput String
-    | SelectFacetValue Aspect String
+    = SelectFacetValue Aspect String
     | SelectFacetUnfilter Aspect
 
 
 {-| -}
-initialModel : List Aspect -> Model
-initialModel facetAspects =
-    { facetAspectsInput =
-        facetAspects
-            |> List.map Aspect.toString
-            |> String.join " "
-    }
+initialModel : Model
+initialModel =
+    ()
 
 
 {-| -}
@@ -100,50 +92,17 @@ update context msg model =
                 (Navigation.ShowListingWithRemovedFacetFilter aspect)
             )
 
-        SetFacetAspectsInput facetAspectsInput ->
-            ( { model | facetAspectsInput = facetAspectsInput }
-            , Cmd.none
-            , facetAspectsInput
-                |> String.Extra.clean
-                |> String.split " "
-                |> List.filter (String.Extra.isBlank >> not)
-                |> List.map Aspect.fromString
-                |> ChangedFacetAspects
-            )
-
 
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
-    Html.div []
-        [ viewFacets context
-        , viewFacetAspectsInput model
-        ]
-
-
-viewFacetAspectsInput : Model -> Html Msg
-viewFacetAspectsInput model =
-    Html.div []
-        [ Html.input
-            [ Html.Attributes.class "facet-aspects-input"
-            , Html.Attributes.type_ "text"
-            , Html.Attributes.placeholder "Facet Aspects ..."
-            , Html.Attributes.value model.facetAspectsInput
-            , Utils.onChange SetFacetAspectsInput
-            ]
-            []
-        ]
-
-
-viewFacets : Context -> Html Msg
-viewFacets context =
     case context.presentation of
         ListingPresentation selection _ ->
             Html.div
                 [ Html.Attributes.class "facets-bar" ]
                 (List.map
                     (viewFacet context selection)
-                    context.facetAspects
+                    context.config.facetAspects
                 )
 
         _ ->
@@ -152,21 +111,21 @@ viewFacets context =
                 ]
 
 
-viewFacet : Context -> Selection -> Aspect -> Html Msg
-viewFacet context selection aspect =
+viewFacet : Context -> Selection -> FacetAspect -> Html Msg
+viewFacet context selection facetAspect =
     Html.nav
         [ Html.Attributes.class "facet-box" ]
         [ Html.div
             [ Html.Attributes.class "facet-name" ]
             [ Html.text
-                (FacetAspect.getLabelOrAspectName Localization.LangDe aspect context.config.facetAspects)
+                (Localization.translation Localization.LangDe facetAspect.label)
             ]
         , Html.div
             [ Html.Attributes.class "facet-values" ]
-            [ case FilterList.get aspect selection.facetFilters of
+            [ case FilterList.get facetAspect.aspect selection.facetFilters of
                 Just selectedValue ->
                     viewFacetSelection
-                        aspect
+                        facetAspect.aspect
                         selectedValue
                         (Cache.Derive.getDocumentCount context.cache selection
                             |> RemoteData.toMaybe
@@ -176,7 +135,9 @@ viewFacet context selection aspect =
                     case
                         Cache.get
                             context.cache.facetsValues
-                            ( selection, context.facetAspects )
+                            ( selection
+                            , FacetAspect.aspects context.config.facetAspects
+                            )
                     of
                         RemoteData.NotAsked ->
                             -- Should never happen
@@ -190,8 +151,8 @@ viewFacet context selection aspect =
 
                         RemoteData.Success facetsValues ->
                             viewFacetValues
-                                aspect
-                                (Sort.Dict.get aspect facetsValues
+                                facetAspect.aspect
+                                (Sort.Dict.get facetAspect.aspect facetsValues
                                     |> Maybe.withDefault []
                                 )
             ]
