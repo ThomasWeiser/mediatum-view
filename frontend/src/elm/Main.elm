@@ -2,9 +2,9 @@ module Main exposing (main)
 
 {-| The `Main` module is responsible for:
 
-  - Initializing the app as a [`Browser.application`](/packages/elm/browser/1.0.1/Browser#application) that takes full control over the browser page.
+  - Initializing the application as a [`Browser.application`](/packages/elm/browser/1.0.1/Browser#application) that takes full control over the browser page.
 
-  - Hosting the module [`App`](App).
+  - Hosting the module [`Setup`](Setup), which in turn hosts the module [`App`](App).
 
   - Mananging URL changes by means of:
       - [`onUrlRequest`](/packages/elm/browser/1.0.1/Browser#application) (when the user clicks a link)
@@ -17,10 +17,10 @@ module Main exposing (main)
 
 import Api
 import Api.Queries
-import App
 import Browser
 import Browser.Navigation
 import Html
+import Setup
 import Types.Config as Config
 import Types.Route as Route
 import Types.Route.Url
@@ -30,7 +30,7 @@ import Url exposing (Url)
 
 type alias Model =
     { navigationKey : Browser.Navigation.Key
-    , app : App.Model
+    , setup : Setup.Model
     }
 
 
@@ -52,13 +52,13 @@ type Msg
     = ApiResponseServerSetup Url (Api.Response ServerSetup)
     | UrlRequest Browser.UrlRequest
     | UrlChanged Url.Url
-    | AppMsg App.Msg
+    | SetupMsg Setup.Msg
 
 
 init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url navigationKey =
     ( { navigationKey = navigationKey
-      , app = App.initEmptyModel
+      , setup = Setup.initEmptyModel
       }
     , Api.sendQueryRequest
         (Api.withOperationName "GetServerSetup")
@@ -72,24 +72,27 @@ update msg model =
     case msg of
         ApiResponseServerSetup url (Ok serverSetup) ->
             let
-                ( appModel, appCmd ) =
+                ( setupModel, setupCmd ) =
                     Types.Route.Url.parseUrl Config.init url
                         |> Maybe.withDefault (Route.initHome Config.init)
                         |> Route.sanitize
                             (Config.updateFromServerSetup serverSetup Config.init)
-                        |> App.initFromServerSetupAndRoute serverSetup
+                        |> Setup.initFromServerSetupAndRoute serverSetup
             in
             ( { model
-                | app = appModel
+                | setup = setupModel
               }
             , Cmd.batch
-                [ Cmd.map AppMsg appCmd
+                [ Cmd.map SetupMsg setupCmd
                 , -- Normalize the URL:
                   -- Replace the externally provided URL with one
                   -- that reflects the resulting intial state.
                   Browser.Navigation.replaceUrl
                     model.navigationKey
-                    (Types.Route.Url.toString Config.init appModel.route)
+                    (Types.Route.Url.toString Config.init
+                        -- TODO: Kein Durchgriff auf app?
+                        setupModel.app.route
+                    )
                 ]
             )
 
@@ -114,42 +117,42 @@ update msg model =
         UrlChanged url ->
             let
                 route =
-                    Types.Route.Url.parseUrl model.app.config url
-                        |> Maybe.withDefault (Route.initHome model.app.config)
-                        |> Route.sanitize model.app.config
+                    Types.Route.Url.parseUrl model.setup.app.config url
+                        |> Maybe.withDefault (Route.initHome model.setup.app.config)
+                        |> Route.sanitize model.setup.app.config
 
-                ( subModel, subCmd ) =
-                    model.app
-                        |> App.updateModelFromRoute route
-                        |> App.requestNeeds
+                ( setupModel, setupCmd ) =
+                    model.setup
+                        |> Setup.updateModelFromRoute route
+                        |> Setup.requestNeeds
             in
             ( { model
-                | app = subModel
+                | setup = setupModel
               }
-            , Cmd.map AppMsg subCmd
+            , Cmd.map SetupMsg setupCmd
             )
 
-        AppMsg subMsg ->
+        SetupMsg setupMsg ->
             let
-                ( subModel1, subCmd1, subReturn1 ) =
-                    App.update subMsg model.app
+                ( setupModel1, setupCmd1, setupReturn ) =
+                    Setup.update setupMsg model.setup
 
-                ( subModel2, subCmd2 ) =
-                    App.requestNeeds subModel1
+                ( setupModel2, setupCmd2 ) =
+                    Setup.requestNeeds setupModel1
             in
             ( { model
-                | app = subModel2
+                | setup = setupModel2
               }
             , Cmd.batch
-                [ Cmd.map AppMsg subCmd1
-                , Cmd.map AppMsg subCmd2
-                , case subReturn1 of
-                    App.ReflectRoute route ->
+                [ Cmd.map SetupMsg setupCmd1
+                , Cmd.map SetupMsg setupCmd2
+                , case setupReturn of
+                    Setup.ReflectRoute route ->
                         Browser.Navigation.pushUrl
                             model.navigationKey
-                            (Types.Route.Url.toString subModel2.config route)
+                            (Types.Route.Url.toString setupModel2.app.config route)
 
-                    App.NoReturn ->
+                    Setup.NoReturn ->
                         Cmd.none
                 ]
             )
@@ -159,7 +162,7 @@ view : Model -> Browser.Document Msg
 view model =
     { title = "mediaTUM View"
     , body =
-        [ App.view model.app
-            |> Html.map AppMsg
+        [ Setup.view model.setup
+            |> Html.map SetupMsg
         ]
     }
