@@ -72,7 +72,7 @@ update msg model =
     case msg of
         ApiResponseServerSetup url (Ok serverSetup) ->
             let
-                ( setupModel, setupCmd ) =
+                ( setupModel, setupCmd, resultingRoute ) =
                     Types.Route.Url.parseUrl Config.init url
                         |> Maybe.withDefault (Route.initHome Config.init)
                         |> Route.sanitize
@@ -89,10 +89,7 @@ update msg model =
                   -- that reflects the resulting intial state.
                   Browser.Navigation.replaceUrl
                     model.navigationKey
-                    (Types.Route.Url.toString Config.init
-                        -- TODO: Kein Durchgriff auf app?
-                        setupModel.app.route
-                    )
+                    (resultingRoute |> Types.Route.Url.toString setupModel.config)
                 ]
             )
 

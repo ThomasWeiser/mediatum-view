@@ -52,8 +52,11 @@ initEmptyModel =
 
 
 {-| Initialize the model with the given route and request the corresponding needs.
+
+Also returns the (possibly amended) route.
+
 -}
-initFromServerSetupAndRoute : ServerSetup -> Route -> ( Model, Cmd Msg )
+initFromServerSetupAndRoute : ServerSetup -> Route -> ( Model, Cmd Msg, Route )
 initFromServerSetupAndRoute serverSetup route =
     let
         config =
@@ -66,6 +69,7 @@ initFromServerSetupAndRoute serverSetup route =
       , app = appModel
       }
     , Cmd.map AppMsg appCmd
+    , appModel.route
     )
 
 
