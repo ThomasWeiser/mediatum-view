@@ -16,7 +16,8 @@ import Types.ServerSetup exposing (ServerSetup)
 {-| Configuration variables that are made available to most modules via their Context type
 -}
 type alias Config =
-    { defaultPageSize : Int
+    { serverConfigAdopted : Bool
+    , defaultPageSize : Int
     , defaultSorting : Selection.Sorting
     , numberOfFacetValues : Int
     , ftsAspects : List FtsAspect
@@ -28,7 +29,8 @@ type alias Config =
 -}
 init : Config
 init =
-    { defaultPageSize = 10
+    { serverConfigAdopted = False
+    , defaultPageSize = 10
     , defaultSorting = Selection.ByRank
     , numberOfFacetValues = 20
     , ftsAspects = []
@@ -39,7 +41,8 @@ init =
 updateFromServerSetup : ServerSetup -> Config -> Config
 updateFromServerSetup serverSetup config =
     { config
-        | defaultPageSize =
+        | serverConfigAdopted = True
+        , defaultPageSize =
             serverSetup.config.defaultPageSize |> Maybe.withDefault config.defaultPageSize
         , defaultSorting =
             serverSetup.config.defaultSorting |> Maybe.withDefault config.defaultSorting

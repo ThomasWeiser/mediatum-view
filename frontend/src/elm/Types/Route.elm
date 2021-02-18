@@ -25,10 +25,11 @@ Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Ro
 
 -}
 
-import Constants
 import Sort.Dict
 import Types.Aspect exposing (Aspect)
 import Types.Config as Config exposing (Config)
+import Types.Config.FacetAspect as FacetAspect
+import Types.Config.FtsAspect as FtsAspect
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
@@ -91,20 +92,26 @@ emptyParameters config =
 {-| Make sure the route does not contain any unwanted details.
 In particular, make sure that the aspects used for fts filters or facet filters are valid.
 -}
-sanitize : Route -> Route
-sanitize route =
+sanitize : Config -> Route -> Route
+sanitize config route =
     let
         parameters =
             route.parameters
     in
     { path = route.path
     , parameters =
-        { parameters
-            | ftsFilters =
-                FilterList.filterAspects Constants.validFtsAspects parameters.ftsFilters
-            , facetFilters =
-                FilterList.filterAspects Constants.validFacetAspects parameters.facetFilters
-        }
+        if config.serverConfigAdopted then
+            { parameters
+                | ftsFilters =
+                    parameters.ftsFilters
+                        |> FilterList.filterAspects (FtsAspect.aspects config.ftsAspects)
+                , facetFilters =
+                    parameters.facetFilters
+                        |> FilterList.filterAspects (FacetAspect.aspects config.facetAspects)
+            }
+
+        else
+            parameters
     }
 
 

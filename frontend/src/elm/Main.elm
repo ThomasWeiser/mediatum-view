@@ -76,6 +76,7 @@ update msg model =
                     Types.Route.Url.parseUrl Config.init url
                         |> Maybe.withDefault (Route.initHome Config.init)
                         |> Route.sanitize
+                            (Config.updateFromServerSetup serverSetup Config.init)
                         |> App.initFromServerSetupAndRoute serverSetup
             in
             ( { model
@@ -115,7 +116,7 @@ update msg model =
                 route =
                     Types.Route.Url.parseUrl model.app.config url
                         |> Maybe.withDefault (Route.initHome model.app.config)
-                        |> Route.sanitize
+                        |> Route.sanitize model.app.config
 
                 ( subModel, subCmd ) =
                     model.app
