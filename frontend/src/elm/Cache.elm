@@ -326,12 +326,6 @@ requestNeed config need cache =
                     Needs.statusFromRemoteData
                         (get cache.residence documentIdFromSearch.id)
                         == Needs.NotRequested
-
-                _ =
-                    Debug.log "NeedDocumentFromSearch"
-                        { documentIdFromSearch = documentIdFromSearch
-                        , needResidence = needResidence
-                        }
             in
             ( { cache
                 | documents =
