@@ -53,7 +53,6 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 import Api
 import Api.Queries
 import Basics.Extra
-import Constants
 import Entities.Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder)
@@ -67,10 +66,9 @@ import Sort.Dict
 import Types exposing (DocumentIdFromSearch, NodeType(..), Window)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
-import Types.FacetValue exposing (FacetValues, FacetsValues)
+import Types.FacetValue exposing (FacetsValues)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Needs as Needs
-import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection as Selection exposing (Selection)
 import Utils
 import Utils.List

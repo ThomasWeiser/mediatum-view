@@ -21,7 +21,7 @@ import App
 import Browser
 import Browser.Navigation
 import Html
-import Types.Config as Config exposing (Config)
+import Types.Config as Config
 import Types.Route as Route
 import Types.Route.Url
 import Types.ServerSetup exposing (ServerSetup)

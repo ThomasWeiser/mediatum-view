@@ -27,7 +27,7 @@ module UI.Article exposing
 import Cache exposing (Cache)
 import Cache.Derive
 import Entities.Document exposing (Document)
-import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
+import Entities.FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra

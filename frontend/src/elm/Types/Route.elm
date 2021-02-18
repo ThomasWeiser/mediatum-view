@@ -22,14 +22,11 @@ Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Ro
 
 -}
 
-import Sort.Dict
-import Types.Aspect exposing (Aspect)
-import Types.Config as Config exposing (Config)
+import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Config.FtsAspectConfig as FtsAspect
-import Types.FilterList as FilterList exposing (FilterList)
+import Types.FilterList as FilterList
 import Types.Id exposing (DocumentId, FolderId, NodeId)
-import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection as Selection exposing (FacetFilters, FtsFilters, GlobalFts, Sorting(..))
 
 
@@ -110,11 +107,3 @@ sanitize config route =
         else
             parameters
     }
-
-
-keepOnly : List Aspect -> Sort.Dict.Dict Aspect v -> Sort.Dict.Dict Aspect v
-keepOnly validAspects =
-    Sort.Dict.keepIf
-        (\aspect _ ->
-            List.member aspect validAspects
-        )

@@ -13,9 +13,9 @@ The type `GenericNode` represents such a result.
 -}
 
 import Entities.Document exposing (Document)
-import Entities.Folder exposing (Folder, LineageFolders)
+import Entities.Folder exposing (LineageFolders)
 import Entities.Residence exposing (Residence)
-import List.Nonempty exposing (Nonempty)
+import List.Nonempty
 import Types exposing (NodeType(..))
 
 

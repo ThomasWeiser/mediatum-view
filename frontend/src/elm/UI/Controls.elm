@@ -32,7 +32,7 @@ import Maybe.Extra
 import RemoteData
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
-import Types.Config.FacetAspectConfig as FacetAspect exposing (FacetAspectConfig)
+import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Config.FtsAspectConfig as FtsAspect exposing (FtsAspectConfig)
 import Types.FilterList as FilterList
 import Types.Localization as Localization
@@ -43,7 +43,6 @@ import Types.Route exposing (Route)
 import Types.SearchTerm as SearchTerm
 import Types.Selection as Selection exposing (Sorting(..))
 import UI.Icons
-import Utils
 import Utils.List
 
 

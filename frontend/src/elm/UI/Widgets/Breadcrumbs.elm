@@ -15,7 +15,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
 import RemoteData
-import Types.Config as Config exposing (Config)
+import Types.Config exposing (Config)
 import Types.Id exposing (FolderId)
 import Types.Navigation as Navigation
 import Types.Route exposing (Route)

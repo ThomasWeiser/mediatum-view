@@ -35,7 +35,7 @@ import Maybe.Extra
 import RemoteData
 import Types exposing (DocumentIdFromSearch, FolderDisplay(..), NodeType(..), Window)
 import Types.FilterList as FilterList
-import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
+import Types.Id as Id exposing (FolderId, NodeId)
 import Types.Route as Route exposing (Route)
 import Types.Selection exposing (Selection)
 

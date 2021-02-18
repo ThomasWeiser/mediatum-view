@@ -22,24 +22,21 @@ module UI.Facets exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
-import Dict
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import RemoteData
 import Sort.Dict
-import String.Extra
-import Types.Aspect as Aspect exposing (Aspect)
+import Types.Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect exposing (FacetAspectConfig)
 import Types.FacetValue exposing (FacetValues)
-import Types.FilterList as FilterList exposing (FilterList)
+import Types.FilterList as FilterList
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Presentation exposing (Presentation(..))
 import Types.Selection exposing (Selection)
 import UI.Icons
-import Utils
 import Utils.Html
 
 

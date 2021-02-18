@@ -16,7 +16,6 @@ import Types.Aspect exposing (Aspect)
 import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.Route as Route exposing (Route)
-import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection exposing (FtsFilters, GlobalFts, Sorting)
 
 

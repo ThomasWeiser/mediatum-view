@@ -47,7 +47,6 @@ In reality it's just function calling.
 import Api.Arguments.AspectTest
 import Api.Arguments.Filter
 import Api.Fragments
-import Constants
 import Entities.Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder, LineageFolders)
@@ -57,14 +56,10 @@ import Entities.Residence exposing (Residence)
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
-import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 import Mediatum.Enum.FtsSorting
 import Mediatum.InputObject
-import Mediatum.Object
-import Mediatum.Object.FacetAspectConfig
 import Mediatum.Object.FoldersConnection
-import Mediatum.Object.FtsAspectConfig
 import Mediatum.Object.GenericNode
 import Mediatum.Object.Setup
 import Mediatum.Object.SetupConfig
@@ -74,11 +69,9 @@ import Pagination.Relay.Page
 import Pagination.Relay.Pagination
 import Types exposing (DocumentIdFromSearch, Window)
 import Types.Aspect as Aspect exposing (Aspect)
-import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
-import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
 import Types.FacetValue as Facet exposing (FacetsValues)
 import Types.FilterList as FilterList
-import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
+import Types.Id as Id exposing (FolderId, NodeId)
 import Types.SearchTerm
 import Types.Selection exposing (Selection, Sorting(..))
 import Types.ServerSetup as ServerSetup exposing (ServerSetup)

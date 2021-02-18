@@ -15,7 +15,7 @@ import Maybe.Extra
 import Regex
 import Types.Aspect as Aspect
 import Types.Config exposing (Config)
-import Types.FilterList as FilterList exposing (FilterList)
+import Types.FilterList as FilterList
 import Types.Id as Id exposing (NodeId)
 import Types.Route as Route exposing (Route, RouteParameters, RoutePath(..))
 import Types.SearchTerm as SearchTerm

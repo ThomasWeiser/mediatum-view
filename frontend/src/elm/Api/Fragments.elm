@@ -50,7 +50,7 @@ import Entities.Residence exposing (Residence)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode exposing (Decoder)
-import List.Nonempty exposing (Nonempty)
+import List.Nonempty
 import Maybe.Extra
 import Mediatum.Object
 import Mediatum.Object.Docset

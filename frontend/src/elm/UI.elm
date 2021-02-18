@@ -15,13 +15,12 @@ import Entities.Document exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Types.Aspect exposing (Aspect)
-import Types.Config as Config exposing (Config)
+import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation exposing (Presentation(..))
-import Types.Route as Route exposing (Route)
+import Types.Route exposing (Route)
 import UI.Article
 import UI.Controls
 import UI.Facets
