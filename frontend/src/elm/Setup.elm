@@ -32,7 +32,8 @@ type Return
 
 {-| -}
 type alias Model =
-    { app : App.Model
+    { config : Config
+    , app : App.Model
     }
 
 
@@ -45,7 +46,8 @@ type Msg
 {-| -}
 initEmptyModel : Model
 initEmptyModel =
-    { app = App.initEmptyModel
+    { config = Config.init
+    , app = App.initEmptyModel
     }
 
 
@@ -54,10 +56,15 @@ initEmptyModel =
 initFromServerSetupAndRoute : ServerSetup -> Route -> ( Model, Cmd Msg )
 initFromServerSetupAndRoute serverSetup route =
     let
+        config =
+            Config.updateFromServerSetup serverSetup Config.init
+
         ( appModel, appCmd ) =
-            App.initFromServerSetupAndRoute serverSetup route
+            App.initFromRoute { config = config } route
     in
-    ( { app = appModel }
+    ( { config = config
+      , app = appModel
+      }
     , Cmd.map AppMsg appCmd
     )
 
@@ -67,7 +74,7 @@ initFromServerSetupAndRoute serverSetup route =
 updateModelFromRoute : Route -> Model -> Model
 updateModelFromRoute route model =
     { model
-        | app = App.updateModelFromRoute route model.app
+        | app = App.updateModelFromRoute (appContext model) route model.app
     }
 
 
@@ -77,7 +84,7 @@ requestNeeds : Model -> ( Model, Cmd Msg )
 requestNeeds model =
     let
         ( appModel, appCmd ) =
-            App.requestNeeds model.app
+            App.requestNeeds (appContext model) model.app
     in
     ( { model | app = appModel }
     , Cmd.map AppMsg appCmd
@@ -92,7 +99,7 @@ update msg model =
         AppMsg appMsg ->
             let
                 ( appModel, appCmd, appReturn ) =
-                    App.update appMsg model.app
+                    App.update (appContext model) appMsg model.app
             in
             ( { model | app = appModel }
             , Cmd.map AppMsg appCmd
@@ -110,5 +117,11 @@ update msg model =
 view : Model -> Html Msg
 view model =
     App.view
+        (appContext model)
         model.app
         |> Html.map AppMsg
+
+
+appContext : Model -> App.Context
+appContext model =
+    { config = model.config }

@@ -117,9 +117,9 @@ update msg model =
         UrlChanged url ->
             let
                 route =
-                    Types.Route.Url.parseUrl model.setup.app.config url
-                        |> Maybe.withDefault (Route.initHome model.setup.app.config)
-                        |> Route.sanitize model.setup.app.config
+                    Types.Route.Url.parseUrl model.setup.config url
+                        |> Maybe.withDefault (Route.initHome model.setup.config)
+                        |> Route.sanitize model.setup.config
 
                 ( setupModel, setupCmd ) =
                     model.setup
@@ -150,7 +150,7 @@ update msg model =
                     Setup.ReflectRoute route ->
                         Browser.Navigation.pushUrl
                             model.navigationKey
-                            (Types.Route.Url.toString setupModel2.app.config route)
+                            (Types.Route.Url.toString setupModel2.config route)
 
                     Setup.NoReturn ->
                         Cmd.none
