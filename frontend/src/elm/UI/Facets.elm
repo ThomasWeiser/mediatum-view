@@ -31,7 +31,7 @@ import Sort.Dict
 import String.Extra
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
-import Types.Config.FacetAspect as FacetAspect exposing (FacetAspect)
+import Types.Config.FacetAspectConfig as FacetAspect exposing (FacetAspectConfig)
 import Types.FacetValue exposing (FacetValues)
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Localization as Localization
@@ -111,21 +111,21 @@ view context model =
                 ]
 
 
-viewFacet : Context -> Selection -> FacetAspect -> Html Msg
-viewFacet context selection facetAspect =
+viewFacet : Context -> Selection -> FacetAspectConfig -> Html Msg
+viewFacet context selection facetAspectConfig =
     Html.nav
         [ Html.Attributes.class "facet-box" ]
         [ Html.div
             [ Html.Attributes.class "facet-name" ]
             [ Html.text
-                (Localization.translation Localization.LangDe facetAspect.label)
+                (Localization.translation Localization.LangDe facetAspectConfig.label)
             ]
         , Html.div
             [ Html.Attributes.class "facet-values" ]
-            [ case FilterList.get facetAspect.aspect selection.facetFilters of
+            [ case FilterList.get facetAspectConfig.aspect selection.facetFilters of
                 Just selectedValue ->
                     viewFacetSelection
-                        facetAspect.aspect
+                        facetAspectConfig.aspect
                         selectedValue
                         (Cache.Derive.getDocumentCount context.cache selection
                             |> RemoteData.toMaybe
@@ -151,8 +151,8 @@ viewFacet context selection facetAspect =
 
                         RemoteData.Success facetsValues ->
                             viewFacetValues
-                                facetAspect.aspect
-                                (Sort.Dict.get facetAspect.aspect facetsValues
+                                facetAspectConfig.aspect
+                                (Sort.Dict.get facetAspectConfig.aspect facetsValues
                                     |> Maybe.withDefault []
                                 )
             ]

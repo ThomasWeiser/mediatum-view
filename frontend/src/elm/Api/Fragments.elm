@@ -76,8 +76,8 @@ import Pagination.Relay.Connection as Connection
 import String.Extra
 import Types exposing (FolderDisplay(..), WindowPage)
 import Types.Aspect as Aspect exposing (Aspect)
-import Types.Config.FacetAspect exposing (FacetAspect)
-import Types.Config.FtsAspect exposing (FtsAspect)
+import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
+import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
 import Types.FacetValue exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (FolderId, LineageIds)
 import Types.Localization as Localization
@@ -97,9 +97,9 @@ _GraphQL notation:_
     }
 
 -}
-ftsAspectConfig : SelectionSet FtsAspect Mediatum.Object.FtsAspectConfig
+ftsAspectConfig : SelectionSet FtsAspectConfig Mediatum.Object.FtsAspectConfig
 ftsAspectConfig =
-    SelectionSet.succeed FtsAspect
+    SelectionSet.succeed FtsAspectConfig
         |> SelectionSet.with
             (Mediatum.Object.FtsAspectConfig.aspect
                 |> SelectionSet.nonNullOrFail
@@ -124,9 +124,9 @@ _GraphQL notation:_
     }
 
 -}
-facetAspectConfig : SelectionSet FacetAspect Mediatum.Object.FacetAspectConfig
+facetAspectConfig : SelectionSet FacetAspectConfig Mediatum.Object.FacetAspectConfig
 facetAspectConfig =
-    SelectionSet.succeed FacetAspect
+    SelectionSet.succeed FacetAspectConfig
         |> SelectionSet.with
             (Mediatum.Object.FacetAspectConfig.aspect
                 |> SelectionSet.nonNullOrFail

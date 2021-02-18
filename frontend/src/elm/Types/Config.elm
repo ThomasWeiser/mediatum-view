@@ -7,8 +7,8 @@ module Types.Config exposing
 {-| Configuration values provided by the server
 -}
 
-import Types.Config.FacetAspect exposing (FacetAspect)
-import Types.Config.FtsAspect exposing (FtsAspect)
+import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
+import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
 import Types.Selection as Selection
 import Types.ServerSetup exposing (ServerSetup)
 
@@ -20,8 +20,8 @@ type alias Config =
     , defaultPageSize : Int
     , defaultSorting : Selection.Sorting
     , numberOfFacetValues : Int
-    , ftsAspects : List FtsAspect
-    , facetAspects : List FacetAspect
+    , ftsAspects : List FtsAspectConfig
+    , facetAspects : List FacetAspectConfig
     }
 
 

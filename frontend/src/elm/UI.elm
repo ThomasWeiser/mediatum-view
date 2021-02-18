@@ -17,7 +17,7 @@ import Html.Attributes
 import Html.Events
 import Types.Aspect exposing (Aspect)
 import Types.Config as Config exposing (Config)
-import Types.Config.FacetAspect as FacetAspect
+import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation exposing (Presentation(..))

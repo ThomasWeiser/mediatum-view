@@ -32,8 +32,8 @@ import Maybe.Extra
 import RemoteData
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
-import Types.Config.FacetAspect as FacetAspect exposing (FacetAspect)
-import Types.Config.FtsAspect as FtsAspect exposing (FtsAspect)
+import Types.Config.FacetAspectConfig as FacetAspect exposing (FacetAspectConfig)
+import Types.Config.FtsAspectConfig as FtsAspect exposing (FtsAspectConfig)
 import Types.FilterList as FilterList
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
@@ -370,8 +370,8 @@ viewFtsFilter config aspect searchText =
         ]
 
 
-viewFtsAspectButtons : List FtsAspect -> List ( Aspect, String ) -> Html Msg
-viewFtsAspectButtons listOfFtsAspects ftsFilterLines =
+viewFtsAspectButtons : List FtsAspectConfig -> List ( Aspect, String ) -> Html Msg
+viewFtsAspectButtons listOfFtsAspectConfigs ftsFilterLines =
     Html.div [] <|
         List.filterMap
             (\{ aspect, label } ->
@@ -390,7 +390,7 @@ viewFtsAspectButtons listOfFtsAspects ftsFilterLines =
                 else
                     Nothing
             )
-            listOfFtsAspects
+            listOfFtsAspectConfigs
 
 
 viewFacetFilters : Context -> Html Msg

@@ -28,8 +28,8 @@ Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Ro
 import Sort.Dict
 import Types.Aspect exposing (Aspect)
 import Types.Config as Config exposing (Config)
-import Types.Config.FacetAspect as FacetAspect
-import Types.Config.FtsAspect as FtsAspect
+import Types.Config.FacetAspectConfig as FacetAspect
+import Types.Config.FtsAspectConfig as FtsAspect
 import Types.FilterList as FilterList exposing (FilterList)
 import Types.Id exposing (DocumentId, FolderId, NodeId)
 import Types.SearchTerm exposing (SearchTerm)
