@@ -115,7 +115,7 @@ viewFacet context selection facetAspectConfig =
         [ Html.div
             [ Html.Attributes.class "facet-name" ]
             [ Html.text
-                (Localization.translation Localization.LangDe facetAspectConfig.label)
+                (Localization.translation context.config.uiLanguage facetAspectConfig.label)
             ]
         , Html.div
             [ Html.Attributes.class "facet-values" ]

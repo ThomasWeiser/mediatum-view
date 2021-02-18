@@ -14,6 +14,7 @@ Most values are defined in the server and fetched dynamically.
 
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
+import Types.Localization as Localization exposing (Language)
 import Types.Selection as Selection
 import Types.ServerSetup exposing (ServerSetup)
 
@@ -21,7 +22,8 @@ import Types.ServerSetup exposing (ServerSetup)
 {-| Configuration values that are made available to most modules via their Context type
 -}
 type alias Config =
-    { serverConfigAdopted : Bool
+    { uiLanguage : Language
+    , serverConfigAdopted : Bool
     , defaultPageSize : Int
     , defaultSorting : Selection.Sorting
     , numberOfFacetValues : Int
@@ -34,7 +36,8 @@ type alias Config =
 -}
 init : Config
 init =
-    { serverConfigAdopted = False
+    { uiLanguage = Localization.LangEn
+    , serverConfigAdopted = False
     , defaultPageSize = 10
     , defaultSorting = Selection.ByRank
     , numberOfFacetValues = 20
