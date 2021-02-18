@@ -14,7 +14,8 @@ import Erl
 import Maybe.Extra
 import Regex
 import Types.Aspect as Aspect
-import Types.FilterList as FilterList exposing (FilterList)
+import Types.Config exposing (Config)
+import Types.FilterList as FilterList
 import Types.Id as Id exposing (NodeId)
 import Types.Route as Route exposing (Route, RouteParameters, RoutePath(..))
 import Types.SearchTerm as SearchTerm
@@ -25,8 +26,8 @@ import Utils
 
 
 {-| -}
-parseUrl : Url -> Maybe Route
-parseUrl url =
+parseUrl : Config -> Url -> Maybe Route
+parseUrl config url =
     let
         erl : Erl.Url
         erl =
@@ -34,7 +35,7 @@ parseUrl url =
     in
     Maybe.map2 Route
         (parsePath erl.path)
-        (parseQuery erl.query)
+        (parseQuery erl.query (Route.initHome config |> .parameters))
 
 
 parsePath : List String -> Maybe RoutePath
@@ -61,13 +62,14 @@ idFromString =
             (Utils.ensure Id.isValidId)
 
 
-parseQuery : List ( String, String ) -> Maybe RouteParameters
-parseQuery =
+parseQuery : List ( String, String ) -> RouteParameters -> Maybe RouteParameters
+parseQuery listOfParameters initRouteParameters =
     List.foldl
         (\param ->
             Maybe.andThen (parseQueryParameter param)
         )
-        (Just (.parameters Route.initHome))
+        (Just initRouteParameters)
+        listOfParameters
 
 
 parseQueryParameter : ( String, String ) -> RouteParameters -> Maybe RouteParameters
@@ -154,8 +156,8 @@ regexHasOrSearchAspect =
 
 
 {-| -}
-toString : Route -> String
-toString route =
+toString : Config -> Route -> String
+toString config route =
     Builder.absolute
         (case route.path of
             NoId ->
@@ -175,7 +177,7 @@ toString route =
                     )
             , buildParameterIfNotDefault
                 (sortingTostring >> Builder.string "sort-by")
-                Route.defaultSorting
+                config.defaultSorting
                 route.parameters.sorting
             ]
             ++ List.map
@@ -199,7 +201,7 @@ toString route =
                     route.parameters.offset
                 , buildParameterIfNotDefault
                     (Builder.int "limit")
-                    Route.defaultLimit
+                    config.defaultPageSize
                     route.parameters.limit
                 ]
         )

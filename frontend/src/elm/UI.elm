@@ -11,16 +11,16 @@ module UI exposing
 -}
 
 import Cache exposing (Cache)
-import Config
 import Entities.Document exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Types.Aspect exposing (Aspect)
+import Types.Config exposing (Config)
+import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation exposing (Presentation(..))
-import Types.Route as Route exposing (Route)
+import Types.Route exposing (Route)
 import UI.Article
 import UI.Controls
 import UI.Facets
@@ -31,7 +31,8 @@ import UI.Tree
 {-| Context data provided by the parent module [`App`](App). Used by several functions here.
 -}
 type alias Context =
-    { cache : Cache
+    { config : Config
+    , cache : Cache
     , route : Route
     , presentation : Presentation
     }
@@ -62,7 +63,6 @@ type alias Model =
     , facets : UI.Facets.Model
     , controls : UI.Controls.Model
     , article : UI.Article.Model
-    , facetAspects : List Aspect
     }
 
 
@@ -77,13 +77,12 @@ type Msg
 
 {-| Initial model
 -}
-init : Model
-init =
+init : Config -> Model
+init config =
     { tree = UI.Tree.initialModel
-    , facets = UI.Facets.initialModel Config.validFacetAspects
-    , controls = UI.Controls.initialModel
+    , facets = UI.Facets.initialModel
+    , controls = UI.Controls.initialModel config
     , article = UI.Article.initialModel (GenericPresentation Nothing)
-    , facetAspects = Config.validFacetAspects
     }
 
 
@@ -94,11 +93,14 @@ needs context model =
     Types.Needs.batch
         [ Types.Needs.atomic Cache.NeedRootFolderIds
         , UI.Tree.needs
-            { cache = context.cache
+            { config = context.config
+            , cache = context.cache
             , presentation = context.presentation
             }
             model.tree
-        , UI.Article.needs model.facetAspects context.presentation
+        , UI.Article.needs
+            (FacetAspect.aspects context.config.facetAspects)
+            context.presentation
         ]
 
 
@@ -131,7 +133,8 @@ update context msg model =
             let
                 ( subModel, subReturn ) =
                     UI.Tree.update
-                        { cache = context.cache
+                        { config = context.config
+                        , cache = context.cache
                         , presentation = context.presentation
                         }
                         subMsg
@@ -151,22 +154,15 @@ update context msg model =
             let
                 ( subModel, subCmd, subReturn ) =
                     UI.Facets.update
-                        { cache = context.cache
+                        { config = context.config
+                        , cache = context.cache
                         , presentation = context.presentation
-                        , facetAspects = model.facetAspects
                         }
                         subMsg
                         model.facets
             in
             ( { model
                 | facets = subModel
-                , facetAspects =
-                    case subReturn of
-                        UI.Facets.ChangedFacetAspects newFacetAspects ->
-                            newFacetAspects
-
-                        _ ->
-                            model.facetAspects
               }
             , Cmd.map FacetsMsg subCmd
             , case subReturn of
@@ -181,7 +177,8 @@ update context msg model =
             let
                 ( subModel, subCmd, subReturn ) =
                     UI.Controls.update
-                        { route = context.route
+                        { config = context.config
+                        , route = context.route
                         , cache = context.cache
                         , presentation = context.presentation
                         }
@@ -204,7 +201,8 @@ update context msg model =
             let
                 ( subModel, subCmd, subReturn ) =
                     UI.Article.update
-                        { cache = context.cache
+                        { config = context.config
+                        , cache = context.cache
                         , route = context.route
                         , presentation = context.presentation
                         }
@@ -254,7 +252,8 @@ view context model =
                     ]
                 ]
             , UI.Controls.view
-                { route = context.route
+                { config = context.config
+                , route = context.route
                 , cache = context.cache
                 , presentation = context.presentation
                 }
@@ -265,27 +264,30 @@ view context model =
             [ Html.aside []
                 [ Html.map TreeMsg <|
                     UI.Tree.view
-                        { cache = context.cache
+                        { config = context.config
+                        , cache = context.cache
                         , presentation = context.presentation
                         }
                         model.tree
                         (UI.Article.folderCountsForQuery
-                            { cache = context.cache
+                            { config = context.config
+                            , cache = context.cache
                             , route = context.route
                             , presentation = context.presentation
                             }
                         )
                 , Html.map FacetsMsg <|
                     UI.Facets.view
-                        { cache = context.cache
+                        { config = context.config
+                        , cache = context.cache
                         , presentation = context.presentation
-                        , facetAspects = model.facetAspects
                         }
                         model.facets
                 ]
             , Html.map ArticleMsg <|
                 UI.Article.view
-                    { cache = context.cache
+                    { config = context.config
+                    , cache = context.cache
                     , route = context.route
                     , presentation = context.presentation
                     }

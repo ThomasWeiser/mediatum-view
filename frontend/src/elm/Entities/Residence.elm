@@ -6,7 +6,7 @@ module Entities.Residence exposing (Residence, toList)
 
 -}
 
-import List.Nonempty exposing (Nonempty)
+import List.Nonempty
 import Sort.Set
 import Types.Id as Id exposing (FolderId, LineageIds)
 import Utils

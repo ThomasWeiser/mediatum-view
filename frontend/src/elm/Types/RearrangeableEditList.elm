@@ -11,14 +11,17 @@ module Types.RearrangeableEditList exposing
 -}
 
 
+{-| -}
 type alias RearrangeableEditItem k v =
     ( k, v )
 
 
+{-| -}
 type alias RearrangeableEditList k v =
     List (RearrangeableEditItem k v)
 
 
+{-| -}
 rearrange : (RearrangeableEditItem k v -> Bool) -> RearrangeableEditList k v -> RearrangeableEditList k v -> RearrangeableEditList k v
 rearrange keep routeList editList =
     let

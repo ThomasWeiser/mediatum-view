@@ -9,6 +9,7 @@ $p src/sql/drop_all.sql
 $p src/sql/types.sql
 $p src/sql/auxiliary.sql
 $p src/sql/entities.sql
+$p src/sql/api-setup.sql
 $p src/sql/api-node.sql
 $p src/sql/api-meta.sql
 $p src/sql/api-folder.sql

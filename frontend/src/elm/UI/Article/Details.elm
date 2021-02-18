@@ -33,7 +33,8 @@ import List.Nonempty
 import Maybe.Extra
 import RemoteData
 import Types exposing (DocumentIdFromSearch)
-import Types.Id as Id exposing (DocumentId)
+import Types.Config exposing (Config)
+import Types.Id exposing (DocumentId)
 import Types.Route exposing (Route)
 import UI.Icons
 import UI.Widgets.Breadcrumbs
@@ -42,7 +43,8 @@ import Utils.Html
 
 {-| -}
 type alias Context =
-    { cache : Cache
+    { config : Config
+    , cache : Cache
     , route : Route
     , documentIdFromSearch : DocumentIdFromSearch
     }

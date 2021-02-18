@@ -27,12 +27,13 @@ module UI.Article exposing
 import Cache exposing (Cache)
 import Cache.Derive
 import Entities.Document exposing (Document)
-import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
+import Entities.FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
 import RemoteData
 import Types.Aspect exposing (Aspect)
+import Types.Config exposing (Config)
 import Types.Id exposing (FolderId)
 import Types.Navigation exposing (Navigation)
 import Types.Needs
@@ -48,7 +49,8 @@ import Utils
 
 {-| -}
 type alias Context =
-    { cache : Cache
+    { config : Config
+    , cache : Cache
     , route : Route
     , presentation : Presentation
     }
@@ -183,7 +185,8 @@ update context msg model =
             let
                 ( subModel1, subCmd, subReturn ) =
                     UI.Article.Listing.update
-                        { cache = context.cache
+                        { config = context.config
+                        , cache = context.cache
                         , selection = selection
                         , window = window
                         }
@@ -206,7 +209,8 @@ update context msg model =
             let
                 ( subModel1, subCmd, subReturn ) =
                     UI.Article.Details.update
-                        { cache = context.cache
+                        { config = context.config
+                        , cache = context.cache
                         , route = context.route
                         , documentIdFromSearch = documentIdFromSearch
                         }
@@ -256,7 +260,8 @@ viewContent context model =
     case ( model.content, context.presentation ) of
         ( GenericModel subModel, GenericPresentation genericParameters ) ->
             UI.Article.Generic.view
-                { cache = context.cache
+                { config = context.config
+                , cache = context.cache
                 , genericParameters = genericParameters
                 }
                 subModel
@@ -264,7 +269,8 @@ viewContent context model =
 
         ( CollectionModel subModel, CollectionPresentation folderId ) ->
             UI.Article.Collection.view
-                { cache = context.cache
+                { config = context.config
+                , cache = context.cache
                 , folderId = folderId
                 }
                 subModel
@@ -272,7 +278,8 @@ viewContent context model =
 
         ( ListingModel subModel, ListingPresentation selection window ) ->
             UI.Article.Listing.view
-                { cache = context.cache
+                { config = context.config
+                , cache = context.cache
                 , selection = selection
                 , window = window
                 }
@@ -281,7 +288,8 @@ viewContent context model =
 
         ( DetailsModel subModel, DocumentPresentation maybeFolderId documentIdFromSearch ) ->
             UI.Article.Details.view
-                { cache = context.cache
+                { config = context.config
+                , cache = context.cache
                 , route = context.route
                 , documentIdFromSearch = documentIdFromSearch
                 }

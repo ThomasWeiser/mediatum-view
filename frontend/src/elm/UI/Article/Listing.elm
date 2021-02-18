@@ -35,6 +35,7 @@ import Maybe.Extra
 import Regex
 import RemoteData
 import Types exposing (Window)
+import Types.Config exposing (Config)
 import Types.Id exposing (DocumentId)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Route as Route
@@ -46,7 +47,8 @@ import Utils.Html
 
 {-| -}
 type alias Context =
-    { cache : Cache
+    { config : Config
+    , cache : Cache
     , selection : Selection
     , window : Window
     }
@@ -230,9 +232,10 @@ viewDocument context number document =
             , Html.a
                 [ Html.Attributes.class "metadatatype"
                 , Route.initDocumentInFolder
+                    context.config
                     context.selection.scope
                     document.id
-                    |> Types.Route.Url.toString
+                    |> Types.Route.Url.toString context.config
                     |> Html.Attributes.href
                 ]
                 [ Html.text document.metadatatypeName ]

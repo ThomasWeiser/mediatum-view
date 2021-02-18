@@ -1,5 +1,6 @@
 module Api.Queries exposing
-    ( toplevelFolders, folders, subfolders
+    ( serverSetup
+    , toplevelFolders, folders, subfolders
     , selectionDocumentsPage, selectionFolderCounts, selectionFacets
     , documentDetails
     , genericNode, authorSearch
@@ -15,6 +16,11 @@ for nested subqueries.
 We will use the GraphQL fragment notation for denoting this embedding.
 In reality it's just function calling.
 (The `elm-graphql` package won't use the fragment notation.)
+
+
+# Server Config
+
+@docs serverSetup
 
 
 # Folder Queries
@@ -41,7 +47,6 @@ In reality it's just function calling.
 import Api.Arguments.AspectTest
 import Api.Arguments.Filter
 import Api.Fragments
-import Config
 import Entities.Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder, LineageFolders)
@@ -51,24 +56,72 @@ import Entities.Residence exposing (Residence)
 import Graphql.Operation
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
-import List.Nonempty exposing (Nonempty)
 import Maybe.Extra
 import Mediatum.Enum.FtsSorting
 import Mediatum.InputObject
-import Mediatum.Object
 import Mediatum.Object.FoldersConnection
 import Mediatum.Object.GenericNode
+import Mediatum.Object.Setup
+import Mediatum.Object.SetupConfig
 import Mediatum.Query
 import Pagination.Relay.Connection as Connection
 import Pagination.Relay.Page
 import Pagination.Relay.Pagination
 import Types exposing (DocumentIdFromSearch, Window)
 import Types.Aspect as Aspect exposing (Aspect)
-import Types.Facet as Facet exposing (FacetsValues)
+import Types.FacetValue as Facet exposing (FacetsValues)
 import Types.FilterList as FilterList
-import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
+import Types.Id as Id exposing (FolderId, NodeId)
 import Types.SearchTerm
 import Types.Selection exposing (Selection, Sorting(..))
+import Types.ServerSetup as ServerSetup exposing (ServerSetup)
+
+
+{-| -}
+serverSetup : SelectionSet ServerSetup Graphql.Operation.RootQuery
+serverSetup =
+    Mediatum.Query.setup
+        { application = "hsb"
+        , clientName = "mediatum-view-web"
+        , clientVersion = "1.0"
+        }
+        (SelectionSet.succeed ServerSetup.ServerSetup
+            |> SelectionSet.with
+                (Mediatum.Object.Setup.config
+                    (SelectionSet.succeed ServerSetup.ServerConfig
+                        |> SelectionSet.with
+                            Mediatum.Object.SetupConfig.defaultPageSize
+                        |> SelectionSet.with
+                            (Mediatum.Object.SetupConfig.defaultSorting
+                                |> SelectionSet.map
+                                    (Maybe.map
+                                        (\apiEnum ->
+                                            case apiEnum of
+                                                Mediatum.Enum.FtsSorting.ByRank ->
+                                                    ByRank
+
+                                                Mediatum.Enum.FtsSorting.ByDate ->
+                                                    ByDate
+                                        )
+                                    )
+                            )
+                        |> SelectionSet.with
+                            Mediatum.Object.SetupConfig.numberOfFacetValues
+                        |> SelectionSet.with
+                            (Mediatum.Object.SetupConfig.staticFtsAspects
+                                Api.Fragments.ftsAspectConfig
+                                |> Api.Fragments.nonNullElementsOfMaybeListOrFail
+                            )
+                        |> SelectionSet.with
+                            (Mediatum.Object.SetupConfig.staticFacetAspects
+                                Api.Fragments.facetAspectConfig
+                                |> Api.Fragments.nonNullElementsOfMaybeListOrFail
+                            )
+                    )
+                    |> SelectionSet.nonNullOrFail
+                )
+        )
+        |> SelectionSet.nonNullOrFail
 
 
 {-| Get the root folders and their sub-folders.
@@ -436,15 +489,16 @@ _GraphQL notation:_
 
 -}
 authorSearch :
-    Maybe (Pagination.Relay.Page.Page Document)
+    Int
+    -> Maybe (Pagination.Relay.Page.Page Document)
     -> Pagination.Relay.Pagination.Position
     -> FolderId
     -> String
     -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-authorSearch referencePage paginationPosition folderId searchString =
+authorSearch pageSize referencePage paginationPosition folderId searchString =
     Mediatum.Query.authorSearch
         (Pagination.Relay.Pagination.paginationArguments
-            Config.pageSize
+            pageSize
             referencePage
             paginationPosition
         )

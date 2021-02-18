@@ -35,6 +35,7 @@ import Html.Events
 import RemoteData
 import Sort.Dict
 import Types exposing (FolderDisplay(..))
+import Types.Config exposing (Config)
 import Types.Id exposing (FolderId)
 import Types.Needs
 import Types.Presentation as Presentation exposing (Presentation(..))
@@ -45,7 +46,8 @@ import Utils.Html
 
 {-| -}
 type alias Context =
-    { cache : Cache
+    { config : Config
+    , cache : Cache
     , presentation : Presentation
     }
 

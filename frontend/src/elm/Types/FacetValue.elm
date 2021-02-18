@@ -1,4 +1,4 @@
-module Types.Facet exposing
+module Types.FacetValue exposing
     ( FacetValue, FacetValues, FacetsValues
     , facetsValuesFromDict
     )

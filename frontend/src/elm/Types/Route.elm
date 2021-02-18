@@ -1,7 +1,5 @@
 module Types.Route exposing
-    ( defaultLimit
-    , defaultSorting
-    , Route
+    ( Route
     , RoutePath(..)
     , RouteParameters
     , initHome
@@ -12,9 +10,6 @@ module Types.Route exposing
 {-| Each correctly formed URL corresponds to a unique value of type [`Route`](#Route).
 
 Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Route-Url).
-
-@docs defaultLimit
-@docs defaultSorting
 
 @docs Route
 @docs RoutePath
@@ -27,25 +22,12 @@ Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Ro
 
 -}
 
-import Config
-import Sort.Dict
-import Types.Aspect exposing (Aspect)
-import Types.FilterList as FilterList exposing (FilterList)
+import Types.Config exposing (Config)
+import Types.Config.FacetAspectConfig as FacetAspect
+import Types.Config.FtsAspectConfig as FtsAspect
+import Types.FilterList as FilterList
 import Types.Id exposing (DocumentId, FolderId, NodeId)
-import Types.SearchTerm exposing (SearchTerm)
 import Types.Selection as Selection exposing (FacetFilters, FtsFilters, GlobalFts, Sorting(..))
-
-
-{-| -}
-defaultLimit : Int
-defaultLimit =
-    10
-
-
-{-| -}
-defaultSorting : Sorting
-defaultSorting =
-    ByRank
 
 
 {-| -}
@@ -74,56 +56,54 @@ type alias RouteParameters =
 
 
 {-| -}
-initHome : Route
-initHome =
+initHome : Config -> Route
+initHome config =
     { path = NoId
-    , parameters = emptyParameters
+    , parameters = emptyParameters config
     }
 
 
 {-| A route to a document within a folder without any further parameters.
 -}
-initDocumentInFolder : FolderId -> DocumentId -> Route
-initDocumentInFolder folderId documentId =
+initDocumentInFolder : Config -> FolderId -> DocumentId -> Route
+initDocumentInFolder config folderId documentId =
     { path = TwoIds (Types.Id.asNodeId folderId) (Types.Id.asNodeId documentId)
-    , parameters = emptyParameters
+    , parameters = emptyParameters config
     }
 
 
-emptyParameters : RouteParameters
-emptyParameters =
+emptyParameters : Config -> RouteParameters
+emptyParameters config =
     { globalFts = Nothing
-    , sorting = defaultSorting
+    , sorting = config.defaultSorting
     , ftsFilters = Selection.initFtsFilters
     , facetFilters = Selection.initFacetFilters
     , offset = 0
-    , limit = defaultLimit
+    , limit = config.defaultPageSize
     }
 
 
 {-| Make sure the route does not contain any unwanted details.
 In particular, make sure that the aspects used for fts filters or facet filters are valid.
 -}
-sanitize : Route -> Route
-sanitize route =
+sanitize : Config -> Route -> Route
+sanitize config route =
     let
         parameters =
             route.parameters
     in
     { path = route.path
     , parameters =
-        { parameters
-            | ftsFilters =
-                FilterList.filterAspects Config.validFtsAspects parameters.ftsFilters
-            , facetFilters =
-                FilterList.filterAspects Config.validFacetAspects parameters.facetFilters
-        }
+        if config.serverConfigAdopted then
+            { parameters
+                | ftsFilters =
+                    parameters.ftsFilters
+                        |> FilterList.filterAspects (FtsAspect.aspects config.ftsAspects)
+                , facetFilters =
+                    parameters.facetFilters
+                        |> FilterList.filterAspects (FacetAspect.aspects config.facetAspects)
+            }
+
+        else
+            parameters
     }
-
-
-keepOnly : List Aspect -> Sort.Dict.Dict Aspect v -> Sort.Dict.Dict Aspect v
-keepOnly validAspects =
-    Sort.Dict.keepIf
-        (\aspect _ ->
-            List.member aspect validAspects
-        )

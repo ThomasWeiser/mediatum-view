@@ -51,7 +51,7 @@ import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (FolderDisplay(..), NodeType(..))
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
-import Types.Selection as Selection exposing (Selection)
+import Types.Selection exposing (Selection)
 
 
 {-| A specialization of [`RemoteData e a`](/packages/krisajenkins/remotedata/6.0.1/RemoteData#RemoteData)

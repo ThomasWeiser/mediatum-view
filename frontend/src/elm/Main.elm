@@ -15,12 +15,16 @@ module Main exposing (main)
 
 -}
 
+import Api
+import Api.Queries
 import App
 import Browser
 import Browser.Navigation
 import Html
+import Types.Config as Config
 import Types.Route as Route
 import Types.Route.Url
+import Types.ServerSetup exposing (ServerSetup)
 import Url exposing (Url)
 
 
@@ -45,38 +49,54 @@ main =
 
 
 type Msg
-    = UrlRequest Browser.UrlRequest
+    = ApiResponseServerSetup Url (Api.Response ServerSetup)
+    | UrlRequest Browser.UrlRequest
     | UrlChanged Url.Url
     | AppMsg App.Msg
 
 
 init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url navigationKey =
-    let
-        ( appModel, appCmd ) =
-            Types.Route.Url.parseUrl url
-                |> Maybe.withDefault Route.initHome
-                |> Route.sanitize
-                |> App.init
-    in
     ( { navigationKey = navigationKey
-      , app = appModel
+      , app = App.initEmptyModel
       }
-    , Cmd.batch
-        [ Cmd.map AppMsg appCmd
-        , -- Normalize the URL:
-          -- Replace the externally provided URL with one
-          -- that reflects the resulting intial state.
-          Browser.Navigation.replaceUrl
-            navigationKey
-            (Types.Route.Url.toString appModel.route)
-        ]
+    , Api.sendQueryRequest
+        (Api.withOperationName "GetServerSetup")
+        (ApiResponseServerSetup url)
+        Api.Queries.serverSetup
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        ApiResponseServerSetup url (Ok serverSetup) ->
+            let
+                ( appModel, appCmd ) =
+                    Types.Route.Url.parseUrl Config.init url
+                        |> Maybe.withDefault (Route.initHome Config.init)
+                        |> Route.sanitize
+                            (Config.updateFromServerSetup serverSetup Config.init)
+                        |> App.initFromServerSetupAndRoute serverSetup
+            in
+            ( { model
+                | app = appModel
+              }
+            , Cmd.batch
+                [ Cmd.map AppMsg appCmd
+                , -- Normalize the URL:
+                  -- Replace the externally provided URL with one
+                  -- that reflects the resulting intial state.
+                  Browser.Navigation.replaceUrl
+                    model.navigationKey
+                    (Types.Route.Url.toString Config.init appModel.route)
+                ]
+            )
+
+        ApiResponseServerSetup url (Err error) ->
+            -- TODO
+            ( model, Cmd.none )
+
         UrlRequest urlRequest ->
             case urlRequest of
                 Browser.Internal url ->
@@ -94,13 +114,13 @@ update msg model =
         UrlChanged url ->
             let
                 route =
-                    Types.Route.Url.parseUrl url
-                        |> Maybe.withDefault Route.initHome
-                        |> Route.sanitize
+                    Types.Route.Url.parseUrl model.app.config url
+                        |> Maybe.withDefault (Route.initHome model.app.config)
+                        |> Route.sanitize model.app.config
 
                 ( subModel, subCmd ) =
                     model.app
-                        |> App.updateRoute route
+                        |> App.updateModelFromRoute route
                         |> App.requestNeeds
             in
             ( { model
@@ -127,7 +147,7 @@ update msg model =
                     App.ReflectRoute route ->
                         Browser.Navigation.pushUrl
                             model.navigationKey
-                            (Types.Route.Url.toString route)
+                            (Types.Route.Url.toString subModel2.config route)
 
                     App.NoReturn ->
                         Cmd.none
