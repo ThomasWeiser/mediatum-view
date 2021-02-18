@@ -1,13 +1,14 @@
 module App exposing
     ( Return(..), Model, Msg
-    , initEmptyModel, requestNeeds, update, view
-    , initFromServerSetupAndRoute, updateModelFromRoute
+    , initEmptyModel, initFromServerSetupAndRoute
+    , requestNeeds, updateModelFromRoute, update, view
     )
 
 {-| Top-level module managing the interaction of the `Route`, the `Cache` and the `UI` components.
 
 @docs Return, Model, Msg
-@docs initEmptyModel, initFromRoute, requestNeeds, updateRoute, update, view
+@docs initEmptyModel, initFromServerSetupAndRoute
+@docs requestNeeds, updateModelFromRoute, update, view
 
 -}
 

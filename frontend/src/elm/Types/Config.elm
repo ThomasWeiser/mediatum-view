@@ -1,10 +1,15 @@
 module Types.Config exposing
     ( Config
-    , init
-    , updateFromServerSetup
+    , init, updateFromServerSetup
     )
 
-{-| Configuration values provided by the server
+{-| Configuration values used throughout the app.
+
+Most values are defined in the server and fetched dynamically.
+
+@docs Config
+@docs init, updateFromServerSetup
+
 -}
 
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
@@ -13,7 +18,7 @@ import Types.Selection as Selection
 import Types.ServerSetup exposing (ServerSetup)
 
 
-{-| Configuration variables that are made available to most modules via their Context type
+{-| Configuration values that are made available to most modules via their Context type
 -}
 type alias Config =
     { serverConfigAdopted : Bool
@@ -38,6 +43,7 @@ init =
     }
 
 
+{-| -}
 updateFromServerSetup : ServerSetup -> Config -> Config
 updateFromServerSetup serverSetup config =
     { config

@@ -11,9 +11,6 @@ module Types.Route exposing
 
 Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Route-Url).
 
-@docs defaultLimit
-@docs defaultSorting
-
 @docs Route
 @docs RoutePath
 @docs RouteParameters
