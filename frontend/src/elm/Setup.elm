@@ -63,12 +63,16 @@ init route =
     )
 
 
-{-| Store a changed route and update the UI accordingly.
+{-| Report a changed route to the App and update it accordingly.
 -}
 updateModelFromRoute : Route -> Model -> Model
 updateModelFromRoute route model =
     { model
-        | app = App.updateModelFromRoute (appContext model) route model.app
+        | app =
+            App.updateModelFromRoute
+                (appContext model)
+                (Route.sanitize model.config route)
+                model.app
     }
 
 

@@ -89,7 +89,6 @@ update msg model =
                 route =
                     Types.Route.Url.parseUrl model.setup.config url
                         |> Maybe.withDefault (Route.initHome model.setup.config)
-                        |> Route.sanitize model.setup.config
 
                 ( setupModel, setupCmd ) =
                     model.setup
