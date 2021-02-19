@@ -1,6 +1,7 @@
 module Types.Config exposing
     ( Config
     , init, updateFromFlags, updateFromServerSetup
+    , setUiLanguage
     )
 
 {-| Configuration values used throughout the app.
@@ -9,10 +10,12 @@ Most values are defined in the server and fetched dynamically.
 
 @docs Config
 @docs init, updateFromFlags, updateFromServerSetup
+@docs setUiLanguage
 
 -}
 
 import Json.Decode as JD
+import Maybe.Extra
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
 import Types.Localization as Localization exposing (Language)
@@ -50,13 +53,15 @@ init =
 
 
 type alias Flags =
-    { navigatorLanguage : Maybe String
+    { navigatorLanguageTag : Maybe String
+    , userSelectedUILanguageTag : Maybe String
     }
 
 
 initFlags : Flags
 initFlags =
-    { navigatorLanguage = Nothing
+    { navigatorLanguageTag = Nothing
+    , userSelectedUILanguageTag = Nothing
     }
 
 
@@ -71,16 +76,28 @@ updateFromFlags flagsJsonValue config =
             { config
                 | flags = flags
                 , uiLanguage =
-                    flags.navigatorLanguage
-                        |> Maybe.andThen Localization.languageFromLanguageTag
+                    [ flags.userSelectedUILanguageTag
+                    , flags.navigatorLanguageTag
+                    ]
+                        |> List.map (Maybe.andThen Localization.languageFromLanguageTag)
+                        |> Maybe.Extra.orList
                         |> Maybe.withDefault config.uiLanguage
             }
 
 
 decoderFlags : JD.Decoder Flags
 decoderFlags =
-    JD.map Flags
-        (JD.maybe <| JD.field "navigator.language" JD.string)
+    JD.map2 Flags
+        (JD.maybe <| JD.field "navigatorLanguageTag" JD.string)
+        (JD.maybe <| JD.field "userSelectedUILanguageTag" JD.string)
+
+
+{-| -}
+setUiLanguage : Language -> Config -> Config
+setUiLanguage language config =
+    { config
+        | uiLanguage = language
+    }
 
 
 {-| -}

@@ -9,7 +9,8 @@
   <script>
     var app = Elm.Main.init({
       flags: {
-        "navigator.language": navigator.language
+        "navigatorLanguageTag": navigator.language,
+        "userSelectedUILanguageTag": localStorage.getItem("selectedUILanguage")
       }
     });
   </script>

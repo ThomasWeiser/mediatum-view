@@ -17,6 +17,7 @@ import Html.Attributes
 import Html.Events
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
+import Types.Localization exposing (Language)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation exposing (Presentation(..))
@@ -26,6 +27,7 @@ import UI.Controls
 import UI.Facets
 import UI.Icons
 import UI.Tree
+import UI.Widgets.LanguageSelect
 
 
 {-| Context data provided by the parent module [`App`](App). Used by several functions here.
@@ -47,6 +49,7 @@ type Return
     = NoReturn
     | Navigate Navigation
     | UpdateCacheWithModifiedDocument Document
+    | SwitchUILanguage Language
 
 
 {-| The model comprises the models of the sub-components.
@@ -69,7 +72,8 @@ type alias Model =
 {-| Standard message type, wrapping the messages of the sub-components.
 -}
 type Msg
-    = TreeMsg UI.Tree.Msg
+    = UserSelectedUILanguage Language
+    | TreeMsg UI.Tree.Msg
     | FacetsMsg UI.Facets.Msg
     | ControlsMsg UI.Controls.Msg
     | ArticleMsg UI.Article.Msg
@@ -129,6 +133,12 @@ updateOnChangedPresentation presentation model =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
+        UserSelectedUILanguage language ->
+            ( model
+            , Cmd.none
+            , SwitchUILanguage language
+            )
+
         TreeMsg subMsg ->
             let
                 ( subModel, subReturn ) =
@@ -243,12 +253,17 @@ view context model =
                         , Html.Events.onClick (ControlsMsg UI.Controls.submitExampleQuery)
                         ]
                         [ Html.text "WIP" ]
-                    , Html.img
-                        [ Html.Attributes.alt "TUM Logo"
-                        , Html.Attributes.src "/logo_tum.png"
-                        , Html.Attributes.style "float" "right"
+                    , Html.div
+                        [ Html.Attributes.style "float" "right" ]
+                        [ UI.Widgets.LanguageSelect.view
+                            context.config.uiLanguage
+                            UserSelectedUILanguage
+                        , Html.img
+                            [ Html.Attributes.alt "TUM Logo"
+                            , Html.Attributes.src "/logo_tum.png"
+                            ]
+                            []
                         ]
-                        []
                     ]
                 ]
             , UI.Controls.view

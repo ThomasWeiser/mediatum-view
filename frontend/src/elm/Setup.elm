@@ -133,15 +133,30 @@ update msg model =
             let
                 ( appModel, appCmd, appReturn ) =
                     App.update (appContext model) appMsg model.app
-            in
-            ( { model | app = appModel }
-            , Cmd.map AppMsg appCmd
-            , case appReturn of
-                App.NoReturn ->
-                    NoReturn
 
-                App.ReflectRoute route ->
-                    ReflectRoute True route
+                ( config, return ) =
+                    case appReturn of
+                        App.NoReturn ->
+                            ( model.config
+                            , NoReturn
+                            )
+
+                        App.SwitchUILanguage language ->
+                            ( model.config |> Config.setUiLanguage language
+                            , NoReturn
+                            )
+
+                        App.ReflectRoute route ->
+                            ( model.config
+                            , ReflectRoute True route
+                            )
+            in
+            ( { model
+                | config = config
+                , app = appModel
+              }
+            , Cmd.map AppMsg appCmd
+            , return
             )
 
 
