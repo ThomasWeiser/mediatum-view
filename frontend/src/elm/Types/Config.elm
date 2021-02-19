@@ -1,6 +1,6 @@
 module Types.Config exposing
     ( Config
-    , init, updateFromFlags, updateFromLanguageTag, updateFromServerSetup
+    , init, updateFromFlags, updateFromJSConfigChangeEvent, updateFromServerSetup
     , setUiLanguage
     )
 
@@ -9,12 +9,13 @@ module Types.Config exposing
 Most values are defined in the server and fetched dynamically.
 
 @docs Config
-@docs init, updateFromFlags, updateFromLanguageTag, updateFromServerSetup
+@docs init, updateFromFlags, updateFromJSConfigChangeEvent, updateFromServerSetup
 @docs setUiLanguage
 
 -}
 
 import Json.Decode as JD
+import Maybe exposing (Maybe)
 import Maybe.Extra
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
@@ -27,6 +28,7 @@ import Types.ServerSetup exposing (ServerSetup)
 -}
 type alias Config =
     { flags : Flags
+    , userSelectedUILanguageTag : Maybe Language
     , uiLanguage : Language
     , serverConfigAdopted : Bool
     , defaultPageSize : Int
@@ -42,6 +44,7 @@ type alias Config =
 init : Config
 init =
     { flags = initFlags
+    , userSelectedUILanguageTag = Nothing
     , uiLanguage = Localization.LangEn
     , serverConfigAdopted = False
     , defaultPageSize = 10
@@ -53,15 +56,60 @@ init =
 
 
 type alias Flags =
-    { navigatorLanguageTag : Maybe String
-    , userSelectedUILanguageTag : Maybe String
+    { navigatorLanguageTag : Maybe Language
+    , userSelectedUILanguageTag : Maybe Language
     }
+
+
+decoderFlags : JD.Decoder Flags
+decoderFlags =
+    JD.map2 Flags
+        (JD.field "navigatorLanguageTag" JD.string
+            |> JD.maybe
+            |> JD.map (Maybe.andThen Localization.languageFromLanguageTag)
+        )
+        (JD.field "userSelectedUILanguageTag" JD.string
+            |> JD.maybe
+            |> JD.map (Maybe.andThen Localization.languageFromLanguageTag)
+        )
 
 
 initFlags : Flags
 initFlags =
     { navigatorLanguageTag = Nothing
     , userSelectedUILanguageTag = Nothing
+    }
+
+
+type alias ConfigChangeEvent =
+    { navigatorLanguageTag : Maybe Language
+    , userSelectedUILanguageTag : Maybe Language
+    }
+
+
+decoderConfigChangeEvent : JD.Decoder ConfigChangeEvent
+decoderConfigChangeEvent =
+    JD.map2 ConfigChangeEvent
+        (JD.field "navigatorLanguageTag" JD.string
+            |> JD.maybe
+            |> JD.map (Maybe.andThen Localization.languageFromLanguageTag)
+        )
+        (JD.field "userSelectedUILanguageTag" JD.string
+            |> JD.maybe
+            |> JD.map (Maybe.andThen Localization.languageFromLanguageTag)
+        )
+
+
+adjustUILanguage : Config -> Config
+adjustUILanguage config =
+    { config
+        | uiLanguage =
+            [ config.userSelectedUILanguageTag
+            , config.flags.userSelectedUILanguageTag
+            , config.flags.navigatorLanguageTag
+            ]
+                |> Maybe.Extra.orList
+                |> Maybe.withDefault Localization.LangEn
     }
 
 
@@ -75,39 +123,42 @@ updateFromFlags flagsJsonValue config =
         Ok flags ->
             { config
                 | flags = flags
-                , uiLanguage =
-                    [ flags.userSelectedUILanguageTag
-                    , flags.navigatorLanguageTag
-                    ]
-                        |> List.map (Maybe.andThen Localization.languageFromLanguageTag)
-                        |> Maybe.Extra.orList
-                        |> Maybe.withDefault config.uiLanguage
+
+                {- , uiLanguage =
+                   [ flags.userSelectedUILanguageTag
+                   , flags.navigatorLanguageTag
+                   ]
+                       |> List.map (Maybe.andThen Localization.languageFromLanguageTag)
+                       |> Maybe.Extra.orList
+                       |> Maybe.withDefault config.uiLanguage
+                -}
             }
+                |> adjustUILanguage
 
 
-updateFromLanguageTag : String -> Config -> Config
-updateFromLanguageTag languageTag config =
-    { config
-        | uiLanguage =
-            languageTag
-                |> Localization.languageFromLanguageTag
-                |> Maybe.withDefault config.uiLanguage
-    }
+updateFromJSConfigChangeEvent : JD.Value -> Config -> Config
+updateFromJSConfigChangeEvent eventJsonValue config =
+    case JD.decodeValue decoderConfigChangeEvent eventJsonValue of
+        Err err ->
+            config
 
-
-decoderFlags : JD.Decoder Flags
-decoderFlags =
-    JD.map2 Flags
-        (JD.maybe <| JD.field "navigatorLanguageTag" JD.string)
-        (JD.maybe <| JD.field "userSelectedUILanguageTag" JD.string)
+        Ok event ->
+            { config
+                | userSelectedUILanguageTag =
+                    Maybe.Extra.or
+                        event.userSelectedUILanguageTag
+                        config.userSelectedUILanguageTag
+            }
+                |> adjustUILanguage
 
 
 {-| -}
 setUiLanguage : Language -> Config -> Config
 setUiLanguage language config =
     { config
-        | uiLanguage = language
+        | userSelectedUILanguageTag = Just language
     }
+        |> adjustUILanguage
 
 
 {-| -}

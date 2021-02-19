@@ -43,7 +43,7 @@ type alias Model =
 
 {-| -}
 type Msg
-    = ChangedSelectedUILanguageTag String
+    = JSConfigChangeEvent Json.Decode.Value
     | ApiResponseServerSetup (Api.Response ServerSetup)
     | AppMsg App.Msg
 
@@ -51,7 +51,7 @@ type Msg
 port saveSelectedUILanguageTag : String -> Cmd msg
 
 
-port changedSelectedUILanguageTag : (String -> msg) -> Sub msg
+port jsConfigChangeEvent : (Json.Decode.Value -> msg) -> Sub msg
 
 
 {-| Initialize fetching the ServerSetup as well as the App module
@@ -74,7 +74,7 @@ init flags route =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    changedSelectedUILanguageTag ChangedSelectedUILanguageTag
+    jsConfigChangeEvent JSConfigChangeEvent
 
 
 {-| Report a changed route to the App and update it accordingly.
@@ -108,8 +108,10 @@ requestNeeds model =
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     case msg of
-        ChangedSelectedUILanguageTag languageTag ->
-            ( { model | config = Config.updateFromLanguageTag languageTag model.config }
+        JSConfigChangeEvent eventJsonValue ->
+            ( { model
+                | config = Config.updateFromJSConfigChangeEvent eventJsonValue model.config
+              }
             , Cmd.none
             , NoReturn
             )

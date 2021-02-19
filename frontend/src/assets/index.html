@@ -20,7 +20,11 @@
     window.addEventListener('storage', function (ev) {
       console.log("StorageEvent: %s %o", ev.newValue, ev);
       if (ev.key == "selectedUILanguage") {
-        app.ports.changedSelectedUILanguageTag.send(ev.newValue);
+        app.ports.jsConfigChangeEvent.send(
+          {
+            "userSelectedUILanguageTag": ev.newValue
+          }
+        );
       }
     });
   </script>
