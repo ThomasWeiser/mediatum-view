@@ -1,6 +1,6 @@
 module Types.Config exposing
     ( Config
-    , init, updateFromServerSetup
+    , init, updateFromFlags, updateFromServerSetup
     )
 
 {-| Configuration values used throughout the app.
@@ -8,10 +8,11 @@ module Types.Config exposing
 Most values are defined in the server and fetched dynamically.
 
 @docs Config
-@docs init, updateFromServerSetup
+@docs init, updateFromFlags, updateFromServerSetup
 
 -}
 
+import Json.Decode as JD
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
 import Types.Localization as Localization exposing (Language)
@@ -22,7 +23,8 @@ import Types.ServerSetup exposing (ServerSetup)
 {-| Configuration values that are made available to most modules via their Context type
 -}
 type alias Config =
-    { uiLanguage : Language
+    { flags : Flags
+    , uiLanguage : Language
     , serverConfigAdopted : Bool
     , defaultPageSize : Int
     , defaultSorting : Selection.Sorting
@@ -36,7 +38,8 @@ type alias Config =
 -}
 init : Config
 init =
-    { uiLanguage = Localization.LangEn
+    { flags = initFlags
+    , uiLanguage = Localization.LangEn
     , serverConfigAdopted = False
     , defaultPageSize = 10
     , defaultSorting = Selection.ByRank
@@ -44,6 +47,40 @@ init =
     , ftsAspects = []
     , facetAspects = []
     }
+
+
+type alias Flags =
+    { navigatorLanguage : Maybe String
+    }
+
+
+initFlags : Flags
+initFlags =
+    { navigatorLanguage = Nothing
+    }
+
+
+{-| -}
+updateFromFlags : JD.Value -> Config -> Config
+updateFromFlags flagsJsonValue config =
+    case JD.decodeValue decoderFlags flagsJsonValue of
+        Err err ->
+            config
+
+        Ok flags ->
+            { config
+                | flags = flags
+                , uiLanguage =
+                    flags.navigatorLanguage
+                        |> Maybe.andThen Localization.languageFromLanguageTag
+                        |> Maybe.withDefault config.uiLanguage
+            }
+
+
+decoderFlags : JD.Decoder Flags
+decoderFlags =
+    JD.map Flags
+        (JD.maybe <| JD.field "navigator.language" JD.string)
 
 
 {-| -}

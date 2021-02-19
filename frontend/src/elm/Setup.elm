@@ -16,6 +16,7 @@ import Api
 import Api.Queries
 import App
 import Html exposing (Html)
+import Json.Decode
 import Types.Config as Config exposing (Config)
 import Types.Route as Route exposing (Route)
 import Types.ServerSetup exposing (ServerSetup)
@@ -50,10 +51,10 @@ type Msg
 Note that the latter is delayed until config is known from received ServerSetup.
 
 -}
-init : Route -> ( Model, Cmd Msg )
-init route =
+init : Json.Decode.Value -> Route -> ( Model, Cmd Msg )
+init flags route =
     ( { delayedInitWithRoute = Just route
-      , config = Config.init
+      , config = Config.init |> Config.updateFromFlags flags
       , app = App.initEmptyModel
       }
     , Api.sendQueryRequest

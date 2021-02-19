@@ -18,6 +18,7 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation
 import Html
+import Json.Decode
 import Setup
 import Types.Config as Config
 import Types.Route as Route
@@ -33,7 +34,7 @@ type alias Model =
 
 {-| Define the application ingredients.
 -}
-main : Program () Model Msg
+main : Program Json.Decode.Value Model Msg
 main =
     Browser.application
         { init = init
@@ -51,11 +52,12 @@ type Msg
     | SetupMsg Setup.Msg
 
 
-init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init : Json.Decode.Value -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url navigationKey =
     let
         ( setupModel, setupCmd ) =
             Setup.init
+                flags
                 (Types.Route.Url.parseUrl Config.init url
                     |> Maybe.withDefault (Route.initHome Config.init)
                 )
