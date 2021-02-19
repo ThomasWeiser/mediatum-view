@@ -62,7 +62,7 @@ Note that the latter is delayed until config is known from received ServerSetup.
 init : Json.Decode.Value -> Route -> ( Model, Cmd Msg )
 init flags route =
     ( { delayedInitWithRoute = Just route
-      , config = Config.init |> Config.updateFromFlags flags
+      , config = Config.initFromFlags flags
       , app = App.initEmptyModel
       }
     , Api.sendQueryRequest

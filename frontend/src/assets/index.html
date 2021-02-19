@@ -22,10 +22,17 @@
       if (ev.key == "selectedUILanguage") {
         app.ports.jsConfigChangeEvent.send(
           {
-            "userSelectedUILanguageTag": ev.newValue
+            "changedSelectedUILanguageTag": ev.newValue
           }
         );
       }
     });
-  </script>
+    window.addEventListener('languagechange', function () {
+      console.log('languagechange event detected! %s', navigator.language);
+      app.ports.jsConfigChangeEvent.send(
+        {
+          "changedNavigatorLanguageTag": navigator.language
+        }
+      );
+    });  </script>
 </body>

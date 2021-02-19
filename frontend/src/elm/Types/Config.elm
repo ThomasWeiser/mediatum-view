@@ -1,6 +1,7 @@
 module Types.Config exposing
     ( Config
-    , init, updateFromFlags, updateFromJSConfigChangeEvent, updateFromServerSetup
+    , init, initFromFlags
+    , updateFromJSConfigChangeEvent, updateFromServerSetup
     , setUiLanguage
     )
 
@@ -9,7 +10,8 @@ module Types.Config exposing
 Most values are defined in the server and fetched dynamically.
 
 @docs Config
-@docs init, updateFromFlags, updateFromJSConfigChangeEvent, updateFromServerSetup
+@docs init, initFromFlags
+@docs updateFromJSConfigChangeEvent, updateFromServerSetup
 @docs setUiLanguage
 
 -}
@@ -27,8 +29,8 @@ import Types.ServerSetup exposing (ServerSetup)
 {-| Configuration values that are made available to most modules via their Context type
 -}
 type alias Config =
-    { flags : Flags
-    , userSelectedUILanguageTag : Maybe Language
+    { navigatorLanguage : Maybe Language
+    , userSelectedUILanguage : Maybe Language
     , uiLanguage : Language
     , serverConfigAdopted : Bool
     , defaultPageSize : Int
@@ -39,12 +41,12 @@ type alias Config =
     }
 
 
-{-| Initialize with standard values. These may get overwritten when we have fetched ServerSetup.
+{-| Initialize with standard values.
 -}
 init : Config
 init =
-    { flags = initFlags
-    , userSelectedUILanguageTag = Nothing
+    { navigatorLanguage = Nothing
+    , userSelectedUILanguage = Nothing
     , uiLanguage = Localization.LangEn
     , serverConfigAdopted = False
     , defaultPageSize = 10
@@ -55,9 +57,11 @@ init =
     }
 
 
+{-| Parameters passed from JS on startup
+-}
 type alias Flags =
-    { navigatorLanguageTag : Maybe Language
-    , userSelectedUILanguageTag : Maybe Language
+    { navigatorLanguage : Maybe Language
+    , storedSelectedUILanguage : Maybe Language
     }
 
 
@@ -74,64 +78,38 @@ decoderFlags =
         )
 
 
-initFlags : Flags
-initFlags =
-    { navigatorLanguageTag = Nothing
-    , userSelectedUILanguageTag = Nothing
+{-| Change-events passed from JS
+-}
+type alias JSConfigChangeEvent =
+    { changedNavigatorLanguage : Maybe Language
+    , changedSelectedUILanguage : Maybe Language
     }
 
 
-type alias ConfigChangeEvent =
-    { navigatorLanguageTag : Maybe Language
-    , userSelectedUILanguageTag : Maybe Language
-    }
-
-
-decoderConfigChangeEvent : JD.Decoder ConfigChangeEvent
+decoderConfigChangeEvent : JD.Decoder JSConfigChangeEvent
 decoderConfigChangeEvent =
-    JD.map2 ConfigChangeEvent
-        (JD.field "navigatorLanguageTag" JD.string
+    JD.map2 JSConfigChangeEvent
+        (JD.field "changedNavigatorLanguageTag" JD.string
             |> JD.maybe
             |> JD.map (Maybe.andThen Localization.languageFromLanguageTag)
         )
-        (JD.field "userSelectedUILanguageTag" JD.string
+        (JD.field "changedSelectedUILanguageTag" JD.string
             |> JD.maybe
             |> JD.map (Maybe.andThen Localization.languageFromLanguageTag)
         )
-
-
-adjustUILanguage : Config -> Config
-adjustUILanguage config =
-    { config
-        | uiLanguage =
-            [ config.userSelectedUILanguageTag
-            , config.flags.userSelectedUILanguageTag
-            , config.flags.navigatorLanguageTag
-            ]
-                |> Maybe.Extra.orList
-                |> Maybe.withDefault Localization.LangEn
-    }
 
 
 {-| -}
-updateFromFlags : JD.Value -> Config -> Config
-updateFromFlags flagsJsonValue config =
+initFromFlags : JD.Value -> Config
+initFromFlags flagsJsonValue =
     case JD.decodeValue decoderFlags flagsJsonValue of
         Err err ->
-            config
+            init
 
         Ok flags ->
-            { config
-                | flags = flags
-
-                {- , uiLanguage =
-                   [ flags.userSelectedUILanguageTag
-                   , flags.navigatorLanguageTag
-                   ]
-                       |> List.map (Maybe.andThen Localization.languageFromLanguageTag)
-                       |> Maybe.Extra.orList
-                       |> Maybe.withDefault config.uiLanguage
-                -}
+            { init
+                | navigatorLanguage = flags.navigatorLanguage
+                , userSelectedUILanguage = flags.storedSelectedUILanguage
             }
                 |> adjustUILanguage
 
@@ -143,11 +121,19 @@ updateFromJSConfigChangeEvent eventJsonValue config =
             config
 
         Ok event ->
+            let
+                _ =
+                    Debug.log "updateFromJSConfigChangeEvent" event
+            in
             { config
-                | userSelectedUILanguageTag =
+                | navigatorLanguage =
                     Maybe.Extra.or
-                        event.userSelectedUILanguageTag
-                        config.userSelectedUILanguageTag
+                        event.changedNavigatorLanguage
+                        config.navigatorLanguage
+                , userSelectedUILanguage =
+                    Maybe.Extra.or
+                        event.changedSelectedUILanguage
+                        config.userSelectedUILanguage
             }
                 |> adjustUILanguage
 
@@ -156,9 +142,21 @@ updateFromJSConfigChangeEvent eventJsonValue config =
 setUiLanguage : Language -> Config -> Config
 setUiLanguage language config =
     { config
-        | userSelectedUILanguageTag = Just language
+        | userSelectedUILanguage = Just language
     }
         |> adjustUILanguage
+
+
+adjustUILanguage : Config -> Config
+adjustUILanguage config =
+    { config
+        | uiLanguage =
+            [ config.userSelectedUILanguage
+            , config.navigatorLanguage
+            ]
+                |> Maybe.Extra.orList
+                |> Maybe.withDefault Localization.LangEn
+    }
 
 
 {-| -}
