@@ -1,6 +1,6 @@
 module Types.Localization exposing
     ( Language(..)
-    , languageFromLanguageTag
+    , languageFromLanguageTag, languageToLanguageTag
     , Translations
     , translation
     )
@@ -10,7 +10,7 @@ module Types.Localization exposing
 Currently we offer English and German as UI languages.
 
 @docs Language
-@docs languageFromLanguageTag
+@docs languageFromLanguageTag, languageToLanguageTag
 @docs Translations
 @docs translation
 
@@ -54,3 +54,13 @@ languageFromLanguageTag languageTag =
 
         _ ->
             Nothing
+
+
+languageToLanguageTag : Language -> String
+languageToLanguageTag language =
+    case language of
+        LangEn ->
+            "en"
+
+        LangDe ->
+            "de"

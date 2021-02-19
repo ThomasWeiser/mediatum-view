@@ -1,4 +1,4 @@
-module Setup exposing
+port module Setup exposing
     ( Return(..), Model, Msg
     , init
     , requestNeeds, updateModelFromRoute, update, view
@@ -18,6 +18,7 @@ import App
 import Html exposing (Html)
 import Json.Decode
 import Types.Config as Config exposing (Config)
+import Types.Localization as Localization
 import Types.Route as Route exposing (Route)
 import Types.ServerSetup exposing (ServerSetup)
 
@@ -44,6 +45,9 @@ type alias Model =
 type Msg
     = ApiResponseServerSetup (Api.Response ServerSetup)
     | AppMsg App.Msg
+
+
+port saveSelectedUILanguageTag : String -> Cmd msg
 
 
 {-| Initialize fetching the ServerSetup as well as the App module
@@ -134,20 +138,23 @@ update msg model =
                 ( appModel, appCmd, appReturn ) =
                     App.update (appContext model) appMsg model.app
 
-                ( config, return ) =
+                ( config, saveSelectedUILanguageCmd, return ) =
                     case appReturn of
                         App.NoReturn ->
                             ( model.config
+                            , Cmd.none
                             , NoReturn
                             )
 
                         App.SwitchUILanguage language ->
                             ( model.config |> Config.setUiLanguage language
+                            , saveSelectedUILanguageTag (Localization.languageToLanguageTag language)
                             , NoReturn
                             )
 
                         App.ReflectRoute route ->
                             ( model.config
+                            , Cmd.none
                             , ReflectRoute True route
                             )
             in
@@ -155,7 +162,9 @@ update msg model =
                 | config = config
                 , app = appModel
               }
-            , Cmd.map AppMsg appCmd
+            , [ appCmd, saveSelectedUILanguageCmd ]
+                |> Cmd.batch
+                |> Cmd.map AppMsg
             , return
             )
 

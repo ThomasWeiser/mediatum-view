@@ -13,5 +13,9 @@
         "userSelectedUILanguageTag": localStorage.getItem("selectedUILanguage")
       }
     });
+    app.ports.saveSelectedUILanguageTag.subscribe(
+      function (userSelectedUILanguageTag) {
+        localStorage.setItem("selectedUILanguage", userSelectedUILanguageTag);
+      });
   </script>
 </body>
