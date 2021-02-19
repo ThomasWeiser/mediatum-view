@@ -5,12 +5,11 @@ module Setup exposing
     , init
     , requestNeeds
     , update
-    , updateFromInitialRoute
     , updateModelFromRoute
     , view
     )
 
-{-| Top-level module sitting between Main and App, which manages setting up the client configuration
+{-| Top-level module sitting between Main and App, to set up the client configuration
 -}
 
 import Api
@@ -58,27 +57,6 @@ init route =
         (Api.withOperationName "GetServerSetup")
         ApiResponseServerSetup
         Api.Queries.serverSetup
-    )
-
-
-{-| Initialize the model with the given route and request the corresponding needs.
-
-Also returns the (possibly amended) route.
-
--}
-updateFromInitialRoute : Route -> Model -> ( Model, Cmd Msg, Route )
-updateFromInitialRoute route model =
-    -- TODO: Do we need this special case?
-    -- TODO: App.initFromRoute should probably called only after we have the ServerSetup
-    let
-        ( appModel, appCmd ) =
-            App.initFromRoute (appContext model) route
-    in
-    ( { model
-        | app = appModel
-      }
-    , Cmd.map AppMsg appCmd
-    , appModel.route
     )
 
 
@@ -136,7 +114,7 @@ update msg model =
                         , app = appModel
                       }
                     , Cmd.map AppMsg appCmd
-                    , NoReturn
+                    , ReflectRoute False route
                     )
 
         ApiResponseServerSetup (Err error) ->

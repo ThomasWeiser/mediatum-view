@@ -15,8 +15,6 @@ module Main exposing (main)
 
 -}
 
-import Api
-import Api.Queries
 import Browser
 import Browser.Navigation
 import Html
@@ -24,7 +22,6 @@ import Setup
 import Types.Config as Config
 import Types.Route as Route
 import Types.Route.Url
-import Types.ServerSetup exposing (ServerSetup)
 import Url exposing (Url)
 
 
@@ -49,8 +46,7 @@ main =
 
 
 type Msg
-    = ApiResponseServerSetup Url (Api.Response ServerSetup)
-    | UrlRequest Browser.UrlRequest
+    = UrlRequest Browser.UrlRequest
     | UrlChanged Url.Url
     | SetupMsg Setup.Msg
 
@@ -67,48 +63,13 @@ init flags url navigationKey =
     ( { navigationKey = navigationKey
       , setup = setupModel
       }
-    , Cmd.batch
-        [ Api.sendQueryRequest
-            (Api.withOperationName "GetServerSetup")
-            (ApiResponseServerSetup url)
-            Api.Queries.serverSetup
-        , Cmd.map SetupMsg setupCmd
-        ]
+    , Cmd.map SetupMsg setupCmd
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ApiResponseServerSetup url (Ok serverSetup) ->
-            let
-                ( setupModel, setupCmd, resultingRoute ) =
-                    Setup.updateFromInitialRoute
-                        (Types.Route.Url.parseUrl Config.init url
-                            |> Maybe.withDefault (Route.initHome Config.init)
-                            |> Route.sanitize
-                                (Config.updateFromServerSetup serverSetup Config.init)
-                        )
-                        model.setup
-            in
-            ( { model
-                | setup = setupModel
-              }
-            , Cmd.batch
-                [ Cmd.map SetupMsg setupCmd
-                , -- Normalize the URL:
-                  -- Replace the externally provided URL with one
-                  -- that reflects the resulting intial state.
-                  Browser.Navigation.replaceUrl
-                    model.navigationKey
-                    (resultingRoute |> Types.Route.Url.toString setupModel.config)
-                ]
-            )
-
-        ApiResponseServerSetup url (Err error) ->
-            -- TODO
-            ( model, Cmd.none )
-
         UrlRequest urlRequest ->
             case urlRequest of
                 Browser.Internal url ->
