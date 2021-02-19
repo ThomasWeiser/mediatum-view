@@ -26,6 +26,7 @@
         "Pagination.Relay.Connection",
         "Pagination.Relay.Page",
         "Pagination.Relay.Pagination",
+        "Setup",
         "Types.Aspect",
         "Types.Config.FacetAspectConfig",
         "Types.Config.FtsAspectConfig",

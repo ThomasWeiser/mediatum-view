@@ -319,7 +319,7 @@ viewFtsFilters : Config -> Model -> Html Msg
 viewFtsFilters config model =
     Html.div [ Html.Attributes.class "filters-bar" ]
         [ viewExistingFtsFilters config model.ftsFilterLines
-        , viewFtsAspectButtons config.ftsAspects model.ftsFilterLines
+        , viewFtsAspectButtons config model.ftsFilterLines
         ]
 
 
@@ -343,7 +343,7 @@ viewFtsFilter config aspect searchText =
         [ Html.label
             [ Html.Attributes.class "search-label" ]
             [ Html.text
-                (FtsAspect.getLabelOrAspectName Localization.LangDe aspect config.ftsAspects)
+                (FtsAspect.getLabelOrAspectName config.uiLanguage aspect config.ftsAspects)
             ]
         , Html.span
             [ Html.Attributes.class "input-group" ]
@@ -352,7 +352,7 @@ viewFtsFilter config aspect searchText =
                 , Html.Attributes.type_ "search"
                 , Html.Attributes.placeholder <|
                     "Search "
-                        ++ FtsAspect.getLabelOrAspectName Localization.LangDe aspect config.ftsAspects
+                        ++ FtsAspect.getLabelOrAspectName config.uiLanguage aspect config.ftsAspects
                 , Html.Attributes.value searchText
                 , Html.Events.onInput (SetFtsFilterText aspect)
                 ]
@@ -369,8 +369,8 @@ viewFtsFilter config aspect searchText =
         ]
 
 
-viewFtsAspectButtons : List FtsAspectConfig -> List ( Aspect, String ) -> Html Msg
-viewFtsAspectButtons listOfFtsAspectConfigs ftsFilterLines =
+viewFtsAspectButtons : Config -> List ( Aspect, String ) -> Html Msg
+viewFtsAspectButtons config ftsFilterLines =
     Html.div [] <|
         List.filterMap
             (\{ aspect, label } ->
@@ -383,13 +383,13 @@ viewFtsAspectButtons listOfFtsAspectConfigs ftsFilterLines =
                                 , Html.Attributes.class "add-filter-button"
                                 , Html.Events.onClick <| AddFtsFilter aspect
                                 ]
-                                [ Html.text (Localization.translation Localization.LangDe label) ]
+                                [ Html.text (Localization.translation config.uiLanguage label) ]
                             ]
 
                 else
                     Nothing
             )
-            listOfFtsAspectConfigs
+            config.ftsAspects
 
 
 viewFacetFilters : Context -> Html Msg
@@ -409,7 +409,7 @@ viewFacetFilter config ( aspect, value ) =
         [ Html.label
             [ Html.Attributes.class "search-label" ]
             [ Html.text
-                (FacetAspect.getLabelOrAspectName Localization.LangDe aspect config.facetAspects)
+                (FacetAspect.getLabelOrAspectName config.uiLanguage aspect config.facetAspects)
             ]
         , Html.span
             [ Html.Attributes.class "input-group" ]

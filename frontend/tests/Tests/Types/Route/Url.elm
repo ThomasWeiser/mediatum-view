@@ -4,10 +4,11 @@ import Expect exposing (Expectation)
 import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Types.Route
-import Types.Aspect as Aspect exposing (Aspect)
-import Types.Config as Config exposing (Config)
-import Types.FilterList as FilterList exposing (FilterList)
+import Types.Aspect as Aspect
+import Types.Config exposing (Config)
+import Types.FilterList as FilterList
 import Types.Id as Id
+import Types.Localization as Localization
 import Types.Route as Route
 import Types.Route.Url
 import Types.SearchTerm exposing (SearchTerm)
@@ -22,7 +23,8 @@ import Utils
 
 testConfig : Config
 testConfig =
-    { serverConfigAdopted = True
+    { uiLanguage = Localization.LangEn
+    , serverConfigAdopted = True
     , defaultPageSize = 10
     , defaultSorting = ByRank
     , numberOfFacetValues = 20
