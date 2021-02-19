@@ -1,14 +1,14 @@
 port module Setup exposing
     ( Return(..), Model, Msg
     , init
-    , requestNeeds, updateModelFromRoute, update, view
+    , requestNeeds, updateModelFromRoute, subscriptions, update, view
     )
 
 {-| Top-level module sitting between Main and App, to set up the client configuration
 
 @docs Return, Model, Msg
 @docs init
-@docs requestNeeds, updateModelFromRoute, update, view
+@docs requestNeeds, updateModelFromRoute, subscriptions, update, view
 
 -}
 
@@ -43,11 +43,15 @@ type alias Model =
 
 {-| -}
 type Msg
-    = ApiResponseServerSetup (Api.Response ServerSetup)
+    = ChangedSelectedUILanguageTag String
+    | ApiResponseServerSetup (Api.Response ServerSetup)
     | AppMsg App.Msg
 
 
 port saveSelectedUILanguageTag : String -> Cmd msg
+
+
+port changedSelectedUILanguageTag : (String -> msg) -> Sub msg
 
 
 {-| Initialize fetching the ServerSetup as well as the App module
@@ -66,6 +70,11 @@ init flags route =
         ApiResponseServerSetup
         Api.Queries.serverSetup
     )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    changedSelectedUILanguageTag ChangedSelectedUILanguageTag
 
 
 {-| Report a changed route to the App and update it accordingly.
@@ -99,6 +108,12 @@ requestNeeds model =
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     case msg of
+        ChangedSelectedUILanguageTag languageTag ->
+            ( { model | config = Config.updateFromLanguageTag languageTag model.config }
+            , Cmd.none
+            , NoReturn
+            )
+
         ApiResponseServerSetup (Ok serverSetup) ->
             let
                 model1 =

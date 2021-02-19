@@ -39,7 +39,7 @@ main =
     Browser.application
         { init = init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         , view = view
         , onUrlRequest = UrlRequest -- << Debug.log "onUrlRequest"
         , onUrlChange = UrlChanged -- << Debug.log "onUrlChange"
@@ -67,6 +67,11 @@ init flags url navigationKey =
       }
     , Cmd.map SetupMsg setupCmd
     )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Setup.subscriptions model.setup |> Sub.map SetupMsg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

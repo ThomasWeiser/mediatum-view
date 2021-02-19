@@ -1,6 +1,6 @@
 module Types.Config exposing
     ( Config
-    , init, updateFromFlags, updateFromServerSetup
+    , init, updateFromFlags, updateFromLanguageTag, updateFromServerSetup
     , setUiLanguage
     )
 
@@ -9,7 +9,7 @@ module Types.Config exposing
 Most values are defined in the server and fetched dynamically.
 
 @docs Config
-@docs init, updateFromFlags, updateFromServerSetup
+@docs init, updateFromFlags, updateFromLanguageTag, updateFromServerSetup
 @docs setUiLanguage
 
 -}
@@ -83,6 +83,16 @@ updateFromFlags flagsJsonValue config =
                         |> Maybe.Extra.orList
                         |> Maybe.withDefault config.uiLanguage
             }
+
+
+updateFromLanguageTag : String -> Config -> Config
+updateFromLanguageTag languageTag config =
+    { config
+        | uiLanguage =
+            languageTag
+                |> Localization.languageFromLanguageTag
+                |> Maybe.withDefault config.uiLanguage
+    }
 
 
 decoderFlags : JD.Decoder Flags
