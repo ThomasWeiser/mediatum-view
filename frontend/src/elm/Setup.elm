@@ -2,10 +2,10 @@ module Setup exposing
     ( Model
     , Msg
     , Return(..)
-    , initEmptyModel
-    , initFromServerSetupAndRoute
+    , init
     , requestNeeds
     , update
+    , updateFromInitialRoute
     , updateModelFromRoute
     , view
     )
@@ -13,10 +13,12 @@ module Setup exposing
 {-| Top-level module sitting between Main and App, which manages setting up the client configuration
 -}
 
+import Api
+import Api.Queries
 import App
 import Html exposing (Html)
 import Types.Config as Config exposing (Config)
-import Types.Route exposing (Route)
+import Types.Route as Route exposing (Route)
 import Types.ServerSetup exposing (ServerSetup)
 
 
@@ -27,12 +29,13 @@ Internal route changes are reported to the [`Main`](Main) module this way.
 -}
 type Return
     = NoReturn
-    | ReflectRoute Route
+    | ReflectRoute Bool Route
 
 
 {-| -}
 type alias Model =
-    { config : Config
+    { delayedInitWithRoute : Maybe Route
+    , config : Config
     , app : App.Model
     }
 
@@ -40,15 +43,22 @@ type alias Model =
 {-| `Msg` wraps the messages from the sub-component [`App`](App).
 -}
 type Msg
-    = AppMsg App.Msg
+    = ApiResponseServerSetup (Api.Response ServerSetup)
+    | AppMsg App.Msg
 
 
 {-| -}
-initEmptyModel : Model
-initEmptyModel =
-    { config = Config.init
-    , app = App.initEmptyModel
-    }
+init : Route -> ( Model, Cmd Msg )
+init route =
+    ( { delayedInitWithRoute = Just route
+      , config = Config.init
+      , app = App.initEmptyModel
+      }
+    , Api.sendQueryRequest
+        (Api.withOperationName "GetServerSetup")
+        ApiResponseServerSetup
+        Api.Queries.serverSetup
+    )
 
 
 {-| Initialize the model with the given route and request the corresponding needs.
@@ -56,17 +66,16 @@ initEmptyModel =
 Also returns the (possibly amended) route.
 
 -}
-initFromServerSetupAndRoute : ServerSetup -> Route -> ( Model, Cmd Msg, Route )
-initFromServerSetupAndRoute serverSetup route =
+updateFromInitialRoute : Route -> Model -> ( Model, Cmd Msg, Route )
+updateFromInitialRoute route model =
+    -- TODO: Do we need this special case?
+    -- TODO: App.initFromRoute should probably called only after we have the ServerSetup
     let
-        config =
-            Config.updateFromServerSetup serverSetup Config.init
-
         ( appModel, appCmd ) =
-            App.initFromRoute { config = config } route
+            App.initFromRoute (appContext model) route
     in
-    ( { config = config
-      , app = appModel
+    ( { model
+        | app = appModel
       }
     , Cmd.map AppMsg appCmd
     , appModel.route
@@ -100,6 +109,40 @@ requestNeeds model =
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     case msg of
+        ApiResponseServerSetup (Ok serverSetup) ->
+            let
+                model1 =
+                    { model
+                        | config =
+                            Config.updateFromServerSetup serverSetup model.config
+                    }
+            in
+            case model1.delayedInitWithRoute of
+                Nothing ->
+                    ( model1
+                    , Cmd.none
+                    , NoReturn
+                    )
+
+                Just route ->
+                    let
+                        ( appModel, appCmd ) =
+                            App.initFromRoute
+                                (appContext model1)
+                                (Route.sanitize model1.config route)
+                    in
+                    ( { model1
+                        | delayedInitWithRoute = Nothing
+                        , app = appModel
+                      }
+                    , Cmd.map AppMsg appCmd
+                    , NoReturn
+                    )
+
+        ApiResponseServerSetup (Err error) ->
+            -- TODO
+            ( model, Cmd.none, NoReturn )
+
         AppMsg appMsg ->
             let
                 ( appModel, appCmd, appReturn ) =
@@ -112,7 +155,7 @@ update msg model =
                     NoReturn
 
                 App.ReflectRoute route ->
-                    ReflectRoute route
+                    ReflectRoute True route
             )
 
 

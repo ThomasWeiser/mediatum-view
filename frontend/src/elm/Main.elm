@@ -57,13 +57,23 @@ type Msg
 
 init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url navigationKey =
+    let
+        ( setupModel, setupCmd ) =
+            Setup.init
+                (Types.Route.Url.parseUrl Config.init url
+                    |> Maybe.withDefault (Route.initHome Config.init)
+                )
+    in
     ( { navigationKey = navigationKey
-      , setup = Setup.initEmptyModel
+      , setup = setupModel
       }
-    , Api.sendQueryRequest
-        (Api.withOperationName "GetServerSetup")
-        (ApiResponseServerSetup url)
-        Api.Queries.serverSetup
+    , Cmd.batch
+        [ Api.sendQueryRequest
+            (Api.withOperationName "GetServerSetup")
+            (ApiResponseServerSetup url)
+            Api.Queries.serverSetup
+        , Cmd.map SetupMsg setupCmd
+        ]
     )
 
 
@@ -73,11 +83,13 @@ update msg model =
         ApiResponseServerSetup url (Ok serverSetup) ->
             let
                 ( setupModel, setupCmd, resultingRoute ) =
-                    Types.Route.Url.parseUrl Config.init url
-                        |> Maybe.withDefault (Route.initHome Config.init)
-                        |> Route.sanitize
-                            (Config.updateFromServerSetup serverSetup Config.init)
-                        |> Setup.initFromServerSetupAndRoute serverSetup
+                    Setup.updateFromInitialRoute
+                        (Types.Route.Url.parseUrl Config.init url
+                            |> Maybe.withDefault (Route.initHome Config.init)
+                            |> Route.sanitize
+                                (Config.updateFromServerSetup serverSetup Config.init)
+                        )
+                        model.setup
             in
             ( { model
                 | setup = setupModel
@@ -144,8 +156,13 @@ update msg model =
                 [ Cmd.map SetupMsg setupCmd1
                 , Cmd.map SetupMsg setupCmd2
                 , case setupReturn of
-                    Setup.ReflectRoute route ->
-                        Browser.Navigation.pushUrl
+                    Setup.ReflectRoute usePush route ->
+                        (if usePush then
+                            Browser.Navigation.pushUrl
+
+                         else
+                            Browser.Navigation.replaceUrl
+                        )
                             model.navigationKey
                             (Types.Route.Url.toString setupModel2.config route)
 
