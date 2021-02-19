@@ -1,15 +1,15 @@
 module Setup exposing
-    ( Model
-    , Msg
-    , Return(..)
+    ( Return(..), Model, Msg
     , init
-    , requestNeeds
-    , update
-    , updateModelFromRoute
-    , view
+    , requestNeeds, updateModelFromRoute, update, view
     )
 
 {-| Top-level module sitting between Main and App, to set up the client configuration
+
+@docs Return, Model, Msg
+@docs init
+@docs requestNeeds, updateModelFromRoute, update, view
+
 -}
 
 import Api
@@ -39,14 +39,17 @@ type alias Model =
     }
 
 
-{-| `Msg` wraps the messages from the sub-component [`App`](App).
--}
+{-| -}
 type Msg
     = ApiResponseServerSetup (Api.Response ServerSetup)
     | AppMsg App.Msg
 
 
-{-| -}
+{-| Initialize fetching the ServerSetup as well as the App module
+
+Note that the latter is delayed until config is known from received ServerSetup.
+
+-}
 init : Route -> ( Model, Cmd Msg )
 init route =
     ( { delayedInitWithRoute = Just route
@@ -69,7 +72,7 @@ updateModelFromRoute route model =
     }
 
 
-{-| Gather the needs from the UI and signal them to the cache.
+{-| Gather the needs from the App and signal them to the cache.
 -}
 requestNeeds : Model -> ( Model, Cmd Msg )
 requestNeeds model =
