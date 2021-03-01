@@ -2,7 +2,7 @@ module Types.Localization exposing
     ( Language(..)
     , languageFromLanguageTag, languageToLanguageTag
     , Translations
-    , translation
+    , translation, text, string
     )
 
 {-| Types used for localization of the app.
@@ -12,9 +12,11 @@ Currently we offer English and German as UI languages.
 @docs Language
 @docs languageFromLanguageTag, languageToLanguageTag
 @docs Translations
-@docs translation
+@docs translation, text, string
 
 -}
+
+import Html exposing (Html)
 
 
 {-| A text with translations into the supported languages
@@ -31,6 +33,10 @@ type Language
     | LangDe
 
 
+type alias Config c =
+    { c | uiLanguage : Language }
+
+
 {-| -}
 translation : Language -> Translations -> String
 translation language translations =
@@ -40,6 +46,18 @@ translation language translations =
 
         LangDe ->
             translations.de
+
+
+{-| -}
+string : Config c -> Translations -> String
+string config =
+    translation config.uiLanguage
+
+
+{-| -}
+text : Config c -> Translations -> Html msg
+text config translations =
+    Html.text (translation config.uiLanguage translations)
 
 
 {-| -}
