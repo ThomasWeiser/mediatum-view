@@ -4,7 +4,7 @@ port module Setup exposing
     , requestNeeds, updateModelFromRoute, subscriptions, update, view
     )
 
-{-| Top-level module sitting between Main and App, to set up the client configuration
+{-| Top-level module sitting between Main and App, with the job to set up the client configuration
 
 @docs Return, Model, Msg
 @docs init
@@ -72,6 +72,7 @@ init flags route =
     )
 
 
+{-| -}
 subscriptions : Model -> Sub Msg
 subscriptions model =
     jsConfigChangeEvent JSConfigChangeEvent

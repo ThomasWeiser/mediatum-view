@@ -114,6 +114,7 @@ initFromFlags flagsJsonValue =
                 |> adjustUILanguage
 
 
+{-| -}
 updateFromJSConfigChangeEvent : JD.Value -> Config -> Config
 updateFromJSConfigChangeEvent eventJsonValue config =
     case JD.decodeValue decoderConfigChangeEvent eventJsonValue of
