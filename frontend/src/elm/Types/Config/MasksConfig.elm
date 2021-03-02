@@ -1,24 +1,29 @@
 module Types.Config.MasksConfig exposing
-    ( MaskPurpose
-    , MasksConfig
-    , forPurpose
+    ( MasksConfig, MaskPurpose(..)
     , init
+    , forPurpose
     )
 
-{-| ... TODO
+{-| Configuration of the mediaTUM mask names used for various purposes.
 
-@docs ... TODO
+Note that the mask name used is also dependant on the configured uiLanguage.
+
+@docs MasksConfig, MaskPurpose
+@docs init
+@docs forPurpose
 
 -}
 
-import Types.Localization as Localization exposing (Language, Translations)
+import Types.Localization exposing (Translations)
 
 
+{-| -}
 type MaskPurpose
     = MaskForListing
     | MaskForDetails
 
 
+{-| -}
 type MasksConfig
     = MasksConfig
         { forListing : Translations
@@ -26,6 +31,8 @@ type MasksConfig
         }
 
 
+{-| Default values; may be overwritten by the server setup
+-}
 init : MasksConfig
 init =
     MasksConfig
@@ -40,6 +47,8 @@ init =
         }
 
 
+{-| Get the mask name for a given purpose. Returns all language translations.
+-}
 forPurpose : MaskPurpose -> MasksConfig -> Translations
 forPurpose purpose (MasksConfig masks) =
     case purpose of
