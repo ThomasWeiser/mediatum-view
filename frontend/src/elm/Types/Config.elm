@@ -20,6 +20,7 @@ import Maybe exposing (Maybe)
 import Maybe.Extra
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
+import Types.Config.MasksConfig as MasksConfig exposing (MasksConfig)
 import Types.Localization as Localization exposing (Language)
 import Types.Selection as Selection
 import Types.ServerSetup exposing (ServerSetup)
@@ -35,6 +36,7 @@ type alias Config =
     , numberOfFacetValues : Int
     , ftsAspects : List FtsAspectConfig
     , facetAspects : List FacetAspectConfig
+    , masks : MasksConfig
     }
 
 
@@ -49,6 +51,7 @@ init =
     , numberOfFacetValues = 20
     , ftsAspects = []
     , facetAspects = []
+    , masks = MasksConfig.init
     }
 
 
