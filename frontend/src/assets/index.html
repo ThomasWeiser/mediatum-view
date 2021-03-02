@@ -18,7 +18,6 @@
         localStorage.setItem("selectedUILanguage", userSelectedUILanguageTag);
       });
     window.addEventListener('storage', function (ev) {
-      console.log("StorageEvent: %s %o", ev.newValue, ev);
       if (ev.key == "selectedUILanguage") {
         app.ports.jsConfigChange.send(
           {
@@ -28,7 +27,6 @@
       }
     });
     window.addEventListener('languagechange', function () {
-      console.log('languagechange event detected! %s', navigator.language);
       app.ports.jsConfigChange.send(
         {
           "changedNavigatorLanguageTag": navigator.language
