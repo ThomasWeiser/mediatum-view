@@ -29,13 +29,12 @@ import Html.Attributes
 import Html.Events
 import List.Extra
 import Maybe.Extra
-import Mediatum.Object.Setup exposing (config)
 import RemoteData
 import String.Format
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
-import Types.Config.FtsAspectConfig as FtsAspect exposing (FtsAspectConfig)
+import Types.Config.FtsAspectConfig as FtsAspect
 import Types.FilterList as FilterList
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
