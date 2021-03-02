@@ -5,11 +5,9 @@ import Test exposing (..)
 import TestUtils exposing (..)
 import Tests.Types.Route
 import Types.Aspect as Aspect
-import Types.Config exposing (Config)
-import Types.Config.MasksConfig as MasksConfig
+import Types.Config as Config exposing (Config)
 import Types.FilterList as FilterList
 import Types.Id as Id
-import Types.Localization as Localization
 import Types.Route as Route
 import Types.Route.Url
 import Types.SearchTerm exposing (SearchTerm)
@@ -24,15 +22,7 @@ import Utils
 
 testConfig : Config
 testConfig =
-    { uiLanguage = Localization.LangEn
-    , serverConfigAdopted = True
-    , defaultPageSize = 10
-    , defaultSorting = ByRank
-    , numberOfFacetValues = 20
-    , ftsAspects = []
-    , facetAspects = []
-    , masks = MasksConfig.init
-    }
+    Config.init
 
 
 suite : Test
