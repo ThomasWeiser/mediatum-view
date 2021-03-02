@@ -35,7 +35,8 @@ import Maybe.Extra
 import Regex
 import RemoteData
 import Types exposing (Window)
-import Types.Config exposing (Config)
+import Types.Config as Config exposing (Config)
+import Types.Config.MasksConfig as MasksConfig
 import Types.Id exposing (DocumentId)
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
@@ -185,7 +186,10 @@ view context model =
         [ case
             Cache.get
                 context.cache.documentsPages
-                ( context.selection, context.window )
+                ( Config.getMaskName MasksConfig.MaskForListing context.config
+                , context.selection
+                , context.window
+                )
           of
             RemoteData.NotAsked ->
                 -- Should never happen
