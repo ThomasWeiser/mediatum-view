@@ -11,12 +11,11 @@ Most values are defined in the server and fetched dynamically.
 
 @docs Config
 @docs init
-@docs updateFromJSConfigChangeEvent, updateFromServerSetup
-@docs setUiLanguage
+@docs updateFromServerSetup
+@docs adjustUILanguage
 
 -}
 
-import Json.Decode as JD
 import Maybe exposing (Maybe)
 import Maybe.Extra
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
@@ -29,9 +28,7 @@ import Types.ServerSetup exposing (ServerSetup)
 {-| Configuration values that are made available to most modules via their Context type
 -}
 type alias Config =
-    { navigatorLanguage : Maybe Language
-    , userSelectedUILanguage : Maybe Language
-    , uiLanguage : Language
+    { uiLanguage : Language
     , serverConfigAdopted : Bool
     , defaultPageSize : Int
     , defaultSorting : Selection.Sorting
@@ -45,9 +42,7 @@ type alias Config =
 -}
 init : Config
 init =
-    { navigatorLanguage = Nothing
-    , userSelectedUILanguage = Nothing
-    , uiLanguage = Localization.LangEn
+    { uiLanguage = Localization.LangEn
     , serverConfigAdopted = False
     , defaultPageSize = 10
     , defaultSorting = Selection.ByRank
@@ -57,7 +52,7 @@ init =
     }
 
 
-{-| Set the uiLanguage from given navigatorLanguage and userSelectedUILanguage
+{-| Set the `uiLanguage` from given `navigatorLanguage` and `userSelectedUILanguage`
 -}
 adjustUILanguage : Maybe Language -> Maybe Language -> Config -> Config
 adjustUILanguage navigatorLanguage userSelectedUILanguage config =
