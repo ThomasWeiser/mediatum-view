@@ -23,9 +23,7 @@ import Utils
 
 testConfig : Config
 testConfig =
-    { navigatorLanguage = Nothing
-    , userSelectedUILanguage = Nothing
-    , uiLanguage = Localization.LangEn
+    { uiLanguage = Localization.LangEn
     , serverConfigAdopted = True
     , defaultPageSize = 10
     , defaultSorting = ByRank
