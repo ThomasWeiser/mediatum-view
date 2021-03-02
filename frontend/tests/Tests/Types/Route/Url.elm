@@ -6,6 +6,7 @@ import TestUtils exposing (..)
 import Tests.Types.Route
 import Types.Aspect as Aspect
 import Types.Config exposing (Config)
+import Types.Config.MasksConfig as MasksConfig
 import Types.FilterList as FilterList
 import Types.Id as Id
 import Types.Localization as Localization
@@ -30,6 +31,7 @@ testConfig =
     , numberOfFacetValues = 20
     , ftsAspects = []
     , facetAspects = []
+    , masks = MasksConfig.init
     }
 
 

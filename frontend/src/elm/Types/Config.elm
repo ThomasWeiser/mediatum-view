@@ -3,6 +3,7 @@ module Types.Config exposing
     , init
     , updateFromServerSetup
     , adjustUILanguage
+    , getMaskName
     )
 
 {-| Configuration values used throughout the app.
@@ -13,6 +14,7 @@ Most values are defined in the server and fetched dynamically.
 @docs init
 @docs updateFromServerSetup
 @docs adjustUILanguage
+@docs getMaskName
 
 -}
 
@@ -85,3 +87,11 @@ updateFromServerSetup serverSetup config =
         , facetAspects =
             serverSetup.config.staticFacetAspects |> Maybe.withDefault []
     }
+
+
+{-| Get the name of a mask as configured for the current uiLanguage and the given purpose.
+-}
+getMaskName : MasksConfig.MaskPurpose -> Config -> String
+getMaskName purpose config =
+    MasksConfig.forPurpose purpose config.masks
+        |> Localization.string config

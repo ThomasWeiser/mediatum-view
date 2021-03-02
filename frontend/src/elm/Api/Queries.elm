@@ -218,8 +218,8 @@ _GraphQL notation:_
     }
 
 -}
-genericNode : NodeId -> SelectionSet GenericNode Graphql.Operation.RootQuery
-genericNode nodeId =
+genericNode : String -> NodeId -> SelectionSet GenericNode Graphql.Operation.RootQuery
+genericNode maskName nodeId =
     let
         constructor : Maybe LineageFolders -> Maybe ( Document, Residence ) -> GenericNode
         constructor maybeLineage maybeDocumentAndResidence =
@@ -245,7 +245,7 @@ genericNode nodeId =
                 (Mediatum.Object.GenericNode.asDocument
                     (SelectionSet.succeed Tuple.pair
                         |> SelectionSet.with
-                            (Api.Fragments.documentByMask "nodebig" Nothing)
+                            (Api.Fragments.documentByMask maskName Nothing)
                         |> SelectionSet.with
                             Api.Fragments.documentResidence
                     )
@@ -294,10 +294,11 @@ _GraphQL notation if FTS is involved:_
 
 -}
 selectionDocumentsPage :
-    Window
+    String
+    -> Window
     -> Selection
     -> SelectionSet DocumentsPage Graphql.Operation.RootQuery
-selectionDocumentsPage window selection =
+selectionDocumentsPage maskName window selection =
     let
         ( query, maybeSearchTerm ) =
             if selection.globalFts == Nothing && FilterList.isEmpty selection.ftsFilters then
@@ -336,7 +337,7 @@ selectionDocumentsPage window selection =
                 )
     in
     query
-        (Api.Fragments.documentsPage "nodesmall" maybeSearchTerm)
+        (Api.Fragments.documentsPage maskName maybeSearchTerm)
         |> SelectionSet.nonNullOrFail
 
 
@@ -489,13 +490,14 @@ _GraphQL notation:_
 
 -}
 authorSearch :
-    Int
+    String
+    -> Int
     -> Maybe (Pagination.Relay.Page.Page Document)
     -> Pagination.Relay.Pagination.Position
     -> FolderId
     -> String
     -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-authorSearch pageSize referencePage paginationPosition folderId searchString =
+authorSearch maskName pageSize referencePage paginationPosition folderId searchString =
     Mediatum.Query.authorSearch
         (Pagination.Relay.Pagination.paginationArguments
             pageSize
@@ -507,7 +509,7 @@ authorSearch pageSize referencePage paginationPosition folderId searchString =
         }
         (Connection.connection
             Api.Fragments.graphqlDocumentObjects
-            (Api.Fragments.documentByMask "nodesmall" Nothing)
+            (Api.Fragments.documentByMask maskName Nothing)
         )
         |> SelectionSet.nonNullOrFail
 
@@ -527,15 +529,16 @@ _GraphQL notation:_
 
 -}
 documentDetails :
-    DocumentIdFromSearch
+    String
+    -> DocumentIdFromSearch
     -> Bool
     -> SelectionSet (Maybe ( Document, Maybe Residence )) Graphql.Operation.RootQuery
-documentDetails documentIdFromSearch withResidence =
+documentDetails maskName documentIdFromSearch withResidence =
     Mediatum.Query.documentById
         { id = Id.toInt documentIdFromSearch.id }
         (SelectionSet.succeed Tuple.pair
             |> SelectionSet.with
-                (Api.Fragments.documentByMask "nodebig" documentIdFromSearch.search)
+                (Api.Fragments.documentByMask maskName documentIdFromSearch.search)
             |> (if withResidence then
                     SelectionSet.with
                         (Api.Fragments.documentResidence

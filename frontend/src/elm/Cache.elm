@@ -120,9 +120,9 @@ type Need
     = NeedRootFolderIds
     | NeedFolders (List FolderId)
     | NeedSubfolders (List FolderId)
-    | NeedGenericNode NodeId
-    | NeedDocumentFromSearch DocumentIdFromSearch
-    | NeedDocumentsPage Selection Window
+    | NeedGenericNode String NodeId
+    | NeedDocumentFromSearch String DocumentIdFromSearch
+    | NeedDocumentsPage String Selection Window
     | NeedFolderCounts Selection
     | NeedFacets Selection (List Aspect)
 
@@ -212,15 +212,15 @@ statusOfNeed cache need =
             Needs.statusFromListOfRemoteData
                 (List.map (get cache.subfolderIds) parentIds)
 
-        NeedGenericNode nodeId ->
+        NeedGenericNode maskName nodeId ->
             get cache.nodeTypes nodeId
                 |> Needs.statusFromRemoteData
 
-        NeedDocumentFromSearch documentId ->
-            get cache.documents documentId
+        NeedDocumentFromSearch maskName documentIdFromSearch ->
+            get cache.documents documentIdFromSearch
                 |> Needs.statusFromRemoteData
 
-        NeedDocumentsPage selection window ->
+        NeedDocumentsPage maskName selection window ->
             get cache.documentsPages ( selection, window )
                 |> Needs.statusFromRemoteData
 
@@ -309,7 +309,7 @@ requestNeed config need cache =
                     (Api.Queries.subfolders parentIdsWithUnknownChildren)
                 )
 
-        NeedGenericNode nodeId ->
+        NeedGenericNode maskName nodeId ->
             ( { cache
                 | nodeTypes =
                     Sort.Dict.insert nodeId Loading cache.nodeTypes
@@ -317,10 +317,10 @@ requestNeed config need cache =
             , Api.sendQueryRequest
                 (Api.withOperationName "NeedGenericNode")
                 (ApiResponseGenericNode nodeId)
-                (Api.Queries.genericNode nodeId)
+                (Api.Queries.genericNode maskName nodeId)
             )
 
-        NeedDocumentFromSearch documentIdFromSearch ->
+        NeedDocumentFromSearch maskName documentIdFromSearch ->
             let
                 needResidence =
                     Needs.statusFromRemoteData
@@ -334,10 +334,10 @@ requestNeed config need cache =
             , Api.sendQueryRequest
                 (Api.withOperationName "NeedDocumentFromSearch")
                 (ApiResponseDocumentFromSearch documentIdFromSearch)
-                (Api.Queries.documentDetails documentIdFromSearch needResidence)
+                (Api.Queries.documentDetails maskName documentIdFromSearch needResidence)
             )
 
-        NeedDocumentsPage selection window ->
+        NeedDocumentsPage maskName selection window ->
             ( { cache
                 | documentsPages =
                     Sort.Dict.insert ( selection, window ) Loading cache.documentsPages
@@ -345,7 +345,7 @@ requestNeed config need cache =
             , Api.sendQueryRequest
                 (Api.withOperationName "NeedDocumentsPage")
                 (ApiResponseDocumentsPage ( selection, window ))
-                (Api.Queries.selectionDocumentsPage window selection)
+                (Api.Queries.selectionDocumentsPage maskName window selection)
             )
 
         NeedFolderCounts selection ->
