@@ -17,7 +17,7 @@ import Html.Attributes
 import Html.Events
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
-import Types.Localization exposing (Language)
+import Types.Localization as Localization exposing (Language)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation exposing (Presentation(..))
@@ -249,7 +249,12 @@ view context model =
                         [ Html.text "mediaTUM view" ]
                     , Html.span
                         [ Html.Attributes.class "subtitle"
-                        , Html.Attributes.title "You may click here to start an example query."
+                        , Html.Attributes.title
+                            (Localization.string context.config
+                                { en = "You may click here to start an example query."
+                                , de = "Hier klicken, um Beispiel-Anfrage zu starten."
+                                }
+                            )
                         , Html.Events.onClick (ControlsMsg UI.Controls.submitExampleQuery)
                         ]
                         [ Html.text "WIP" ]

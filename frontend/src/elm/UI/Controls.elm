@@ -29,7 +29,9 @@ import Html.Attributes
 import Html.Events
 import List.Extra
 import Maybe.Extra
+import Mediatum.Object.Setup exposing (config)
 import RemoteData
+import String.Format
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
@@ -241,7 +243,7 @@ view context model =
             [ viewSearch context model
             , viewFtsFilters context.config model
             , viewFacetFilters context
-            , viewSearchButtons model
+            , viewSearchButtons context.config model
             ]
         ]
 
@@ -251,7 +253,11 @@ viewSearch context model =
     Html.div [ Html.Attributes.class "search-bar" ]
         [ Html.label
             [ Html.Attributes.class "search-label" ]
-            [ Html.text "metadata & fulltext" ]
+            [ Localization.text context.config
+                { en = "Metadata & Fulltext"
+                , de = "Metadaten & Volltext"
+                }
+            ]
         , Html.span [ Html.Attributes.class "input-group" ]
             [ Html.input
                 [ Html.Attributes.class "search-input"
@@ -273,8 +279,8 @@ viewSearch context model =
         ]
 
 
-viewSearchButtons : Model -> Html Msg
-viewSearchButtons model =
+viewSearchButtons : Config -> Model -> Html Msg
+viewSearchButtons config model =
     Html.div [ Html.Attributes.class "submit-buttons" ]
         [ Html.button
             [ Html.Attributes.type_ "submit"
@@ -285,7 +291,12 @@ viewSearchButtons model =
                 ]
             , Html.Events.onClick (SetSorting ByRank)
             ]
-            [ UI.Icons.search, Html.text " By Rank" ]
+            [ UI.Icons.search
+            , Localization.text config
+                { en = " By Rank"
+                , de = " Beste zuerst"
+                }
+            ]
         , Html.button
             [ Html.Attributes.type_ "submit"
             , Html.Attributes.classList
@@ -295,7 +306,12 @@ viewSearchButtons model =
                 ]
             , Html.Events.onClick (SetSorting ByDate)
             ]
-            [ UI.Icons.search, Html.text " By Date" ]
+            [ UI.Icons.search
+            , Localization.text config
+                { en = " By Date"
+                , de = " Neueste zuerst"
+                }
+            ]
         ]
 
 
@@ -311,8 +327,18 @@ getSearchFieldPlaceholder context =
                     |> Maybe.map .name
             )
         |> Maybe.Extra.unwrap
-            "Search"
-            (\folderName -> "Search in " ++ folderName)
+            (Localization.string context.config
+                { en = "Search"
+                , de = "Suche"
+                }
+            )
+            (\folderName ->
+                Localization.string context.config
+                    { en = "Search in {{}}"
+                    , de = "Suche in {{}}"
+                    }
+                    |> String.Format.value folderName
+            )
 
 
 viewFtsFilters : Config -> Model -> Html Msg
@@ -350,9 +376,14 @@ viewFtsFilter config aspect searchText =
             [ Html.input
                 [ Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
-                , Html.Attributes.placeholder <|
-                    "Search "
-                        ++ FtsAspect.getLabelOrAspectName config.uiLanguage aspect config.ftsAspects
+                , Html.Attributes.placeholder
+                    (Localization.string config
+                        { en = "Search for {{}}"
+                        , de = "Suche nach {{}}"
+                        }
+                        |> String.Format.value
+                            (FtsAspect.getLabelOrAspectName config.uiLanguage aspect config.ftsAspects)
+                    )
                 , Html.Attributes.value searchText
                 , Html.Events.onInput (SetFtsFilterText aspect)
                 ]

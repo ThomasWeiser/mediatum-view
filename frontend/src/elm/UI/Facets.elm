@@ -114,14 +114,13 @@ viewFacet context selection facetAspectConfig =
         [ Html.Attributes.class "facet-box" ]
         [ Html.div
             [ Html.Attributes.class "facet-name" ]
-            [ Html.text
-                (Localization.translation context.config.uiLanguage facetAspectConfig.label)
-            ]
+            [ Localization.text context.config facetAspectConfig.label ]
         , Html.div
             [ Html.Attributes.class "facet-values" ]
             [ case FilterList.get facetAspectConfig.aspect selection.facetFilters of
                 Just selectedValue ->
                     viewFacetSelection
+                        context.config
                         facetAspectConfig.aspect
                         selectedValue
                         (Cache.Derive.getDocumentCount context.cache selection
@@ -148,6 +147,7 @@ viewFacet context selection facetAspectConfig =
 
                         RemoteData.Success facetsValues ->
                             viewFacetValues
+                                context.config
                                 facetAspectConfig.aspect
                                 (Sort.Dict.get facetAspectConfig.aspect facetsValues
                                     |> Maybe.withDefault []
@@ -156,8 +156,8 @@ viewFacet context selection facetAspectConfig =
         ]
 
 
-viewFacetSelection : Aspect -> String -> Maybe Int -> Html Msg
-viewFacetSelection aspect selectedValue maybeCount =
+viewFacetSelection : Config -> Aspect -> String -> Maybe Int -> Html Msg
+viewFacetSelection config aspect selectedValue maybeCount =
     Html.ul [] <|
         [ Html.li
             [ Html.Attributes.class "facet-value-line facet-remove-filter"
@@ -165,7 +165,13 @@ viewFacetSelection aspect selectedValue maybeCount =
             ]
             [ Html.span
                 [ Html.Attributes.class "facet-value-text" ]
-                [ Html.i [] [ Html.text "<< All" ] ]
+                [ Html.i []
+                    [ Localization.text config
+                        { en = "<< All"
+                        , de = "<< zurück"
+                        }
+                    ]
+                ]
             ]
         , Html.li
             [ Html.Attributes.class "facet-value-line"
@@ -174,7 +180,7 @@ viewFacetSelection aspect selectedValue maybeCount =
             [ Html.span
                 [ Html.Attributes.class "facet-value-text" ]
                 [ if String.isEmpty selectedValue then
-                    Html.i [] [ Html.text "[not specified]" ]
+                    viewNotSpecified config
 
                   else
                     Html.text selectedValue
@@ -191,8 +197,8 @@ viewFacetSelection aspect selectedValue maybeCount =
         ]
 
 
-viewFacetValues : Aspect -> FacetValues -> Html Msg
-viewFacetValues aspect facetValues =
+viewFacetValues : Config -> Aspect -> FacetValues -> Html Msg
+viewFacetValues config aspect facetValues =
     Html.ul [] <|
         List.map
             (\{ value, count } ->
@@ -203,7 +209,7 @@ viewFacetValues aspect facetValues =
                     [ Html.span
                         [ Html.Attributes.class "facet-value-text" ]
                         [ if String.isEmpty value then
-                            Html.i [] [ Html.text "[not specified]" ]
+                            viewNotSpecified config
 
                           else
                             Html.text value
@@ -214,3 +220,13 @@ viewFacetValues aspect facetValues =
                     ]
             )
             facetValues
+
+
+viewNotSpecified : Config -> Html msg
+viewNotSpecified config =
+    Html.i []
+        [ Localization.text config
+            { en = "[not specified]"
+            , de = "[nicht angegeben]"
+            }
+        ]

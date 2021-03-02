@@ -22,9 +22,11 @@ import Cache exposing (Cache)
 import Cache.Derive
 import Html exposing (Html)
 import RemoteData exposing (RemoteData(..))
+import String.Format
 import Types exposing (DocumentIdFromSearch, NodeType(..))
 import Types.Config exposing (Config)
 import Types.Id as Id exposing (NodeId)
+import Types.Localization as Localization
 import UI.Icons
 import Utils
 import Utils.Html
@@ -69,7 +71,13 @@ view context model =
             case context.genericParameters of
                 Nothing ->
                     Cache.Derive.getRootFolder context.cache
-                        |> RemoteData.map (always "Going to show the root folder")
+                        |> RemoteData.map
+                            (Localization.string context.config
+                                { en = "Going to show the root folder"
+                                , de = "Laden des Startverzeichnisses"
+                                }
+                                |> always
+                            )
 
                 Just ( nodeId, Nothing ) ->
                     Cache.Derive.getNodeType context.cache nodeId
@@ -78,18 +86,23 @@ view context model =
                             (\nodeType ->
                                 Maybe.map Cache.Derive.CacheDerivationError <|
                                     if nodeType == NodeIsNeither then
-                                        Just <|
-                                            "Node "
-                                                ++ Id.toString nodeId
-                                                ++ " is neither a folder nor a document"
+                                        Localization.string context.config
+                                            { en = "Node {{}} is neither a folder nor a document"
+                                            , de = "Node {{}} ist weder ein Verzeichnis noch ein Dokument"
+                                            }
+                                            |> String.Format.value (Id.toString nodeId)
+                                            |> Just
 
                                     else
                                         Nothing
                             )
                         |> RemoteData.map
-                            (always <|
-                                "Going to show the folder or document "
-                                    ++ Id.toString nodeId
+                            (Localization.string context.config
+                                { en = "Going to show the folder or document {{}}"
+                                , de = "Anzeige des Verzeichnisses oder Dokuments {{}} wird vorbereitet"
+                                }
+                                |> String.Format.value (Id.toString nodeId)
+                                |> always
                             )
 
                 Just ( nodeIdOne, Just documentIdFromSearch ) ->
@@ -108,23 +121,29 @@ view context model =
                                             Nothing
 
                                         ( NodeIsFolder _, _ ) ->
-                                            Just <|
-                                                "Node "
-                                                    ++ Id.toString nodeIdTwo
-                                                    ++ " is not a document"
+                                            Localization.string context.config
+                                                { en = "Node {{}} is not a document"
+                                                , de = "Node {{}} ist kein Dokument"
+                                                }
+                                                |> String.Format.value (Id.toString nodeIdTwo)
+                                                |> Just
 
                                         ( _, _ ) ->
-                                            Just <|
-                                                "Node "
-                                                    ++ Id.toString nodeIdOne
-                                                    ++ " is not a folder"
+                                            Localization.string context.config
+                                                { en = "Node {{}} is not a folder"
+                                                , de = "Node {{}} ist kein Verzeichnis"
+                                                }
+                                                |> String.Format.value (Id.toString nodeIdOne)
+                                                |> Just
                             )
                         |> RemoteData.map
-                            (always <|
-                                "Going to show document "
-                                    ++ Id.toString nodeIdOne
-                                    ++ " in folder"
-                                    ++ Id.toString nodeIdTwo
+                            (Localization.string context.config
+                                { en = "Going to show document {{}} in folder {{}}"
+                                , de = "Anzeige des Dokuments {{}} im Verzeichnis {{}} wird vorbereitet"
+                                }
+                                |> String.Format.value (Id.toString nodeIdOne)
+                                |> String.Format.value (Id.toString nodeIdTwo)
+                                |> always
                             )
     in
     Html.div [] <|
