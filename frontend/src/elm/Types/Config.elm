@@ -122,10 +122,6 @@ updateFromJSConfigChangeEvent eventJsonValue config =
             config
 
         Ok event ->
-            let
-                _ =
-                    Debug.log "updateFromJSConfigChangeEvent" event
-            in
             { config
                 | navigatorLanguage =
                     Maybe.Extra.or
