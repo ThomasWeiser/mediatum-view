@@ -17,11 +17,12 @@ import Cmd.Extra
 import Html exposing (Html)
 import Types.Config as Config exposing (Config)
 import Types.DebugInfo exposing (DebugInfo, debugInfo)
+import Types.Localization exposing (Language)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation as Presentation exposing (Presentation(..))
 import Types.Route as Route exposing (Route)
-import UI
+import UI exposing (Return(..))
 
 
 {-| Context data provided by the parent module [`Setup`](Setup).
@@ -38,6 +39,7 @@ Internal route changes are reported to the [`Main`](Main) module this way.
 -}
 type Return
     = NoReturn
+    | SwitchUILanguage Language
     | ReflectRoute Route
 
 
@@ -168,15 +170,18 @@ requestNeeds context model =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     let
-        ( model1, cmd1, maybeNavigation ) =
+        ( model1, cmd1, subReturn ) =
             updateSubModel context msg model
 
         ( model2, return ) =
-            case maybeNavigation of
-                Nothing ->
+            case subReturn of
+                SubNoReturn ->
                     ( model1, NoReturn )
 
-                Just navigation ->
+                SubReturnSwitchUILanguage language ->
+                    ( model1, SwitchUILanguage language )
+
+                SubReturnNavigate navigation ->
                     let
                         route =
                             Navigation.alterRoute
@@ -194,7 +199,13 @@ update context msg model =
     )
 
 
-updateSubModel : Context -> Msg -> Model -> ( Model, Cmd Msg, Maybe Navigation )
+type SubReturn
+    = SubNoReturn
+    | SubReturnNavigate Navigation
+    | SubReturnSwitchUILanguage Language
+
+
+updateSubModel : Context -> Msg -> Model -> ( Model, Cmd Msg, SubReturn )
 updateSubModel context msg model =
     case msg of
         CacheMsg subMsg ->
@@ -209,38 +220,41 @@ updateSubModel context msg model =
             in
             ( model1 |> adjustPresentation
             , cmd1
-            , Nothing
+            , SubNoReturn
             )
 
         UIMsg subMsg ->
             let
-                ( subModel, subCmd, subReturn ) =
+                ( uiModel, uiCmd, uiReturn ) =
                     UI.update
                         (uiContext context model)
                         subMsg
                         model.ui
 
                 model1 =
-                    { model | ui = subModel }
+                    { model | ui = uiModel }
 
-                ( model2, maybeNavigation ) =
-                    case subReturn of
+                ( model2, subReturn ) =
+                    case uiReturn of
                         UI.NoReturn ->
-                            ( model1, Nothing )
+                            ( model1, SubNoReturn )
 
                         UI.Navigate navigation ->
-                            ( model1, Just navigation )
+                            ( model1, SubReturnNavigate navigation )
 
                         UI.UpdateCacheWithModifiedDocument document ->
                             ( { model1
                                 | cache = Cache.updateWithModifiedDocument document model1.cache
                               }
-                            , Nothing
+                            , SubNoReturn
                             )
+
+                        UI.SwitchUILanguage language ->
+                            ( model1, SubReturnSwitchUILanguage language )
             in
             ( model2
-            , Cmd.map UIMsg subCmd
-            , maybeNavigation
+            , Cmd.map UIMsg uiCmd
+            , subReturn
             )
 
 

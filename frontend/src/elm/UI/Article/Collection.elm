@@ -24,6 +24,7 @@ import Html exposing (Html)
 import RemoteData
 import Types.Config exposing (Config)
 import Types.Id exposing (FolderId)
+import Types.Localization as Localization
 import UI.Icons
 import Utils.Html
 
@@ -76,10 +77,18 @@ view context model =
             RemoteData.Success folder ->
                 Html.h3 [] <|
                     if Folder.isRoot folder then
-                        [ Html.text "Front page for root of all collections" ]
+                        [ Localization.text context.config
+                            { en = "Front page for root of all collections"
+                            , de = "Startseite für alle Kollektionen"
+                            }
+                        ]
 
                     else
-                        [ Html.text "Front page for collection \""
+                        [ Localization.text context.config
+                            { en = "Front page for collection"
+                            , de = "Startseite für Kollektion"
+                            }
+                        , Html.text " \""
                         , Html.text folder.name
                         , Html.text "\""
                         ]

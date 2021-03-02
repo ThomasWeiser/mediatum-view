@@ -37,6 +37,7 @@ import RemoteData
 import Types exposing (Window)
 import Types.Config exposing (Config)
 import Types.Id exposing (DocumentId)
+import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Route as Route
 import Types.Route.Url
@@ -211,7 +212,7 @@ viewDocumentsPage context documentsPage =
                 (viewDocumentResult context)
                 documentsPage.content
             )
-        , viewPaginationButtons documentsPage
+        , viewPaginationButtons context.config documentsPage
         ]
 
 
@@ -248,29 +249,35 @@ viewDocument context number document =
                 viewAttribute
                 document.attributes
             )
-        , viewSearchMatching document.searchMatching
+        , viewSearchMatching context.config document.searchMatching
         ]
 
 
-viewSearchMatching : Maybe Document.SearchMatching -> Html msg
-viewSearchMatching =
+viewSearchMatching : Config -> Maybe Document.SearchMatching -> Html msg
+viewSearchMatching config =
     Maybe.Extra.unwrap
-        ""
+        { en = "", de = "" }
         (\{ attributes, fulltext } ->
             case ( attributes, fulltext ) of
                 ( False, False ) ->
-                    ""
+                    { en = "", de = "" }
 
                 ( True, False ) ->
-                    "Suchbegriff in Metadaten gefunden"
+                    { en = "Search term found in metadata"
+                    , de = "Suchbegriff in Metadaten gefunden"
+                    }
 
                 ( False, True ) ->
-                    "Suchbegriff in Volltext gefunden"
+                    { en = "Search term found in fulltext"
+                    , de = "Suchbegriff in Volltext gefunden"
+                    }
 
                 ( True, True ) ->
-                    "Suchbegriff in Metadaten und Volltext gefunden"
+                    { en = "Search term found in metadata and fulltext"
+                    , de = "Suchbegriff in Metadaten und Volltext gefunden"
+                    }
         )
-        >> Html.text
+        >> Localization.text config
 
 
 maxAttributeStringLength : Int
@@ -328,29 +335,29 @@ viewAttribute attribute =
             Html.text ""
 
 
-viewPaginationButtons : DocumentsPage -> Html Msg
-viewPaginationButtons documentsPage =
+viewPaginationButtons : Config -> DocumentsPage -> Html Msg
+viewPaginationButtons config documentsPage =
     let
-        viewButton : String -> Msg -> Bool -> Html Msg
+        viewButton : Localization.Translations -> Msg -> Bool -> Html Msg
         viewButton label msg enabled =
             Html.button
                 [ Html.Attributes.type_ "button"
                 , Html.Attributes.disabled (not enabled)
                 , Html.Events.onClick msg
                 ]
-                [ Html.text label ]
+                [ Localization.text config label ]
     in
     Html.div
         [ Html.Attributes.style "margin" "4px 0px 8px 0px"
         , Html.Attributes.class "input-group"
         ]
-        [ viewButton "First"
+        [ viewButton { en = "First", de = "zum Anfang" }
             (PickPosition First)
             (documentsPage.offset /= 0)
-        , viewButton "Prev"
+        , viewButton { en = "Prev", de = "zurück" }
             (PickPosition Previous)
             (documentsPage.offset /= 0)
-        , viewButton "Next"
+        , viewButton { en = "Next", de = "weiter" }
             (PickPosition Next)
             documentsPage.hasNextPage
         ]

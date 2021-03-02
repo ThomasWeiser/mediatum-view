@@ -7,6 +7,32 @@
 
 <body>
   <script>
-    var app = Elm.Main.init();
-  </script>
+    var app = Elm.Main.init({
+      flags: {
+        "navigatorLanguageTag": navigator.language,
+        "userSelectedUILanguageTag": localStorage.getItem("selectedUILanguage")
+      }
+    });
+    app.ports.saveSelectedUILanguageTag.subscribe(
+      function (userSelectedUILanguageTag) {
+        localStorage.setItem("selectedUILanguage", userSelectedUILanguageTag);
+      });
+    window.addEventListener('storage', function (ev) {
+      console.log("StorageEvent: %s %o", ev.newValue, ev);
+      if (ev.key == "selectedUILanguage") {
+        app.ports.jsConfigChangeEvent.send(
+          {
+            "changedSelectedUILanguageTag": ev.newValue
+          }
+        );
+      }
+    });
+    window.addEventListener('languagechange', function () {
+      console.log('languagechange event detected! %s', navigator.language);
+      app.ports.jsConfigChangeEvent.send(
+        {
+          "changedNavigatorLanguageTag": navigator.language
+        }
+      );
+    });  </script>
 </body>

@@ -35,6 +35,7 @@ import RemoteData
 import Types exposing (DocumentIdFromSearch)
 import Types.Config exposing (Config)
 import Types.Id exposing (DocumentId)
+import Types.Localization as Localization
 import Types.Route exposing (Route)
 import UI.Icons
 import UI.Widgets.Breadcrumbs
@@ -213,31 +214,37 @@ viewDocument context model document residence =
                     viewAttribute
                     document.attributes
             ]
-        , viewSearchMatching document.searchMatching
+        , viewSearchMatching context.config document.searchMatching
         , viewResidence context residence
         , viewEditAttribute model document
         ]
 
 
-viewSearchMatching : Maybe Document.SearchMatching -> Html msg
-viewSearchMatching =
+viewSearchMatching : Config -> Maybe Document.SearchMatching -> Html msg
+viewSearchMatching config =
     Maybe.Extra.unwrap
-        ""
+        { en = "", de = "" }
         (\{ attributes, fulltext } ->
             case ( attributes, fulltext ) of
                 ( False, False ) ->
-                    ""
+                    { en = "", de = "" }
 
                 ( True, False ) ->
-                    "Suchbegriff in Metadaten gefunden"
+                    { en = "Search term found in metadata"
+                    , de = "Suchbegriff in Metadaten gefunden"
+                    }
 
                 ( False, True ) ->
-                    "Suchbegriff in Volltext gefunden"
+                    { en = "Search term found in fulltext"
+                    , de = "Suchbegriff in Volltext gefunden"
+                    }
 
                 ( True, True ) ->
-                    "Suchbegriff in Metadaten und Volltext gefunden"
+                    { en = "Search term found in metadata and fulltext"
+                    , de = "Suchbegriff in Metadaten und Volltext gefunden"
+                    }
         )
-        >> Html.text
+        >> Localization.text config
 
 
 viewAttribute : Document.Attribute -> Html msg
@@ -262,7 +269,11 @@ viewResidence context residence =
         [ Html.Attributes.class "residence" ]
         [ Html.div
             [ Html.Attributes.class "title" ]
-            [ Html.text "Vorkommen:" ]
+            [ Localization.text context.config
+                { en = "Occurrences:"
+                , de = "Vorkommen:"
+                }
+            ]
         , Html.ul [] <|
             List.map
                 (\lineage ->
@@ -279,6 +290,7 @@ viewResidence context residence =
 
 viewEditAttribute : Model -> Document -> Html Msg
 viewEditAttribute model document =
+    -- TODO: Editing feature will be removed soon. View function not localized for now.
     let
         formDisabled =
             model.mutationState == Pending

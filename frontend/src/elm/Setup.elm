@@ -1,14 +1,14 @@
-module Setup exposing
+port module Setup exposing
     ( Return(..), Model, Msg
     , init
-    , requestNeeds, updateModelFromRoute, update, view
+    , requestNeeds, updateModelFromRoute, subscriptions, update, view
     )
 
 {-| Top-level module sitting between Main and App, to set up the client configuration
 
 @docs Return, Model, Msg
 @docs init
-@docs requestNeeds, updateModelFromRoute, update, view
+@docs requestNeeds, updateModelFromRoute, subscriptions, update, view
 
 -}
 
@@ -16,7 +16,9 @@ import Api
 import Api.Queries
 import App
 import Html exposing (Html)
+import Json.Decode
 import Types.Config as Config exposing (Config)
+import Types.Localization as Localization
 import Types.Route as Route exposing (Route)
 import Types.ServerSetup exposing (ServerSetup)
 
@@ -41,8 +43,15 @@ type alias Model =
 
 {-| -}
 type Msg
-    = ApiResponseServerSetup (Api.Response ServerSetup)
+    = JSConfigChangeEvent Json.Decode.Value
+    | ApiResponseServerSetup (Api.Response ServerSetup)
     | AppMsg App.Msg
+
+
+port saveSelectedUILanguageTag : String -> Cmd msg
+
+
+port jsConfigChangeEvent : (Json.Decode.Value -> msg) -> Sub msg
 
 
 {-| Initialize fetching the ServerSetup as well as the App module
@@ -50,10 +59,10 @@ type Msg
 Note that the latter is delayed until config is known from received ServerSetup.
 
 -}
-init : Route -> ( Model, Cmd Msg )
-init route =
+init : Json.Decode.Value -> Route -> ( Model, Cmd Msg )
+init flags route =
     ( { delayedInitWithRoute = Just route
-      , config = Config.init
+      , config = Config.initFromFlags flags
       , app = App.initEmptyModel
       }
     , Api.sendQueryRequest
@@ -61,6 +70,11 @@ init route =
         ApiResponseServerSetup
         Api.Queries.serverSetup
     )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    jsConfigChangeEvent JSConfigChangeEvent
 
 
 {-| Report a changed route to the App and update it accordingly.
@@ -94,6 +108,14 @@ requestNeeds model =
 update : Msg -> Model -> ( Model, Cmd Msg, Return )
 update msg model =
     case msg of
+        JSConfigChangeEvent eventJsonValue ->
+            ( { model
+                | config = Config.updateFromJSConfigChangeEvent eventJsonValue model.config
+              }
+            , Cmd.none
+            , NoReturn
+            )
+
         ApiResponseServerSetup (Ok serverSetup) ->
             let
                 model1 =
@@ -132,15 +154,35 @@ update msg model =
             let
                 ( appModel, appCmd, appReturn ) =
                     App.update (appContext model) appMsg model.app
-            in
-            ( { model | app = appModel }
-            , Cmd.map AppMsg appCmd
-            , case appReturn of
-                App.NoReturn ->
-                    NoReturn
 
-                App.ReflectRoute route ->
-                    ReflectRoute True route
+                ( config, saveSelectedUILanguageCmd, return ) =
+                    case appReturn of
+                        App.NoReturn ->
+                            ( model.config
+                            , Cmd.none
+                            , NoReturn
+                            )
+
+                        App.SwitchUILanguage language ->
+                            ( model.config |> Config.setUiLanguage language
+                            , saveSelectedUILanguageTag (Localization.languageToLanguageTag language)
+                            , NoReturn
+                            )
+
+                        App.ReflectRoute route ->
+                            ( model.config
+                            , Cmd.none
+                            , ReflectRoute True route
+                            )
+            in
+            ( { model
+                | config = config
+                , app = appModel
+              }
+            , [ appCmd, saveSelectedUILanguageCmd ]
+                |> Cmd.batch
+                |> Cmd.map AppMsg
+            , return
             )
 
 
