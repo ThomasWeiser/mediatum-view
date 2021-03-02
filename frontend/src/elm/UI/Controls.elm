@@ -369,7 +369,7 @@ viewFtsFilter config aspect searchText =
         [ Html.label
             [ Html.Attributes.class "search-label" ]
             [ Html.text
-                (FtsAspect.getLabelOrAspectName config.uiLanguage aspect config.ftsAspects)
+                (FtsAspect.getLabelOrAspectName config aspect config.ftsAspects)
             ]
         , Html.span
             [ Html.Attributes.class "input-group" ]
@@ -382,7 +382,7 @@ viewFtsFilter config aspect searchText =
                         , de = "Suche nach {{}}"
                         }
                         |> String.Format.value
-                            (FtsAspect.getLabelOrAspectName config.uiLanguage aspect config.ftsAspects)
+                            (FtsAspect.getLabelOrAspectName config aspect config.ftsAspects)
                     )
                 , Html.Attributes.value searchText
                 , Html.Events.onInput (SetFtsFilterText aspect)
@@ -414,7 +414,7 @@ viewFtsAspectButtons config ftsFilterLines =
                                 , Html.Attributes.class "add-filter-button"
                                 , Html.Events.onClick <| AddFtsFilter aspect
                                 ]
-                                [ Html.text (Localization.translation config.uiLanguage label) ]
+                                [ Localization.text config label ]
                             ]
 
                 else
@@ -440,7 +440,7 @@ viewFacetFilter config ( aspect, value ) =
         [ Html.label
             [ Html.Attributes.class "search-label" ]
             [ Html.text
-                (FacetAspect.getLabelOrAspectName config.uiLanguage aspect config.facetAspects)
+                (FacetAspect.getLabelOrAspectName config aspect config.facetAspects)
             ]
         , Html.span
             [ Html.Attributes.class "input-group" ]

@@ -38,13 +38,13 @@ get =
 If the given aspect has no configuration (should never happen) then we use the raw aspect name.
 
 -}
-getLabelOrAspectName : Localization.Language -> Aspect -> List FtsAspectConfig -> String
-getLabelOrAspectName language aspect listOfFtsAspectConfigs =
+getLabelOrAspectName : { c | uiLanguage : Localization.Language } -> Aspect -> List FtsAspectConfig -> String
+getLabelOrAspectName config aspect listOfFtsAspectConfigs =
     get aspect listOfFtsAspectConfigs
         |> Maybe.Extra.unwrap
             (Aspect.toString aspect)
             (\ftsAspectConfig ->
-                Localization.translation language ftsAspectConfig.label
+                Localization.string config ftsAspectConfig.label
             )
 
 
