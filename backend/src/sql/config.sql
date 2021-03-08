@@ -55,3 +55,14 @@ insert into config.aspect_facet values
     ('keywords', '{"en": "Keywords", "de": "Stichworte"}'::jsonb),
     ('year', '{"en": "Year", "de": "Jahr"}'::jsonb)
 ;
+
+
+create table config.masks_by_purpose (
+    purpose text not null,
+    mask_names jsonb not null
+);
+
+insert into config.masks_by_purpose values
+    ('listing', '{"en": "nodesmall_en", "de": "nodesmall"}'::jsonb),
+    ('details', '{"en": "nodebig_en", "de": "nodebig"}'::jsonb)
+;

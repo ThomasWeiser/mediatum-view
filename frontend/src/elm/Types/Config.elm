@@ -22,7 +22,7 @@ import Maybe exposing (Maybe)
 import Maybe.Extra
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
-import Types.Config.MasksConfig as MasksConfig exposing (MasksConfig)
+import Types.Config.MasksConfig as MasksConfig exposing (MasksConfig, MasksPurposeServerConfig)
 import Types.Localization as Localization exposing (Language)
 import Types.Selection as Selection
 import Types.ServerSetup exposing (ServerSetup)
@@ -83,10 +83,25 @@ updateFromServerSetup serverSetup config =
         , numberOfFacetValues =
             serverSetup.config.numberOfFacetValues |> Maybe.withDefault config.numberOfFacetValues
         , ftsAspects =
-            serverSetup.config.staticFtsAspects |> Maybe.withDefault []
+            serverSetup.config.staticFtsAspects |> Maybe.withDefault config.ftsAspects
         , facetAspects =
-            serverSetup.config.staticFacetAspects |> Maybe.withDefault []
+            serverSetup.config.staticFacetAspects |> Maybe.withDefault config.facetAspects
+        , masks =
+            Maybe.Extra.unwrap
+                config.masks
+                (updateMasks config.masks)
+                serverSetup.config.masksByPurpose
     }
+
+
+updateMasks : MasksConfig -> List MasksPurposeServerConfig -> MasksConfig
+updateMasks masksConfig listOfMasksPurposeServerConfig =
+    listOfMasksPurposeServerConfig
+        |> List.foldl
+            (\{ purpose, maskNames } ->
+                MasksConfig.updateMasksForPurpose purpose maskNames
+            )
+            masksConfig
 
 
 {-| Get the name of a mask as configured for the current uiLanguage and the given purpose.

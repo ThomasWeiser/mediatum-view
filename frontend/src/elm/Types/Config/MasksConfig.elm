@@ -1,6 +1,7 @@
 module Types.Config.MasksConfig exposing
     ( MasksConfig, MaskPurpose(..)
-    , init
+    , MasksPurposeServerConfig
+    , init, updateMasksForPurpose
     , forPurpose
     )
 
@@ -9,7 +10,8 @@ module Types.Config.MasksConfig exposing
 Note that the mask name used is also dependant on the configured uiLanguage.
 
 @docs MasksConfig, MaskPurpose
-@docs init
+@docs MasksPurposeServerConfig
+@docs init, updateMasksForPurpose
 @docs forPurpose
 
 -}
@@ -31,6 +33,13 @@ type MasksConfig
         }
 
 
+{-| -}
+type alias MasksPurposeServerConfig =
+    { purpose : String
+    , maskNames : Translations
+    }
+
+
 {-| Default values; may be overwritten by the server setup
 -}
 init : MasksConfig
@@ -45,6 +54,20 @@ init =
             , de = "nodebig"
             }
         }
+
+
+updateMasksForPurpose : String -> Translations -> MasksConfig -> MasksConfig
+updateMasksForPurpose purpose translations (MasksConfig masksConfig) =
+    MasksConfig <|
+        case purpose of
+            "listing" ->
+                { masksConfig | forListing = translations }
+
+            "details" ->
+                { masksConfig | forDetails = translations }
+
+            _ ->
+                masksConfig
 
 
 {-| Get the mask name for a given purpose. Returns all language translations.

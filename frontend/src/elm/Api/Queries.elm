@@ -117,6 +117,11 @@ serverSetup =
                                 Api.Fragments.facetAspectConfig
                                 |> Api.Fragments.nonNullElementsOfMaybeListOrFail
                             )
+                        |> SelectionSet.with
+                            (Mediatum.Object.SetupConfig.masksByPurpose
+                                Api.Fragments.masksPurposeConfig
+                                |> Api.Fragments.nonNullElementsOfMaybeListOrFail
+                            )
                     )
                     |> SelectionSet.nonNullOrFail
                 )

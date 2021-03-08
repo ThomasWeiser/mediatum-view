@@ -1,5 +1,5 @@
 module Api.Fragments exposing
-    ( translation, ftsAspectConfig, facetAspectConfig
+    ( translation, ftsAspectConfig, facetAspectConfig, masksPurposeConfig
     , folder, folderAndSubfolders, folderLineageFolders
     , folderAndSubfolderCounts, folderCount, facetByAspect
     , documentsPage, documentResult, documentByMask, documentResidence
@@ -12,7 +12,7 @@ module Api.Fragments exposing
 
 # Fragments of Config
 
-@docs translation, ftsAspectConfig, facetAspectConfig
+@docs translation, ftsAspectConfig, facetAspectConfig, masksPurposeConfig
 
 
 # Fragments on Folder
@@ -68,6 +68,7 @@ import Mediatum.Object.FolderCount
 import Mediatum.Object.FolderCountsConnection
 import Mediatum.Object.FoldersConnection
 import Mediatum.Object.FtsAspectConfig
+import Mediatum.Object.MasksPurposeConfig
 import Mediatum.Object.Metadatatype
 import Mediatum.Object.PageInfo
 import Mediatum.Object.Translation
@@ -78,6 +79,7 @@ import Types exposing (FolderDisplay(..), WindowPage)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
+import Types.Config.MasksConfig exposing (MasksPurposeServerConfig)
 import Types.FacetValue exposing (FacetValue, FacetValues)
 import Types.Id as Id exposing (FolderId, LineageIds)
 import Types.Localization as Localization
@@ -134,6 +136,33 @@ facetAspectConfig =
             )
         |> SelectionSet.with
             (Mediatum.Object.FacetAspectConfig.label
+                translation
+                |> SelectionSet.nonNullOrFail
+            )
+
+
+{-| Selection set on a MasksPurposeConfig to get a MasksPurposeServerConfig
+
+_GraphQL notation:_
+
+    fragment masksPurposeConfig on MasksPurposeConfig
+        purpose
+        maskeNames {
+            ...translation
+        }
+    }
+
+-}
+masksPurposeConfig : SelectionSet MasksPurposeServerConfig Mediatum.Object.MasksPurposeConfig
+masksPurposeConfig =
+    SelectionSet.succeed
+        MasksPurposeServerConfig
+        |> SelectionSet.with
+            (Mediatum.Object.MasksPurposeConfig.purpose
+                |> SelectionSet.nonNullOrFail
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.MasksPurposeConfig.maskNames
                 translation
                 |> SelectionSet.nonNullOrFail
             )
