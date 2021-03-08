@@ -6,6 +6,8 @@ module Tests.Types exposing
     , fuzzerFtsFilters
     , fuzzerGlobalFts
     , fuzzerLimit
+    , fuzzerMaskDocumentIdFromSearch
+    , fuzzerMaskSelectionWindow
     , fuzzerNodeId
     , fuzzerOffset
     , fuzzerSelection
@@ -52,11 +54,25 @@ fuzzerDocumentId =
     Fuzz.map Id.fromInt fuzzerId
 
 
+fuzzerMaskName : Fuzzer String
+fuzzerMaskName =
+    [ "nodesmall_en", "nodesmall", "nodebig_en", "nodebig" ]
+        |> List.map Fuzz.constant
+        |> Fuzz.oneOf
+
+
 fuzzerDocumentIdFromSearch : Fuzzer DocumentIdFromSearch
 fuzzerDocumentIdFromSearch =
     Fuzz.map2 DocumentIdFromSearch
         (Fuzz.map Id.fromInt fuzzerId)
         (Fuzz.maybe fuzzerSearchTerm)
+
+
+fuzzerMaskDocumentIdFromSearch : Fuzzer ( String, DocumentIdFromSearch )
+fuzzerMaskDocumentIdFromSearch =
+    Fuzz.map2 Tuple.pair
+        fuzzerMaskName
+        fuzzerDocumentIdFromSearch
 
 
 fuzzerSelection : Fuzzer Selection
@@ -72,6 +88,14 @@ fuzzerSelection =
 fuzzerSelectionWindow : Fuzzer ( Selection, Window )
 fuzzerSelectionWindow =
     Fuzz.map2 Tuple.pair
+        fuzzerSelection
+        fuzzerWindow
+
+
+fuzzerMaskSelectionWindow : Fuzzer ( String, Selection, Window )
+fuzzerMaskSelectionWindow =
+    Fuzz.map3 (\maskName selection window -> ( maskName, selection, window ))
+        fuzzerMaskName
         fuzzerSelection
         fuzzerWindow
 

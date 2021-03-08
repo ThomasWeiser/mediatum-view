@@ -18,7 +18,9 @@ suite =
         , testFineOrderingProperties "DocumentId" fuzzerDocumentId Id.ordering
         , testFineOrderingProperties "Selection" fuzzerSelection Selection.orderingSelection
         , testFineOrderingProperties "DocumentIdFromSearch" fuzzerDocumentIdFromSearch Types.orderingDocumentIdFromSearch
+        , testFineOrderingProperties "MaskDocumentIdFromSearch" fuzzerMaskDocumentIdFromSearch Cache.orderingMaskDocumentIdFromSearch
         , testFineOrderingProperties "SelectionWindow" fuzzerSelectionWindow Cache.orderingSelectionWindow
+        , testFineOrderingProperties "MaskSelectionWindow" fuzzerMaskSelectionWindow Cache.orderingMaskSelectionWindow
         , testCoarseOrderingProperties "SelectionFacets" fuzzerSelectionFacets Cache.orderingSelectionFacets
         , testFineOrderingProperties "SearchMethod" fuzzerGlobalFts Selection.orderingGlobalFts
         , testFineOrderingProperties "Sorting" fuzzerSorting Selection.orderingSorting

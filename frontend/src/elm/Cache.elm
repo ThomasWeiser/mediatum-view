@@ -4,7 +4,7 @@ module Cache exposing
     , updateWithModifiedDocument
     , ApiError, apiErrorToString
     , Msg(..), init, update
-    , orderingSelectionWindow, orderingSelectionFacets
+    , orderingSelectionWindow, orderingMaskSelectionWindow, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
     )
 
 {-| Manage fetching and caching of all API data.
@@ -46,7 +46,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Internal functions exposed for testing only
 
-@docs orderingSelectionWindow, orderingSelectionFacets
+@docs orderingSelectionWindow, orderingMaskSelectionWindow, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
 
 -}
 
