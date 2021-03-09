@@ -87,21 +87,13 @@ updateFromServerSetup serverSetup config =
         , facetAspects =
             serverSetup.config.staticFacetAspects |> Maybe.withDefault config.facetAspects
         , masks =
-            Maybe.Extra.unwrap
-                config.masks
-                (updateMasks config.masks)
-                serverSetup.config.masksByPurpose
+            case serverSetup.config.masksByPurpose of
+                Nothing ->
+                    config.masks
+
+                Just masksPurposeServerConfig ->
+                    MasksConfig.updateFromServer masksPurposeServerConfig config.masks
     }
-
-
-updateMasks : MasksConfig -> List MasksPurposeServerConfig -> MasksConfig
-updateMasks masksConfig listOfMasksPurposeServerConfig =
-    listOfMasksPurposeServerConfig
-        |> List.foldl
-            (\{ purpose, maskNames } ->
-                MasksConfig.updateMasksForPurpose purpose maskNames
-            )
-            masksConfig
 
 
 {-| Get the name of a mask as configured for the current uiLanguage and the given purpose.

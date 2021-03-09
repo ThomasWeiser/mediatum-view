@@ -1,7 +1,7 @@
 module Types.Config.MasksConfig exposing
     ( MasksConfig, MaskPurpose(..)
     , MasksPurposeServerConfig
-    , init, updateMasksForPurpose
+    , init, updateFromServer
     , forPurpose
     )
 
@@ -9,7 +9,7 @@ module Types.Config.MasksConfig exposing
 
 @docs MasksConfig, MaskPurpose
 @docs MasksPurposeServerConfig
-@docs init, updateMasksForPurpose
+@docs init, updateFromServer
 @docs forPurpose
 
 -}
@@ -59,10 +59,20 @@ init =
         }
 
 
+updateFromServer : List MasksPurposeServerConfig -> MasksConfig -> MasksConfig
+updateFromServer listOfMasksPurposeServerConfig masksConfig =
+    listOfMasksPurposeServerConfig
+        |> List.foldl
+            (\{ purpose, maskNames } ->
+                updateForPurpose purpose maskNames
+            )
+            masksConfig
+
+
 {-| Set the mask names for a specific purpose
 -}
-updateMasksForPurpose : String -> Translations -> MasksConfig -> MasksConfig
-updateMasksForPurpose purpose translations (MasksConfig masksConfig) =
+updateForPurpose : String -> Translations -> MasksConfig -> MasksConfig
+updateForPurpose purpose translations (MasksConfig masksConfig) =
     MasksConfig <|
         case purpose of
             "listing" ->
