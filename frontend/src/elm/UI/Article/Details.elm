@@ -33,7 +33,8 @@ import List.Nonempty
 import Maybe.Extra
 import RemoteData
 import Types exposing (DocumentIdFromSearch)
-import Types.Config exposing (Config)
+import Types.Config as Config exposing (Config)
+import Types.Config.MasksConfig as MasksConfig
 import Types.Id exposing (DocumentId)
 import Types.Localization as Localization
 import Types.Route exposing (Route)
@@ -146,7 +147,9 @@ initEditAttributeValue context model =
     case
         Cache.get
             context.cache.documents
-            context.documentIdFromSearch
+            ( Config.getMaskName MasksConfig.MaskForDetails context.config
+            , context.documentIdFromSearch
+            )
     of
         RemoteData.Success document ->
             let
@@ -181,7 +184,11 @@ view context model =
     Html.div [ Html.Attributes.class "details" ]
         [ case
             RemoteData.map2 Tuple.pair
-                (Cache.get context.cache.documents context.documentIdFromSearch)
+                (Cache.get context.cache.documents
+                    ( Config.getMaskName MasksConfig.MaskForDetails context.config
+                    , context.documentIdFromSearch
+                    )
+                )
                 (Cache.get context.cache.residence context.documentIdFromSearch.id)
           of
             RemoteData.NotAsked ->

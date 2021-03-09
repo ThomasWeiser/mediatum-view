@@ -4,7 +4,7 @@ module Cache exposing
     , updateWithModifiedDocument
     , ApiError, apiErrorToString
     , Msg(..), init, update
-    , orderingSelectionWindow, orderingSelectionFacets
+    , orderingSelectionWindow, orderingMaskSelectionWindow, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
     )
 
 {-| Manage fetching and caching of all API data.
@@ -46,7 +46,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Internal functions exposed for testing only
 
-@docs orderingSelectionWindow, orderingSelectionFacets
+@docs orderingSelectionWindow, orderingMaskSelectionWindow, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
 
 -}
 
@@ -106,9 +106,9 @@ type alias Cache =
     , folders : Sort.Dict.Dict FolderId (ApiData Folder)
     , subfolderIds : Sort.Dict.Dict FolderId (ApiData (List FolderId))
     , nodeTypes : Sort.Dict.Dict NodeId (ApiData NodeType)
-    , documents : Sort.Dict.Dict DocumentIdFromSearch (ApiData Document)
+    , documents : Sort.Dict.Dict ( String, DocumentIdFromSearch ) (ApiData Document)
     , residence : Sort.Dict.Dict DocumentId (ApiData Residence)
-    , documentsPages : Sort.Dict.Dict ( Selection, Window ) (ApiData DocumentsPage)
+    , documentsPages : Sort.Dict.Dict ( String, Selection, Window ) (ApiData DocumentsPage)
     , folderCounts : Sort.Dict.Dict Selection (ApiData FolderCounts)
     , facetsValues : Sort.Dict.Dict ( Selection, List Aspect ) (ApiData FacetsValues)
     }
@@ -120,9 +120,9 @@ type Need
     = NeedRootFolderIds
     | NeedFolders (List FolderId)
     | NeedSubfolders (List FolderId)
-    | NeedGenericNode NodeId
-    | NeedDocumentFromSearch DocumentIdFromSearch
-    | NeedDocumentsPage Selection Window
+    | NeedGenericNode String NodeId
+    | NeedDocumentFromSearch String DocumentIdFromSearch
+    | NeedDocumentsPage String Selection Window
     | NeedFolderCounts Selection
     | NeedFacets Selection (List Aspect)
 
@@ -148,9 +148,9 @@ init =
     , folders = Sort.Dict.empty (Utils.sorter Id.ordering)
     , subfolderIds = Sort.Dict.empty (Utils.sorter Id.ordering)
     , nodeTypes = Sort.Dict.empty (Utils.sorter Id.ordering)
-    , documents = Sort.Dict.empty (Utils.sorter Types.orderingDocumentIdFromSearch)
+    , documents = Sort.Dict.empty (Utils.sorter orderingMaskDocumentIdFromSearch)
     , residence = Sort.Dict.empty (Utils.sorter Id.ordering)
-    , documentsPages = Sort.Dict.empty (Utils.sorter orderingSelectionWindow)
+    , documentsPages = Sort.Dict.empty (Utils.sorter orderingMaskSelectionWindow)
     , folderCounts = Sort.Dict.empty (Utils.sorter Selection.orderingSelectionModuloSorting)
     , facetsValues = Sort.Dict.empty (Utils.sorter orderingSelectionFacets)
     }
@@ -176,9 +176,9 @@ type Msg
     = ApiResponseToplevelFolders (Api.Response (List ( Folder, List Folder )))
     | ApiResponseFolders (List FolderId) (Api.Response (List Folder))
     | ApiResponseSubfolders (List FolderId) (Api.Response (List Folder))
-    | ApiResponseGenericNode NodeId (Api.Response GenericNode)
-    | ApiResponseDocumentFromSearch DocumentIdFromSearch (Api.Response (Maybe ( Document, Maybe Residence )))
-    | ApiResponseDocumentsPage ( Selection, Window ) (Api.Response DocumentsPage)
+    | ApiResponseGenericNode String NodeId (Api.Response GenericNode)
+    | ApiResponseDocumentFromSearch String DocumentIdFromSearch (Api.Response (Maybe ( Document, Maybe Residence )))
+    | ApiResponseDocumentsPage ( String, Selection, Window ) (Api.Response DocumentsPage)
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
     | ApiResponseFacets ( Selection, List Aspect ) (Api.Response FacetsValues)
 
@@ -212,16 +212,16 @@ statusOfNeed cache need =
             Needs.statusFromListOfRemoteData
                 (List.map (get cache.subfolderIds) parentIds)
 
-        NeedGenericNode nodeId ->
+        NeedGenericNode maskName nodeId ->
             get cache.nodeTypes nodeId
                 |> Needs.statusFromRemoteData
 
-        NeedDocumentFromSearch documentId ->
-            get cache.documents documentId
+        NeedDocumentFromSearch maskName documentIdFromSearch ->
+            get cache.documents ( maskName, documentIdFromSearch )
                 |> Needs.statusFromRemoteData
 
-        NeedDocumentsPage selection window ->
-            get cache.documentsPages ( selection, window )
+        NeedDocumentsPage maskName selection window ->
+            get cache.documentsPages ( maskName, selection, window )
                 |> Needs.statusFromRemoteData
 
         NeedFolderCounts selection ->
@@ -309,18 +309,18 @@ requestNeed config need cache =
                     (Api.Queries.subfolders parentIdsWithUnknownChildren)
                 )
 
-        NeedGenericNode nodeId ->
+        NeedGenericNode maskName nodeId ->
             ( { cache
                 | nodeTypes =
                     Sort.Dict.insert nodeId Loading cache.nodeTypes
               }
             , Api.sendQueryRequest
                 (Api.withOperationName "NeedGenericNode")
-                (ApiResponseGenericNode nodeId)
-                (Api.Queries.genericNode nodeId)
+                (ApiResponseGenericNode maskName nodeId)
+                (Api.Queries.genericNode maskName nodeId)
             )
 
-        NeedDocumentFromSearch documentIdFromSearch ->
+        NeedDocumentFromSearch maskName documentIdFromSearch ->
             let
                 needResidence =
                     Needs.statusFromRemoteData
@@ -329,23 +329,23 @@ requestNeed config need cache =
             in
             ( { cache
                 | documents =
-                    Sort.Dict.insert documentIdFromSearch Loading cache.documents
+                    Sort.Dict.insert ( maskName, documentIdFromSearch ) Loading cache.documents
               }
             , Api.sendQueryRequest
                 (Api.withOperationName "NeedDocumentFromSearch")
-                (ApiResponseDocumentFromSearch documentIdFromSearch)
-                (Api.Queries.documentDetails documentIdFromSearch needResidence)
+                (ApiResponseDocumentFromSearch maskName documentIdFromSearch)
+                (Api.Queries.documentDetails maskName documentIdFromSearch needResidence)
             )
 
-        NeedDocumentsPage selection window ->
+        NeedDocumentsPage maskName selection window ->
             ( { cache
                 | documentsPages =
-                    Sort.Dict.insert ( selection, window ) Loading cache.documentsPages
+                    Sort.Dict.insert ( maskName, selection, window ) Loading cache.documentsPages
               }
             , Api.sendQueryRequest
                 (Api.withOperationName "NeedDocumentsPage")
-                (ApiResponseDocumentsPage ( selection, window ))
-                (Api.Queries.selectionDocumentsPage window selection)
+                (ApiResponseDocumentsPage ( maskName, selection, window ))
+                (Api.Queries.selectionDocumentsPage maskName window selection)
             )
 
         NeedFolderCounts selection ->
@@ -373,12 +373,12 @@ requestNeed config need cache =
 
 {-| Insert or update a document into the table `Cache.documents`.
 -}
-updateWithModifiedDocument : Document -> Cache -> Cache
-updateWithModifiedDocument document cache =
+updateWithModifiedDocument : String -> Document -> Cache -> Cache
+updateWithModifiedDocument maskName document cache =
     { cache
         | documents =
             Sort.Dict.insert
-                (DocumentIdFromSearch document.id Nothing)
+                ( maskName, DocumentIdFromSearch document.id Nothing )
                 (Success document)
                 cache.documents
     }
@@ -464,7 +464,7 @@ update config msg cache =
             , Cmd.none
             )
 
-        ApiResponseGenericNode nodeId (Ok genericNode) ->
+        ApiResponseGenericNode maskName nodeId (Ok genericNode) ->
             let
                 cache1 =
                     cache
@@ -484,6 +484,7 @@ update config msg cache =
                 GenericNode.IsDocument ( document, residence ) ->
                     updateWithDocumentAndResidence
                         config
+                        maskName
                         (DocumentIdFromSearch document.id Nothing)
                         (Just ( document, Just residence ))
                         cache1
@@ -493,7 +494,7 @@ update config msg cache =
                     , Cmd.none
                     )
 
-        ApiResponseGenericNode nodeId (Err error) ->
+        ApiResponseGenericNode maskName nodeId (Err error) ->
             ( { cache
                 | nodeTypes =
                     Sort.Dict.insert nodeId (Failure error) cache.nodeTypes
@@ -501,25 +502,26 @@ update config msg cache =
             , Cmd.none
             )
 
-        ApiResponseDocumentFromSearch documentIdFromSearch (Ok maybeDocumentAndResidence) ->
+        ApiResponseDocumentFromSearch maskName documentIdFromSearch (Ok maybeDocumentAndResidence) ->
             updateWithDocumentAndResidence
                 config
+                maskName
                 documentIdFromSearch
                 maybeDocumentAndResidence
                 cache
 
-        ApiResponseDocumentFromSearch documentIdFromSearch (Err error) ->
+        ApiResponseDocumentFromSearch maskName documentIdFromSearch (Err error) ->
             ( { cache
                 | documents =
-                    Sort.Dict.insert documentIdFromSearch (Failure error) cache.documents
+                    Sort.Dict.insert ( maskName, documentIdFromSearch ) (Failure error) cache.documents
               }
             , Cmd.none
             )
 
-        ApiResponseDocumentsPage selectionAndWindow result ->
+        ApiResponseDocumentsPage maskAndSelectionAndWindow result ->
             ( { cache
                 | documentsPages =
-                    Sort.Dict.insert selectionAndWindow (RemoteData.fromResult result) cache.documentsPages
+                    Sort.Dict.insert maskAndSelectionAndWindow (RemoteData.fromResult result) cache.documentsPages
               }
             , Cmd.none
             )
@@ -543,11 +545,12 @@ update config msg cache =
 
 updateWithDocumentAndResidence :
     Config
+    -> String
     -> DocumentIdFromSearch
     -> Maybe ( Document, Maybe Residence )
     -> Cache
     -> ( Cache, Cmd Msg )
-updateWithDocumentAndResidence config documentIdFromSearch maybeDocumentAndResidence cache =
+updateWithDocumentAndResidence config maskName documentIdFromSearch maybeDocumentAndResidence cache =
     let
         cache1 =
             case maybeDocumentAndResidence of
@@ -555,7 +558,7 @@ updateWithDocumentAndResidence config documentIdFromSearch maybeDocumentAndResid
                     { cache
                         | documents =
                             Sort.Dict.insert
-                                documentIdFromSearch
+                                ( maskName, documentIdFromSearch )
                                 (Success document)
                                 cache.documents
                     }
@@ -672,6 +675,15 @@ insertNodeType nodeId nodeType cache =
     }
 
 
+{-| Ordering on the tuple type `( String, DocumentIdFromSearch )`
+-}
+orderingMaskDocumentIdFromSearch : Ordering ( String, DocumentIdFromSearch )
+orderingMaskDocumentIdFromSearch =
+    Ordering.byFieldWith Ordering.natural Tuple.first
+        |> Ordering.breakTiesWith
+            (Ordering.byFieldWith Types.orderingDocumentIdFromSearch Tuple.second)
+
+
 {-| Ordering on the tuple type `( Selection, Window )`
 -}
 orderingSelectionWindow : Ordering ( Selection, Window )
@@ -679,6 +691,17 @@ orderingSelectionWindow =
     Ordering.byFieldWith Selection.orderingSelection Tuple.first
         |> Ordering.breakTiesWith
             (Ordering.byFieldWith Types.orderingWindow Tuple.second)
+
+
+{-| Ordering on the tuple type `( String, Selection, Window )`
+-}
+orderingMaskSelectionWindow : Ordering ( String, Selection, Window )
+orderingMaskSelectionWindow =
+    Ordering.byFieldWith Ordering.natural (\( maskName, _, _ ) -> maskName)
+        |> Ordering.breakTiesWith
+            (Ordering.byFieldWith Selection.orderingSelection (\( _, selection, _ ) -> selection))
+        |> Ordering.breakTiesWith
+            (Ordering.byFieldWith Types.orderingWindow (\( _, _, window ) -> window))
 
 
 {-| Ordering on the tuple type `( Selection, List String )`

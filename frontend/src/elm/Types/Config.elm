@@ -3,6 +3,7 @@ module Types.Config exposing
     , init
     , updateFromServerSetup
     , adjustUILanguage
+    , getMaskName
     )
 
 {-| Configuration values used throughout the app.
@@ -13,6 +14,7 @@ Most values are defined in the server and fetched dynamically.
 @docs init
 @docs updateFromServerSetup
 @docs adjustUILanguage
+@docs getMaskName
 
 -}
 
@@ -20,6 +22,7 @@ import Maybe exposing (Maybe)
 import Maybe.Extra
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
+import Types.Config.MasksConfig as MasksConfig exposing (MasksConfig, MasksPurposeServerConfig)
 import Types.Localization as Localization exposing (Language)
 import Types.Selection as Selection
 import Types.ServerSetup exposing (ServerSetup)
@@ -35,6 +38,7 @@ type alias Config =
     , numberOfFacetValues : Int
     , ftsAspects : List FtsAspectConfig
     , facetAspects : List FacetAspectConfig
+    , masks : MasksConfig
     }
 
 
@@ -49,6 +53,7 @@ init =
     , numberOfFacetValues = 20
     , ftsAspects = []
     , facetAspects = []
+    , masks = MasksConfig.init
     }
 
 
@@ -78,7 +83,30 @@ updateFromServerSetup serverSetup config =
         , numberOfFacetValues =
             serverSetup.config.numberOfFacetValues |> Maybe.withDefault config.numberOfFacetValues
         , ftsAspects =
-            serverSetup.config.staticFtsAspects |> Maybe.withDefault []
+            serverSetup.config.staticFtsAspects |> Maybe.withDefault config.ftsAspects
         , facetAspects =
-            serverSetup.config.staticFacetAspects |> Maybe.withDefault []
+            serverSetup.config.staticFacetAspects |> Maybe.withDefault config.facetAspects
+        , masks =
+            Maybe.Extra.unwrap
+                config.masks
+                (updateMasks config.masks)
+                serverSetup.config.masksByPurpose
     }
+
+
+updateMasks : MasksConfig -> List MasksPurposeServerConfig -> MasksConfig
+updateMasks masksConfig listOfMasksPurposeServerConfig =
+    listOfMasksPurposeServerConfig
+        |> List.foldl
+            (\{ purpose, maskNames } ->
+                MasksConfig.updateMasksForPurpose purpose maskNames
+            )
+            masksConfig
+
+
+{-| Get the name of a mask as configured for the current uiLanguage and the given purpose.
+-}
+getMaskName : MasksConfig.MaskPurpose -> Config -> String
+getMaskName purpose config =
+    MasksConfig.forPurpose purpose config.masks
+        |> Localization.string config

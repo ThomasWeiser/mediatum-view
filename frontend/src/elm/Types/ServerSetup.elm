@@ -12,6 +12,7 @@ module Types.ServerSetup exposing
 
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
+import Types.Config.MasksConfig exposing (MasksPurposeServerConfig)
 import Types.Selection as Selection
 
 
@@ -28,4 +29,5 @@ type alias ServerConfig =
     , numberOfFacetValues : Maybe Int
     , staticFtsAspects : Maybe (List FtsAspectConfig)
     , staticFacetAspects : Maybe (List FacetAspectConfig)
+    , masksByPurpose : Maybe (List MasksPurposeServerConfig)
     }

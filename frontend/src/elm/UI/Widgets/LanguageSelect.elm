@@ -1,8 +1,7 @@
 module UI.Widgets.LanguageSelect exposing (view)
 
-{-|
+{-| Small widget for switching and displaying current uiLanguage
 
-@docs Context
 @docs view
 
 -}

@@ -16,6 +16,7 @@ import Cache exposing (Cache)
 import Cmd.Extra
 import Html exposing (Html)
 import Types.Config as Config exposing (Config)
+import Types.Config.MasksConfig as MasksConfig
 import Types.DebugInfo exposing (DebugInfo, debugInfo)
 import Types.Localization exposing (Language)
 import Types.Navigation as Navigation exposing (Navigation)
@@ -244,7 +245,11 @@ updateSubModel context msg model =
 
                         UI.UpdateCacheWithModifiedDocument document ->
                             ( { model1
-                                | cache = Cache.updateWithModifiedDocument document model1.cache
+                                | cache =
+                                    Cache.updateWithModifiedDocument
+                                        (Config.getMaskName MasksConfig.MaskForDetails context.config)
+                                        document
+                                        model1.cache
                               }
                             , SubNoReturn
                             )

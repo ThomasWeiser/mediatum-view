@@ -33,7 +33,8 @@ import Html.Attributes
 import Maybe.Extra
 import RemoteData
 import Types.Aspect exposing (Aspect)
-import Types.Config exposing (Config)
+import Types.Config as Config exposing (Config)
+import Types.Config.MasksConfig as MasksConfig
 import Types.Id exposing (FolderId)
 import Types.Navigation exposing (Navigation)
 import Types.Needs
@@ -102,8 +103,8 @@ initialModel presentation =
 
 
 {-| -}
-needs : List Aspect -> Presentation -> Cache.Needs
-needs facetAspects presentation =
+needs : Config -> List Aspect -> Presentation -> Cache.Needs
+needs config facetAspects presentation =
     case presentation of
         GenericPresentation genericParameters ->
             case genericParameters of
@@ -115,15 +116,22 @@ needs facetAspects presentation =
                         maybeNeedTwo =
                             maybeDocumentIdFromSearch
                                 |> Maybe.map
-                                    Cache.NeedDocumentFromSearch
+                                    (Cache.NeedDocumentFromSearch
+                                        (Config.getMaskName MasksConfig.MaskForDetails config)
+                                    )
                     in
-                    [ Cache.NeedGenericNode nodeIdOne ]
+                    [ Cache.NeedGenericNode
+                        (Config.getMaskName MasksConfig.MaskForDetails config)
+                        nodeIdOne
+                    ]
                         |> Maybe.Extra.cons maybeNeedTwo
                         |> List.map Types.Needs.atomic
                         |> Types.Needs.batch
 
         DocumentPresentation maybeFolderId documentIdFromSearch ->
-            Cache.NeedDocumentFromSearch documentIdFromSearch
+            Cache.NeedDocumentFromSearch
+                (Config.getMaskName MasksConfig.MaskForDetails config)
+                documentIdFromSearch
                 |> Types.Needs.atomic
 
         CollectionPresentation folderId ->
@@ -131,7 +139,12 @@ needs facetAspects presentation =
 
         ListingPresentation selection window ->
             Types.Needs.sequence
-                (Types.Needs.atomic <| Cache.NeedDocumentsPage selection window)
+                (Types.Needs.atomic <|
+                    Cache.NeedDocumentsPage
+                        (Config.getMaskName MasksConfig.MaskForListing config)
+                        selection
+                        window
+                )
                 (Types.Needs.batch
                     [ Types.Needs.atomic <| Cache.NeedFolderCounts selection
                     , Types.Needs.atomic <| Cache.NeedFacets selection facetAspects

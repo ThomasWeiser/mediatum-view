@@ -103,6 +103,7 @@ needs context model =
             }
             model.tree
         , UI.Article.needs
+            context.config
             (FacetAspect.aspects context.config.facetAspects)
             context.presentation
         ]
