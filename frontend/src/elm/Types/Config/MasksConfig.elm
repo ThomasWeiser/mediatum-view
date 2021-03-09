@@ -5,9 +5,7 @@ module Types.Config.MasksConfig exposing
     , forPurpose
     )
 
-{-| Configuration of the mediaTUM mask names used for various purposes.
-
-Note that the mask name used is also dependant on the configured uiLanguage.
+{-| Configuration of the mediaTUM mask names used for various purposes and ui languages.
 
 @docs MasksConfig, MaskPurpose
 @docs MasksPurposeServerConfig
@@ -25,7 +23,11 @@ type MaskPurpose
     | MaskForDetails
 
 
-{-| -}
+{-| Configuration of the mask names as used in the client
+
+It's an opaque type. Use the provided functions to access the content.
+
+-}
 type MasksConfig
     = MasksConfig
         { forListing : Translations
@@ -33,7 +35,8 @@ type MasksConfig
         }
 
 
-{-| -}
+{-| Configuration of the mask names as provided by the server
+-}
 type alias MasksPurposeServerConfig =
     { purpose : String
     , maskNames : Translations
@@ -56,6 +59,8 @@ init =
         }
 
 
+{-| Set the mask names for a specific purpose
+-}
 updateMasksForPurpose : String -> Translations -> MasksConfig -> MasksConfig
 updateMasksForPurpose purpose translations (MasksConfig masksConfig) =
     MasksConfig <|

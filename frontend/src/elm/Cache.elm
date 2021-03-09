@@ -675,6 +675,8 @@ insertNodeType nodeId nodeType cache =
     }
 
 
+{-| Ordering on the tuple type `( String, DocumentIdFromSearch )`
+-}
 orderingMaskDocumentIdFromSearch : Ordering ( String, DocumentIdFromSearch )
 orderingMaskDocumentIdFromSearch =
     Ordering.byFieldWith Ordering.natural Tuple.first
@@ -691,6 +693,8 @@ orderingSelectionWindow =
             (Ordering.byFieldWith Types.orderingWindow Tuple.second)
 
 
+{-| Ordering on the tuple type `( String, Selection, Window )`
+-}
 orderingMaskSelectionWindow : Ordering ( String, Selection, Window )
 orderingMaskSelectionWindow =
     Ordering.byFieldWith Ordering.natural (\( maskName, _, _ ) -> maskName)
