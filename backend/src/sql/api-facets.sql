@@ -2,6 +2,11 @@
 -- Publicly exposed GraphQL functions
 -- regarding facetted search.
 
+/* TODO: We should probably check in all relevant api functions
+         that the given aspect tests are allowed to be used for fts or facet filtering.
+         One option would be to check them against the tables config.aspect_fts and config.aspect_facet.
+ */
+
 create or replace function aux.fts_documents_tsquery_docset
     ( folder_id int4
     , fts_query tsquery
@@ -276,6 +281,9 @@ comment on function api.docset_facet_by_aspect
     'Documents without the corresponding key indicate the value as the empty string.'
 ;
 
+/* TODO: We should probably check that the given aspect is allowed to be used as a facet.
+         One option would be to check them against the table config.aspect_facet.
+ */
 
 create or replace function api.all_documents_facet_by_key
     ( folder_id int4

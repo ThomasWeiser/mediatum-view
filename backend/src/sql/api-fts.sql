@@ -321,6 +321,10 @@ comment on function api.fts_documents_page (folder_id int4, text text, aspect_te
     ' For pagination you may specify a limit (defaults to 10) and an offset (defaults to 0).'
     ;
 
+/* TODO: We should probably check in all relevant api functions
+         that the given aspect tests are allowed to be used for fts or facet filtering.
+         One option would be to check them against the tables config.aspect_fts and config.aspect_facet.
+ */
 
 ----------------------------------------------------
 
