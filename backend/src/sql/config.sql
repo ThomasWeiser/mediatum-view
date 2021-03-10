@@ -5,6 +5,16 @@ drop schema if exists config cascade;
 create schema if not exists config;
 
 
+create table config.application (
+    name text primary key,
+    toplevel_folder_ids int4[]
+);
+
+insert into config.application values
+    ('hsb', array[604993])
+;
+
+
 create table config.aspect_def (
     name text primary key,
     keys text[],
