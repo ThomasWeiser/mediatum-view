@@ -90,6 +90,11 @@ serverSetup =
                 (Mediatum.Object.Setup.config
                     (SelectionSet.succeed ServerSetup.ServerConfig
                         |> SelectionSet.with
+                            (Mediatum.Object.SetupConfig.toplevelFolders
+                                |> Api.Fragments.nonNullElementsOfMaybeListOrFail
+                                |> SelectionSet.map (Maybe.map (List.map Id.fromInt))
+                            )
+                        |> SelectionSet.with
                             Mediatum.Object.SetupConfig.defaultPageSize
                         |> SelectionSet.with
                             (Mediatum.Object.SetupConfig.defaultSorting
