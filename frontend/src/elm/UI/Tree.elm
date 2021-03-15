@@ -128,7 +128,7 @@ view context model maybeFolderCounts =
             context
             model
             maybeFolderCounts
-            context.cache.rootFolderIds
+            (RemoteData.Success context.config.toplevelFolders)
         ]
 
 

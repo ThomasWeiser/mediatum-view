@@ -50,6 +50,7 @@ import Maybe.Extra
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (FolderDisplay(..), NodeType(..))
+import Types.Config exposing (Config)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Selection exposing (Selection)
 
@@ -118,15 +119,11 @@ getAsDocumentId cache nodeId =
 
 
 {-| -}
-getRootFolder : Cache -> DerivedData ( FolderId, FolderDisplay )
-getRootFolder cache =
-    cache.rootFolderIds
-        |> RemoteData.mapError CacheApiError
-        |> RemoteData.andThen
-            (\listOfFolderIds ->
-                List.head listOfFolderIds
-                    |> RemoteData.fromMaybe (CacheDerivationError "List of root folders is empty")
-            )
+getRootFolder : Config -> Cache -> DerivedData ( FolderId, FolderDisplay )
+getRootFolder config cache =
+    config.toplevelFolders
+        |> List.head
+        |> RemoteData.fromMaybe (CacheDerivationError "List of root folders is empty")
         |> RemoteData.andThen
             (\folderId ->
                 Cache.get cache.nodeTypes (folderId |> Id.asNodeId)
@@ -144,9 +141,9 @@ getRootFolder cache =
 
 
 {-| -}
-getRootFolderId : Cache -> Maybe FolderId
-getRootFolderId cache =
-    getRootFolder cache
+getRootFolderId : Config -> Cache -> Maybe FolderId
+getRootFolderId config cache =
+    getRootFolder config cache
         |> RemoteData.toMaybe
         |> Maybe.map Tuple.first
 

@@ -34,6 +34,7 @@ import Cache.Derive
 import Maybe.Extra
 import RemoteData
 import Types exposing (DocumentIdFromSearch, FolderDisplay(..), NodeType(..), Window)
+import Types.Config exposing (Config)
 import Types.FilterList as FilterList
 import Types.Id as Id exposing (FolderId, NodeId)
 import Types.Route as Route exposing (Route)
@@ -68,8 +69,8 @@ getFolderId cache presentation =
 
 
 {-| -}
-fromRoute : Cache -> Route -> Presentation
-fromRoute cache route =
+fromRoute : Config -> Cache -> Route -> Presentation
+fromRoute config cache route =
     let
         folderPresentation folderId folderType =
             if
@@ -98,7 +99,7 @@ fromRoute cache route =
     in
     case route.path of
         Route.NoId ->
-            Cache.Derive.getRootFolder cache
+            Cache.Derive.getRootFolder config cache
                 |> RemoteData.toMaybe
                 |> Maybe.Extra.unwrap
                     (GenericPresentation Nothing)

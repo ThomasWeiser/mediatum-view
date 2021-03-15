@@ -52,7 +52,6 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 import Api
 import Api.Queries
-import Basics.Extra
 import Entities.Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder)
@@ -97,13 +96,12 @@ Consuming modules read from these tables to fulfill their data needs.
 
 For each entity or relation in the local data schema there is a field in the `Cache` record.
 
-Most fields are lookup-tables that map from a key type (representing query parameters)
+All fields are lookup-tables that map from a key type (representing query parameters)
 to an `ApiData` type that contains (in case of a `RemoteData.Success`) the wanted content data.
 
 -}
 type alias Cache =
-    { rootFolderIds : ApiData (List FolderId)
-    , folders : Sort.Dict.Dict FolderId (ApiData Folder)
+    { folders : Sort.Dict.Dict FolderId (ApiData Folder)
     , subfolderIds : Sort.Dict.Dict FolderId (ApiData (List FolderId))
     , nodeTypes : Sort.Dict.Dict NodeId (ApiData NodeType)
     , documents : Sort.Dict.Dict ( String, DocumentIdFromSearch ) (ApiData Document)
@@ -144,8 +142,7 @@ apiErrorToString apiError =
 -}
 init : Cache
 init =
-    { rootFolderIds = NotAsked
-    , folders = Sort.Dict.empty (Utils.sorter Id.ordering)
+    { folders = Sort.Dict.empty (Utils.sorter Id.ordering)
     , subfolderIds = Sort.Dict.empty (Utils.sorter Id.ordering)
     , nodeTypes = Sort.Dict.empty (Utils.sorter Id.ordering)
     , documents = Sort.Dict.empty (Utils.sorter orderingMaskDocumentIdFromSearch)
@@ -173,8 +170,7 @@ Currently all messages transport some API response.
 
 -}
 type Msg
-    = ApiResponseToplevelFolders (Api.Response (List ( Folder, List Folder )))
-    | ApiResponseFolders (List FolderId) (Api.Response (List Folder))
+    = ApiResponseFolders (List FolderId) (Api.Response (List Folder))
     | ApiResponseSubfolders (List FolderId) (Api.Response (List Folder))
     | ApiResponseGenericNode String NodeId (Api.Response GenericNode)
     | ApiResponseDocumentFromSearch String DocumentIdFromSearch (Api.Response (Maybe ( Document, Maybe Residence )))
@@ -189,7 +185,7 @@ Submit API requests to get that data and mark the corresponding cache entries as
 targetNeeds : Config -> Needs -> Cache -> ( Cache, Cmd Msg )
 targetNeeds config needs cache =
     Needs.target
-        (statusOfNeed cache)
+        (statusOfNeed config cache)
         (requestNeed config)
         needs
         cache
@@ -197,12 +193,12 @@ targetNeeds config needs cache =
 
 {-| Check the status of an atomic need.
 -}
-statusOfNeed : Cache -> Need -> Needs.Status
-statusOfNeed cache need =
+statusOfNeed : Config -> Cache -> Need -> Needs.Status
+statusOfNeed config cache need =
     case need of
         NeedRootFolderIds ->
-            cache.rootFolderIds
-                |> Needs.statusFromRemoteData
+            Needs.statusFromListOfRemoteData
+                (List.map (get cache.folders) config.toplevelFolders)
 
         NeedFolders folderIds ->
             Needs.statusFromListOfRemoteData
@@ -244,14 +240,10 @@ requestNeed : Config -> Need -> Cache -> ( Cache, Cmd Msg )
 requestNeed config need cache =
     case need of
         NeedRootFolderIds ->
-            ( { cache
-                | rootFolderIds = Loading
-              }
-            , Api.sendQueryRequest
-                (Api.withOperationName "NeedRootFolderIds")
-                ApiResponseToplevelFolders
-                Api.Queries.toplevelFolders
-            )
+            requestNeed
+                config
+                (NeedFolders config.toplevelFolders)
+                cache
 
         NeedFolders folderIds ->
             let
@@ -389,40 +381,6 @@ updateWithModifiedDocument maskName document cache =
 update : Config -> Msg -> Cache -> ( Cache, Cmd Msg )
 update config msg cache =
     case msg of
-        ApiResponseToplevelFolders (Ok listOfRootFoldersWithSubfolders) ->
-            ( let
-                allNewFolders =
-                    listOfRootFoldersWithSubfolders
-                        |> List.map (Basics.Extra.uncurry (::))
-                        |> List.concat
-
-                allRootFolderIds =
-                    listOfRootFoldersWithSubfolders
-                        |> List.map (Tuple.first >> .id)
-
-                allSubfolders =
-                    listOfRootFoldersWithSubfolders
-                        |> List.map Tuple.second
-                        |> List.concat
-              in
-              { cache
-                | rootFolderIds =
-                    Success
-                        (List.map (Tuple.first >> .id) listOfRootFoldersWithSubfolders)
-              }
-                |> insertAsFolders allNewFolders
-                |> insertAsSubfolderIds allRootFolderIds allSubfolders
-                |> insertFoldersAsNodeTypes allNewFolders
-            , Cmd.none
-            )
-
-        ApiResponseToplevelFolders (Err error) ->
-            ( { cache
-                | rootFolderIds = Failure error
-              }
-            , Cmd.none
-            )
-
         ApiResponseFolders folderIds (Ok listOfFolders) ->
             ( cache
                 |> insertAsFolders listOfFolders
