@@ -115,8 +115,7 @@ type alias Cache =
 {-| A data-consuming module declares its wishes for API data by means of this type.
 -}
 type Need
-    = NeedRootFolderIds
-    | NeedFolders (List FolderId)
+    = NeedFolders (List FolderId)
     | NeedSubfolders (List FolderId)
     | NeedGenericNode String NodeId
     | NeedDocumentFromSearch String DocumentIdFromSearch
@@ -196,10 +195,6 @@ targetNeeds config needs cache =
 statusOfNeed : Config -> Cache -> Need -> Needs.Status
 statusOfNeed config cache need =
     case need of
-        NeedRootFolderIds ->
-            Needs.statusFromListOfRemoteData
-                (List.map (get cache.folders) config.toplevelFolders)
-
         NeedFolders folderIds ->
             Needs.statusFromListOfRemoteData
                 (List.map (get cache.folders) folderIds)
@@ -239,12 +234,6 @@ Also mark the corresponding cache entries as `RemoteData.Loading`.
 requestNeed : Config -> Need -> Cache -> ( Cache, Cmd Msg )
 requestNeed config need cache =
     case need of
-        NeedRootFolderIds ->
-            requestNeed
-                config
-                (NeedFolders config.toplevelFolders)
-                cache
-
         NeedFolders folderIds ->
             let
                 unknownFolderIds =

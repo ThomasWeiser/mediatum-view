@@ -95,7 +95,7 @@ init config =
 needs : Context -> Model -> Cache.Needs
 needs context model =
     Types.Needs.batch
-        [ Types.Needs.atomic Cache.NeedRootFolderIds
+        [ Types.Needs.atomic (Cache.NeedFolders context.config.toplevelFolders)
         , UI.Tree.needs
             { config = context.config
             , cache = context.cache
