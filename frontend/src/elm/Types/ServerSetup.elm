@@ -25,7 +25,7 @@ type alias ServerSetup =
 
 {-| -}
 type alias ServerConfig =
-    { toplevelFolders : Maybe (List FolderId)
+    { toplevelFolderIds : Maybe (List FolderId)
     , defaultPageSize : Maybe Int
     , defaultSorting : Maybe Selection.Sorting
     , numberOfFacetValues : Maybe Int

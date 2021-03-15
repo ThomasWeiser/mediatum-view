@@ -121,7 +121,7 @@ getAsDocumentId cache nodeId =
 {-| -}
 getRootFolder : Config -> Cache -> DerivedData ( FolderId, FolderDisplay )
 getRootFolder config cache =
-    config.toplevelFolders
+    config.toplevelFolderIds
         |> List.head
         |> RemoteData.fromMaybe (CacheDerivationError "List of root folders is empty")
         |> RemoteData.andThen

@@ -34,7 +34,7 @@ import Types.ServerSetup exposing (ServerSetup)
 type alias Config =
     { uiLanguage : Language
     , serverConfigAdopted : Bool
-    , toplevelFolders : List FolderId
+    , toplevelFolderIds : List FolderId
     , defaultPageSize : Int
     , defaultSorting : Selection.Sorting
     , numberOfFacetValues : Int
@@ -50,7 +50,7 @@ init : Config
 init =
     { uiLanguage = Localization.LangEn
     , serverConfigAdopted = False
-    , toplevelFolders = []
+    , toplevelFolderIds = []
     , defaultPageSize = 10
     , defaultSorting = Selection.ByRank
     , numberOfFacetValues = 20
@@ -79,8 +79,8 @@ updateFromServerSetup : ServerSetup -> Config -> Config
 updateFromServerSetup serverSetup config =
     { config
         | serverConfigAdopted = True
-        , toplevelFolders =
-            serverSetup.config.toplevelFolders |> Maybe.withDefault config.toplevelFolders
+        , toplevelFolderIds =
+            serverSetup.config.toplevelFolderIds |> Maybe.withDefault config.toplevelFolderIds
         , defaultPageSize =
             serverSetup.config.defaultPageSize |> Maybe.withDefault config.defaultPageSize
         , defaultSorting =
