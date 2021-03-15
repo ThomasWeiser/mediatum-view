@@ -70,14 +70,16 @@ view context model =
             -- Find the reason why we have a GenericPresentation
             case context.genericParameters of
                 Nothing ->
-                    Cache.Derive.getFirstRootFolder context.config context.cache
-                        |> RemoteData.map
-                            (Localization.string context.config
-                                { en = "Going to show the root folder"
-                                , de = "Laden des Startverzeichnisses"
-                                }
-                                |> always
-                            )
+                    (List.length context.config.toplevelFolderIds < 2)
+                        |> Utils.ifElse
+                            { en = "Going to show the top folder"
+                            , de = "Laden des Startverzeichnisses"
+                            }
+                            { en = "Going to show the top folders"
+                            , de = "Laden der Startverzeichnisse"
+                            }
+                        |> Localization.string context.config
+                        |> Success
 
                 Just ( nodeId, Nothing ) ->
                     Cache.Derive.getNodeType context.cache nodeId
