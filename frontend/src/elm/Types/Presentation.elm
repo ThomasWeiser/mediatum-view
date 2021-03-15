@@ -99,7 +99,7 @@ fromRoute config cache route =
     in
     case route.path of
         Route.NoId ->
-            Cache.Derive.getRootFolder config cache
+            Cache.Derive.getFirstRootFolder config cache
                 |> RemoteData.toMaybe
                 |> Maybe.Extra.unwrap
                     (GenericPresentation Nothing)

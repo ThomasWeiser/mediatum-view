@@ -6,7 +6,6 @@ module Cache.Derive exposing
     , getNodeType
     , getAsFolderId
     , getAsDocumentId
-    , getRootFolder
     , getRootFolderId
     , getParentId
     , getPath
@@ -14,6 +13,7 @@ module Cache.Derive exposing
     , isOnPath
     , getDocumentCount
     , folderCountsOnPath
+    , getFirstRootFolder
     )
 
 {-| Functions for getting/deriving some special data from the base tables in the cache.
@@ -119,8 +119,8 @@ getAsDocumentId cache nodeId =
 
 
 {-| -}
-getRootFolder : Config -> Cache -> DerivedData ( FolderId, FolderDisplay )
-getRootFolder config cache =
+getFirstRootFolder : Config -> Cache -> DerivedData ( FolderId, FolderDisplay )
+getFirstRootFolder config cache =
     config.toplevelFolderIds
         |> List.head
         |> RemoteData.fromMaybe (CacheDerivationError "List of root folders is empty")
@@ -143,7 +143,7 @@ getRootFolder config cache =
 {-| -}
 getRootFolderId : Config -> Cache -> Maybe FolderId
 getRootFolderId config cache =
-    getRootFolder config cache
+    getFirstRootFolder config cache
         |> RemoteData.toMaybe
         |> Maybe.map Tuple.first
 

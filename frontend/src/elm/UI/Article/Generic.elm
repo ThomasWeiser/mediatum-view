@@ -70,7 +70,7 @@ view context model =
             -- Find the reason why we have a GenericPresentation
             case context.genericParameters of
                 Nothing ->
-                    Cache.Derive.getRootFolder context.config context.cache
+                    Cache.Derive.getFirstRootFolder context.config context.cache
                         |> RemoteData.map
                             (Localization.string context.config
                                 { en = "Going to show the root folder"
