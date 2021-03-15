@@ -11,7 +11,8 @@ create table config.application (
 );
 
 insert into config.application values
-    ('hsb', array[604993])
+    -- ('hsb', array[604993]) -- 604993 is the root node
+    ('hsb', array[1433087]) -- 1433087 is the "Hochschulbibliographie" node
 ;
 
 
