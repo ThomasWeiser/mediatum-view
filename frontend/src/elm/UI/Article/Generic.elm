@@ -70,14 +70,22 @@ view context model =
             -- Find the reason why we have a GenericPresentation
             case context.genericParameters of
                 Nothing ->
-                    (List.length context.config.toplevelFolderIds < 2)
-                        |> Utils.ifElse
+                    (case List.length context.config.toplevelFolderIds of
+                        0 ->
+                            { en = "There are no known top folders."
+                            , de = "Es sind keine Startverzeichnisse bekannt."
+                            }
+
+                        1 ->
                             { en = "Going to show the top folder"
                             , de = "Laden des Startverzeichnisses"
                             }
+
+                        _ ->
                             { en = "Going to show the top folders"
                             , de = "Laden der Startverzeichnisse"
                             }
+                    )
                         |> Localization.string context.config
                         |> Success
 

@@ -74,11 +74,9 @@ fromRoute config cache route =
     let
         folderPresentation folderId folderType =
             if
-                route.parameters.globalFts
-                    == Nothing
+                (route.parameters.globalFts == Nothing)
                     && FilterList.isEmpty route.parameters.ftsFilters
-                    && folderType
-                    == DisplayAsCollection
+                    && (folderType == DisplayAsCollection)
             then
                 CollectionPresentation folderId
 
@@ -99,12 +97,14 @@ fromRoute config cache route =
     in
     case route.path of
         Route.NoId ->
-            Cache.Derive.getFirstRootFolder config cache
-                |> RemoteData.toMaybe
+            List.head config.toplevelFolderIds
                 |> Maybe.Extra.unwrap
                     (GenericPresentation Nothing)
-                    (\( rootFolderId, rootFolderType ) ->
-                        folderPresentation rootFolderId rootFolderType
+                    (\firstToplevelFolderId ->
+                        Cache.Derive.getFolderDisplay cache firstToplevelFolderId
+                            |> Maybe.Extra.unwrap
+                                (GenericPresentation (Just ( firstToplevelFolderId |> Id.asNodeId, Nothing )))
+                                (folderPresentation firstToplevelFolderId)
                     )
 
         Route.OneId nodeId ->

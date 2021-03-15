@@ -6,14 +6,13 @@ module Cache.Derive exposing
     , getNodeType
     , getAsFolderId
     , getAsDocumentId
-    , getRootFolderId
+    , getFolderDisplay
     , getParentId
     , getPath
     , getPathAsFarAsCached
     , isOnPath
     , getDocumentCount
     , folderCountsOnPath
-    , getFirstRootFolder
     )
 
 {-| Functions for getting/deriving some special data from the base tables in the cache.
@@ -33,8 +32,7 @@ module Cache.Derive exposing
 @docs getNodeType
 @docs getAsFolderId
 @docs getAsDocumentId
-@docs getRootFolder
-@docs getRootFolderId
+@docs getFolderDisplay
 @docs getParentId
 @docs getPath
 @docs getPathAsFarAsCached
@@ -50,7 +48,6 @@ import Maybe.Extra
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (FolderDisplay(..), NodeType(..))
-import Types.Config exposing (Config)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Selection exposing (Selection)
 
@@ -119,33 +116,14 @@ getAsDocumentId cache nodeId =
 
 
 {-| -}
-getFirstRootFolder : Config -> Cache -> DerivedData ( FolderId, FolderDisplay )
-getFirstRootFolder config cache =
-    config.toplevelFolderIds
-        |> List.head
-        |> RemoteData.fromMaybe (CacheDerivationError "List of root folders is empty")
-        |> RemoteData.andThen
-            (\folderId ->
-                Cache.get cache.nodeTypes (folderId |> Id.asNodeId)
-                    |> RemoteData.mapError CacheApiError
-                    |> RemoteData.andThen
-                        (\nodeType ->
-                            case nodeType of
-                                NodeIsFolder folderType ->
-                                    Success ( folderId, folderType )
+getFolderDisplay : Cache -> FolderId -> Maybe FolderDisplay
+getFolderDisplay cache folderId =
+    case Cache.get cache.nodeTypes (folderId |> Id.asNodeId) of
+        Success (NodeIsFolder folderDisplay) ->
+            Just folderDisplay
 
-                                _ ->
-                                    Failure (CacheDerivationError "Root node is not a folder")
-                        )
-            )
-
-
-{-| -}
-getRootFolderId : Config -> Cache -> Maybe FolderId
-getRootFolderId config cache =
-    getFirstRootFolder config cache
-        |> RemoteData.toMaybe
-        |> Maybe.map Tuple.first
+        _ ->
+            Nothing
 
 
 {-| -}

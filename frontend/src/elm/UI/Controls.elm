@@ -318,7 +318,7 @@ getSearchFieldPlaceholder : Context -> String
 getSearchFieldPlaceholder context =
     Types.Presentation.getFolderId context.cache context.presentation
         |> Maybe.Extra.orElse
-            (Cache.Derive.getRootFolderId context.config context.cache)
+            (context.config.toplevelFolderIds |> List.head)
         |> Maybe.andThen
             (\folderId ->
                 Cache.get context.cache.folders folderId
