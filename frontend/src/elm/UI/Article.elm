@@ -166,7 +166,7 @@ folderCountsForQuery context =
             Nothing
 
         ListingPresentation selection window ->
-            Cache.Derive.folderCountsOnPath context.cache selection
+            Cache.Derive.folderCountsOnPath context.config context.cache selection
                 |> Just
 
 
@@ -262,7 +262,7 @@ viewBreadcrumbs : Context -> Maybe FolderId -> Html msg
 viewBreadcrumbs context maybeFolderId =
     maybeFolderId
         |> Maybe.andThen
-            (Cache.Derive.getPath context.cache
+            (Cache.Derive.getPath context.config context.cache
                 >> RemoteData.toMaybe
             )
         |> UI.Widgets.Breadcrumbs.view context
