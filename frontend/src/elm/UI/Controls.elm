@@ -23,7 +23,6 @@ module UI.Controls exposing
 -}
 
 import Cache exposing (Cache)
-import Cache.Derive
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
