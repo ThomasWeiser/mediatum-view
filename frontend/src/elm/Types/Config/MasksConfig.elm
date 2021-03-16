@@ -59,6 +59,8 @@ init =
         }
 
 
+{-| Adopt the configuration from the server
+-}
 updateFromServer : List MasksPurposeServerConfig -> MasksConfig -> MasksConfig
 updateFromServer listOfMasksPurposeServerConfig masksConfig =
     listOfMasksPurposeServerConfig

@@ -25,7 +25,7 @@ In reality it's just function calling.
 
 # Folder Queries
 
-@docs toplevelFolders, folders, subfolders
+@docs folders, subfolders
 
 
 # Document Search and Facet Queries
