@@ -22,7 +22,8 @@ import Maybe exposing (Maybe)
 import Maybe.Extra
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
-import Types.Config.MasksConfig as MasksConfig exposing (MasksConfig, MasksPurposeServerConfig)
+import Types.Config.MasksConfig as MasksConfig exposing (MasksConfig)
+import Types.Id exposing (FolderId)
 import Types.Localization as Localization exposing (Language)
 import Types.Selection as Selection
 import Types.ServerSetup exposing (ServerSetup)
@@ -33,6 +34,7 @@ import Types.ServerSetup exposing (ServerSetup)
 type alias Config =
     { uiLanguage : Language
     , serverConfigAdopted : Bool
+    , toplevelFolderIds : List FolderId
     , defaultPageSize : Int
     , defaultSorting : Selection.Sorting
     , numberOfFacetValues : Int
@@ -48,6 +50,7 @@ init : Config
 init =
     { uiLanguage = Localization.LangEn
     , serverConfigAdopted = False
+    , toplevelFolderIds = []
     , defaultPageSize = 10
     , defaultSorting = Selection.ByRank
     , numberOfFacetValues = 20
@@ -76,6 +79,8 @@ updateFromServerSetup : ServerSetup -> Config -> Config
 updateFromServerSetup serverSetup config =
     { config
         | serverConfigAdopted = True
+        , toplevelFolderIds =
+            serverSetup.config.toplevelFolderIds |> Maybe.withDefault config.toplevelFolderIds
         , defaultPageSize =
             serverSetup.config.defaultPageSize |> Maybe.withDefault config.defaultPageSize
         , defaultSorting =

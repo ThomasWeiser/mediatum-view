@@ -23,7 +23,6 @@ module UI.Controls exposing
 -}
 
 import Cache exposing (Cache)
-import Cache.Derive
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -318,7 +317,7 @@ getSearchFieldPlaceholder : Context -> String
 getSearchFieldPlaceholder context =
     Types.Presentation.getFolderId context.cache context.presentation
         |> Maybe.Extra.orElse
-            (Cache.Derive.getRootFolderId context.cache)
+            (context.config.toplevelFolderIds |> List.head)
         |> Maybe.andThen
             (\folderId ->
                 Cache.get context.cache.folders folderId

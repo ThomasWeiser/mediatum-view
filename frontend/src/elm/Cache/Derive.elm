@@ -6,8 +6,7 @@ module Cache.Derive exposing
     , getNodeType
     , getAsFolderId
     , getAsDocumentId
-    , getRootFolder
-    , getRootFolderId
+    , getFolderDisplay
     , getParentId
     , getPath
     , getPathAsFarAsCached
@@ -33,8 +32,7 @@ module Cache.Derive exposing
 @docs getNodeType
 @docs getAsFolderId
 @docs getAsDocumentId
-@docs getRootFolder
-@docs getRootFolderId
+@docs getFolderDisplay
 @docs getParentId
 @docs getPath
 @docs getPathAsFarAsCached
@@ -50,6 +48,7 @@ import Maybe.Extra
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (FolderDisplay(..), NodeType(..))
+import Types.Config exposing (Config)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Selection exposing (Selection)
 
@@ -118,84 +117,66 @@ getAsDocumentId cache nodeId =
 
 
 {-| -}
-getRootFolder : Cache -> DerivedData ( FolderId, FolderDisplay )
-getRootFolder cache =
-    cache.rootFolderIds
-        |> RemoteData.mapError CacheApiError
-        |> RemoteData.andThen
-            (\listOfFolderIds ->
-                List.head listOfFolderIds
-                    |> RemoteData.fromMaybe (CacheDerivationError "List of root folders is empty")
-            )
-        |> RemoteData.andThen
-            (\folderId ->
-                Cache.get cache.nodeTypes (folderId |> Id.asNodeId)
-                    |> RemoteData.mapError CacheApiError
-                    |> RemoteData.andThen
-                        (\nodeType ->
-                            case nodeType of
-                                NodeIsFolder folderType ->
-                                    Success ( folderId, folderType )
+getFolderDisplay : Cache -> FolderId -> Maybe FolderDisplay
+getFolderDisplay cache folderId =
+    case Cache.get cache.nodeTypes (folderId |> Id.asNodeId) of
+        Success (NodeIsFolder folderDisplay) ->
+            Just folderDisplay
 
-                                _ ->
-                                    Failure (CacheDerivationError "Root node is not a folder")
-                        )
-            )
+        _ ->
+            Nothing
 
 
 {-| -}
-getRootFolderId : Cache -> Maybe FolderId
-getRootFolderId cache =
-    getRootFolder cache
-        |> RemoteData.toMaybe
-        |> Maybe.map Tuple.first
+getParentId : Config -> Cache -> FolderId -> ApiData (Maybe FolderId)
+getParentId config cache id =
+    if List.member id config.toplevelFolderIds then
+        Success Nothing
+
+    else
+        Cache.get cache.folders id
+            |> RemoteData.map .parent
 
 
 {-| -}
-getParentId : Cache -> FolderId -> ApiData (Maybe FolderId)
-getParentId cache id =
-    Cache.get cache.folders id
-        |> RemoteData.map .parent
-
-
-{-| -}
-getPath : Cache -> FolderId -> ApiData (List FolderId)
-getPath cache id =
-    getParentId cache id
+getPath : Config -> Cache -> FolderId -> ApiData (List FolderId)
+getPath config cache id =
+    getParentId config cache id
         |> RemoteData.andThen
             (Maybe.Extra.unwrap
                 (RemoteData.Success [ id ])
-                (getPath cache
+                (getPath config cache
                     >> RemoteData.map ((::) id)
                 )
             )
 
 
 {-| -}
-getPathAsFarAsCached : Cache -> Maybe FolderId -> List FolderId
-getPathAsFarAsCached cache =
+getPathAsFarAsCached : Config -> Cache -> Maybe FolderId -> List FolderId
+getPathAsFarAsCached config cache =
     Maybe.Extra.unwrap
         []
         (\id ->
             id
-                :: (getParentId cache id
+                :: (getParentId config cache id
                         |> RemoteData.toMaybe
                         |> Maybe.Extra.join
-                        |> getPathAsFarAsCached cache
+                        |> getPathAsFarAsCached config cache
                    )
         )
 
 
 {-| -}
-isOnPath : Cache -> FolderId -> Maybe FolderId -> Bool
-isOnPath cache requestedId =
+isOnPath : Config -> Cache -> FolderId -> Maybe FolderId -> Bool
+isOnPath config cache requestedId =
     Maybe.Extra.unwrap
         False
         (\pathId ->
             (requestedId == pathId)
-                || isOnPath cache
+                || isOnPath config
+                    cache
                     requestedId
-                    (getParentId cache pathId
+                    (getParentId config cache pathId
                         |> RemoteData.toMaybe
                         |> Maybe.Extra.join
                     )
@@ -220,8 +201,8 @@ getDocumentCount cache selection =
 
 {-| Get the folder counts for the scoped folder of the selection and of all folders upwards to the root.
 -}
-folderCountsOnPath : Cache -> Selection -> FolderCounts
-folderCountsOnPath cache selection =
+folderCountsOnPath : Config -> Cache -> Selection -> FolderCounts
+folderCountsOnPath config cache selection =
     List.foldr
         (\folderId folderCounts ->
             Sort.Dict.foldl Sort.Dict.insert
@@ -233,4 +214,4 @@ folderCountsOnPath cache selection =
                 folderCounts
         )
         FolderCounts.init
-        (getPathAsFarAsCached cache (Just selection.scope))
+        (getPathAsFarAsCached config cache (Just selection.scope))

@@ -2,7 +2,7 @@ module Types.Id exposing
     ( NodeId
     , FolderId
     , DocumentId
-    , LineageIds
+    , LineageIds, limitToToplevelFolders
     , asNodeId
     , asFolderId
     , asDocumentId
@@ -25,7 +25,7 @@ module Types.Id exposing
 
 # Types for aggregates of identifiers
 
-@docs LineageIds
+@docs LineageIds, limitToToplevelFolders
 
 
 # Converting from one node id type into another
@@ -49,7 +49,7 @@ module Types.Id exposing
 
 -}
 
-import List.Nonempty exposing (Nonempty)
+import List.Nonempty exposing (Nonempty(..))
 import Ordering exposing (Ordering)
 
 
@@ -187,3 +187,29 @@ toString nodeId =
 ordering : Ordering (Id a)
 ordering (Id id1) (Id id2) =
     compare id1 id2
+
+
+{-| Limit the lineage in relation to a list of toplevel folders.
+
+Return Nothing, if the lineage is not based on one of the toplevel folders.
+
+-}
+limitToToplevelFolders : List FolderId -> LineageIds -> Maybe LineageIds
+limitToToplevelFolders toplevelFolderIds (Nonempty head tail) =
+    let
+        limitList : List FolderId -> Maybe (List FolderId)
+        limitList list =
+            case list of
+                [] ->
+                    Nothing
+
+                id :: ids ->
+                    if List.member id toplevelFolderIds then
+                        Just [ id ]
+
+                    else
+                        limitList ids
+                            |> Maybe.map (\res -> id :: res)
+    in
+    limitList tail
+        |> Maybe.map (\res -> Nonempty head res)

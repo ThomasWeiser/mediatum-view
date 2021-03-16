@@ -80,7 +80,7 @@ initialModel =
 needs : Context -> Model -> Cache.Needs
 needs context model =
     getPresentationFolderId context
-        |> Cache.Derive.getPathAsFarAsCached context.cache
+        |> Cache.Derive.getPathAsFarAsCached context.config context.cache
         |> Cache.NeedSubfolders
         |> Types.Needs.atomic
 
@@ -128,7 +128,7 @@ view context model maybeFolderCounts =
             context
             model
             maybeFolderCounts
-            context.cache.rootFolderIds
+            (RemoteData.Success context.config.toplevelFolderIds)
         ]
 
 
@@ -175,7 +175,7 @@ viewFolderTree context model maybeFolderCounts id =
                     expanded =
                         Folder.isRoot folder
                             || (model.collapsedPresentationFolder /= Just id)
-                            && Cache.Derive.isOnPath context.cache id presentationFolderId
+                            && Cache.Derive.isOnPath context.config context.cache id presentationFolderId
                 in
                 [ Html.div
                     [ Html.Events.onClick (Select id) ]

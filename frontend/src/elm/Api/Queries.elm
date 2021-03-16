@@ -1,6 +1,6 @@
 module Api.Queries exposing
     ( serverSetup
-    , toplevelFolders, folders, subfolders
+    , folders, subfolders
     , selectionDocumentsPage, selectionFolderCounts, selectionFacets
     , documentDetails
     , genericNode, authorSearch
@@ -25,7 +25,7 @@ In reality it's just function calling.
 
 # Folder Queries
 
-@docs toplevelFolders, folders, subfolders
+@docs folders, subfolders
 
 
 # Document Search and Facet Queries
@@ -90,6 +90,11 @@ serverSetup =
                 (Mediatum.Object.Setup.config
                     (SelectionSet.succeed ServerSetup.ServerConfig
                         |> SelectionSet.with
+                            (Mediatum.Object.SetupConfig.toplevelFolders
+                                |> Api.Fragments.nonNullElementsOfMaybeListOrFail
+                                |> SelectionSet.map (Maybe.map (List.map Id.fromInt))
+                            )
+                        |> SelectionSet.with
                             Mediatum.Object.SetupConfig.defaultPageSize
                         |> SelectionSet.with
                             (Mediatum.Object.SetupConfig.defaultSorting
@@ -125,33 +130,6 @@ serverSetup =
                     )
                     |> SelectionSet.nonNullOrFail
                 )
-        )
-        |> SelectionSet.nonNullOrFail
-
-
-{-| Get the root folders and their sub-folders.
-
-_GraphQL notation:_
-
-    query {
-        allFolders(isRoot: true) {
-            nodes {
-                ...folderAndSubfolders
-            }
-        }
-    }
-
--}
-toplevelFolders : SelectionSet (List ( Folder, List Folder )) Graphql.Operation.RootQuery
-toplevelFolders =
-    Mediatum.Query.allFolders
-        (\optionals ->
-            { optionals
-                | isRoot = Present True
-            }
-        )
-        (Mediatum.Object.FoldersConnection.nodes
-            Api.Fragments.folderAndSubfolders
         )
         |> SelectionSet.nonNullOrFail
 

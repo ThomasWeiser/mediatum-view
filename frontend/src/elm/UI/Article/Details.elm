@@ -25,7 +25,7 @@ import Api.Mutations
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
 import Entities.Markup
-import Entities.Residence exposing (Residence)
+import Entities.Residence as Residence exposing (Residence)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -291,7 +291,7 @@ viewResidence context residence =
                             |> UI.Widgets.Breadcrumbs.view context
                         ]
                 )
-                residence
+                (Residence.limitToToplevelFolders context.config residence)
         ]
 
 

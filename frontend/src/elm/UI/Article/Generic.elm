@@ -70,14 +70,24 @@ view context model =
             -- Find the reason why we have a GenericPresentation
             case context.genericParameters of
                 Nothing ->
-                    Cache.Derive.getRootFolder context.cache
-                        |> RemoteData.map
-                            (Localization.string context.config
-                                { en = "Going to show the root folder"
-                                , de = "Laden des Startverzeichnisses"
-                                }
-                                |> always
-                            )
+                    (case List.length context.config.toplevelFolderIds of
+                        0 ->
+                            { en = "There are no known top folders."
+                            , de = "Es sind keine Startverzeichnisse bekannt."
+                            }
+
+                        1 ->
+                            { en = "Going to show the top folder"
+                            , de = "Laden des Startverzeichnisses"
+                            }
+
+                        _ ->
+                            { en = "Going to show the top folders"
+                            , de = "Laden der Startverzeichnisse"
+                            }
+                    )
+                        |> Localization.string context.config
+                        |> Success
 
                 Just ( nodeId, Nothing ) ->
                     Cache.Derive.getNodeType context.cache nodeId

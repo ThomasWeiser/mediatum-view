@@ -5,6 +5,22 @@ drop schema if exists config cascade;
 create schema if not exists config;
 
 
+create table config.application (
+    name text primary key,
+    toplevel_folder_ids int4[]
+);
+
+insert into config.application values
+    -- ('hsb', array[604993]) -- 604993 is the root node
+    ('hsb', array[1433087]) -- 1433087 is the "Hochschulbibliographie" node
+    -- ('hsb', array[1433088, 1433089, 1515316]) -- Multiple root folders, using several years of hsb
+    -- ('hsb', array[1459256]) -- A directory
+    -- ('hsb', array[1459256, 1433088, 1433089, 1515316]) -- Multiple root folders, using a directory first and then several years of hsb
+    -- ('hsb', array[1433088, 1433089, 1515316, 1459256]) -- Multiple root folders, using several years of hsb first, and a directory last
+    -- ('hsb', '{}') -- No root folder, for testing only
+;
+
+
 create table config.aspect_def (
     name text primary key,
     keys text[],

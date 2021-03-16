@@ -34,6 +34,7 @@ import Cache.Derive
 import Maybe.Extra
 import RemoteData
 import Types exposing (DocumentIdFromSearch, FolderDisplay(..), NodeType(..), Window)
+import Types.Config exposing (Config)
 import Types.FilterList as FilterList
 import Types.Id as Id exposing (FolderId, NodeId)
 import Types.Route as Route exposing (Route)
@@ -68,16 +69,14 @@ getFolderId cache presentation =
 
 
 {-| -}
-fromRoute : Cache -> Route -> Presentation
-fromRoute cache route =
+fromRoute : Config -> Cache -> Route -> Presentation
+fromRoute config cache route =
     let
         folderPresentation folderId folderType =
             if
-                route.parameters.globalFts
-                    == Nothing
+                (route.parameters.globalFts == Nothing)
                     && FilterList.isEmpty route.parameters.ftsFilters
-                    && folderType
-                    == DisplayAsCollection
+                    && (folderType == DisplayAsCollection)
             then
                 CollectionPresentation folderId
 
@@ -98,12 +97,14 @@ fromRoute cache route =
     in
     case route.path of
         Route.NoId ->
-            Cache.Derive.getRootFolder cache
-                |> RemoteData.toMaybe
+            List.head config.toplevelFolderIds
                 |> Maybe.Extra.unwrap
                     (GenericPresentation Nothing)
-                    (\( rootFolderId, rootFolderType ) ->
-                        folderPresentation rootFolderId rootFolderType
+                    (\firstToplevelFolderId ->
+                        Cache.Derive.getFolderDisplay cache firstToplevelFolderId
+                            |> Maybe.Extra.unwrap
+                                (GenericPresentation (Just ( firstToplevelFolderId |> Id.asNodeId, Nothing )))
+                                (folderPresentation firstToplevelFolderId)
                     )
 
         Route.OneId nodeId ->
