@@ -51,6 +51,7 @@ import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
+import Entities.PageSequence as PageSequence exposing (PageSequence)
 import Entities.Residence as Residence exposing (Residence)
 import List.Nonempty
 import Ordering exposing (Ordering)
