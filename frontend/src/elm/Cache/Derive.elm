@@ -42,12 +42,13 @@ module Cache.Derive exposing
 
 -}
 
-import Cache exposing (ApiData, Cache)
+import Cache exposing (Cache)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
 import Maybe.Extra
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (FolderDisplay(..), NodeType(..))
+import Types.ApiData as ApiData exposing (ApiData, ApiError)
 import Types.Config exposing (Config)
 import Types.Id as Id exposing (DocumentId, FolderId, NodeId)
 import Types.Selection exposing (Selection)
@@ -66,7 +67,7 @@ type alias DerivedData a =
 {-| An error on getting derived data may be either an ApiError or some logical error within the base data.
 -}
 type Error
-    = CacheApiError Cache.ApiError
+    = CacheApiError ApiError
     | CacheDerivationError String
 
 
@@ -75,7 +76,7 @@ errorToString : Error -> String
 errorToString error =
     case error of
         CacheApiError apiError ->
-            Cache.apiErrorToString apiError
+            ApiData.apiErrorToString apiError
 
         CacheDerivationError str ->
             str

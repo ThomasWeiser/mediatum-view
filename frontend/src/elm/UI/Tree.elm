@@ -25,7 +25,7 @@ module UI.Tree exposing
 
 -}
 
-import Cache exposing (ApiData, Cache)
+import Cache exposing (Cache)
 import Cache.Derive
 import Entities.Folder as Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
@@ -35,6 +35,7 @@ import Html.Events
 import RemoteData
 import Sort.Dict
 import Types exposing (FolderDisplay(..))
+import Types.ApiData exposing (ApiData)
 import Types.Config exposing (Config)
 import Types.Id exposing (FolderId)
 import Types.Needs

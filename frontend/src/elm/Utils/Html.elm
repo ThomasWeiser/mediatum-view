@@ -19,12 +19,13 @@ import Cache
 import Cache.Derive
 import Html exposing (Attribute, Html)
 import Html.Attributes
+import Types.ApiData as ApiData exposing (ApiData, ApiError)
 
 
 {-| -}
-viewApiError : Cache.ApiError -> Html msg
+viewApiError : ApiError -> Html msg
 viewApiError error =
-    viewError (Cache.apiErrorToString error)
+    viewError (ApiData.apiErrorToString error)
 
 
 {-| -}

@@ -1,8 +1,7 @@
 module Cache exposing
-    ( Cache, ApiData, get
+    ( Cache, get
     , Need(..), Needs, targetNeeds
     , updateWithModifiedDocument
-    , ApiError, apiErrorToString
     , Msg(..), init, update
     , orderingSelectionWindow, orderingMaskSelectionWindow, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
     )
@@ -21,7 +20,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Cached Data
 
-@docs Cache, ApiData, get
+@docs Cache, get
 
 
 # Declaring required data
@@ -32,11 +31,6 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 # Modifying data locally (preliminary)
 
 @docs updateWithModifiedDocument
-
-
-# Error handling
-
-@docs ApiError, apiErrorToString
 
 
 # Elm architecture standard functions
@@ -63,6 +57,7 @@ import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (DocumentIdFromSearch, NodeType(..), Window)
+import Types.ApiData exposing (ApiData)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.FacetValue exposing (FacetsValues)
@@ -71,23 +66,6 @@ import Types.Needs as Needs
 import Types.Selection as Selection exposing (Selection)
 import Utils
 import Utils.List
-
-
-{-| A specialization of [`RemoteData e a`](/packages/krisajenkins/remotedata/6.0.1/RemoteData#RemoteData)
-where the error type `e` is defined by `ApiError`.
-
-Any `RemoteData` used in this module uses this error type and is therefore an `ApiData`.
-
--}
-type alias ApiData a =
-    RemoteData ApiError a
-
-
-{-| The type of errors that may be reported in an `ApiData.Failure`.
-It's the same as `Api.Error`.
--}
-type alias ApiError =
-    Api.Error
 
 
 {-| Represents all known data (in whatever state it may be: `Loading`, `Failure` or `Success`).
@@ -128,13 +106,6 @@ type Need
 -}
 type alias Needs =
     Needs.Needs Need
-
-
-{-| Describe an `ApiError` as text (aimed for debugging)
--}
-apiErrorToString : ApiError -> String
-apiErrorToString apiError =
-    Api.errorToString apiError
 
 
 {-| Initial cache model without any entry
