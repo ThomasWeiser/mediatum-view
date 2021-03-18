@@ -200,8 +200,8 @@ viewPageSequence : Context -> PageSequence -> Html Msg
 viewPageSequence context pageSequence =
     Html.div [] <|
         List.map
-            (viewPageApiData context << Tuple.second)
-            pageSequence
+            (viewPageApiData context)
+            (PageSequence.toList pageSequence)
 
 
 {-| -}

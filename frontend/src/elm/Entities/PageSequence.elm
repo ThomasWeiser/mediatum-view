@@ -1,4 +1,4 @@
-module Entities.PageSequence exposing (PageSequence, requestWindow, statusOfNeededWindow, updatePageResult)
+module Entities.PageSequence exposing (PageSequence, init, requestWindow, statusOfNeededWindow, toList, updatePageResult)
 
 import Entities.DocumentResults exposing (DocumentsPage)
 import List.Extra
@@ -16,21 +16,36 @@ as it is managed by the cache.
 
 The segmentation of the listing into pages reflects the history of requests to prolong the listing.
 
-@docs PageSequence
+@docs PageSequence, init, toList
+
 @docs statusOfNeededWindow, requestWindow, updatePage
 
 -}
-type alias PageSequence =
+type PageSequence
+    = PageSequence PageSequenceIntern
+
+
+type alias PageSequenceIntern =
     List ( Int, ApiData DocumentsPage )
 
 
+init : PageSequence
+init =
+    PageSequence []
+
+
+toList : PageSequence -> List (ApiData DocumentsPage)
+toList (PageSequence pageSequence) =
+    List.map Tuple.second pageSequence
+
+
 statusOfNeededWindow : Window -> PageSequence -> Needs.Status
-statusOfNeededWindow window pageSequence =
+statusOfNeededWindow window (PageSequence pageSequence) =
     let
         neededLength =
             window.offset + window.limit
 
-        step : Int -> PageSequence -> Needs.Status
+        step : Int -> PageSequenceIntern -> Needs.Status
         step length sequence =
             case sequence of
                 [] ->
@@ -54,12 +69,12 @@ statusOfNeededWindow window pageSequence =
 
 
 requestWindow : Window -> PageSequence -> ( Maybe ( Int, Window ), PageSequence )
-requestWindow window pageSequence =
+requestWindow window (PageSequence pageSequence) =
     let
         neededLength =
             window.offset + window.limit
 
-        step : Int -> Int -> PageSequence -> ( Maybe ( Int, Window ), PageSequence )
+        step : Int -> Int -> PageSequenceIntern -> ( Maybe ( Int, Window ), PageSequenceIntern )
         step index length sequence =
             case sequence of
                 [] ->
@@ -93,11 +108,13 @@ requestWindow window pageSequence =
                 )
     in
     step 0 0 pageSequence
+        |> Tuple.mapSecond PageSequence
 
 
 updatePageResult : Int -> Window -> ApiData DocumentsPage -> PageSequence -> PageSequence
-updatePageResult pageIndex window apiData pageSequence =
+updatePageResult pageIndex window apiData (PageSequence pageSequence) =
     List.Extra.setAt
         pageIndex
         ( window.limit, apiData )
         pageSequence
+        |> PageSequence

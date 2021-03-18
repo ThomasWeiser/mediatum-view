@@ -144,7 +144,7 @@ If the given key is not yet present in the table return `RemoteData.NotAsked`.
 getDocumentsPages : Cache -> ( String, Selection ) -> PageSequence
 getDocumentsPages cache key =
     Sort.Dict.get key cache.documentsPages
-        |> Maybe.withDefault []
+        |> Maybe.withDefault PageSequence.init
 
 
 {-| The messages that the `update` function may process in response to an executed `Cmd`.
