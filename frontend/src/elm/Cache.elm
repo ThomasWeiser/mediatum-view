@@ -178,7 +178,7 @@ targetNeeds config needs cache =
 -}
 statusOfNeed : Config -> Cache -> Need -> Needs.Status
 statusOfNeed config cache need =
-    case need |> Debug.log "statusOfNeed" of
+    case need of
         NeedFolders folderIds ->
             Needs.statusFromListOfRemoteData
                 (List.map (get cache.folders) folderIds)
@@ -217,7 +217,7 @@ Also mark the corresponding cache entries as `RemoteData.Loading`.
 -}
 requestNeed : Config -> Need -> Cache -> ( Cache, Cmd Msg )
 requestNeed config need cache =
-    case need |> Debug.log "requestNeed" of
+    case need of
         NeedFolders folderIds ->
             let
                 unknownFolderIds =
@@ -465,7 +465,7 @@ update config msg cache =
                 | documentsPages =
                     Sort.Dict.insert
                         ( maskName, selection )
-                        (PageSequence.updatePage
+                        (PageSequence.updatePageResult
                             window
                             (RemoteData.fromResult result)
                             (getDocumentsPages cache ( maskName, selection ))

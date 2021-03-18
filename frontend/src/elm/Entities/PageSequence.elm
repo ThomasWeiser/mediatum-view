@@ -1,4 +1,4 @@
-module Entities.PageSequence exposing (PageSequence, requestWindow, statusOfNeededWindow, updatePage)
+module Entities.PageSequence exposing (PageSequence, requestWindow, statusOfNeededWindow, updatePageResult)
 
 import Entities.DocumentResults exposing (DocumentsPage)
 import RemoteData exposing (RemoteData(..))
@@ -13,43 +13,14 @@ e.g. by a UI button to load more results.
 The type `PageSequence` represents such a sequence of pages
 as it is managed by the cache.
 
+The segmentation of the listing into pages reflects the history of requests to prolong the listing.
+
 @docs PageSequence
 @docs statusOfNeededWindow, requestWindow, updatePage
 
 -}
 type alias PageSequence =
     List ( Int, ApiData DocumentsPage )
-
-
-statusOfNeededWindow_1 : Window -> PageSequence -> Needs.Status
-statusOfNeededWindow_1 window pageSequence =
-    let
-        neededLength =
-            window.offset + window.limit
-    in
-    pageSequence
-        |> List.foldl
-            (\( elementLength, elementApiData ) ( accuLength, accuStatus ) ->
-                ( accuLength + elementLength
-                , if neededLength < accuLength then
-                    accuStatus
-
-                  else
-                    Needs.statusPlus
-                        accuStatus
-                        (Needs.statusFromRemoteData elementApiData)
-                )
-            )
-            ( 0, Needs.Fulfilled )
-        |> Tuple.second
-        |> (\res ->
-                let
-                    _ =
-                        Debug.log "statusOfNeededWindow"
-                            { window = window, pageSequence = pageSequence, res = res }
-                in
-                res
-           )
 
 
 statusOfNeededWindow : Window -> PageSequence -> Needs.Status
@@ -77,30 +48,8 @@ statusOfNeededWindow window pageSequence =
                             Fulfilled
                         )
                         (step (length + elementLength) tail)
-
-        requestWithExistingLength length =
-            if neededLength > length then
-                ( Just { offset = length, limit = neededLength - length }
-                , [ ( neededLength - length
-                    , Loading
-                    )
-                  ]
-                )
-
-            else
-                ( Nothing
-                , []
-                )
     in
     step 0 pageSequence
-        |> (\res ->
-                let
-                    _ =
-                        Debug.log "statusOfNeededWindow"
-                            { window = window, pageSequence = pageSequence, res = res }
-                in
-                res
-           )
 
 
 requestWindow : Window -> PageSequence -> ( Maybe Window, PageSequence )
@@ -145,8 +94,8 @@ requestWindow window pageSequence =
     step 0 pageSequence
 
 
-updatePage : Window -> ApiData DocumentsPage -> PageSequence -> PageSequence
-updatePage window apiData pageSequence =
+updatePageResult : Window -> ApiData DocumentsPage -> PageSequence -> PageSequence
+updatePageResult window apiData pageSequence =
     let
         step : Int -> PageSequence -> PageSequence
         step length sequence =
@@ -169,11 +118,3 @@ updatePage window apiData pageSequence =
                 pageSequence
     in
     step 0 pageSequence
-        |> (\res ->
-                let
-                    _ =
-                        Debug.log "updatePage"
-                            { window = window, apiData = apiData, pageSequence = pageSequence, res = res }
-                in
-                res
-           )
