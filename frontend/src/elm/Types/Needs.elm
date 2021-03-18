@@ -131,6 +131,8 @@ type Status
     | OnGoing
 
 
+{-| Combine two Status values
+-}
 statusPlus : Status -> Status -> Status
 statusPlus statusOne statusTwo =
     if statusOne == NotRequested || statusTwo == NotRequested then

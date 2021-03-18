@@ -3,8 +3,7 @@ module Cache exposing
     , Need(..), Needs, targetNeeds
     , updateWithModifiedDocument
     , Msg(..), init, update
-    , orderingSelectionWindow, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
-    , orderingMaskSelection
+    , orderingSelectionWindow, orderingMaskSelection, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
     )
 
 {-| Manage fetching and caching of all API data.
@@ -41,7 +40,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Internal functions exposed for testing only
 
-@docs orderingSelectionWindow, orderingMaskSelectionWindow, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
+@docs orderingSelectionWindow, orderingMaskSelection, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
 
 -}
 
@@ -643,7 +642,7 @@ orderingSelectionWindow =
             (Ordering.byFieldWith Types.orderingWindow Tuple.second)
 
 
-{-| Ordering on the tuple type `( String, Selection, Window )`
+{-| Ordering on the tuple type `( String, Selection )`
 -}
 orderingMaskSelection : Ordering ( String, Selection )
 orderingMaskSelection =
