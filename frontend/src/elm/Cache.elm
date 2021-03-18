@@ -157,7 +157,7 @@ type Msg
     | ApiResponseSubfolders (List FolderId) (Api.Response (List Folder))
     | ApiResponseGenericNode String NodeId (Api.Response GenericNode)
     | ApiResponseDocumentFromSearch String DocumentIdFromSearch (Api.Response (Maybe ( Document, Maybe Residence )))
-    | ApiResponseDocumentsPage ( String, Selection, Window ) (Api.Response DocumentsPage)
+    | ApiResponseDocumentsPage ( String, Selection, ( Int, Window ) ) (Api.Response DocumentsPage)
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
     | ApiResponseFacets ( Selection, List Aspect ) (Api.Response FacetsValues)
 
@@ -304,7 +304,7 @@ requestNeed config need cache =
 
         NeedDocumentsPage maskName selection window ->
             let
-                ( maybeNeededWindow, newPageSequence ) =
+                ( maybeIndexAndNeededWindow, newPageSequence ) =
                     PageSequence.requestWindow
                         window
                         (getDocumentsPages cache ( maskName, selection ))
@@ -313,14 +313,14 @@ requestNeed config need cache =
                 | documentsPages =
                     Sort.Dict.insert ( maskName, selection ) newPageSequence cache.documentsPages
               }
-            , case maybeNeededWindow of
+            , case maybeIndexAndNeededWindow of
                 Nothing ->
                     Cmd.none
 
-                Just neededWindow ->
+                Just ( pageIndex, neededWindow ) ->
                     Api.sendQueryRequest
                         (Api.withOperationName "NeedDocumentsPage")
-                        (ApiResponseDocumentsPage ( maskName, selection, neededWindow ))
+                        (ApiResponseDocumentsPage ( maskName, selection, ( pageIndex, neededWindow ) ))
                         (Api.Queries.selectionDocumentsPage maskName neededWindow selection)
             )
 
@@ -460,12 +460,13 @@ update config msg cache =
             , Cmd.none
             )
 
-        ApiResponseDocumentsPage ( maskName, selection, window ) result ->
+        ApiResponseDocumentsPage ( maskName, selection, ( pageIndex, window ) ) result ->
             ( { cache
                 | documentsPages =
                     Sort.Dict.insert
                         ( maskName, selection )
                         (PageSequence.updatePageResult
+                            pageIndex
                             window
                             (RemoteData.fromResult result)
                             (getDocumentsPages cache ( maskName, selection ))

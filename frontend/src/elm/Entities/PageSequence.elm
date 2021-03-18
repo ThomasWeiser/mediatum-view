@@ -1,6 +1,7 @@
 module Entities.PageSequence exposing (PageSequence, requestWindow, statusOfNeededWindow, updatePageResult)
 
 import Entities.DocumentResults exposing (DocumentsPage)
+import List.Extra
 import RemoteData exposing (RemoteData(..))
 import Types exposing (Window)
 import Types.ApiData exposing (ApiData)
@@ -52,34 +53,34 @@ statusOfNeededWindow window pageSequence =
     step 0 pageSequence
 
 
-requestWindow : Window -> PageSequence -> ( Maybe Window, PageSequence )
+requestWindow : Window -> PageSequence -> ( Maybe ( Int, Window ), PageSequence )
 requestWindow window pageSequence =
     let
         neededLength =
             window.offset + window.limit
 
-        step : Int -> PageSequence -> ( Maybe Window, PageSequence )
-        step length sequence =
+        step : Int -> Int -> PageSequence -> ( Maybe ( Int, Window ), PageSequence )
+        step index length sequence =
             case sequence of
                 [] ->
-                    requestWithExistingLength length
+                    requestWithExistingLength index length
 
                 (( elementLength, elementApiData ) as element) :: tail ->
                     if elementApiData == NotAsked then
-                        requestWithExistingLength length
+                        requestWithExistingLength index length
 
                     else
                         let
                             ( tailMaybeWindow, tailPageSequence ) =
-                                step (length + elementLength) tail
+                                step (index + 1) (length + elementLength) tail
                         in
                         ( tailMaybeWindow
                         , element :: tailPageSequence
                         )
 
-        requestWithExistingLength length =
+        requestWithExistingLength index length =
             if neededLength > length then
-                ( Just { offset = length, limit = neededLength - length }
+                ( Just ( index, { offset = length, limit = neededLength - length } )
                 , [ ( neededLength - length
                     , Loading
                     )
@@ -91,30 +92,12 @@ requestWindow window pageSequence =
                 , []
                 )
     in
-    step 0 pageSequence
+    step 0 0 pageSequence
 
 
-updatePageResult : Window -> ApiData DocumentsPage -> PageSequence -> PageSequence
-updatePageResult window apiData pageSequence =
-    let
-        step : Int -> PageSequence -> PageSequence
-        step length sequence =
-            if length == window.offset then
-                [ ( window.limit, apiData ) ]
-
-            else if length < window.offset then
-                case sequence of
-                    [] ->
-                        -- Should never happen
-                        [ ( window.offset - length, NotAsked )
-                        , ( window.limit, apiData )
-                        ]
-
-                    (( elementLength, _ ) as element) :: tail ->
-                        element :: step (length + elementLength) tail
-
-            else
-                -- Should never happen
-                pageSequence
-    in
-    step 0 pageSequence
+updatePageResult : Int -> Window -> ApiData DocumentsPage -> PageSequence -> PageSequence
+updatePageResult pageIndex window apiData pageSequence =
+    List.Extra.setAt
+        pageIndex
+        ( window.limit, apiData )
+        pageSequence
