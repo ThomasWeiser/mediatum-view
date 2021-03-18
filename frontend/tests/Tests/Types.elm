@@ -7,7 +7,7 @@ module Tests.Types exposing
     , fuzzerGlobalFts
     , fuzzerLimit
     , fuzzerMaskDocumentIdFromSearch
-    , fuzzerMaskSelectionWindow
+    , fuzzerMaskSelection
     , fuzzerNodeId
     , fuzzerOffset
     , fuzzerSelection
@@ -92,12 +92,11 @@ fuzzerSelectionWindow =
         fuzzerWindow
 
 
-fuzzerMaskSelectionWindow : Fuzzer ( String, Selection, Window )
-fuzzerMaskSelectionWindow =
-    Fuzz.map3 (\maskName selection window -> ( maskName, selection, window ))
+fuzzerMaskSelection : Fuzzer ( String, Selection )
+fuzzerMaskSelection =
+    Fuzz.map2 Tuple.pair
         fuzzerMaskName
         fuzzerSelection
-        fuzzerWindow
 
 
 fuzzerSelectionFacets : Fuzzer ( Selection, List Aspect )
