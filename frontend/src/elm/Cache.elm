@@ -1,9 +1,10 @@
 module Cache exposing
-    ( Cache, get
+    ( Cache, get, getDocumentsPages
     , Need(..), Needs, targetNeeds
     , updateWithModifiedDocument
     , Msg(..), init, update
-    , orderingSelectionWindow, orderingMaskSelectionWindow, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
+    , orderingSelectionWindow, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
+    , orderingMaskSelection
     )
 
 {-| Manage fetching and caching of all API data.
@@ -20,7 +21,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Cached Data
 
-@docs Cache, get
+@docs Cache, get, getDocumentsPages
 
 
 # Declaring required data
@@ -85,7 +86,7 @@ type alias Cache =
     , nodeTypes : Sort.Dict.Dict NodeId (ApiData NodeType)
     , documents : Sort.Dict.Dict ( String, DocumentIdFromSearch ) (ApiData Document)
     , residence : Sort.Dict.Dict DocumentId (ApiData Residence)
-    , documentsPages : Sort.Dict.Dict ( String, Selection, Window ) (ApiData DocumentsPage)
+    , documentsPages : Sort.Dict.Dict ( String, Selection ) PageSequence
     , folderCounts : Sort.Dict.Dict Selection (ApiData FolderCounts)
     , facetsValues : Sort.Dict.Dict ( Selection, List Aspect ) (ApiData FacetsValues)
     }
@@ -118,7 +119,7 @@ init =
     , nodeTypes = Sort.Dict.empty (Utils.sorter Id.ordering)
     , documents = Sort.Dict.empty (Utils.sorter orderingMaskDocumentIdFromSearch)
     , residence = Sort.Dict.empty (Utils.sorter Id.ordering)
-    , documentsPages = Sort.Dict.empty (Utils.sorter orderingMaskSelectionWindow)
+    , documentsPages = Sort.Dict.empty (Utils.sorter orderingMaskSelection)
     , folderCounts = Sort.Dict.empty (Utils.sorter Selection.orderingSelectionModuloSorting)
     , facetsValues = Sort.Dict.empty (Utils.sorter orderingSelectionFacets)
     }
@@ -133,6 +134,17 @@ get : Sort.Dict.Dict k (ApiData v) -> k -> ApiData v
 get dict key =
     Sort.Dict.get key dict
         |> Maybe.withDefault NotAsked
+
+
+{-| Read an entry from a lookup-table of the cache.
+
+If the given key is not yet present in the table return `RemoteData.NotAsked`.
+
+-}
+getDocumentsPages : Cache -> ( String, Selection ) -> PageSequence
+getDocumentsPages cache key =
+    Sort.Dict.get key cache.documentsPages
+        |> Maybe.withDefault []
 
 
 {-| The messages that the `update` function may process in response to an executed `Cmd`.
@@ -166,7 +178,7 @@ targetNeeds config needs cache =
 -}
 statusOfNeed : Config -> Cache -> Need -> Needs.Status
 statusOfNeed config cache need =
-    case need of
+    case need |> Debug.log "statusOfNeed" of
         NeedFolders folderIds ->
             Needs.statusFromListOfRemoteData
                 (List.map (get cache.folders) folderIds)
@@ -184,8 +196,8 @@ statusOfNeed config cache need =
                 |> Needs.statusFromRemoteData
 
         NeedDocumentsPage maskName selection window ->
-            get cache.documentsPages ( maskName, selection, window )
-                |> Needs.statusFromRemoteData
+            getDocumentsPages cache ( maskName, selection )
+                |> PageSequence.statusOfNeededWindow window
 
         NeedFolderCounts selection ->
             get cache.folderCounts selection
@@ -205,7 +217,7 @@ Also mark the corresponding cache entries as `RemoteData.Loading`.
 -}
 requestNeed : Config -> Need -> Cache -> ( Cache, Cmd Msg )
 requestNeed config need cache =
-    case need of
+    case need |> Debug.log "requestNeed" of
         NeedFolders folderIds ->
             let
                 unknownFolderIds =
@@ -291,14 +303,25 @@ requestNeed config need cache =
             )
 
         NeedDocumentsPage maskName selection window ->
+            let
+                ( maybeNeededWindow, newPageSequence ) =
+                    PageSequence.requestWindow
+                        window
+                        (getDocumentsPages cache ( maskName, selection ))
+            in
             ( { cache
                 | documentsPages =
-                    Sort.Dict.insert ( maskName, selection, window ) Loading cache.documentsPages
+                    Sort.Dict.insert ( maskName, selection ) newPageSequence cache.documentsPages
               }
-            , Api.sendQueryRequest
-                (Api.withOperationName "NeedDocumentsPage")
-                (ApiResponseDocumentsPage ( maskName, selection, window ))
-                (Api.Queries.selectionDocumentsPage maskName window selection)
+            , case maybeNeededWindow of
+                Nothing ->
+                    Cmd.none
+
+                Just neededWindow ->
+                    Api.sendQueryRequest
+                        (Api.withOperationName "NeedDocumentsPage")
+                        (ApiResponseDocumentsPage ( maskName, selection, neededWindow ))
+                        (Api.Queries.selectionDocumentsPage maskName neededWindow selection)
             )
 
         NeedFolderCounts selection ->
@@ -437,10 +460,17 @@ update config msg cache =
             , Cmd.none
             )
 
-        ApiResponseDocumentsPage maskAndSelectionAndWindow result ->
+        ApiResponseDocumentsPage ( maskName, selection, window ) result ->
             ( { cache
                 | documentsPages =
-                    Sort.Dict.insert maskAndSelectionAndWindow (RemoteData.fromResult result) cache.documentsPages
+                    Sort.Dict.insert
+                        ( maskName, selection )
+                        (PageSequence.updatePage
+                            window
+                            (RemoteData.fromResult result)
+                            (getDocumentsPages cache ( maskName, selection ))
+                        )
+                        cache.documentsPages
               }
             , Cmd.none
             )
@@ -614,13 +644,11 @@ orderingSelectionWindow =
 
 {-| Ordering on the tuple type `( String, Selection, Window )`
 -}
-orderingMaskSelectionWindow : Ordering ( String, Selection, Window )
-orderingMaskSelectionWindow =
-    Ordering.byFieldWith Ordering.natural (\( maskName, _, _ ) -> maskName)
+orderingMaskSelection : Ordering ( String, Selection )
+orderingMaskSelection =
+    Ordering.byFieldWith Ordering.natural Tuple.first
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith Selection.orderingSelection (\( _, selection, _ ) -> selection))
-        |> Ordering.breakTiesWith
-            (Ordering.byFieldWith Types.orderingWindow (\( _, _, window ) -> window))
+            (Ordering.byFieldWith Selection.orderingSelection Tuple.second)
 
 
 {-| Ordering on the tuple type `( Selection, List String )`

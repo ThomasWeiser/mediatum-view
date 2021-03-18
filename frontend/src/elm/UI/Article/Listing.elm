@@ -28,6 +28,7 @@ import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import Entities.Markup
+import Entities.PageSequence as PageSequence exposing (PageSequence)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -35,6 +36,7 @@ import Maybe.Extra
 import Regex
 import RemoteData
 import Types exposing (Window)
+import Types.ApiData exposing (ApiData)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
 import Types.Id exposing (DocumentId)
@@ -183,14 +185,30 @@ view context model =
     Html.div [] <|
         -- case model.iterator of
         -- Nothing ->
-        [ case
-            Cache.get
-                context.cache.documentsPages
+        [ viewPageSequence context
+            (Cache.getDocumentsPages
+                context.cache
                 ( Config.getMaskName MasksConfig.MaskForListing context.config
                 , context.selection
-                , context.window
                 )
-          of
+            )
+        ]
+
+
+{-| -}
+viewPageSequence : Context -> PageSequence -> Html Msg
+viewPageSequence context pageSequence =
+    Html.div [] <|
+        List.map
+            (viewPageApiData context << Tuple.second)
+            pageSequence
+
+
+{-| -}
+viewPageApiData : Context -> ApiData DocumentsPage -> Html Msg
+viewPageApiData context apiData =
+    Html.div [] <|
+        [ case apiData of
             RemoteData.NotAsked ->
                 -- Should never happen
                 UI.Icons.spinner
