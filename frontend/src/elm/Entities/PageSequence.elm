@@ -7,8 +7,7 @@ module Entities.PageSequence exposing
 {-| Listings of documents may get queryied in several consecutive pages,
 e.g. by a UI button to load more results.
 
-The type `PageSequence` represents such a sequence of pages
-as it is managed by the cache.
+The type `PageSequence` represents such a sequence of pages as it is stored in the cache.
 
 The segmentation of the listing into pages reflects the history of requests to prolong the listing.
 
@@ -19,24 +18,26 @@ The segmentation of the listing into pages reflects the history of requests to p
 
 -}
 
+import Array exposing (Array)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
-import List.Extra
 import RemoteData exposing (RemoteData(..))
 import Types exposing (Window)
 import Types.ApiData exposing (ApiData)
 import Types.Needs as Needs exposing (Status(..))
 
 
-{-| The type `PageSequence` represents a sequence of pages that are stiched together for a listing
+{-| The type `PageSequence` represents a sequence of pages as they are queried from the API
 -}
 type PageSequence
     = PageSequence InternalSegments Bool
 
 
 type alias InternalSegments =
-    List ( Int, ApiData DocumentsPage )
+    Array ( Int, ApiData DocumentsPage )
 
 
+{-| A list of segments as it is used to view the listing
+-}
 type alias PresentationSegments =
     List (ApiData (List DocumentResult))
 
@@ -45,66 +46,50 @@ type alias PresentationSegments =
 -}
 init : PageSequence
 init =
-    PageSequence [] False
+    PageSequence Array.empty False
 
 
 {-| Construct a subsequence that comprises the given window of the listing.
 -}
-presentationSegments :
-    Int
-    -> PageSequence
-    -> PresentationSegments
-presentationSegments limit (PageSequence segments complete) =
-    let
-        step : Int -> InternalSegments -> PresentationSegments
-        step length list =
-            case list of
-                [] ->
-                    []
+presentationSegments : Int -> PageSequence -> PresentationSegments
+presentationSegments limit (PageSequence array complete) =
+    foldrWithLimit
+        (\lengthSoFar ( elementLength, elementApiData ) accu ->
+            RemoteData.map
+                (\documentsPage ->
+                    documentsPage.content
+                        |> (if (limit - lengthSoFar) >= elementLength then
+                                identity
 
-                (( elementLength, elementApiData ) as element) :: tail ->
-                    if limit <= length then
-                        []
-
-                    else
-                        RemoteData.map
-                            (\documentsPage ->
-                                List.take
-                                    (limit - length)
-                                    documentsPage.content
-                            )
-                            elementApiData
-                            :: step (length + elementLength) tail
-    in
-    step 0 segments
+                            else
+                                List.take (limit - lengthSoFar)
+                           )
+                )
+                elementApiData
+                :: accu
+        )
+        limit
+        []
+        array
 
 
 {-| Determine if a given page sequence fulfills the needs to show a given window of a listing
 -}
 statusOfNeededWindow : Int -> PageSequence -> Needs.Status
-statusOfNeededWindow limit (PageSequence segments complete) =
-    let
-        step : Int -> InternalSegments -> Needs.Status
-        step length list =
-            case list of
-                [] ->
-                    if limit > length && not complete then
-                        NotRequested
+statusOfNeededWindow limit (PageSequence array complete) =
+    if limit > numberOfResults array && not complete then
+        NotRequested
 
-                    else
-                        Fulfilled
-
-                (( elementLength, elementApiData ) as element) :: tail ->
-                    Needs.statusPlus
-                        (if limit > length then
-                            Needs.statusFromRemoteData elementApiData
-
-                         else
-                            Fulfilled
-                        )
-                        (step (length + elementLength) tail)
-    in
-    step 0 segments
+    else
+        foldrWithLimit
+            (\lengthSoFar ( elementLength, elementApiData ) accu ->
+                Needs.statusPlus
+                    (Needs.statusFromRemoteData elementApiData)
+                    accu
+            )
+            limit
+            Fulfilled
+            array
 
 
 {-| Possibly add a new page (with state `Loading`) to the page sequence,
@@ -114,47 +99,25 @@ Also returns the page index and the window that needs to be queried in addition.
 
 -}
 requestWindow : Int -> PageSequence -> ( Maybe ( Int, Window ), PageSequence )
-requestWindow limit (PageSequence segments complete) =
+requestWindow limit ((PageSequence array complete) as pageSequence) =
     let
-        step : Int -> Int -> InternalSegments -> ( Maybe ( Int, Window ), InternalSegments )
-        step index length list =
-            case list of
-                [] ->
-                    requestWithExistingLength index length
-
-                (( elementLength, elementApiData ) as element) :: tail ->
-                    if elementApiData == NotAsked then
-                        requestWithExistingLength index length
-
-                    else
-                        let
-                            ( tailMaybeWindow, tailPageSequence ) =
-                                step (index + 1) (length + elementLength) tail
-                        in
-                        ( tailMaybeWindow
-                        , element :: tailPageSequence
-                        )
-
-        requestWithExistingLength index length =
-            if limit > length then
-                ( Just ( index, { offset = length, limit = limit - length } )
-                , [ ( limit - length
-                    , Loading
-                    )
-                  ]
-                )
-
-            else
-                ( Nothing
-                , []
-                )
+        currentLength =
+            numberOfResults array
     in
-    if complete then
-        ( Nothing, PageSequence segments True )
+    if complete || limit <= currentLength then
+        ( Nothing
+        , pageSequence
+        )
 
     else
-        step 0 0 segments
-            |> Tuple.mapSecond (\resultSegments -> PageSequence resultSegments False)
+        ( Just
+            ( Array.length array
+            , { offset = currentLength, limit = limit - currentLength }
+            )
+        , PageSequence
+            (Array.push ( limit - currentLength, Loading ) array)
+            False
+        )
 
 
 {-| Update a page (most likely the last one) of the sequence after recieving the query's result.
@@ -162,7 +125,7 @@ requestWindow limit (PageSequence segments complete) =
 updatePageResult : Int -> Window -> ApiData DocumentsPage -> PageSequence -> PageSequence
 updatePageResult pageIndex window apiData (PageSequence segments complete) =
     PageSequence
-        (List.Extra.setAt
+        (Array.set
             pageIndex
             ( window.limit, apiData )
             segments
@@ -173,3 +136,32 @@ updatePageResult pageIndex window apiData (PageSequence segments complete) =
                 (\documentsPage -> not documentsPage.hasNextPage)
                 apiData
         )
+
+
+numberOfResults : InternalSegments -> Int
+numberOfResults array =
+    Array.foldl
+        (\( elementLength, elementApiData ) sum ->
+            elementLength + sum
+        )
+        0
+        array
+
+
+foldrWithLimit : (Int -> ( Int, ApiData DocumentsPage ) -> b -> b) -> Int -> b -> InternalSegments -> b
+foldrWithLimit fn limit start array =
+    let
+        step : Int -> Int -> b
+        step length index =
+            if limit <= length then
+                start
+
+            else
+                case Array.get index array of
+                    Nothing ->
+                        start
+
+                    Just (( elementLength, elementApiData ) as element) ->
+                        fn length element (step (length + elementLength) (index + 1))
+    in
+    step 0 0
