@@ -192,16 +192,19 @@ view context model =
                 , context.selection
                 )
             )
+        , viewFooter context
         ]
 
 
 {-| -}
 viewPageSequence : Context -> PageSequence -> Html Msg
 viewPageSequence context pageSequence =
-    Html.div [] <|
-        List.map
-            (viewPageApiData context)
-            (PageSequence.toList pageSequence)
+    Html.div []
+        (PageSequence.toList pageSequence
+            |> List.map
+                (viewPageApiData context)
+            |> List.intersperse (Html.hr [] [])
+        )
 
 
 {-| -}
@@ -227,14 +230,12 @@ viewPageApiData context apiData =
 viewDocumentsPage : Context -> DocumentsPage -> Html Msg
 viewDocumentsPage context documentsPage =
     Html.div []
-        [ -- viewNumberOfResults page,
-          Html.div
+        [ Html.div
             [ Html.Attributes.class "listing" ]
             (List.map
                 (viewDocumentResult context)
                 documentsPage.content
             )
-        , viewPaginationButtons context.config documentsPage
         ]
 
 
@@ -357,8 +358,8 @@ viewAttribute attribute =
             Html.text ""
 
 
-viewPaginationButtons : Config -> DocumentsPage -> Html Msg
-viewPaginationButtons config documentsPage =
+viewFooter : Context -> Html Msg
+viewFooter context =
     let
         viewButton : Localization.Translations -> Msg -> Bool -> Html Msg
         viewButton label msg enabled =
@@ -367,19 +368,13 @@ viewPaginationButtons config documentsPage =
                 , Html.Attributes.disabled (not enabled)
                 , Html.Events.onClick msg
                 ]
-                [ Localization.text config label ]
+                [ Localization.text context.config label ]
     in
     Html.div
         [ Html.Attributes.style "margin" "4px 0px 8px 0px"
         , Html.Attributes.class "input-group"
         ]
-        [ viewButton { en = "First", de = "zum Anfang" }
-            (PickPosition First)
-            (documentsPage.offset /= 0)
-        , viewButton { en = "Prev", de = "zurück" }
-            (PickPosition Previous)
-            (documentsPage.offset /= 0)
-        , viewButton { en = "Next", de = "weiter" }
+        [ viewButton { en = "More", de = "mehr" }
             (PickPosition Next)
-            documentsPage.hasNextPage
+            True
         ]

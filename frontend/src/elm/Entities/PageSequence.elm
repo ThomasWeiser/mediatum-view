@@ -49,7 +49,7 @@ toList (PageSequence pageSequence) =
     List.map Tuple.second pageSequence
 
 
-{-| Determine if a given page sequence fullfills the needs to show a given window of a listing
+{-| Determine if a given page sequence fulfills the needs to show a given window of a listing
 -}
 statusOfNeededWindow : Window -> PageSequence -> Needs.Status
 statusOfNeededWindow window (PageSequence pageSequence) =
