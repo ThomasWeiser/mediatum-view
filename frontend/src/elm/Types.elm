@@ -2,9 +2,9 @@ module Types exposing
     ( FolderDisplay(..)
     , NodeType(..)
     , Window
-    , WindowPage, sectionOfWindowPage
     , DocumentIdFromSearch
     , orderingWindow, orderingDocumentIdFromSearch
+    , WindowPage
     )
 
 {-| Some general types used throughout the application.
@@ -16,14 +16,13 @@ Note that certain other types, which are entities representing query results, ar
 @docs FolderDisplay
 @docs NodeType
 @docs Window
-@docs WindowPage, sectionOfWindowPage
+@docs WindowPagesectionOfWindowPage
 @docs DocumentIdFromSearch
 
 @docs orderingWindow, orderingDocumentIdFromSearch
 
 -}
 
-import Basics.Extra
 import Ordering exposing (Ordering)
 import Types.Id as Id exposing (DocumentId)
 import Types.SearchTerm exposing (SearchTerm)
@@ -60,33 +59,6 @@ type alias WindowPage itemModel =
     { offset : Int
     , hasNextPage : Bool
     , content : List itemModel
-    }
-
-
-{-| Get a section of a WindowPage.
-
-The cuttong points of the section are defined by a Window, whose coordinates are relative to the WindowPage.
-
-The resulting WindowPage cannot exceed the original WindowPage.
-
--}
-sectionOfWindowPage : Window -> WindowPage itemModel -> WindowPage itemModel
-sectionOfWindowPage window page =
-    let
-        pageLength =
-            List.length page.content
-
-        windowOffset =
-            window.offset |> Basics.Extra.atLeast 0
-
-        windowLimit =
-            window.limit
-                |> Basics.Extra.atLeast 0
-                |> Basics.Extra.atMost (window.offset + window.limit)
-    in
-    { offset = page.offset + (windowOffset |> Basics.Extra.atMost pageLength)
-    , hasNextPage = (windowOffset + windowLimit < pageLength) || page.hasNextPage
-    , content = page.content |> List.drop windowOffset |> List.take windowLimit
     }
 
 

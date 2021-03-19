@@ -1,5 +1,6 @@
 module Entities.PageSequence exposing
-    ( PageSequence, init, windowAsList
+    ( PageSequence, init
+    , PresentationSegments, presentationSegments
     , statusOfNeededWindow, requestWindow, updatePageResult
     )
 
@@ -11,13 +12,14 @@ as it is managed by the cache.
 
 The segmentation of the listing into pages reflects the history of requests to prolong the listing.
 
-@docs PageSequence, init, windowAsList
+@docs PageSequence, init
+@docs PresentationSegments, presentationSegments
 
 @docs statusOfNeededWindow, requestWindow, updatePageResult
 
 -}
 
-import Entities.DocumentResults exposing (DocumentsPage)
+import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import List.Extra
 import RemoteData exposing (RemoteData(..))
 import Types exposing (Window)
@@ -28,11 +30,15 @@ import Types.Needs as Needs exposing (Status(..))
 {-| The type `PageSequence` represents a sequence of pages that are stiched together for a listing
 -}
 type PageSequence
-    = PageSequence Segments Bool
+    = PageSequence InternalSegments Bool
 
 
-type alias Segments =
+type alias InternalSegments =
     List ( Int, ApiData DocumentsPage )
+
+
+type alias PresentationSegments =
+    List (ApiData (List DocumentResult))
 
 
 {-| Return an empty page sequence
@@ -44,16 +50,13 @@ init =
 
 {-| Construct a subsequence that comprises the given window of the listing.
 -}
-
-
-
--- TODO
-
-
-windowAsList : Int -> PageSequence -> List (ApiData DocumentsPage)
-windowAsList limit (PageSequence segments complete) =
+presentationSegments :
+    Int
+    -> PageSequence
+    -> PresentationSegments
+presentationSegments limit (PageSequence segments complete) =
     let
-        step : Int -> Segments -> List (ApiData DocumentsPage)
+        step : Int -> InternalSegments -> PresentationSegments
         step length list =
             case list of
                 [] ->
@@ -63,15 +66,12 @@ windowAsList limit (PageSequence segments complete) =
                     if limit <= length then
                         []
 
-                    else if 0 >= length + elementLength then
-                        step (length + elementLength) tail
-
                     else
                         RemoteData.map
-                            (Types.sectionOfWindowPage
-                                { offset = 0 - length
-                                , limit = limit
-                                }
+                            (\documentsPage ->
+                                List.take
+                                    (limit - length)
+                                    documentsPage.content
                             )
                             elementApiData
                             :: step (length + elementLength) tail
@@ -84,7 +84,7 @@ windowAsList limit (PageSequence segments complete) =
 statusOfNeededWindow : Int -> PageSequence -> Needs.Status
 statusOfNeededWindow limit (PageSequence segments complete) =
     let
-        step : Int -> Segments -> Needs.Status
+        step : Int -> InternalSegments -> Needs.Status
         step length list =
             case list of
                 [] ->
@@ -108,7 +108,7 @@ statusOfNeededWindow limit (PageSequence segments complete) =
 
 
 {-| Possibly add a new page (with state `Loading`) to the page sequence,
-so that the whole given window is covered by the sequence.
+so that the whole limit is covered by the sequence.
 
 Also returns the page index and the window that needs to be queried in addition.
 
@@ -116,7 +116,7 @@ Also returns the page index and the window that needs to be queried in addition.
 requestWindow : Int -> PageSequence -> ( Maybe ( Int, Window ), PageSequence )
 requestWindow limit (PageSequence segments complete) =
     let
-        step : Int -> Int -> Segments -> ( Maybe ( Int, Window ), Segments )
+        step : Int -> Int -> InternalSegments -> ( Maybe ( Int, Window ), InternalSegments )
         step index length list =
             case list of
                 [] ->

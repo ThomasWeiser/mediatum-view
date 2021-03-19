@@ -26,7 +26,7 @@ module UI.Article.Listing exposing
 import Basics.Extra
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
-import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
+import Entities.DocumentResults exposing (DocumentResult)
 import Entities.Markup
 import Entities.PageSequence as PageSequence exposing (PageSequence)
 import Html exposing (Html)
@@ -182,7 +182,7 @@ view context model =
 viewPageSequence : Context -> PageSequence -> Html Msg
 viewPageSequence context pageSequence =
     Html.div []
-        (PageSequence.windowAsList context.limit pageSequence
+        (PageSequence.presentationSegments context.limit pageSequence
             |> List.map
                 (viewPageApiData context)
             |> List.intersperse (Html.hr [] [])
@@ -190,7 +190,7 @@ viewPageSequence context pageSequence =
 
 
 {-| -}
-viewPageApiData : Context -> ApiData DocumentsPage -> Html Msg
+viewPageApiData : Context -> ApiData (List DocumentResult) -> Html Msg
 viewPageApiData context apiData =
     Html.div [] <|
         [ case apiData of
@@ -209,14 +209,14 @@ viewPageApiData context apiData =
         ]
 
 
-viewDocumentsPage : Context -> DocumentsPage -> Html Msg
-viewDocumentsPage context documentsPage =
+viewDocumentsPage : Context -> List DocumentResult -> Html Msg
+viewDocumentsPage context documentResults =
     Html.div []
         [ Html.div
             [ Html.Attributes.class "listing" ]
             (List.map
                 (viewDocumentResult context)
-                documentsPage.content
+                documentResults
             )
         ]
 
