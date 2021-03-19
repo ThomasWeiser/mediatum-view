@@ -73,7 +73,7 @@ type alias Model =
 {-| -}
 type Msg
     = SelectDocument DocumentId
-    | ShiftLimit (Int -> Int)
+    | ShowMore
 
 
 
@@ -100,12 +100,12 @@ initialModel =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
-        ShiftLimit mapping ->
+        ShowMore ->
             ( model
             , Cmd.none
             , Navigate
                 (Navigation.SetLimit
-                    (mapping context.limit |> Basics.Extra.atLeast 0)
+                    (context.limit + 10)
                 )
             )
 
@@ -166,8 +166,7 @@ view context model =
     Html.div [] <|
         -- case model.iterator of
         -- Nothing ->
-        [ viewFooter context
-        , viewPageSequence context
+        [ viewPageSequence context
             (Cache.getDocumentsPages
                 context.cache
                 ( Config.getMaskName MasksConfig.MaskForListing context.config
@@ -360,13 +359,5 @@ viewFooter context =
         [ Html.Attributes.style "margin" "4px 0px 8px 0px"
         , Html.Attributes.class "input-group"
         ]
-        [ {- viewButton { en = "More", de = "mehr" }
-             (PickPosition Next)
-             True
-          -}
-          viewButtonTest "Limit = 0" (ShiftLimit (always 0))
-        , viewButtonTest "Limit + 1" (ShiftLimit ((+) 1))
-        , viewButtonTest "Limit + 4" (ShiftLimit ((+) 4))
-        , viewButtonTest "Limit - 1" (ShiftLimit ((+) -1))
-        , viewButtonTest "Limit - 4" (ShiftLimit ((+) -4))
+        [ viewButton { en = "More Results", de = "weitere Ergebnisse" } ShowMore True
         ]
