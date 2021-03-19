@@ -44,12 +44,15 @@ init =
 
 {-| Construct a subsequence that comprises the given window of the listing.
 -}
-windowAsList : Window -> PageSequence -> List (ApiData DocumentsPage)
-windowAsList window (PageSequence segments complete) =
-    let
-        neededLength =
-            window.offset + window.limit
 
+
+
+-- TODO
+
+
+windowAsList : Int -> PageSequence -> List (ApiData DocumentsPage)
+windowAsList limit (PageSequence segments complete) =
+    let
         step : Int -> Segments -> List (ApiData DocumentsPage)
         step length list =
             case list of
@@ -57,17 +60,17 @@ windowAsList window (PageSequence segments complete) =
                     []
 
                 (( elementLength, elementApiData ) as element) :: tail ->
-                    if window.offset + window.limit <= length then
+                    if limit <= length then
                         []
 
-                    else if window.offset >= length + elementLength then
+                    else if 0 >= length + elementLength then
                         step (length + elementLength) tail
 
                     else
                         RemoteData.map
                             (Types.sectionOfWindowPage
-                                { offset = window.offset - length
-                                , limit = window.limit
+                                { offset = 0 - length
+                                , limit = limit
                                 }
                             )
                             elementApiData
@@ -78,17 +81,14 @@ windowAsList window (PageSequence segments complete) =
 
 {-| Determine if a given page sequence fulfills the needs to show a given window of a listing
 -}
-statusOfNeededWindow : Window -> PageSequence -> Needs.Status
-statusOfNeededWindow window (PageSequence segments complete) =
+statusOfNeededWindow : Int -> PageSequence -> Needs.Status
+statusOfNeededWindow limit (PageSequence segments complete) =
     let
-        neededLength =
-            window.offset + window.limit
-
         step : Int -> Segments -> Needs.Status
         step length list =
             case list of
                 [] ->
-                    if neededLength > length && not complete then
+                    if limit > length && not complete then
                         NotRequested
 
                     else
@@ -96,7 +96,7 @@ statusOfNeededWindow window (PageSequence segments complete) =
 
                 (( elementLength, elementApiData ) as element) :: tail ->
                     Needs.statusPlus
-                        (if neededLength > length then
+                        (if limit > length then
                             Needs.statusFromRemoteData elementApiData
 
                          else
@@ -113,12 +113,9 @@ so that the whole given window is covered by the sequence.
 Also returns the page index and the window that needs to be queried in addition.
 
 -}
-requestWindow : Window -> PageSequence -> ( Maybe ( Int, Window ), PageSequence )
-requestWindow window (PageSequence segments complete) =
+requestWindow : Int -> PageSequence -> ( Maybe ( Int, Window ), PageSequence )
+requestWindow limit (PageSequence segments complete) =
     let
-        neededLength =
-            window.offset + window.limit
-
         step : Int -> Int -> Segments -> ( Maybe ( Int, Window ), Segments )
         step index length list =
             case list of
@@ -139,9 +136,9 @@ requestWindow window (PageSequence segments complete) =
                         )
 
         requestWithExistingLength index length =
-            if neededLength > length then
-                ( Just ( index, { offset = length, limit = neededLength - length } )
-                , [ ( neededLength - length
+            if limit > length then
+                ( Just ( index, { offset = length, limit = limit - length } )
+                , [ ( limit - length
                     , Loading
                     )
                   ]

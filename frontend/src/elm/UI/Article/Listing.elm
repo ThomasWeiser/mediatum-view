@@ -35,7 +35,7 @@ import Html.Events
 import Maybe.Extra
 import Regex
 import RemoteData
-import Types exposing (Window)
+import Types
 import Types.ApiData exposing (ApiData)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
@@ -54,7 +54,7 @@ type alias Context =
     { config : Config
     , cache : Cache
     , selection : Selection
-    , window : Window
+    , limit : Int
     }
 
 
@@ -73,7 +73,6 @@ type alias Model =
 {-| -}
 type Msg
     = SelectDocument DocumentId
-    | ShiftOffset (Int -> Int)
     | ShiftLimit (Int -> Int)
 
 
@@ -101,21 +100,12 @@ initialModel =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
-        ShiftOffset mapping ->
-            ( model
-            , Cmd.none
-            , Navigate
-                (Navigation.SetOffset
-                    (mapping context.window.offset |> Basics.Extra.atLeast 0)
-                )
-            )
-
         ShiftLimit mapping ->
             ( model
             , Cmd.none
             , Navigate
                 (Navigation.SetLimit
-                    (mapping context.window.limit |> Basics.Extra.atLeast 0)
+                    (mapping context.limit |> Basics.Extra.atLeast 0)
                 )
             )
 
@@ -192,7 +182,7 @@ view context model =
 viewPageSequence : Context -> PageSequence -> Html Msg
 viewPageSequence context pageSequence =
     Html.div []
-        (PageSequence.windowAsList context.window pageSequence
+        (PageSequence.windowAsList context.limit pageSequence
             |> List.map
                 (viewPageApiData context)
             |> List.intersperse (Html.hr [] [])
@@ -374,13 +364,7 @@ viewFooter context =
              (PickPosition Next)
              True
           -}
-          viewButtonTest "Offset = 0" (ShiftOffset (always 0))
-        , viewButtonTest "Offset + 1" (ShiftOffset ((+) 1))
-        , viewButtonTest "Offset + 4" (ShiftOffset ((+) 4))
-        , viewButtonTest "Offset - 1" (ShiftOffset ((+) -1))
-        , viewButtonTest "Offset - 4" (ShiftOffset ((+) -4))
-        , Html.br [] []
-        , viewButtonTest "Limit = 0" (ShiftLimit (always 0))
+          viewButtonTest "Limit = 0" (ShiftLimit (always 0))
         , viewButtonTest "Limit + 1" (ShiftLimit ((+) 1))
         , viewButtonTest "Limit + 4" (ShiftLimit ((+) 4))
         , viewButtonTest "Limit - 1" (ShiftLimit ((+) -1))

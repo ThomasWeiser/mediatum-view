@@ -98,7 +98,7 @@ type Need
     | NeedSubfolders (List FolderId)
     | NeedGenericNode String NodeId
     | NeedDocumentFromSearch String DocumentIdFromSearch
-    | NeedDocumentsPage String Selection Window
+    | NeedDocumentsPage String Selection Int
     | NeedFolderCounts Selection
     | NeedFacets Selection (List Aspect)
 
@@ -194,9 +194,9 @@ statusOfNeed config cache need =
             get cache.documents ( maskName, documentIdFromSearch )
                 |> Needs.statusFromRemoteData
 
-        NeedDocumentsPage maskName selection window ->
+        NeedDocumentsPage maskName selection limit ->
             getDocumentsPages cache ( maskName, selection )
-                |> PageSequence.statusOfNeededWindow window
+                |> PageSequence.statusOfNeededWindow limit
 
         NeedFolderCounts selection ->
             get cache.folderCounts selection
@@ -301,11 +301,11 @@ requestNeed config need cache =
                 (Api.Queries.documentDetails maskName documentIdFromSearch needResidence)
             )
 
-        NeedDocumentsPage maskName selection window ->
+        NeedDocumentsPage maskName selection limit ->
             let
                 ( maybeIndexAndNeededWindow, newPageSequence ) =
                     PageSequence.requestWindow
-                        window
+                        limit
                         (getDocumentsPages cache ( maskName, selection ))
             in
             ( { cache

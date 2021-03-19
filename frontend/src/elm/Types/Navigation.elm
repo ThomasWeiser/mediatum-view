@@ -27,7 +27,6 @@ type Navigation
     | ShowListingWithSearchAndFtsFilter GlobalFts FtsFilters Sorting
     | ShowListingWithAddedFacetFilter Aspect String
     | ShowListingWithRemovedFacetFilter Aspect
-    | SetOffset Int
     | SetLimit Int
 
 
@@ -56,14 +55,11 @@ alterRoute cache navigation route =
                     Route.TwoIds idOne _ ->
                         Route.OneId idOne
             , parameters =
-                parametersWithOffset0
+                parameters
             }
 
         parameters =
             route.parameters
-
-        parametersWithOffset0 =
-            { parameters | offset = 0 }
     in
     case navigation of
         ListOfNavigations listOfNavigations ->
@@ -87,7 +83,7 @@ alterRoute cache navigation route =
         ShowListingWithSearchAndFtsFilter globalFts ftsFilters sorting ->
             { listingRoute
                 | parameters =
-                    { parametersWithOffset0
+                    { parameters
                         | globalFts = globalFts
                         , sorting = sorting
                         , ftsFilters = ftsFilters
@@ -97,7 +93,7 @@ alterRoute cache navigation route =
         ShowListingWithAddedFacetFilter aspect value ->
             { listingRoute
                 | parameters =
-                    { parametersWithOffset0
+                    { parameters
                         | facetFilters =
                             FilterList.insert aspect value parameters.facetFilters
                     }
@@ -106,16 +102,10 @@ alterRoute cache navigation route =
         ShowListingWithRemovedFacetFilter aspect ->
             { listingRoute
                 | parameters =
-                    { parametersWithOffset0
+                    { parameters
                         | facetFilters =
                             FilterList.remove aspect parameters.facetFilters
                     }
-            }
-
-        SetOffset offset ->
-            { route
-                | parameters =
-                    { parameters | offset = offset }
             }
 
         SetLimit limit ->

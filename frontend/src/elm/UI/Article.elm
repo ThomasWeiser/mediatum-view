@@ -98,7 +98,7 @@ initialModel presentation =
         CollectionPresentation folderId ->
             { content = CollectionModel UI.Article.Collection.initialModel }
 
-        ListingPresentation selection window ->
+        ListingPresentation selection limit ->
             { content = ListingModel UI.Article.Listing.initialModel }
 
 
@@ -137,13 +137,13 @@ needs config facetAspects presentation =
         CollectionPresentation folderId ->
             Types.Needs.none
 
-        ListingPresentation selection window ->
+        ListingPresentation selection limit ->
             Types.Needs.sequence
                 (Types.Needs.atomic <|
                     Cache.NeedDocumentsPage
                         (Config.getMaskName MasksConfig.MaskForListing config)
                         selection
-                        window
+                        limit
                 )
                 (Types.Needs.batch
                     [ Types.Needs.atomic <| Cache.NeedFolderCounts selection
@@ -165,7 +165,7 @@ folderCountsForQuery context =
         CollectionPresentation folderId ->
             Nothing
 
-        ListingPresentation selection window ->
+        ListingPresentation selection limit ->
             Cache.Derive.folderCountsOnPath context.config context.cache selection
                 |> Just
 
@@ -194,14 +194,14 @@ update context msg model =
             , NoReturn
             )
 
-        ( ListingMsg subMsg, ListingModel subModel, ListingPresentation selection window ) ->
+        ( ListingMsg subMsg, ListingModel subModel, ListingPresentation selection limit ) ->
             let
                 ( subModel1, subCmd, subReturn ) =
                     UI.Article.Listing.update
                         { config = context.config
                         , cache = context.cache
                         , selection = selection
-                        , window = window
+                        , limit = limit
                         }
                         subMsg
                         subModel
@@ -289,12 +289,12 @@ viewContent context model =
                 subModel
                 |> Html.map CollectionMsg
 
-        ( ListingModel subModel, ListingPresentation selection window ) ->
+        ( ListingModel subModel, ListingPresentation selection limit ) ->
             UI.Article.Listing.view
                 { config = context.config
                 , cache = context.cache
                 , selection = selection
-                , window = window
+                , limit = limit
                 }
                 subModel
                 |> Html.map ListingMsg

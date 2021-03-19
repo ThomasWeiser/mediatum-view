@@ -50,7 +50,6 @@ type alias RouteParameters =
     , sorting : Sorting
     , ftsFilters : FtsFilters
     , facetFilters : FacetFilters
-    , offset : Int
     , limit : Int
     }
 
@@ -78,7 +77,6 @@ emptyParameters config =
     , sorting = config.defaultSorting
     , ftsFilters = Selection.initFtsFilters
     , facetFilters = Selection.initFacetFilters
-    , offset = 0
     , limit = config.defaultPageSize
     }
 
