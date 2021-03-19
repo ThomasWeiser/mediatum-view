@@ -45,6 +45,7 @@ import Types.Route as Route
 import Types.Route.Url
 import Types.Selection exposing (Selection)
 import UI.Icons
+import Utils
 import Utils.Html
 
 
@@ -162,17 +163,19 @@ update context msg model =
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
-    Html.div [] <|
-        -- case model.iterator of
-        -- Nothing ->
-        [ viewPageSequence context
-            (Cache.getDocumentsPages
+    let
+        pageSequence =
+            Cache.getDocumentsPages
                 context.cache
                 ( Config.getMaskName MasksConfig.MaskForListing context.config
                 , context.selection
                 )
-            )
-        , viewFooter context
+    in
+    Html.div [] <|
+        -- case model.iterator of
+        -- Nothing ->
+        [ viewPageSequence context pageSequence
+        , viewFooter context pageSequence
         ]
 
 
@@ -338,8 +341,8 @@ viewAttribute attribute =
             Html.text ""
 
 
-viewFooter : Context -> Html Msg
-viewFooter context =
+viewFooter : Context -> PageSequence -> Html Msg
+viewFooter context pageSequence =
     let
         viewButton : Localization.Translations -> Msg -> Bool -> Html Msg
         viewButton label msg enabled =
@@ -353,10 +356,23 @@ viewFooter context =
         viewButtonTest : String -> Msg -> Html Msg
         viewButtonTest text msg =
             viewButton { en = text, de = text } msg True
+
+        canShowMore =
+            PageSequence.canShowMore context.limit pageSequence
     in
-    Html.div
-        [ Html.Attributes.style "margin" "4px 0px 8px 0px"
-        , Html.Attributes.class "input-group"
-        ]
-        [ viewButton { en = "More Results", de = "weitere Ergebnisse" } ShowMore True
-        ]
+    if canShowMore then
+        Html.div
+            [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+            , Html.Attributes.class "input-group"
+            ]
+            [ viewButton { en = "More Results", de = "weitere Ergebnisse" } ShowMore True ]
+
+    else
+        Html.div
+            [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+            , Html.Attributes.class "no-more-results"
+            ]
+            [ Html.hr [] []
+            , Localization.text context.config
+                { en = "No More Results", de = "keine weiteren Ergebnisse" }
+            ]

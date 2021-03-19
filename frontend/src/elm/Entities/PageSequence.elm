@@ -1,6 +1,6 @@
 module Entities.PageSequence exposing
     ( PageSequence, init
-    , PresentationSegments, presentationSegments
+    , PresentationSegments, presentationSegments, canShowMore
     , statusOfNeededWindow, requestWindow, updatePageResult
     )
 
@@ -12,7 +12,7 @@ The type `PageSequence` represents such a sequence of pages as it is stored in t
 The segmentation of the listing into pages reflects the history of requests to prolong the listing.
 
 @docs PageSequence, init
-@docs PresentationSegments, presentationSegments
+@docs PresentationSegments, presentationSegments, canShowMore
 
 @docs statusOfNeededWindow, requestWindow, updatePageResult
 
@@ -71,6 +71,11 @@ presentationSegments limit (PageSequence array complete) =
         limit
         []
         array
+
+
+canShowMore : Int -> PageSequence -> Bool
+canShowMore limit (PageSequence array complete) =
+    not complete || limit < numberOfResults array
 
 
 {-| Determine if a given page sequence fulfills the needs to show a given window of a listing
