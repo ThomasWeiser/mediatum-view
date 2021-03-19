@@ -2,9 +2,9 @@ module Types exposing
     ( FolderDisplay(..)
     , NodeType(..)
     , Window
+    , WindowPage
     , DocumentIdFromSearch
     , orderingWindow, orderingDocumentIdFromSearch
-    , WindowPage
     )
 
 {-| Some general types used throughout the application.
@@ -16,7 +16,7 @@ Note that certain other types, which are entities representing query results, ar
 @docs FolderDisplay
 @docs NodeType
 @docs Window
-@docs WindowPagesectionOfWindowPage
+@docs WindowPage
 @docs DocumentIdFromSearch
 
 @docs orderingWindow, orderingDocumentIdFromSearch
