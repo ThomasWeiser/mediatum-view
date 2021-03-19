@@ -73,20 +73,12 @@ type alias Model =
 {-| -}
 type Msg
     = SelectDocument DocumentId
-    | PickPosition PaginationPosition
+    | ShiftOffset (Int -> Int)
+    | ShiftLimit (Int -> Int)
 
 
 
 -- | IteratorMsg Iterator.Msg
-
-
-type PaginationPosition
-    = First
-    | Previous
-    | Next
-
-
-
 {-
    iteratorContext : Context -> Model -> Iterator.Context DocumentResult
    iteratorContext context model =
@@ -109,23 +101,22 @@ initialModel =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
-        PickPosition position ->
-            let
-                newOffset =
-                    case position of
-                        First ->
-                            0
-
-                        Previous ->
-                            (context.window.offset - context.window.limit)
-                                |> Basics.Extra.atLeast 0
-
-                        Next ->
-                            context.window.offset + context.window.limit
-            in
+        ShiftOffset mapping ->
             ( model
             , Cmd.none
-            , Navigate (Navigation.SetOffset newOffset)
+            , Navigate
+                (Navigation.SetOffset
+                    (mapping context.window.offset |> Basics.Extra.atLeast 0)
+                )
+            )
+
+        ShiftLimit mapping ->
+            ( model
+            , Cmd.none
+            , Navigate
+                (Navigation.SetLimit
+                    (mapping context.window.limit |> Basics.Extra.atLeast 0)
+                )
             )
 
         SelectDocument documentId ->
@@ -185,7 +176,8 @@ view context model =
     Html.div [] <|
         -- case model.iterator of
         -- Nothing ->
-        [ viewPageSequence context
+        [ viewFooter context
+        , viewPageSequence context
             (Cache.getDocumentsPages
                 context.cache
                 ( Config.getMaskName MasksConfig.MaskForListing context.config
@@ -200,7 +192,7 @@ view context model =
 viewPageSequence : Context -> PageSequence -> Html Msg
 viewPageSequence context pageSequence =
     Html.div []
-        (PageSequence.toList pageSequence
+        (PageSequence.windowAsList context.window pageSequence
             |> List.map
                 (viewPageApiData context)
             |> List.intersperse (Html.hr [] [])
@@ -369,12 +361,28 @@ viewFooter context =
                 , Html.Events.onClick msg
                 ]
                 [ Localization.text context.config label ]
+
+        viewButtonTest : String -> Msg -> Html Msg
+        viewButtonTest text msg =
+            viewButton { en = text, de = text } msg True
     in
     Html.div
         [ Html.Attributes.style "margin" "4px 0px 8px 0px"
         , Html.Attributes.class "input-group"
         ]
-        [ viewButton { en = "More", de = "mehr" }
-            (PickPosition Next)
-            True
+        [ {- viewButton { en = "More", de = "mehr" }
+             (PickPosition Next)
+             True
+          -}
+          viewButtonTest "Offset = 0" (ShiftOffset (always 0))
+        , viewButtonTest "Offset + 1" (ShiftOffset ((+) 1))
+        , viewButtonTest "Offset + 4" (ShiftOffset ((+) 4))
+        , viewButtonTest "Offset - 1" (ShiftOffset ((+) -1))
+        , viewButtonTest "Offset - 4" (ShiftOffset ((+) -4))
+        , Html.br [] []
+        , viewButtonTest "Limit = 0" (ShiftLimit (always 0))
+        , viewButtonTest "Limit + 1" (ShiftLimit ((+) 1))
+        , viewButtonTest "Limit + 4" (ShiftLimit ((+) 4))
+        , viewButtonTest "Limit - 1" (ShiftLimit ((+) -1))
+        , viewButtonTest "Limit - 4" (ShiftLimit ((+) -4))
         ]

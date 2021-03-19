@@ -1,5 +1,5 @@
 module Entities.PageSequence exposing
-    ( PageSequence, init, toList
+    ( PageSequence, init, windowAsList
     , statusOfNeededWindow, requestWindow, updatePageResult
     )
 
@@ -11,7 +11,7 @@ as it is managed by the cache.
 
 The segmentation of the listing into pages reflects the history of requests to prolong the listing.
 
-@docs PageSequence, init, toList
+@docs PageSequence, init, windowAsList
 
 @docs statusOfNeededWindow, requestWindow, updatePageResult
 
@@ -42,11 +42,38 @@ init =
     PageSequence []
 
 
-{-| Return the list of pages, given as `ApiData DocumentsPage`
+{-| Construct a subsequence that comprises the given window of the listing.
 -}
-toList : PageSequence -> List (ApiData DocumentsPage)
-toList (PageSequence pageSequence) =
-    List.map Tuple.second pageSequence
+windowAsList : Window -> PageSequence -> List (ApiData DocumentsPage)
+windowAsList window (PageSequence pageSequence) =
+    let
+        neededLength =
+            window.offset + window.limit
+
+        step : Int -> PageSequenceIntern -> List (ApiData DocumentsPage)
+        step length sequence =
+            case sequence of
+                [] ->
+                    []
+
+                (( elementLength, elementApiData ) as element) :: tail ->
+                    if window.offset + window.limit <= length then
+                        []
+
+                    else if window.offset >= length + elementLength then
+                        step (length + elementLength) tail
+
+                    else
+                        RemoteData.map
+                            (Types.sectionOfWindowPage
+                                { offset = window.offset - length
+                                , limit = window.limit
+                                }
+                            )
+                            elementApiData
+                            :: step (length + elementLength) tail
+    in
+    step 0 pageSequence
 
 
 {-| Determine if a given page sequence fulfills the needs to show a given window of a listing
