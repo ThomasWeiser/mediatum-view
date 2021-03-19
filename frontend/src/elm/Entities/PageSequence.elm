@@ -28,10 +28,10 @@ import Types.Needs as Needs exposing (Status(..))
 {-| The type `PageSequence` represents a sequence of pages that are stiched together for a listing
 -}
 type PageSequence
-    = PageSequence PageSequenceIntern
+    = PageSequence Segments Bool
 
 
-type alias PageSequenceIntern =
+type alias Segments =
     List ( Int, ApiData DocumentsPage )
 
 
@@ -39,20 +39,20 @@ type alias PageSequenceIntern =
 -}
 init : PageSequence
 init =
-    PageSequence []
+    PageSequence [] False
 
 
 {-| Construct a subsequence that comprises the given window of the listing.
 -}
 windowAsList : Window -> PageSequence -> List (ApiData DocumentsPage)
-windowAsList window (PageSequence pageSequence) =
+windowAsList window (PageSequence segments complete) =
     let
         neededLength =
             window.offset + window.limit
 
-        step : Int -> PageSequenceIntern -> List (ApiData DocumentsPage)
-        step length sequence =
-            case sequence of
+        step : Int -> Segments -> List (ApiData DocumentsPage)
+        step length list =
+            case list of
                 [] ->
                     []
 
@@ -73,22 +73,22 @@ windowAsList window (PageSequence pageSequence) =
                             elementApiData
                             :: step (length + elementLength) tail
     in
-    step 0 pageSequence
+    step 0 segments
 
 
 {-| Determine if a given page sequence fulfills the needs to show a given window of a listing
 -}
 statusOfNeededWindow : Window -> PageSequence -> Needs.Status
-statusOfNeededWindow window (PageSequence pageSequence) =
+statusOfNeededWindow window (PageSequence segments complete) =
     let
         neededLength =
             window.offset + window.limit
 
-        step : Int -> PageSequenceIntern -> Needs.Status
-        step length sequence =
-            case sequence of
+        step : Int -> Segments -> Needs.Status
+        step length list =
+            case list of
                 [] ->
-                    if neededLength > length then
+                    if neededLength > length && not complete then
                         NotRequested
 
                     else
@@ -104,7 +104,7 @@ statusOfNeededWindow window (PageSequence pageSequence) =
                         )
                         (step (length + elementLength) tail)
     in
-    step 0 pageSequence
+    step 0 segments
 
 
 {-| Possibly add a new page (with state `Loading`) to the page sequence,
@@ -114,14 +114,14 @@ Also returns the page index and the window that needs to be queried in addition.
 
 -}
 requestWindow : Window -> PageSequence -> ( Maybe ( Int, Window ), PageSequence )
-requestWindow window (PageSequence pageSequence) =
+requestWindow window (PageSequence segments complete) =
     let
         neededLength =
             window.offset + window.limit
 
-        step : Int -> Int -> PageSequenceIntern -> ( Maybe ( Int, Window ), PageSequenceIntern )
-        step index length sequence =
-            case sequence of
+        step : Int -> Int -> Segments -> ( Maybe ( Int, Window ), Segments )
+        step index length list =
+            case list of
                 [] ->
                     requestWithExistingLength index length
 
@@ -152,16 +152,27 @@ requestWindow window (PageSequence pageSequence) =
                 , []
                 )
     in
-    step 0 0 pageSequence
-        |> Tuple.mapSecond PageSequence
+    if complete then
+        ( Nothing, PageSequence segments True )
+
+    else
+        step 0 0 segments
+            |> Tuple.mapSecond (\resultSegments -> PageSequence resultSegments False)
 
 
 {-| Update a page (most likely the last one) of the sequence after recieving the query's result.
 -}
 updatePageResult : Int -> Window -> ApiData DocumentsPage -> PageSequence -> PageSequence
-updatePageResult pageIndex window apiData (PageSequence pageSequence) =
-    List.Extra.setAt
-        pageIndex
-        ( window.limit, apiData )
-        pageSequence
-        |> PageSequence
+updatePageResult pageIndex window apiData (PageSequence segments complete) =
+    PageSequence
+        (List.Extra.setAt
+            pageIndex
+            ( window.limit, apiData )
+            segments
+        )
+        (complete
+            || RemoteData.unwrap
+                False
+                (\documentsPage -> not documentsPage.hasNextPage)
+                apiData
+        )
