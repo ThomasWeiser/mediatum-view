@@ -200,6 +200,9 @@ button.filter-button, .filter-inputs {
 .attribute .highlight {
   color: red;
 }
+.no-more-results {
+  font-style: italic;
+}
 .folder-list {
   list-style-type: none;
   padding-left: 0;
