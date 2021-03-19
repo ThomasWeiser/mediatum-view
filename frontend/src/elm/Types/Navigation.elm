@@ -13,6 +13,7 @@ module Types.Navigation exposing
 import Cache exposing (Cache)
 import Cache.Derive
 import Types.Aspect exposing (Aspect)
+import Types.Config exposing (Config)
 import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.Route as Route exposing (Route)
@@ -35,8 +36,8 @@ type Navigation
 In some cases this uses knowledge about node types from the cache.
 
 -}
-alterRoute : Cache -> Navigation -> Route -> Route
-alterRoute cache navigation route =
+alterRoute : Config -> Cache -> Navigation -> Route -> Route
+alterRoute config cache navigation route =
     let
         listingRoute =
             { path =
@@ -55,15 +56,18 @@ alterRoute cache navigation route =
                     Route.TwoIds idOne _ ->
                         Route.OneId idOne
             , parameters =
-                parameters
+                parametersWithDefaultLimit
             }
 
         parameters =
             route.parameters
+
+        parametersWithDefaultLimit =
+            { parameters | limit = config.defaultPageSize }
     in
     case navigation of
         ListOfNavigations listOfNavigations ->
-            List.foldl (alterRoute cache) route listOfNavigations
+            List.foldl (alterRoute config cache) route listOfNavigations
 
         ShowDocument folderId documentId ->
             { route
