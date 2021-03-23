@@ -77,7 +77,7 @@ emptyParameters config =
     , sorting = config.defaultSorting
     , ftsFilters = Selection.initFtsFilters
     , facetFilters = Selection.initFacetFilters
-    , limit = config.defaultPageSize
+    , limit = config.defaultLimit
     }
 
 

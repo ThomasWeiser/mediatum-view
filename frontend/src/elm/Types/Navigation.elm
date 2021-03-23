@@ -63,7 +63,7 @@ alterRoute config cache navigation route =
             route.parameters
 
         parametersWithDefaultLimit =
-            { parameters | limit = config.defaultPageSize }
+            { parameters | limit = config.defaultLimit }
     in
     case navigation of
         ListOfNavigations listOfNavigations ->

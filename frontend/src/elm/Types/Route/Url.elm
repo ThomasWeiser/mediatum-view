@@ -190,7 +190,7 @@ toString config route =
             ++ Maybe.Extra.values
                 [ buildParameterIfNotDefault
                     (Builder.int "limit")
-                    config.defaultPageSize
+                    config.defaultLimit
                     route.parameters.limit
                 ]
         )

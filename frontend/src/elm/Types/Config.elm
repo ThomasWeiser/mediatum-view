@@ -35,7 +35,7 @@ type alias Config =
     { uiLanguage : Language
     , serverConfigAdopted : Bool
     , toplevelFolderIds : List FolderId
-    , defaultPageSize : Int
+    , defaultLimit : Int
     , defaultSorting : Selection.Sorting
     , numberOfFacetValues : Int
     , ftsAspects : List FtsAspectConfig
@@ -51,7 +51,7 @@ init =
     { uiLanguage = Localization.LangEn
     , serverConfigAdopted = False
     , toplevelFolderIds = []
-    , defaultPageSize = 10
+    , defaultLimit = 10
     , defaultSorting = Selection.ByRank
     , numberOfFacetValues = 20
     , ftsAspects = []
@@ -81,8 +81,8 @@ updateFromServerSetup serverSetup config =
         | serverConfigAdopted = True
         , toplevelFolderIds =
             serverSetup.config.toplevelFolderIds |> Maybe.withDefault config.toplevelFolderIds
-        , defaultPageSize =
-            serverSetup.config.defaultPageSize |> Maybe.withDefault config.defaultPageSize
+        , defaultLimit =
+            serverSetup.config.defaultLimit |> Maybe.withDefault config.defaultLimit
         , defaultSorting =
             serverSetup.config.defaultSorting |> Maybe.withDefault config.defaultSorting
         , numberOfFacetValues =
