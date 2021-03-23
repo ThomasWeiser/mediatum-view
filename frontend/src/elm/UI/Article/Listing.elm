@@ -362,11 +362,30 @@ viewFooter context pageSequence =
             PageSequence.canShowMore context.limit pageSequence
     in
     if canShowMore then
-        Html.div
-            [ Html.Attributes.style "margin" "4px 0px 8px 0px"
-            , Html.Attributes.class "input-group"
-            ]
-            [ viewButton { en = "More Results", de = "weitere Ergebnisse" } ShowMore True ]
+        if context.limit < context.config.maxLimit then
+            Html.div
+                [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+                , Html.Attributes.class "input-group"
+                ]
+                [ viewButton
+                    { en = "More Results"
+                    , de = "weitere Ergebnisse"
+                    }
+                    ShowMore
+                    True
+                ]
+
+        else
+            Html.div
+                [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+                , Html.Attributes.class "no-more-results"
+                ]
+                [ Html.hr [] []
+                , Localization.text context.config
+                    { en = "Maximum Number of Results Reached"
+                    , de = "maximale Anzahl von Ergebnissen erreicht"
+                    }
+                ]
 
     else
         Html.div
@@ -375,5 +394,7 @@ viewFooter context pageSequence =
             ]
             [ Html.hr [] []
             , Localization.text context.config
-                { en = "No More Results", de = "keine weiteren Ergebnisse" }
+                { en = "No More Results"
+                , de = "keine weiteren Ergebnisse"
+                }
             ]

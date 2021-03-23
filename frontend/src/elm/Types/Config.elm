@@ -36,6 +36,7 @@ type alias Config =
     , serverConfigAdopted : Bool
     , toplevelFolderIds : List FolderId
     , defaultLimit : Int
+    , maxLimit : Int
     , defaultSorting : Selection.Sorting
     , numberOfFacetValues : Int
     , ftsAspects : List FtsAspectConfig
@@ -52,6 +53,7 @@ init =
     , serverConfigAdopted = False
     , toplevelFolderIds = []
     , defaultLimit = 10
+    , maxLimit = 1000
     , defaultSorting = Selection.ByRank
     , numberOfFacetValues = 20
     , ftsAspects = []
@@ -83,6 +85,8 @@ updateFromServerSetup serverSetup config =
             serverSetup.config.toplevelFolderIds |> Maybe.withDefault config.toplevelFolderIds
         , defaultLimit =
             serverSetup.config.defaultLimit |> Maybe.withDefault config.defaultLimit
+        , maxLimit =
+            serverSetup.config.maxLimit |> Maybe.withDefault config.maxLimit
         , defaultSorting =
             serverSetup.config.defaultSorting |> Maybe.withDefault config.defaultSorting
         , numberOfFacetValues =

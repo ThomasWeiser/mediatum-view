@@ -32,6 +32,7 @@ create type api.masks_purpose_config as
 create type api.setup_config as
     ( toplevel_folders int4[]
     , default_limit integer
+    , max_limit integer
     , default_sorting api.fts_sorting
     , number_of_facet_values integer
     , static_fts_aspects api.fts_aspect_config[]
@@ -67,6 +68,7 @@ create or replace function api.setup_config
             where name = 'hsb'
         ) as toplevel_folders,
     	10 as default_limit,
+    	1000 as max_limit,
     	'by_rank'::api.fts_sorting as default_sorting,
         20 as number_of_facet_values,
         (select array(

@@ -97,6 +97,8 @@ serverSetup =
                         |> SelectionSet.with
                             Mediatum.Object.SetupConfig.defaultLimit
                         |> SelectionSet.with
+                            Mediatum.Object.SetupConfig.maxLimit
+                        |> SelectionSet.with
                             (Mediatum.Object.SetupConfig.defaultSorting
                                 |> SelectionSet.map
                                     (Maybe.map
