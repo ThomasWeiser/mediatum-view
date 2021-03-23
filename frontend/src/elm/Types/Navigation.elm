@@ -87,7 +87,7 @@ alterRoute config cache navigation route =
         ShowListingWithSearchAndFtsFilter globalFts ftsFilters sorting ->
             { listingRoute
                 | parameters =
-                    { parameters
+                    { parametersWithDefaultLimit
                         | globalFts = globalFts
                         , sorting = sorting
                         , ftsFilters = ftsFilters
@@ -97,7 +97,7 @@ alterRoute config cache navigation route =
         ShowListingWithAddedFacetFilter aspect value ->
             { listingRoute
                 | parameters =
-                    { parameters
+                    { parametersWithDefaultLimit
                         | facetFilters =
                             FilterList.insert aspect value parameters.facetFilters
                     }
@@ -106,7 +106,7 @@ alterRoute config cache navigation route =
         ShowListingWithRemovedFacetFilter aspect ->
             { listingRoute
                 | parameters =
-                    { parameters
+                    { parametersWithDefaultLimit
                         | facetFilters =
                             FilterList.remove aspect parameters.facetFilters
                     }
