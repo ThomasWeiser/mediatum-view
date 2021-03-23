@@ -24,6 +24,7 @@ module UI.Article.Listing exposing
 -- import Pagination.Offset.Page as Page exposing (Page, PageResult)
 
 import Cache exposing (Cache)
+import Constants
 import Entities.Document as Document exposing (Document)
 import Entities.DocumentResults exposing (DocumentResult)
 import Entities.Markup
@@ -105,7 +106,7 @@ update context msg model =
             , Cmd.none
             , Navigate
                 (Navigation.SetLimit
-                    (context.limit + 10)
+                    (Constants.incrementLimitOnShowMore context.limit)
                 )
             )
 
