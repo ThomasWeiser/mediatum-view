@@ -227,8 +227,8 @@ viewDocument context model document residence =
         ]
 
 
-viewSearchMatching : Config -> Maybe Document.SearchMatching -> Html msg
-viewSearchMatching config =
+viewSearchMatching_1 : Config -> Maybe Document.SearchMatching -> Html msg
+viewSearchMatching_1 config =
     Maybe.Extra.unwrap
         { en = "", de = "" }
         (\{ attributes, fulltext } ->
@@ -252,6 +252,42 @@ viewSearchMatching config =
                     }
         )
         >> Localization.text config
+
+
+viewSearchMatching : Config -> Maybe Document.SearchMatching -> Html msg
+viewSearchMatching config maybeSearchMatching =
+    case maybeSearchMatching of
+        Nothing ->
+            Html.text ""
+
+        Just { attributes, fulltext } ->
+            let
+                block translations =
+                    Html.div
+                        [ Html.Attributes.class "search-matching" ]
+                        [ Localization.text config translations ]
+            in
+            case ( attributes, fulltext ) of
+                ( False, False ) ->
+                    Html.text ""
+
+                ( True, False ) ->
+                    block
+                        { en = "Search term found in metadata"
+                        , de = "Suchbegriff in Metadaten gefunden"
+                        }
+
+                ( False, True ) ->
+                    block
+                        { en = "Search term found in fulltext"
+                        , de = "Suchbegriff in Volltext gefunden"
+                        }
+
+                ( True, True ) ->
+                    block
+                        { en = "Search term found in metadata and fulltext"
+                        , de = "Suchbegriff in Metadaten und Volltext gefunden"
+                        }
 
 
 viewAttribute : Document.Attribute -> Html msg
