@@ -4,7 +4,7 @@ module UI.Icons exposing
     , leaf
     , search
     , clear
-    , spinner
+    , spinner, spinnerSmall
     )
 
 {-|
@@ -14,11 +14,12 @@ module UI.Icons exposing
 @docs leaf
 @docs search
 @docs clear
-@docs spinner
+@docs spinner, spinnerSmall
 
 -}
 
 import Html exposing (Html)
+import Html.Attributes
 import Svg exposing (Svg)
 import Svg.Attributes
 
@@ -129,3 +130,12 @@ spinner =
                 ]
             ]
         ]
+
+
+{-| Smaller icon for waiting state. Uses CSS animation
+-}
+spinnerSmall : Html msg
+spinnerSmall =
+    Html.div
+        [ Html.Attributes.class "spinner-small" ]
+        []

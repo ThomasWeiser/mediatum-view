@@ -137,10 +137,10 @@ viewFacet context selection facetAspectConfig =
                     of
                         RemoteData.NotAsked ->
                             -- Should never happen
-                            UI.Icons.spinner
+                            UI.Icons.spinnerSmall
 
                         RemoteData.Loading ->
-                            UI.Icons.spinner
+                            UI.Icons.spinnerSmall
 
                         RemoteData.Failure error ->
                             Utils.Html.viewApiError error
