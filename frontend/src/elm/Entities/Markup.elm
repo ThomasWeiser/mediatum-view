@@ -35,6 +35,8 @@ empty =
     Markup []
 
 
+{-| Determine if the Markup contains no text
+-}
 isEmpty : Markup -> Bool
 isEmpty (Markup segments) =
     segments == []

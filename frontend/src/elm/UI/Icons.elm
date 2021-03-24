@@ -4,8 +4,7 @@ module UI.Icons exposing
     , leaf
     , search
     , clear
-    , spinner
-    , spinnerSmall
+    , spinner, spinnerSmall
     )
 
 {-|
@@ -15,7 +14,7 @@ module UI.Icons exposing
 @docs leaf
 @docs search
 @docs clear
-@docs spinner
+@docs spinner, spinnerSmall
 
 -}
 
