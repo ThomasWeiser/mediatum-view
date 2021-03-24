@@ -324,3 +324,43 @@ ul.folder-list ul.folder-list {
 .facet-value-count {
   margin-left: 0.2em;
 }
+
+
+
+/* Small waiting animation with three dots */
+.spinner-small, .spinner-small::before, .spinner-small::after {
+  width: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background-color:#333;
+  color: #333;
+  animation: spinner-small 1s infinite alternate;
+}
+
+.spinner-small {
+  position: relative;
+  animation-delay: .5s;
+  margin: 0.5em;
+}
+
+.spinner-small::before, .spinner-small::after {
+  content: '';
+  display: inline-block;
+  position: absolute;
+  top: 0;
+}
+
+.spinner-small::before {
+  left: -7px;
+  animation-delay: 0s;
+}
+
+.spinner-small::after {
+  left: 7px;
+  animation-delay: 1s;
+}
+
+@keyframes spinner-small {
+  0% { background-color: #333; }
+  60%, 100% { background-color: #ccc; }
+}

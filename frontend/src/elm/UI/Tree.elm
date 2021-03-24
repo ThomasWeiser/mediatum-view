@@ -138,10 +138,10 @@ viewListOfFolders context model maybeFolderCounts apiDataFolderIds =
     Html.ul [ Html.Attributes.class "folder-list" ] <|
         case apiDataFolderIds of
             RemoteData.NotAsked ->
-                [ Html.li [] [ Html.text "..." ] ]
+                [ Html.li [] [ UI.Icons.spinnerSmall ] ]
 
             RemoteData.Loading ->
-                [ Html.li [] [ Html.text "..." ] ]
+                [ Html.li [] [ UI.Icons.spinnerSmall ] ]
 
             RemoteData.Success folderIds ->
                 List.map
@@ -160,10 +160,10 @@ viewFolderTree context model maybeFolderCounts id =
     Html.div [] <|
         case Cache.get context.cache.folders id of
             RemoteData.NotAsked ->
-                [ Html.text "..." ]
+                [ UI.Icons.spinnerSmall ]
 
             RemoteData.Loading ->
-                [ Html.text "..." ]
+                [ UI.Icons.spinnerSmall ]
 
             RemoteData.Success folder ->
                 let
