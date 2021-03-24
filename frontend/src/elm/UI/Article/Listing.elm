@@ -397,7 +397,7 @@ viewFooter context pageSequence =
                     , de = "weitere Ergebnisse"
                     }
                     ShowMore
-                    True
+                    (PageSequence.remoteDataIsSuccess pageSequence)
                 ]
 
         else
