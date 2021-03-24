@@ -245,17 +245,6 @@ updateSubModel context msg model =
                         UI.Navigate navigation ->
                             ( model1, SubReturnNavigate navigation )
 
-                        UI.UpdateCacheWithModifiedDocument document ->
-                            ( { model1
-                                | cache =
-                                    Cache.updateWithModifiedDocument
-                                        (Config.getMaskName MasksConfig.MaskForDetails context.config)
-                                        document
-                                        model1.cache
-                              }
-                            , SubNoReturn
-                            )
-
                         UI.SwitchUILanguage language ->
                             ( model1, SubReturnSwitchUILanguage language )
             in

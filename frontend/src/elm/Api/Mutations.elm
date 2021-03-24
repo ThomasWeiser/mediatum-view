@@ -21,7 +21,7 @@ import Mediatum.Object.UpdateDocumentAttributePayload
 import Types.Id as Id exposing (DocumentId)
 
 
-{-| Set an attribute of a document selected by a mediaTUM id.
+{-| Set an attribute of a document selected by a mediaTUM id. (Currently not used.)
 
 Returns the new document details based on the mediaTUM mask "nodebig".
 
