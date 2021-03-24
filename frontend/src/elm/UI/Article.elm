@@ -26,7 +26,7 @@ module UI.Article exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
-import Entities.Document exposing (Document)
+import Entities.Document
 import Entities.FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
@@ -61,7 +61,6 @@ type alias Context =
 type Return
     = NoReturn
     | Navigate Navigation
-    | UpdateCacheWithModifiedDocument Document
 
 
 {-| -}
@@ -235,9 +234,6 @@ update context msg model =
             , case subReturn of
                 UI.Article.Details.NoReturn ->
                     NoReturn
-
-                UI.Article.Details.UpdateCacheWithModifiedDocument document ->
-                    UpdateCacheWithModifiedDocument document
             )
 
         _ ->

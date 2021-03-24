@@ -1,7 +1,6 @@
 module Cache exposing
     ( Cache, get, getDocumentsPages
     , Need(..), Needs, targetNeeds
-    , updateWithModifiedDocument
     , Msg(..), init, update
     , orderingSelectionWindow, orderingMaskSelection, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
     )
@@ -26,11 +25,6 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 # Declaring required data
 
 @docs Need, Needs, targetNeeds
-
-
-# Modifying data locally (preliminary)
-
-@docs updateWithModifiedDocument
 
 
 # Elm architecture standard functions
@@ -344,19 +338,6 @@ requestNeed config need cache =
                 (ApiResponseFacets ( selection, aspects ))
                 (Api.Queries.selectionFacets selection aspects config.numberOfFacetValues)
             )
-
-
-{-| Insert or update a document into the table `Cache.documents`.
--}
-updateWithModifiedDocument : String -> Document -> Cache -> Cache
-updateWithModifiedDocument maskName document cache =
-    { cache
-        | documents =
-            Sort.Dict.insert
-                ( maskName, DocumentIdFromSearch document.id Nothing )
-                (Success document)
-                cache.documents
-    }
 
 
 {-| Digest a Msg (i.e. a response from the API layer) and update the data in the cache accordingly.

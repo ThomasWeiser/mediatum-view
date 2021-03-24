@@ -48,7 +48,6 @@ Mainly used to report navigational requests.
 type Return
     = NoReturn
     | Navigate Navigation
-    | UpdateCacheWithModifiedDocument Document
     | SwitchUILanguage Language
 
 
@@ -228,9 +227,6 @@ update context msg model =
 
                 UI.Article.Navigate navigation ->
                     Navigate navigation
-
-                UI.Article.UpdateCacheWithModifiedDocument document ->
-                    UpdateCacheWithModifiedDocument document
             )
 
 
