@@ -41,8 +41,7 @@ import Types.Config.MasksConfig as MasksConfig
 import Types.Id exposing (DocumentId)
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
-import Types.Route as Route
-import Types.Route.Url
+import Types.Route exposing (Route)
 import Types.Selection exposing (Selection)
 import UI.Icons
 import Utils.Html
@@ -52,6 +51,7 @@ import Utils.Html
 type alias Context =
     { config : Config
     , cache : Cache
+    , route : Route
     , selection : Selection
     , limit : Int
     }
@@ -238,20 +238,17 @@ viewDocumentResult context documentResult =
 
 viewDocument : Context -> Int -> Document -> Html Msg
 viewDocument context number document =
-    Html.div [ Html.Attributes.class "document" ]
+    Html.a
+        [ Html.Attributes.class "document"
+        , Navigation.alterRouteHref
+            context
+            (Navigation.ShowDocument context.selection.scope document.id)
+        ]
         [ Html.div [ Html.Attributes.class "metadatatype" ]
             [ Html.span [ Html.Attributes.class "result-number" ]
-                [ Html.text <| String.fromInt number ++ ". " ]
-            , Html.a
-                [ Html.Attributes.class "metadatatype"
-                , Route.initDocumentInFolder
-                    context.config
-                    context.selection.scope
-                    document.id
-                    |> Types.Route.Url.toString context.config
-                    |> Html.Attributes.href
+                [ Html.text <| String.fromInt number ++ ". "
+                , Html.text document.metadatatypeName
                 ]
-                [ Html.text document.metadatatypeName ]
             ]
         , Html.div
             [ Html.Attributes.class "attributes"
