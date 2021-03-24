@@ -187,6 +187,7 @@ update context msg model =
                     let
                         route =
                             Navigation.alterRoute
+                                context.config
                                 model1.cache
                                 navigation
                                 model1.route

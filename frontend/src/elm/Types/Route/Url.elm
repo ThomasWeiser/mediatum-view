@@ -95,13 +95,6 @@ parseQueryParameter ( name, value ) routeParameters =
                 _ ->
                     Nothing
 
-        "offset" ->
-            String.toInt value
-                |> Maybe.map
-                    (\intValue ->
-                        { routeParameters | offset = intValue }
-                    )
-
         "limit" ->
             String.toInt value
                 |> Maybe.map
@@ -196,12 +189,8 @@ toString config route =
                 (FilterList.toList route.parameters.facetFilters)
             ++ Maybe.Extra.values
                 [ buildParameterIfNotDefault
-                    (Builder.int "offset")
-                    0
-                    route.parameters.offset
-                , buildParameterIfNotDefault
                     (Builder.int "limit")
-                    config.defaultPageSize
+                    config.defaultLimit
                     route.parameters.limit
                 ]
         )

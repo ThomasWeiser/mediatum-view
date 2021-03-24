@@ -29,7 +29,7 @@ type alias DocumentResult =
     }
 
 
-{-| A [page](Types#WindowPage) of document results
+{-| A [page](Types#WindowPage) of document results as received from the API
 -}
 type alias DocumentsPage =
     Types.WindowPage DocumentResult

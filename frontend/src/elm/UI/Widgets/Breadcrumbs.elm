@@ -59,6 +59,7 @@ view context maybeLineage =
                                             Html.a
                                                 [ context.route
                                                     |> Navigation.alterRoute
+                                                        context.config
                                                         context.cache
                                                         (Navigation.ShowListingWithFolder folderId)
                                                     |> Types.Route.Url.toString context.config

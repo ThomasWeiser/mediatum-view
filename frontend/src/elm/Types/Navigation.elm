@@ -13,6 +13,7 @@ module Types.Navigation exposing
 import Cache exposing (Cache)
 import Cache.Derive
 import Types.Aspect exposing (Aspect)
+import Types.Config exposing (Config)
 import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.Route as Route exposing (Route)
@@ -27,7 +28,6 @@ type Navigation
     | ShowListingWithSearchAndFtsFilter GlobalFts FtsFilters Sorting
     | ShowListingWithAddedFacetFilter Aspect String
     | ShowListingWithRemovedFacetFilter Aspect
-    | SetOffset Int
     | SetLimit Int
 
 
@@ -36,8 +36,8 @@ type Navigation
 In some cases this uses knowledge about node types from the cache.
 
 -}
-alterRoute : Cache -> Navigation -> Route -> Route
-alterRoute cache navigation route =
+alterRoute : Config -> Cache -> Navigation -> Route -> Route
+alterRoute config cache navigation route =
     let
         listingRoute =
             { path =
@@ -56,18 +56,18 @@ alterRoute cache navigation route =
                     Route.TwoIds idOne _ ->
                         Route.OneId idOne
             , parameters =
-                parametersWithOffset0
+                parametersWithDefaultLimit
             }
 
         parameters =
             route.parameters
 
-        parametersWithOffset0 =
-            { parameters | offset = 0 }
+        parametersWithDefaultLimit =
+            { parameters | limit = config.defaultLimit }
     in
     case navigation of
         ListOfNavigations listOfNavigations ->
-            List.foldl (alterRoute cache) route listOfNavigations
+            List.foldl (alterRoute config cache) route listOfNavigations
 
         ShowDocument folderId documentId ->
             { route
@@ -87,7 +87,7 @@ alterRoute cache navigation route =
         ShowListingWithSearchAndFtsFilter globalFts ftsFilters sorting ->
             { listingRoute
                 | parameters =
-                    { parametersWithOffset0
+                    { parametersWithDefaultLimit
                         | globalFts = globalFts
                         , sorting = sorting
                         , ftsFilters = ftsFilters
@@ -97,7 +97,7 @@ alterRoute cache navigation route =
         ShowListingWithAddedFacetFilter aspect value ->
             { listingRoute
                 | parameters =
-                    { parametersWithOffset0
+                    { parametersWithDefaultLimit
                         | facetFilters =
                             FilterList.insert aspect value parameters.facetFilters
                     }
@@ -106,16 +106,10 @@ alterRoute cache navigation route =
         ShowListingWithRemovedFacetFilter aspect ->
             { listingRoute
                 | parameters =
-                    { parametersWithOffset0
+                    { parametersWithDefaultLimit
                         | facetFilters =
                             FilterList.remove aspect parameters.facetFilters
                     }
-            }
-
-        SetOffset offset ->
-            { route
-                | parameters =
-                    { parameters | offset = offset }
             }
 
         SetLimit limit ->

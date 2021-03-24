@@ -123,13 +123,13 @@ suite =
                         , Types.Route.Url.toString testConfig >> Expect.equal "/123/456?search=foo"
                         ]
             , describe "It should remove search terms that are empty"
-                [ testString "https://example.com/?search=&offset=7" <|
+                [ testString "https://example.com/?search=&limit=7" <|
                     Url.fromString
                         >> Maybe.andThen (Types.Route.Url.parseUrl testConfig)
                         >> justAndThenAll
                             [ .parameters >> .globalFts >> nothing
-                            , .parameters >> .offset >> Expect.equal 7
-                            , Types.Route.Url.toString testConfig >> Expect.equal "/?offset=7"
+                            , .parameters >> .limit >> Expect.equal 7
+                            , Types.Route.Url.toString testConfig >> Expect.equal "/?limit=7"
                             ]
                 ]
             , describe "It should remove whitespace on both sides of a search term"
@@ -143,12 +143,12 @@ suite =
                             ]
                 ]
             , describe "It should remove search terms that are only whitespace"
-                [ testString "https://example.com/?search=%20%20&offset=7" <|
+                [ testString "https://example.com/?search=%20%20&limit=7" <|
                     Url.fromString
                         >> Maybe.andThen (Types.Route.Url.parseUrl testConfig)
                         >> justAndThenAll
                             [ .parameters >> .globalFts >> nothing
-                            , .parameters >> .offset >> Expect.equal 7
+                            , .parameters >> .limit >> Expect.equal 7
                             ]
                 ]
             , describe "It should remove fts filter terms that are empty or only whitespace"

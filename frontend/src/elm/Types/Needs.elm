@@ -2,7 +2,7 @@ module Types.Needs exposing
     ( Needs
     , none, atomic, batch, sequence
     , Status(..)
-    , statusFromRemoteData, statusFromListOfRemoteData
+    , statusFromRemoteData, statusFromListOfRemoteData, statusPlus
     , StatusOfAtomicNeed, RequestAtomicNeed, target
     , flatten
     )
@@ -22,7 +22,7 @@ The type variable `n` stands for an atomic need.
 # Status of a need
 
 @docs Status
-@docs statusFromRemoteData, statusFromListOfRemoteData
+@docs statusFromRemoteData, statusFromListOfRemoteData, statusPlus
 
 
 # Targeting needs
@@ -131,6 +131,8 @@ type Status
     | OnGoing
 
 
+{-| Combine two Status values
+-}
 statusPlus : Status -> Status -> Status
 statusPlus statusOne statusTwo =
     if statusOne == NotRequested || statusTwo == NotRequested then

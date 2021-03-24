@@ -33,7 +33,7 @@ import Cache exposing (Cache)
 import Cache.Derive
 import Maybe.Extra
 import RemoteData
-import Types exposing (DocumentIdFromSearch, FolderDisplay(..), NodeType(..), Window)
+import Types exposing (DocumentIdFromSearch, FolderDisplay(..), NodeType(..))
 import Types.Config exposing (Config)
 import Types.FilterList as FilterList
 import Types.Id as Id exposing (FolderId, NodeId)
@@ -46,7 +46,7 @@ type Presentation
     = GenericPresentation (Maybe ( NodeId, Maybe DocumentIdFromSearch ))
     | CollectionPresentation FolderId
     | DocumentPresentation (Maybe FolderId) DocumentIdFromSearch
-    | ListingPresentation Selection Window
+    | ListingPresentation Selection Int
 
 
 {-| -}
@@ -64,7 +64,7 @@ getFolderId cache presentation =
         CollectionPresentation folderId ->
             Just folderId
 
-        ListingPresentation selection window ->
+        ListingPresentation selection limit ->
             Just selection.scope
 
 
@@ -88,12 +88,7 @@ fromRoute config cache route =
                     , facetFilters = route.parameters.facetFilters
                     , sorting = route.parameters.sorting
                     }
-                    windowOfRoute
-
-        windowOfRoute =
-            { offset = route.parameters.offset
-            , limit = route.parameters.limit
-            }
+                    route.parameters.limit
     in
     case route.path of
         Route.NoId ->

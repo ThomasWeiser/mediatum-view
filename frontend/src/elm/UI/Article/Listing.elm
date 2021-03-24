@@ -23,18 +23,20 @@ module UI.Article.Listing exposing
 -- import Article.Iterator as Iterator
 -- import Pagination.Offset.Page as Page exposing (Page, PageResult)
 
-import Basics.Extra
 import Cache exposing (Cache)
+import Constants
 import Entities.Document as Document exposing (Document)
-import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
+import Entities.DocumentResults exposing (DocumentResult)
 import Entities.Markup
+import Entities.PageSequence as PageSequence exposing (PageSequence)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Maybe.Extra
 import Regex
 import RemoteData
-import Types exposing (Window)
+import Types
+import Types.ApiData exposing (ApiData)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
 import Types.Id exposing (DocumentId)
@@ -44,6 +46,7 @@ import Types.Route as Route
 import Types.Route.Url
 import Types.Selection exposing (Selection)
 import UI.Icons
+import Utils
 import Utils.Html
 
 
@@ -52,7 +55,7 @@ type alias Context =
     { config : Config
     , cache : Cache
     , selection : Selection
-    , window : Window
+    , limit : Int
     }
 
 
@@ -71,20 +74,11 @@ type alias Model =
 {-| -}
 type Msg
     = SelectDocument DocumentId
-    | PickPosition PaginationPosition
+    | ShowMore
 
 
 
 -- | IteratorMsg Iterator.Msg
-
-
-type PaginationPosition
-    = First
-    | Previous
-    | Next
-
-
-
 {-
    iteratorContext : Context -> Model -> Iterator.Context DocumentResult
    iteratorContext context model =
@@ -107,23 +101,13 @@ initialModel =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
-        PickPosition position ->
-            let
-                newOffset =
-                    case position of
-                        First ->
-                            0
-
-                        Previous ->
-                            (context.window.offset - context.window.limit)
-                                |> Basics.Extra.atLeast 0
-
-                        Next ->
-                            context.window.offset + context.window.limit
-            in
+        ShowMore ->
             ( model
             , Cmd.none
-            , Navigate (Navigation.SetOffset newOffset)
+            , Navigate
+                (Navigation.SetLimit
+                    (Constants.incrementLimitOnShowMore context.limit)
+                )
             )
 
         SelectDocument documentId ->
@@ -180,17 +164,38 @@ update context msg model =
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
+    let
+        pageSequence =
+            Cache.getDocumentsPages
+                context.cache
+                ( Config.getMaskName MasksConfig.MaskForListing context.config
+                , context.selection
+                )
+    in
     Html.div [] <|
         -- case model.iterator of
         -- Nothing ->
-        [ case
-            Cache.get
-                context.cache.documentsPages
-                ( Config.getMaskName MasksConfig.MaskForListing context.config
-                , context.selection
-                , context.window
-                )
-          of
+        [ viewPageSequence context pageSequence
+        , viewFooter context pageSequence
+        ]
+
+
+{-| -}
+viewPageSequence : Context -> PageSequence -> Html Msg
+viewPageSequence context pageSequence =
+    Html.div []
+        (PageSequence.presentationSegments context.limit pageSequence
+            |> List.map
+                (viewPageApiData context)
+            |> List.intersperse (Html.hr [] [])
+        )
+
+
+{-| -}
+viewPageApiData : Context -> ApiData (List DocumentResult) -> Html Msg
+viewPageApiData context apiData =
+    Html.div [] <|
+        [ case apiData of
             RemoteData.NotAsked ->
                 -- Should never happen
                 UI.Icons.spinner
@@ -206,17 +211,15 @@ view context model =
         ]
 
 
-viewDocumentsPage : Context -> DocumentsPage -> Html Msg
-viewDocumentsPage context documentsPage =
+viewDocumentsPage : Context -> List DocumentResult -> Html Msg
+viewDocumentsPage context documentResults =
     Html.div []
-        [ -- viewNumberOfResults page,
-          Html.div
+        [ Html.div
             [ Html.Attributes.class "listing" ]
             (List.map
                 (viewDocumentResult context)
-                documentsPage.content
+                documentResults
             )
-        , viewPaginationButtons context.config documentsPage
         ]
 
 
@@ -339,8 +342,8 @@ viewAttribute attribute =
             Html.text ""
 
 
-viewPaginationButtons : Config -> DocumentsPage -> Html Msg
-viewPaginationButtons config documentsPage =
+viewFooter : Context -> PageSequence -> Html Msg
+viewFooter context pageSequence =
     let
         viewButton : Localization.Translations -> Msg -> Bool -> Html Msg
         viewButton label msg enabled =
@@ -349,19 +352,49 @@ viewPaginationButtons config documentsPage =
                 , Html.Attributes.disabled (not enabled)
                 , Html.Events.onClick msg
                 ]
-                [ Localization.text config label ]
+                [ Localization.text context.config label ]
+
+        viewButtonTest : String -> Msg -> Html Msg
+        viewButtonTest text msg =
+            viewButton { en = text, de = text } msg True
+
+        canShowMore =
+            PageSequence.canShowMore context.limit pageSequence
     in
-    Html.div
-        [ Html.Attributes.style "margin" "4px 0px 8px 0px"
-        , Html.Attributes.class "input-group"
-        ]
-        [ viewButton { en = "First", de = "zum Anfang" }
-            (PickPosition First)
-            (documentsPage.offset /= 0)
-        , viewButton { en = "Prev", de = "zurück" }
-            (PickPosition Previous)
-            (documentsPage.offset /= 0)
-        , viewButton { en = "Next", de = "weiter" }
-            (PickPosition Next)
-            documentsPage.hasNextPage
-        ]
+    if canShowMore then
+        if context.limit < context.config.maxLimit then
+            Html.div
+                [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+                , Html.Attributes.class "input-group"
+                ]
+                [ viewButton
+                    { en = "More Results"
+                    , de = "weitere Ergebnisse"
+                    }
+                    ShowMore
+                    True
+                ]
+
+        else
+            Html.div
+                [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+                , Html.Attributes.class "no-more-results"
+                ]
+                [ Html.hr [] []
+                , Localization.text context.config
+                    { en = "Maximum Number of Results Reached"
+                    , de = "maximale Anzahl von Ergebnissen erreicht"
+                    }
+                ]
+
+    else
+        Html.div
+            [ Html.Attributes.style "margin" "4px 0px 8px 0px"
+            , Html.Attributes.class "no-more-results"
+            ]
+            [ Html.hr [] []
+            , Localization.text context.config
+                { en = "No More Results"
+                , de = "keine weiteren Ergebnisse"
+                }
+            ]

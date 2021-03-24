@@ -20,7 +20,7 @@ suite =
         , testFineOrderingProperties "DocumentIdFromSearch" fuzzerDocumentIdFromSearch Types.orderingDocumentIdFromSearch
         , testFineOrderingProperties "MaskDocumentIdFromSearch" fuzzerMaskDocumentIdFromSearch Cache.orderingMaskDocumentIdFromSearch
         , testFineOrderingProperties "SelectionWindow" fuzzerSelectionWindow Cache.orderingSelectionWindow
-        , testFineOrderingProperties "MaskSelectionWindow" fuzzerMaskSelectionWindow Cache.orderingMaskSelectionWindow
+        , testFineOrderingProperties "MaskSelection" fuzzerMaskSelection Cache.orderingMaskSelection
         , testCoarseOrderingProperties "SelectionFacets" fuzzerSelectionFacets Cache.orderingSelectionFacets
         , testFineOrderingProperties "SearchMethod" fuzzerGlobalFts Selection.orderingGlobalFts
         , testFineOrderingProperties "Sorting" fuzzerSorting Selection.orderingSorting

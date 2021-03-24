@@ -22,6 +22,7 @@ Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Ro
 
 -}
 
+import Basics.Extra
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Config.FtsAspectConfig as FtsAspect
@@ -50,7 +51,6 @@ type alias RouteParameters =
     , sorting : Sorting
     , ftsFilters : FtsFilters
     , facetFilters : FacetFilters
-    , offset : Int
     , limit : Int
     }
 
@@ -78,8 +78,7 @@ emptyParameters config =
     , sorting = config.defaultSorting
     , ftsFilters = Selection.initFtsFilters
     , facetFilters = Selection.initFacetFilters
-    , offset = 0
-    , limit = config.defaultPageSize
+    , limit = config.defaultLimit
     }
 
 
@@ -89,8 +88,13 @@ In particular, make sure that the aspects used for fts filters or facet filters 
 sanitize : Config -> Route -> Route
 sanitize config route =
     let
-        parameters =
+        parameters0 =
             route.parameters
+
+        parameters =
+            { parameters0
+                | limit = parameters0.limit |> Basics.Extra.atMost config.maxLimit
+            }
     in
     { path = route.path
     , parameters =

@@ -1,10 +1,9 @@
 module Cache exposing
-    ( Cache, ApiData, get
+    ( Cache, get, getDocumentsPages
     , Need(..), Needs, targetNeeds
     , updateWithModifiedDocument
-    , ApiError, apiErrorToString
     , Msg(..), init, update
-    , orderingSelectionWindow, orderingMaskSelectionWindow, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
+    , orderingSelectionWindow, orderingMaskSelection, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
     )
 
 {-| Manage fetching and caching of all API data.
@@ -21,7 +20,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Cached Data
 
-@docs Cache, ApiData, get
+@docs Cache, get, getDocumentsPages
 
 
 # Declaring required data
@@ -34,11 +33,6 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 @docs updateWithModifiedDocument
 
 
-# Error handling
-
-@docs ApiError, apiErrorToString
-
-
 # Elm architecture standard functions
 
 @docs Msg, init, update
@@ -46,7 +40,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 
 # Internal functions exposed for testing only
 
-@docs orderingSelectionWindow, orderingMaskSelectionWindow, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
+@docs orderingSelectionWindow, orderingMaskSelection, orderingSelectionFacets, orderingMaskDocumentIdFromSearch
 
 -}
 
@@ -57,12 +51,14 @@ import Entities.DocumentResults exposing (DocumentsPage)
 import Entities.Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
+import Entities.PageSequence as PageSequence exposing (PageSequence)
 import Entities.Residence as Residence exposing (Residence)
 import List.Nonempty
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
 import Sort.Dict
 import Types exposing (DocumentIdFromSearch, NodeType(..), Window)
+import Types.ApiData exposing (ApiData)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.FacetValue exposing (FacetsValues)
@@ -71,23 +67,6 @@ import Types.Needs as Needs
 import Types.Selection as Selection exposing (Selection)
 import Utils
 import Utils.List
-
-
-{-| A specialization of [`RemoteData e a`](/packages/krisajenkins/remotedata/6.0.1/RemoteData#RemoteData)
-where the error type `e` is defined by `ApiError`.
-
-Any `RemoteData` used in this module uses this error type and is therefore an `ApiData`.
-
--}
-type alias ApiData a =
-    RemoteData ApiError a
-
-
-{-| The type of errors that may be reported in an `ApiData.Failure`.
-It's the same as `Api.Error`.
--}
-type alias ApiError =
-    Api.Error
 
 
 {-| Represents all known data (in whatever state it may be: `Loading`, `Failure` or `Success`).
@@ -106,7 +85,7 @@ type alias Cache =
     , nodeTypes : Sort.Dict.Dict NodeId (ApiData NodeType)
     , documents : Sort.Dict.Dict ( String, DocumentIdFromSearch ) (ApiData Document)
     , residence : Sort.Dict.Dict DocumentId (ApiData Residence)
-    , documentsPages : Sort.Dict.Dict ( String, Selection, Window ) (ApiData DocumentsPage)
+    , documentsPages : Sort.Dict.Dict ( String, Selection ) PageSequence
     , folderCounts : Sort.Dict.Dict Selection (ApiData FolderCounts)
     , facetsValues : Sort.Dict.Dict ( Selection, List Aspect ) (ApiData FacetsValues)
     }
@@ -119,7 +98,7 @@ type Need
     | NeedSubfolders (List FolderId)
     | NeedGenericNode String NodeId
     | NeedDocumentFromSearch String DocumentIdFromSearch
-    | NeedDocumentsPage String Selection Window
+    | NeedDocumentsPage String Selection Int
     | NeedFolderCounts Selection
     | NeedFacets Selection (List Aspect)
 
@@ -128,13 +107,6 @@ type Need
 -}
 type alias Needs =
     Needs.Needs Need
-
-
-{-| Describe an `ApiError` as text (aimed for debugging)
--}
-apiErrorToString : ApiError -> String
-apiErrorToString apiError =
-    Api.errorToString apiError
 
 
 {-| Initial cache model without any entry
@@ -146,7 +118,7 @@ init =
     , nodeTypes = Sort.Dict.empty (Utils.sorter Id.ordering)
     , documents = Sort.Dict.empty (Utils.sorter orderingMaskDocumentIdFromSearch)
     , residence = Sort.Dict.empty (Utils.sorter Id.ordering)
-    , documentsPages = Sort.Dict.empty (Utils.sorter orderingMaskSelectionWindow)
+    , documentsPages = Sort.Dict.empty (Utils.sorter orderingMaskSelection)
     , folderCounts = Sort.Dict.empty (Utils.sorter Selection.orderingSelectionModuloSorting)
     , facetsValues = Sort.Dict.empty (Utils.sorter orderingSelectionFacets)
     }
@@ -163,6 +135,17 @@ get dict key =
         |> Maybe.withDefault NotAsked
 
 
+{-| Read an entry from a lookup-table of the cache.
+
+If the given key is not yet present in the table return `RemoteData.NotAsked`.
+
+-}
+getDocumentsPages : Cache -> ( String, Selection ) -> PageSequence
+getDocumentsPages cache key =
+    Sort.Dict.get key cache.documentsPages
+        |> Maybe.withDefault PageSequence.init
+
+
 {-| The messages that the `update` function may process in response to an executed `Cmd`.
 
 Currently all messages transport some API response.
@@ -173,7 +156,7 @@ type Msg
     | ApiResponseSubfolders (List FolderId) (Api.Response (List Folder))
     | ApiResponseGenericNode String NodeId (Api.Response GenericNode)
     | ApiResponseDocumentFromSearch String DocumentIdFromSearch (Api.Response (Maybe ( Document, Maybe Residence )))
-    | ApiResponseDocumentsPage ( String, Selection, Window ) (Api.Response DocumentsPage)
+    | ApiResponseDocumentsPage ( String, Selection, ( Int, Window ) ) (Api.Response DocumentsPage)
     | ApiResponseFolderCounts Selection (Api.Response FolderCounts)
     | ApiResponseFacets ( Selection, List Aspect ) (Api.Response FacetsValues)
 
@@ -211,9 +194,9 @@ statusOfNeed config cache need =
             get cache.documents ( maskName, documentIdFromSearch )
                 |> Needs.statusFromRemoteData
 
-        NeedDocumentsPage maskName selection window ->
-            get cache.documentsPages ( maskName, selection, window )
-                |> Needs.statusFromRemoteData
+        NeedDocumentsPage maskName selection limit ->
+            getDocumentsPages cache ( maskName, selection )
+                |> PageSequence.statusOfNeededWindow limit
 
         NeedFolderCounts selection ->
             get cache.folderCounts selection
@@ -318,15 +301,26 @@ requestNeed config need cache =
                 (Api.Queries.documentDetails maskName documentIdFromSearch needResidence)
             )
 
-        NeedDocumentsPage maskName selection window ->
+        NeedDocumentsPage maskName selection limit ->
+            let
+                ( maybeIndexAndNeededWindow, newPageSequence ) =
+                    PageSequence.requestWindow
+                        limit
+                        (getDocumentsPages cache ( maskName, selection ))
+            in
             ( { cache
                 | documentsPages =
-                    Sort.Dict.insert ( maskName, selection, window ) Loading cache.documentsPages
+                    Sort.Dict.insert ( maskName, selection ) newPageSequence cache.documentsPages
               }
-            , Api.sendQueryRequest
-                (Api.withOperationName "NeedDocumentsPage")
-                (ApiResponseDocumentsPage ( maskName, selection, window ))
-                (Api.Queries.selectionDocumentsPage maskName window selection)
+            , case maybeIndexAndNeededWindow of
+                Nothing ->
+                    Cmd.none
+
+                Just ( pageIndex, neededWindow ) ->
+                    Api.sendQueryRequest
+                        (Api.withOperationName "NeedDocumentsPage")
+                        (ApiResponseDocumentsPage ( maskName, selection, ( pageIndex, neededWindow ) ))
+                        (Api.Queries.selectionDocumentsPage maskName neededWindow selection)
             )
 
         NeedFolderCounts selection ->
@@ -465,10 +459,18 @@ update config msg cache =
             , Cmd.none
             )
 
-        ApiResponseDocumentsPage maskAndSelectionAndWindow result ->
+        ApiResponseDocumentsPage ( maskName, selection, ( pageIndex, window ) ) result ->
             ( { cache
                 | documentsPages =
-                    Sort.Dict.insert maskAndSelectionAndWindow (RemoteData.fromResult result) cache.documentsPages
+                    Sort.Dict.insert
+                        ( maskName, selection )
+                        (PageSequence.updatePageResult
+                            pageIndex
+                            window
+                            (RemoteData.fromResult result)
+                            (getDocumentsPages cache ( maskName, selection ))
+                        )
+                        cache.documentsPages
               }
             , Cmd.none
             )
@@ -640,15 +642,13 @@ orderingSelectionWindow =
             (Ordering.byFieldWith Types.orderingWindow Tuple.second)
 
 
-{-| Ordering on the tuple type `( String, Selection, Window )`
+{-| Ordering on the tuple type `( String, Selection )`
 -}
-orderingMaskSelectionWindow : Ordering ( String, Selection, Window )
-orderingMaskSelectionWindow =
-    Ordering.byFieldWith Ordering.natural (\( maskName, _, _ ) -> maskName)
+orderingMaskSelection : Ordering ( String, Selection )
+orderingMaskSelection =
+    Ordering.byFieldWith Ordering.natural Tuple.first
         |> Ordering.breakTiesWith
-            (Ordering.byFieldWith Selection.orderingSelection (\( _, selection, _ ) -> selection))
-        |> Ordering.breakTiesWith
-            (Ordering.byFieldWith Types.orderingWindow (\( _, _, window ) -> window))
+            (Ordering.byFieldWith Selection.orderingSelection Tuple.second)
 
 
 {-| Ordering on the tuple type `( Selection, List String )`

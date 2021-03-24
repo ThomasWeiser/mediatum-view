@@ -95,7 +95,9 @@ serverSetup =
                                 |> SelectionSet.map (Maybe.map (List.map Id.fromInt))
                             )
                         |> SelectionSet.with
-                            Mediatum.Object.SetupConfig.defaultPageSize
+                            Mediatum.Object.SetupConfig.defaultLimit
+                        |> SelectionSet.with
+                            Mediatum.Object.SetupConfig.maxLimit
                         |> SelectionSet.with
                             (Mediatum.Object.SetupConfig.defaultSorting
                                 |> SelectionSet.map
@@ -480,10 +482,10 @@ authorSearch :
     -> FolderId
     -> String
     -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-authorSearch maskName pageSize referencePage paginationPosition folderId searchString =
+authorSearch maskName limit referencePage paginationPosition folderId searchString =
     Mediatum.Query.authorSearch
         (Pagination.Relay.Pagination.paginationArguments
-            pageSize
+            limit
             referencePage
             paginationPosition
         )
