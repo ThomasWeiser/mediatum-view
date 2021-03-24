@@ -35,7 +35,6 @@ import Html.Events
 import Maybe.Extra
 import Regex
 import RemoteData
-import Types
 import Types.ApiData exposing (ApiData)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
@@ -46,7 +45,6 @@ import Types.Route as Route
 import Types.Route.Url
 import Types.Selection exposing (Selection)
 import UI.Icons
-import Utils
 import Utils.Html
 
 
@@ -292,41 +290,61 @@ maxAttributeStringLength =
     80
 
 
+keys :
+    { author : Regex.Regex
+    , congressOrJournal : Regex.Regex
+    , title : Regex.Regex
+    , titleOrType : Regex.Regex
+    , year : Regex.Regex
+    }
+keys =
+    let
+        regex regexString =
+            Maybe.withDefault Regex.never (Regex.fromString regexString)
+    in
+    { author = regex "author"
+    , title = regex "title"
+    , congressOrJournal = regex "congress|journal"
+    , year = regex "year"
+    , titleOrType = regex "title|type"
+    }
+
+
 viewAttribute : Document.Attribute -> Html msg
 viewAttribute attribute =
     let
-        isField regexString =
-            Regex.contains
-                (Maybe.withDefault Regex.never (Regex.fromString regexString))
-                attribute.field
+        isField regex =
+            Regex.contains regex attribute.field
     in
     case attribute.value of
         Just value ->
             Html.span
                 [ Html.Attributes.classList
                     [ ( "attribute", True )
-                    , ( "author", isField "author" )
+                    , ( "author", isField keys.author )
                     , ( "title"
-                      , isField "title"
-                            && not (isField "congress|journal")
+                      , isField keys.title
+                            && not (isField keys.congressOrJournal)
                       )
                     ]
                 ]
                 (let
                     markup =
-                        Entities.Markup.view value
+                        value
+                            |> Entities.Markup.trim Constants.maxAttributeLengthInListingView
+                            |> Entities.Markup.view
                  in
-                 if isField "year" then
+                 if isField keys.year then
                     [ value |> Entities.Markup.normalizeYear |> Entities.Markup.view
                     , Html.text ". "
                     ]
 
-                 else if isField "author" then
+                 else if isField keys.author then
                     [ markup
                     , Html.text ": "
                     ]
 
-                 else if isField "title|type" then
+                 else if isField keys.titleOrType then
                     [ markup
                     , Html.text ". "
                     ]
