@@ -196,10 +196,10 @@ viewPageApiData context apiData =
         [ case apiData of
             RemoteData.NotAsked ->
                 -- Should never happen
-                UI.Icons.spinner
+                viewSpinner
 
             RemoteData.Loading ->
-                UI.Icons.spinner
+                viewSpinner
 
             RemoteData.Failure error ->
                 Utils.Html.viewApiError error
@@ -207,6 +207,13 @@ viewPageApiData context apiData =
             RemoteData.Success documentsPage ->
                 viewDocumentsPage context documentsPage
         ]
+
+
+viewSpinner : Html msg
+viewSpinner =
+    Html.div
+        [ Html.Attributes.class "text-align-center" ]
+        [ UI.Icons.spinner ]
 
 
 viewDocumentsPage : Context -> List DocumentResult -> Html Msg

@@ -256,13 +256,9 @@ ul.folder-list ul.folder-list {
 .spinner {
   width: 3em;
 }
-.article .spinner {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.text-align-center {
+  text-align: center;
 }
-
 .error {
   color: #3070b3;
 }
