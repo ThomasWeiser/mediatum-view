@@ -314,7 +314,9 @@ viewAttribute attribute =
                 ]
                 (let
                     markup =
-                        Entities.Markup.view value
+                        value
+                            |> Entities.Markup.trim Constants.maxAttributeLengthInListingView
+                            |> Entities.Markup.view
                  in
                  if isField "year" then
                     [ value |> Entities.Markup.normalizeYear |> Entities.Markup.view

@@ -2,7 +2,7 @@ module Entities.Markup exposing
     ( Markup
     , parse
     , empty, plainText, normalizeYear
-    , view
+    , trim, view
     )
 
 {-|
@@ -10,13 +10,14 @@ module Entities.Markup exposing
 @docs Markup
 @docs parse
 @docs empty, plainText, normalizeYear
-@docs view
+@docs trim, view
 
 -}
 
 import Entities.Markup.Parser exposing (Segment(..), Segments)
 import Html exposing (Html)
 import Html.Attributes
+import String.Extra
 
 
 {-| A text with markup. Internaly represented as a list of segments.
@@ -76,6 +77,42 @@ normalizeYear (Markup segments) =
                 (String.left 4)
             )
         |> Markup
+
+
+{-| Limits the length of the Markup approximately to a certain number of characters.
+
+We don't cut within Fts segments. So the result may be a bit longer then given.
+
+-}
+trim : Int -> Markup -> Markup
+trim length0 (Markup segments0) =
+    let
+        step length segments =
+            if length <= 0 then
+                []
+
+            else
+                case segments of
+                    [] ->
+                        []
+
+                    segment :: tail ->
+                        case segment of
+                            Text string ->
+                                let
+                                    trunc =
+                                        String.Extra.softEllipsis length string
+                                in
+                                if trunc == string then
+                                    Text string :: step (length - String.length string) tail
+
+                                else
+                                    [ Text trunc ]
+
+                            Fts string ->
+                                Fts string :: step (length - String.length string) tail
+    in
+    Markup (step length0 segments0)
 
 
 {-| Map markup to a Html.span element. Fts segments get marked with class "highlight".

@@ -1,12 +1,14 @@
 module Constants exposing
     ( apiUrl, graphqlOperationNamePrefix
     , incrementLimitOnShowMore
+    , maxAttributeLengthInListingView
     )
 
 {-| Configurable values
 
 @docs apiUrl, graphqlOperationNamePrefix
 @docs incrementLimitOnShowMore
+@docs maxAttributeLengthInListingView
 
 -}
 
@@ -42,3 +44,9 @@ incrementLimitOnShowMore limit =
 
     else
         ((limit + 149) // 100) * 100
+
+
+{-| -}
+maxAttributeLengthInListingView : Int
+maxAttributeLengthInListingView =
+    200
