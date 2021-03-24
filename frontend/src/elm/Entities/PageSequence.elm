@@ -73,6 +73,7 @@ presentationSegments limit (PageSequence array complete) =
         array
 
 
+{-| -}
 canShowMore : Int -> PageSequence -> Bool
 canShowMore limit (PageSequence array complete) =
     not complete || limit < numberOfResults array
