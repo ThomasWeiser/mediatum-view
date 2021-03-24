@@ -258,13 +258,17 @@ viewAttribute : Document.Attribute -> Html msg
 viewAttribute attribute =
     case attribute.value of
         Just value ->
-            Html.tr
-                [ Html.Attributes.class "attribute" ]
-                [ Html.td [] [ Html.text attribute.name ]
-                , Html.td []
-                    [ Entities.Markup.view value
+            if Entities.Markup.isEmpty value then
+                Html.text ""
+
+            else
+                Html.tr
+                    [ Html.Attributes.class "attribute" ]
+                    [ Html.td [] [ Html.text attribute.name ]
+                    , Html.td []
+                        [ Entities.Markup.view value
+                        ]
                     ]
-                ]
 
         Nothing ->
             Html.text ""

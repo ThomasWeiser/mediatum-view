@@ -2,6 +2,7 @@ module Entities.Markup exposing
     ( Markup
     , parse
     , empty, plainText, normalizeYear
+    , isEmpty
     , trim, view
     )
 
@@ -10,6 +11,7 @@ module Entities.Markup exposing
 @docs Markup
 @docs parse
 @docs empty, plainText, normalizeYear
+@docs isEmpty
 @docs trim, view
 
 -}
@@ -31,6 +33,11 @@ type Markup
 empty : Markup
 empty =
     Markup []
+
+
+isEmpty : Markup -> Bool
+isEmpty (Markup segments) =
+    segments == []
 
 
 {-| Decompose a string with markup.
