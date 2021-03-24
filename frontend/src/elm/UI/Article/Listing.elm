@@ -322,43 +322,47 @@ viewAttribute attribute =
     in
     case attribute.value of
         Just value ->
-            Html.span
-                [ Html.Attributes.classList
-                    [ ( "attribute", True )
-                    , ( "author", isField keys.author )
-                    , ( "title"
-                      , isField keys.title
-                            && not (isField keys.congressOrJournal)
-                      )
-                    ]
-                ]
-                (let
-                    markup =
-                        value
-                            |> Entities.Markup.trim Constants.maxAttributeLengthInListingView
-                            |> Entities.Markup.view
-                 in
-                 if isField keys.year then
-                    [ value |> Entities.Markup.normalizeYear |> Entities.Markup.view
-                    , Html.text ". "
-                    ]
+            if Entities.Markup.isEmpty value then
+                Html.text ""
 
-                 else if isField keys.author then
-                    [ markup
-                    , Html.text ": "
+            else
+                Html.span
+                    [ Html.Attributes.classList
+                        [ ( "attribute", True )
+                        , ( "author", isField keys.author )
+                        , ( "title"
+                          , isField keys.title
+                                && not (isField keys.congressOrJournal)
+                          )
+                        ]
                     ]
+                    (let
+                        markup =
+                            value
+                                |> Entities.Markup.trim Constants.maxAttributeLengthInListingView
+                                |> Entities.Markup.view
+                     in
+                     if isField keys.year then
+                        [ value |> Entities.Markup.normalizeYear |> Entities.Markup.view
+                        , Html.text ". "
+                        ]
 
-                 else if isField keys.titleOrType then
-                    [ markup
-                    , Html.text ". "
-                    ]
+                     else if isField keys.author then
+                        [ markup
+                        , Html.text ": "
+                        ]
 
-                 else
-                    [ Html.text (attribute.name ++ ": ")
-                    , markup
-                    , Html.text ". "
-                    ]
-                )
+                     else if isField keys.titleOrType then
+                        [ markup
+                        , Html.text ". "
+                        ]
+
+                     else
+                        [ Html.text (attribute.name ++ ": ")
+                        , markup
+                        , Html.text ". "
+                        ]
+                    )
 
         Nothing ->
             Html.text ""
