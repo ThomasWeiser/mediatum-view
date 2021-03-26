@@ -199,6 +199,7 @@ update context msg model =
                     UI.Article.Listing.update
                         { config = context.config
                         , cache = context.cache
+                        , route = context.route
                         , selection = selection
                         , limit = limit
                         }
@@ -289,6 +290,7 @@ viewContent context model =
             UI.Article.Listing.view
                 { config = context.config
                 , cache = context.cache
+                , route = context.route
                 , selection = selection
                 , limit = limit
                 }

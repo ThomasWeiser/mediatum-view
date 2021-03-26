@@ -1,22 +1,27 @@
 module Types.Navigation exposing
     ( Navigation(..)
     , alterRoute
+    , Context, alterRouteHref
     )
 
 {-| A navigation is an instruction to alter a given route in response to some user interaction.
 
 @docs Navigation
 @docs alterRoute
+@docs Context, alterRouteHref
 
 -}
 
 import Cache exposing (Cache)
 import Cache.Derive
+import Html
+import Html.Attributes
 import Types.Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.FilterList as FilterList
 import Types.Id as Id exposing (DocumentId, FolderId)
 import Types.Route as Route exposing (Route)
+import Types.Route.Url
 import Types.Selection exposing (FtsFilters, GlobalFts, Sorting)
 
 
@@ -117,3 +122,22 @@ alterRoute config cache navigation route =
                 | parameters =
                     { parameters | limit = limit }
             }
+
+
+{-| Any context type that exposes the necessary fields config, cache and route
+-}
+type alias Context c =
+    { c
+        | config : Config
+        , cache : Cache
+        , route : Route
+    }
+
+
+{-| Get a href for a link to an altered route according to a navigation.
+-}
+alterRouteHref : Context c -> Navigation -> Html.Attribute msg
+alterRouteHref context navigation =
+    alterRoute context.config context.cache navigation context.route
+        |> Types.Route.Url.toString context.config
+        |> Html.Attributes.href

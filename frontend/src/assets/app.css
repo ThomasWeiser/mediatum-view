@@ -179,11 +179,24 @@ button.filter-button, .filter-inputs {
   padding: 0.25rem .75rem;
 }
 
-
-
-
 .document {
+  display: block;
   margin: 2ex 0;
+  padding: 1px 3px;
+  border: 1px solid transparent;
+}
+.document:hover {
+  border: 1px solid #a0af00;
+}
+a.document {
+  color: unset;
+  text-decoration: unset;
+}
+a.document:hover {
+  text-decoration: unset;
+}
+.document .metadatatype {
+  color: #4889ce;
 }
 .listing .attributes {
   margin-left: 2em;

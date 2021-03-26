@@ -19,11 +19,11 @@ import Types.Config exposing (Config)
 import Types.Id exposing (FolderId)
 import Types.Navigation as Navigation
 import Types.Route exposing (Route)
-import Types.Route.Url
 import Utils.List
 
 
-{-| -}
+{-| Any context type that exposes the necessary fields config, cache and route
+-}
 type alias Context c =
     { c
         | config : Config
@@ -57,13 +57,9 @@ view context maybeLineage =
                                     |> Maybe.map
                                         (\folder ->
                                             Html.a
-                                                [ context.route
-                                                    |> Navigation.alterRoute
-                                                        context.config
-                                                        context.cache
-                                                        (Navigation.ShowListingWithFolder folderId)
-                                                    |> Types.Route.Url.toString context.config
-                                                    |> Html.Attributes.href
+                                                [ Navigation.alterRouteHref
+                                                    context
+                                                    (Navigation.ShowListingWithFolder folderId)
                                                 ]
                                                 [ Html.text folder.name ]
                                         )
