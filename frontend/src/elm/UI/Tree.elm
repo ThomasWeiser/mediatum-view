@@ -32,6 +32,7 @@ import Entities.FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Maybe.Extra
 import RemoteData
 import Sort.Dict
 import Types exposing (FolderDisplay(..))
@@ -97,8 +98,12 @@ needs context model =
 
 
 {-| -}
-updateOnPresentationFolderId : Maybe FolderId -> Model -> Model
-updateOnPresentationFolderId maybePresentationFolderId model =
+updateOnPresentationFolderId : Context -> Model -> Model
+updateOnPresentationFolderId context model =
+    let
+        maybePresentationFolderId =
+            getPresentationFolderId context
+    in
     { model
         | latestPresentationFolderId = maybePresentationFolderId
         , userCollapsedPresentationFolder =
@@ -182,16 +187,22 @@ viewFolderTree context model maybeFolderCounts id =
                     presentationFolderId =
                         getPresentationFolderId context
 
-                    isSelectedFolder =
-                        presentationFolderId == Just id
+                    expandSoleToplevelFolderOnPresentationWithoutFolder =
+                        (context.config.toplevelFolderIds == [ id ])
+                            && (presentationFolderId == Nothing)
+
+                    collapsedByUser =
+                        (model.latestPresentationFolderId == Just id)
+                            && model.userCollapsedPresentationFolder
 
                     expanded =
-                        List.member id context.config.toplevelFolderIds
-                            || (((model.latestPresentationFolderId /= Just id)
-                                    || not model.userCollapsedPresentationFolder
-                                )
+                        expandSoleToplevelFolderOnPresentationWithoutFolder
+                            || (not collapsedByUser
                                     && Cache.Derive.isOnPath context.config context.cache id presentationFolderId
                                )
+
+                    isSelectedFolder =
+                        presentationFolderId == Just id
                 in
                 [ Html.div
                     [ Html.Events.onClick (Select id) ]

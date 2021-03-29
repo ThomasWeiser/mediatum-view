@@ -20,7 +20,7 @@ import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Localization as Localization exposing (Language)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
-import Types.Presentation as Presentation exposing (Presentation(..))
+import Types.Presentation exposing (Presentation(..))
 import Types.Route exposing (Route)
 import UI.Article
 import UI.Controls
@@ -126,7 +126,10 @@ updateOnChangedPresentation context model =
             UI.Article.initialModel context.presentation
         , tree =
             UI.Tree.updateOnPresentationFolderId
-                (Presentation.getFolderId context.cache context.presentation)
+                { config = context.config
+                , cache = context.cache
+                , presentation = context.presentation
+                }
                 model.tree
     }
 
