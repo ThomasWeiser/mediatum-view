@@ -61,12 +61,21 @@ type Return
 
 {-| The model represents the UI state of the tree.
 
-By default, the presentation folder is shown in expanded state.
-If the user clicks (message `Select`) on the presentation folder we show it in collapsed state.
-If later the presentation folder changes, then we want to show it as expanded again.
+Some notes on state management:
 
-For tracking the necessary state we use `latestPresentationFolderId` and
-`userCollapsedPresentationFolder` here in the UI model.
+Selection of the tree nodes to be shown is basically informed by the context,
+notably by the current presentation folder.
+However, the expansion state of the current presentation folder if managed as a local UI state.
+
+By default, the presentation folder is shown in expanded state.
+If the user clicks on the presentation folder we show it in collapsed state.
+If later the presentation folder changes or the user clicks the collapsed folder a second time,
+then we show it in expanded state again.
+
+For tracking the necessary state we use these fields as the local UI state:
+
+  - `latestPresentationFolderId`, which is set in `updateOnPresentationFolderId`
+  - `userCollapsedPresentationFolder`, which may be modified in `update` and in `updateOnPresentationFolderId`
 
 -}
 type alias Model =
