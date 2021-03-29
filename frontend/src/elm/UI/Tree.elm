@@ -174,9 +174,10 @@ viewFolderTree context model maybeFolderCounts id =
                         presentationFolderId == Just id
 
                     expanded =
-                        Folder.isRoot folder
-                            || (model.collapsedPresentationFolder /= Just id)
-                            && Cache.Derive.isOnPath context.config context.cache id presentationFolderId
+                        List.member id context.config.toplevelFolderIds
+                            || ((model.collapsedPresentationFolder /= Just id)
+                                    && Cache.Derive.isOnPath context.config context.cache id presentationFolderId
+                               )
                 in
                 [ Html.div
                     [ Html.Events.onClick (Select id) ]
