@@ -92,6 +92,7 @@ initialModel =
 needs : Context -> Model -> Cache.Needs
 needs context model =
     getPresentationFolderId context
+        |> Maybe.Extra.orElse (List.head context.config.toplevelFolderIds)
         |> Cache.Derive.getPathAsFarAsCached context.config context.cache
         |> Cache.NeedSubfolders
         |> Types.Needs.atomic
