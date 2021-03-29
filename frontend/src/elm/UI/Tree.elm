@@ -59,7 +59,15 @@ type Return
     | UserSelection FolderId
 
 
-{-| -}
+{-| The model represents the UI state of the tree.
+
+By default, the presentation folder is shown in expanded state.
+If the user clicks (message `Select`) on the presentation folder we show it in collapsed state.
+If later the presentation folder changes, then we want to show it as expanded again.
+
+For tracking the collapsed state we use `collapsedPresentationFolder` here in the UI model.
+
+-}
 type alias Model =
     { collapsedPresentationFolder : Maybe FolderId
     }
