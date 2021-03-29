@@ -114,17 +114,23 @@ updateOnChangedRoute : Context -> Model -> Model
 updateOnChangedRoute context model =
     { model
         | controls = UI.Controls.updateFromRoute context.route model.controls
-        , tree = UI.Tree.expandPresentationFolder model.tree
     }
 
 
 {-| Update the Article to adapt to a changed presentation.
 -}
-updateOnChangedPresentation : Presentation -> Model -> Model
-updateOnChangedPresentation presentation model =
+updateOnChangedPresentation : Context -> Model -> Model
+updateOnChangedPresentation context model =
     { model
         | article =
-            UI.Article.initialModel presentation
+            UI.Article.initialModel context.presentation
+        , tree =
+            UI.Tree.updateOnPresentationFolderId
+                { config = context.config
+                , cache = context.cache
+                , presentation = context.presentation
+                }
+                model.tree
     }
 
 

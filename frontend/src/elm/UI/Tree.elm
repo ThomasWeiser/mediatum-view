@@ -5,7 +5,7 @@ module UI.Tree exposing
     , Msg
     , initialModel
     , needs
-    , expandPresentationFolder
+    , updateOnPresentationFolderId
     , update
     , view
     )
@@ -19,7 +19,7 @@ module UI.Tree exposing
 
 @docs initialModel
 @docs needs
-@docs expandPresentationFolder
+@docs updateOnPresentationFolderId
 @docs update
 @docs view
 
@@ -32,6 +32,7 @@ import Entities.FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Maybe.Extra
 import RemoteData
 import Sort.Dict
 import Types exposing (FolderDisplay(..))
@@ -41,7 +42,6 @@ import Types.Id exposing (FolderId)
 import Types.Needs
 import Types.Presentation as Presentation exposing (Presentation(..))
 import UI.Icons
-import Utils
 import Utils.Html
 
 
@@ -59,9 +59,28 @@ type Return
     | UserSelection FolderId
 
 
-{-| -}
+{-| The model represents the UI state of the tree.
+
+Some notes on state management:
+
+Selection of the tree nodes to be shown is basically informed by the context,
+notably by the current presentation folder.
+However, the expansion state of the current presentation folder if managed as a local UI state.
+
+By default, the presentation folder is shown in expanded state.
+If the user clicks on the presentation folder we show it in collapsed state.
+If later the presentation folder changes or the user clicks the collapsed folder a second time,
+then we show it in expanded state again.
+
+For tracking the necessary state we use these fields as the local UI state:
+
+  - `latestPresentationFolderId`, which is set in `updateOnPresentationFolderId`
+  - `userCollapsedPresentationFolder`, which may be modified in `update` and in `updateOnPresentationFolderId`
+
+-}
 type alias Model =
-    { collapsedPresentationFolder : Maybe FolderId
+    { latestPresentationFolderId : Maybe FolderId
+    , userCollapsedPresentationFolder : Bool
     }
 
 
@@ -73,7 +92,8 @@ type Msg
 {-| -}
 initialModel : Model
 initialModel =
-    { collapsedPresentationFolder = Nothing
+    { latestPresentationFolderId = Nothing
+    , userCollapsedPresentationFolder = False
     }
 
 
@@ -81,16 +101,27 @@ initialModel =
 needs : Context -> Model -> Cache.Needs
 needs context model =
     getPresentationFolderId context
+        |> Maybe.Extra.orElse (List.head context.config.toplevelFolderIds)
         |> Cache.Derive.getPathAsFarAsCached context.config context.cache
         |> Cache.NeedSubfolders
         |> Types.Needs.atomic
 
 
 {-| -}
-expandPresentationFolder : Model -> Model
-expandPresentationFolder model =
+updateOnPresentationFolderId : Context -> Model -> Model
+updateOnPresentationFolderId context model =
+    let
+        maybePresentationFolderId =
+            getPresentationFolderId context
+    in
     { model
-        | collapsedPresentationFolder = Nothing
+        | latestPresentationFolderId = maybePresentationFolderId
+        , userCollapsedPresentationFolder =
+            if model.latestPresentationFolderId == maybePresentationFolderId then
+                model.userCollapsedPresentationFolder
+
+            else
+                False
     }
 
 
@@ -101,11 +132,7 @@ update context msg model =
         Select id ->
             if getPresentationFolderId context == Just id then
                 ( { model
-                    | collapsedPresentationFolder =
-                        (model.collapsedPresentationFolder == Just id)
-                            |> Utils.ifElse
-                                Nothing
-                                (Just id)
+                    | userCollapsedPresentationFolder = not model.userCollapsedPresentationFolder
                   }
                 , NoReturn
                 )
@@ -170,13 +197,22 @@ viewFolderTree context model maybeFolderCounts id =
                     presentationFolderId =
                         getPresentationFolderId context
 
-                    isSelectedFolder =
-                        presentationFolderId == Just id
+                    expandSoleToplevelFolderOnPresentationWithoutFolder =
+                        (context.config.toplevelFolderIds == [ id ])
+                            && (presentationFolderId == Nothing)
+
+                    collapsedByUser =
+                        (model.latestPresentationFolderId == Just id)
+                            && model.userCollapsedPresentationFolder
 
                     expanded =
-                        Folder.isRoot folder
-                            || (model.collapsedPresentationFolder /= Just id)
-                            && Cache.Derive.isOnPath context.config context.cache id presentationFolderId
+                        expandSoleToplevelFolderOnPresentationWithoutFolder
+                            || (not collapsedByUser
+                                    && Cache.Derive.isOnPath context.config context.cache id presentationFolderId
+                               )
+
+                    isSelectedFolder =
+                        presentationFolderId == Just id
                 in
                 [ Html.div
                     [ Html.Events.onClick (Select id) ]
