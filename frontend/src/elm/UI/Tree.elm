@@ -5,7 +5,7 @@ module UI.Tree exposing
     , Msg
     , initialModel
     , needs
-    , expandPresentationFolder
+    , updateOnPresentationFolderId
     , update
     , view
     )
@@ -19,7 +19,7 @@ module UI.Tree exposing
 
 @docs initialModel
 @docs needs
-@docs expandPresentationFolder
+@docs updateOnPresentationFolderId
 @docs update
 @docs view
 
@@ -41,7 +41,6 @@ import Types.Id exposing (FolderId)
 import Types.Needs
 import Types.Presentation as Presentation exposing (Presentation(..))
 import UI.Icons
-import Utils
 import Utils.Html
 
 
@@ -65,11 +64,13 @@ By default, the presentation folder is shown in expanded state.
 If the user clicks (message `Select`) on the presentation folder we show it in collapsed state.
 If later the presentation folder changes, then we want to show it as expanded again.
 
-For tracking the collapsed state we use `collapsedPresentationFolder` here in the UI model.
+For tracking the necessary state we use `latestPresentationFolderId` and
+`userCollapsedPresentationFolder` here in the UI model.
 
 -}
 type alias Model =
-    { collapsedPresentationFolder : Maybe FolderId
+    { latestPresentationFolderId : Maybe FolderId
+    , userCollapsedPresentationFolder : Bool
     }
 
 
@@ -81,7 +82,8 @@ type Msg
 {-| -}
 initialModel : Model
 initialModel =
-    { collapsedPresentationFolder = Nothing
+    { latestPresentationFolderId = Nothing
+    , userCollapsedPresentationFolder = False
     }
 
 
@@ -95,10 +97,16 @@ needs context model =
 
 
 {-| -}
-expandPresentationFolder : Model -> Model
-expandPresentationFolder model =
+updateOnPresentationFolderId : Maybe FolderId -> Model -> Model
+updateOnPresentationFolderId maybePresentationFolderId model =
     { model
-        | collapsedPresentationFolder = Nothing
+        | latestPresentationFolderId = maybePresentationFolderId
+        , userCollapsedPresentationFolder =
+            if model.latestPresentationFolderId == maybePresentationFolderId then
+                model.userCollapsedPresentationFolder
+
+            else
+                False
     }
 
 
@@ -109,11 +117,7 @@ update context msg model =
         Select id ->
             if getPresentationFolderId context == Just id then
                 ( { model
-                    | collapsedPresentationFolder =
-                        (model.collapsedPresentationFolder == Just id)
-                            |> Utils.ifElse
-                                Nothing
-                                (Just id)
+                    | userCollapsedPresentationFolder = not model.userCollapsedPresentationFolder
                   }
                 , NoReturn
                 )
@@ -183,7 +187,9 @@ viewFolderTree context model maybeFolderCounts id =
 
                     expanded =
                         List.member id context.config.toplevelFolderIds
-                            || ((model.collapsedPresentationFolder /= Just id)
+                            || (((model.latestPresentationFolderId /= Just id)
+                                    || not model.userCollapsedPresentationFolder
+                                )
                                     && Cache.Derive.isOnPath context.config context.cache id presentationFolderId
                                )
                 in

@@ -113,19 +113,19 @@ updateModelFromRoute context route model =
             }
 
         model3 =
-            adjustPresentation context.config model2
+            adjustPresentation context model2
     in
     model3
 
 
 {-| Derive the current presentation from the route using contextual knowledge from the cache and update the UI accordingly.
 -}
-adjustPresentation : Config -> Model -> Model
-adjustPresentation config model =
+adjustPresentation : Context -> Model -> Model
+adjustPresentation context model =
     let
         presentation =
             Presentation.fromRoute
-                config
+                context.config
                 model.cache
                 model.route
     in
@@ -135,11 +135,14 @@ adjustPresentation config model =
         model
 
     else
-        { model
-            | presentation = presentation
-            , ui =
+        let
+            model1 =
+                { model | presentation = presentation }
+        in
+        { model1
+            | ui =
                 UI.updateOnChangedPresentation
-                    presentation
+                    (uiContext context model1)
                     model.ui
         }
 
@@ -221,7 +224,7 @@ updateSubModel context msg model =
                     , Cmd.map CacheMsg subCmd
                     )
             in
-            ( model1 |> adjustPresentation context.config
+            ( model1 |> adjustPresentation context
             , cmd1
             , SubNoReturn
             )
