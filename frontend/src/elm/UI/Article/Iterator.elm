@@ -20,177 +20,131 @@ module UI.Article.Iterator exposing
 
 -}
 
-import Article.Details as Details
+import Cache exposing (Cache)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Maybe.Extra
-import Types exposing (Document, DocumentId, Folder)
+import Types exposing (DocumentIdFromSearch)
+import Types.Config as Config exposing (Config)
+import Types.Id exposing (DocumentId)
+import Types.Navigation as Navigation exposing (Navigation)
+import Types.Route exposing (Route)
+import Types.Selection exposing (Selection)
+import UI.Article.Details as Details
+import UI.Article.Listing as Listing
 import Utils
 
 
 {-| -}
-type alias Context item =
-    { cache : Cache
-    , folder : Folder
-    , itemList : List item
-    , itemId : item -> DocumentId
+type alias Context =
+    { config : Config
+    , cache : Cache
+    , route : Route
+    , selection : Selection
+    , limit : Int
+    , documentIdFromSearch : DocumentIdFromSearch
     }
 
 
 {-| -}
 type Return
     = NoReturn
-    | ShowDocument DocumentId
-    | CloseIterator
-    | UpdateCacheWithModifiedDocument Document
+    | Navigate Navigation
 
 
 {-| -}
 type alias Model =
-    { currentId : DocumentId
+    { listing : Listing.Model
     , details : Details.Model
     }
 
 
 {-| -}
 type Msg
-    = DetailsMsg Details.Msg
-    | Show
-    | Close
-    | Select DocumentId
+    = ListingMsg Listing.Msg
+    | DetailsMsg Details.Msg
 
 
 {-| -}
-initialModel : Context item -> DocumentId -> Model
-initialModel context documentId =
-    let
-        subModel =
-            Details.initialModel
-                { cache = context.cache
-                , detailsQuery =
-                    { folder = context.folder
-                    , documentId = documentId
-                    , filters = Types.filterNone
-                    }
-                }
-    in
-    { currentId = documentId
-    , details = subModel
+initialModel : Model
+initialModel =
+    { listing = Listing.initialModel
+    , details = Details.initialModel
     }
 
 
 {-| -}
-update : Context item -> Msg -> Model -> ( Model, Cmd Msg, Return )
+update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
+        ListingMsg subMsg ->
+            let
+                ( subModel, subCmd, subReturn ) =
+                    Listing.update
+                        { config = context.config
+                        , cache = context.cache
+                        , route = context.route
+                        , selection = context.selection
+                        , limit = context.limit
+                        }
+                        subMsg
+                        model.listing
+            in
+            ( { model | listing = subModel }
+            , Cmd.map ListingMsg subCmd
+            , case subReturn of
+                Listing.NoReturn ->
+                    NoReturn
+
+                Listing.Navigate navigation ->
+                    Navigate navigation
+            )
+
         DetailsMsg subMsg ->
             let
                 ( subModel, subCmd, subReturn ) =
                     Details.update
-                        { cache = context.cache
-                        , detailsQuery =
-                            { folder = context.folder
-                            , documentId = model.currentId
-                            , filters = Types.filterNone
-                            }
+                        { config = context.config
+                        , cache = context.cache
+                        , route = context.route
+                        , documentIdFromSearch = context.documentIdFromSearch
                         }
                         subMsg
                         model.details
             in
             ( { model | details = subModel }
             , Cmd.map DetailsMsg subCmd
-            , case subReturn of
-                Details.NoReturn ->
-                    NoReturn
-
-                Details.UpdateCacheWithModifiedDocument document ->
-                    UpdateCacheWithModifiedDocument document
-            )
-
-        Close ->
-            ( model, Cmd.none, CloseIterator )
-
-        Show ->
-            ( model, Cmd.none, ShowDocument model.currentId )
-
-        Select documentId ->
-            ( initialModel context documentId
-            , Cmd.none
             , NoReturn
             )
 
 
 {-| -}
-view : Context item -> Model -> Html Msg
+view : Context -> Model -> Html Msg
 view context model =
-    let
-        first =
-            List.head context.itemList
-                |> Maybe.map context.itemId
-                |> Maybe.Extra.filter ((/=) model.currentId)
-
-        prev =
-            case adjacent of
-                Just ( Just prevItem, _, _ ) ->
-                    Just (context.itemId prevItem)
-
-                _ ->
-                    Nothing
-
-        next =
-            case adjacent of
-                Just ( _, _, Just nextItem ) ->
-                    Just (context.itemId nextItem)
-
-                _ ->
-                    Nothing
-
-        adjacent =
-            Utils.findAdjacent
-                (\item -> context.itemId item == model.currentId)
-                context.itemList
-
-        selectButtonAttrs maybeId =
-            Maybe.Extra.unwrap
-                [ Html.Attributes.type_ "button"
-                , Html.Attributes.disabled True
-                ]
-                (\id -> [ Html.Events.onClick (Select id) ])
-                maybeId
-    in
     Html.div
-        [ Html.Attributes.class "iterator" ]
+        [ Html.Attributes.style "display" "flex" ]
         [ Html.div
-            [ Html.Attributes.class "input-group" ]
-            [ Html.button
-                [ Html.Attributes.type_ "button"
-                , Html.Events.onClick Show
-                ]
-                [ Html.text "Show" ]
-            , Html.button
-                [ Html.Attributes.type_ "button"
-                , Html.Events.onClick Close
-                ]
-                [ Html.text "All Results" ]
-            , Html.button
-                (selectButtonAttrs first)
-                [ Html.text "First" ]
-            , Html.button
-                (selectButtonAttrs prev)
-                [ Html.text "Prev" ]
-            , Html.button
-                (selectButtonAttrs next)
-                [ Html.text "Next" ]
-            ]
-        , Details.view
-            { cache = context.cache
-            , detailsQuery =
-                { folder = context.folder
-                , documentId = model.currentId
-                , filters = Types.filterNone
+            [ Html.Attributes.style "flex" "1" ]
+            [ Listing.view
+                { config = context.config
+                , cache = context.cache
+                , route = context.route
+                , selection = context.selection
+                , limit = context.limit
                 }
-            }
-            model.details
-            |> Html.map DetailsMsg
+                model.listing
+                |> Html.map ListingMsg
+            ]
+        , Html.div
+            [ Html.Attributes.style "flex" "1" ]
+            [ Details.view
+                { config = context.config
+                , cache = context.cache
+                , route = context.route
+                , documentIdFromSearch = context.documentIdFromSearch
+                }
+                model.details
+                |> Html.map DetailsMsg
+            ]
         ]

@@ -47,6 +47,7 @@ type Presentation
     | CollectionPresentation FolderId
     | DocumentPresentation (Maybe FolderId) DocumentIdFromSearch
     | ListingPresentation Selection Int
+    | IteratorPresentation Selection Int DocumentIdFromSearch
 
 
 {-| -}
@@ -65,6 +66,9 @@ getFolderId cache presentation =
             Just folderId
 
         ListingPresentation selection limit ->
+            Just selection.scope
+
+        IteratorPresentation selection limit documentIdFromSearch ->
             Just selection.scope
 
 

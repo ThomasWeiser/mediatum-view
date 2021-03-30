@@ -43,7 +43,9 @@ import Types.Route exposing (Route)
 import UI.Article.Collection
 import UI.Article.Details
 import UI.Article.Generic
+import UI.Article.Iterator
 import UI.Article.Listing
+import UI.Icons exposing (search)
 import UI.Widgets.Breadcrumbs
 import Utils
 
@@ -74,6 +76,7 @@ type Content
     | CollectionModel UI.Article.Collection.Model
     | ListingModel UI.Article.Listing.Model
     | DetailsModel UI.Article.Details.Model
+    | IteratorModel UI.Article.Iterator.Model
 
 
 {-| -}
@@ -82,6 +85,7 @@ type Msg
     | CollectionMsg UI.Article.Collection.Msg
     | ListingMsg UI.Article.Listing.Msg
     | DetailsMsg UI.Article.Details.Msg
+    | IteratorMsg UI.Article.Iterator.Msg
 
 
 {-| -}
@@ -99,6 +103,9 @@ initialModel presentation =
 
         ListingPresentation selection limit ->
             { content = ListingModel UI.Article.Listing.initialModel }
+
+        IteratorPresentation selection limit documentIdFromSearch ->
+            { content = IteratorModel UI.Article.Iterator.initialModel }
 
 
 {-| -}
@@ -150,6 +157,12 @@ needs config facetAspects presentation =
                     ]
                 )
 
+        IteratorPresentation selection limit documentIdFromSearch ->
+            Types.Needs.batch
+                [ needs config facetAspects (DocumentPresentation (Just selection.scope) documentIdFromSearch)
+                , needs config facetAspects (ListingPresentation selection limit)
+                ]
+
 
 {-| -}
 folderCountsForQuery : Context -> Maybe FolderCounts
@@ -165,6 +178,10 @@ folderCountsForQuery context =
             Nothing
 
         ListingPresentation selection limit ->
+            Cache.Derive.folderCountsOnPath context.config context.cache selection
+                |> Just
+
+        IteratorPresentation selection limit documentIdFromSearch ->
             Cache.Derive.folderCountsOnPath context.config context.cache selection
                 |> Just
 
@@ -237,6 +254,32 @@ update context msg model =
                     NoReturn
             )
 
+        ( IteratorMsg subMsg, IteratorModel subModel, IteratorPresentation selection limit documentIdFromSearch ) ->
+            let
+                ( subModel1, subCmd, subReturn ) =
+                    UI.Article.Iterator.update
+                        { config = context.config
+                        , cache = context.cache
+                        , route = context.route
+                        , selection = selection
+                        , limit = limit
+                        , documentIdFromSearch = documentIdFromSearch
+                        }
+                        subMsg
+                        subModel
+            in
+            ( { model | content = IteratorModel subModel1 }
+            , Cmd.map IteratorMsg subCmd
+            )
+                |> Utils.tupleAddThird
+                    (case subReturn of
+                        UI.Article.Iterator.NoReturn ->
+                            NoReturn
+
+                        UI.Article.Iterator.Navigate navigation ->
+                            Navigate navigation
+                    )
+
         _ ->
             -- Message doesn't match model; should never happen.
             -- Or model doesn't match presentation; should never happen.
@@ -306,6 +349,18 @@ viewContent context model =
                 }
                 subModel
                 |> Html.map DetailsMsg
+
+        ( IteratorModel subModel, IteratorPresentation selection limit documentIdFromSearch ) ->
+            UI.Article.Iterator.view
+                { config = context.config
+                , cache = context.cache
+                , route = context.route
+                , selection = selection
+                , limit = limit
+                , documentIdFromSearch = documentIdFromSearch
+                }
+                subModel
+                |> Html.map IteratorMsg
 
         _ ->
             -- Model doesn't match query-context; should never happen.
