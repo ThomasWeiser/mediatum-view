@@ -72,7 +72,7 @@ type alias Model =
 {-| -}
 type Msg
     = SelectDocument DocumentId
-    | ShowMore
+    | LoadMore
 
 
 
@@ -99,12 +99,12 @@ initialModel =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
-        ShowMore ->
+        LoadMore ->
             ( model
             , Cmd.none
             , Navigate
                 (Navigation.SetLimit
-                    (Constants.incrementLimitOnShowMore context.limit)
+                    (Constants.incrementLimitOnLoadMore context.limit)
                 )
             )
 
@@ -384,10 +384,10 @@ viewFooter context pageSequence =
         viewButtonTest text msg =
             viewButton { en = text, de = text } msg True
 
-        canShowMore =
-            PageSequence.canShowMore context.limit pageSequence
+        canLoadMore =
+            PageSequence.canLoadMore context.limit pageSequence
     in
-    if canShowMore then
+    if canLoadMore then
         if context.limit < context.config.maxLimit then
             Html.div
                 [ Html.Attributes.style "margin" "4px 0px 8px 0px"
@@ -397,7 +397,7 @@ viewFooter context pageSequence =
                     { en = "More Results"
                     , de = "weitere Ergebnisse"
                     }
-                    ShowMore
+                    LoadMore
                     (PageSequence.remoteDataIsSuccess pageSequence)
                 ]
 

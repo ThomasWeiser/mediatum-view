@@ -1,6 +1,6 @@
 module Entities.PageSequence exposing
     ( PageSequence, init
-    , PresentationSegments, presentationSegments, canShowMore, remoteDataIsSuccess
+    , PresentationSegments, presentationSegments, canLoadMore, remoteDataIsSuccess
     , statusOfNeededWindow, requestWindow, updatePageResult
     )
 
@@ -12,7 +12,7 @@ The type `PageSequence` represents such a sequence of pages as it is stored in t
 The segmentation of the listing into pages reflects the history of requests to prolong the listing.
 
 @docs PageSequence, init
-@docs PresentationSegments, presentationSegments, canShowMore, remoteDataIsSuccess
+@docs PresentationSegments, presentationSegments, canLoadMore, remoteDataIsSuccess
 
 @docs statusOfNeededWindow, requestWindow, updatePageResult
 
@@ -74,8 +74,8 @@ presentationSegments limit (PageSequence array complete) =
 
 
 {-| -}
-canShowMore : Int -> PageSequence -> Bool
-canShowMore limit (PageSequence array complete) =
+canLoadMore : Int -> PageSequence -> Bool
+canLoadMore limit (PageSequence array complete) =
     not complete || limit < numberOfResults array
 
 
