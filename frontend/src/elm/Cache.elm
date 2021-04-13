@@ -41,7 +41,7 @@ So the consuming modules will have to deal with the possible states a `RemoteDat
 import Api
 import Api.Queries
 import Entities.Document exposing (Document)
-import Entities.DocumentResults exposing (DocumentsPage)
+import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import Entities.Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
 import Entities.GenericNode as GenericNode exposing (GenericNode)
@@ -453,6 +453,13 @@ update config msg cache =
                         )
                         cache.documentsPages
               }
+                |> (case result of
+                        Ok documentsPage ->
+                            insertDocumentResultsAsNodeTypes documentsPage.content
+
+                        Err _ ->
+                            identity
+                   )
             , Cmd.none
             )
 
@@ -595,6 +602,18 @@ insertFoldersAsNodeTypes listOfNewFolders cache =
         )
         cache
         listOfNewFolders
+
+
+insertDocumentResultsAsNodeTypes : List DocumentResult -> Cache -> Cache
+insertDocumentResultsAsNodeTypes listOfDocumentResults cache =
+    List.foldl
+        (\documentResult ->
+            insertNodeType
+                (documentResult.document.id |> Id.asNodeId)
+                NodeIsDocument
+        )
+        cache
+        listOfDocumentResults
 
 
 insertNodeType : NodeId -> NodeType -> Cache -> Cache
