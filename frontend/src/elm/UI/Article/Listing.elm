@@ -380,10 +380,6 @@ viewFooter context pageSequence =
                 ]
                 [ Localization.text context.config label ]
 
-        viewButtonTest : String -> Msg -> Html Msg
-        viewButtonTest text msg =
-            viewButton { en = text, de = text } msg True
-
         canLoadMore =
             PageSequence.canLoadMore context.limit pageSequence
     in

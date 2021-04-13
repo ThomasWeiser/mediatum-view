@@ -1,6 +1,8 @@
 module Entities.PageSequence exposing
     ( PageSequence, init
-    , PresentationSegments, presentationSegments, canLoadMore, remoteDataIsSuccess
+    , PresentationSegments, presentationSegments
+    , canLoadMore, remoteDataIsSuccess
+    , findAdjacentDocuments
     , statusOfNeededWindow, requestWindow, updatePageResult
     )
 
@@ -12,7 +14,12 @@ The type `PageSequence` represents such a sequence of pages as it is stored in t
 The segmentation of the listing into pages reflects the history of requests to prolong the listing.
 
 @docs PageSequence, init
-@docs PresentationSegments, presentationSegments, canLoadMore, remoteDataIsSuccess
+
+@docs PresentationSegments, presentationSegments
+
+@docs canLoadMore, remoteDataIsSuccess
+
+@docs findAdjacentDocuments
 
 @docs statusOfNeededWindow, requestWindow, updatePageResult
 
@@ -20,10 +27,13 @@ The segmentation of the listing into pages reflects the history of requests to p
 
 import Array exposing (Array)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
+import Maybe.Extra
 import RemoteData exposing (RemoteData(..))
 import Types exposing (Window)
 import Types.ApiData exposing (ApiData)
+import Types.Id exposing (DocumentId)
 import Types.Needs as Needs exposing (Status(..))
+import Utils.List
 
 
 {-| The type `PageSequence` represents a sequence of pages as they are queried from the API
@@ -40,6 +50,12 @@ type alias InternalSegments =
 -}
 type alias PresentationSegments =
     List (ApiData (List DocumentResult))
+
+
+{-| A list of document results, which may be Nothing to denote a hole in the sequence
+-}
+type alias PartialListOfDocumentResults =
+    List (Maybe DocumentResult)
 
 
 {-| Return an empty page sequence
@@ -71,6 +87,47 @@ presentationSegments limit (PageSequence array complete) =
         limit
         []
         array
+
+
+{-| Construct PartialListOfDocumentResults from PresentationSegments.
+-}
+partialListOfDocumentResults : PresentationSegments -> PartialListOfDocumentResults
+partialListOfDocumentResults thePresentationSegments =
+    thePresentationSegments
+        |> List.map
+            (RemoteData.unwrap
+                [ Nothing ]
+                (List.map Just)
+            )
+        |> List.concat
+
+
+{-| Find a document by id along with its direct neighbours.
+-}
+findAdjacentDocuments : DocumentId -> PresentationSegments -> Maybe ( Maybe DocumentResult, DocumentResult, Maybe DocumentResult )
+findAdjacentDocuments documentId thePresentationSegments =
+    thePresentationSegments
+        |> partialListOfDocumentResults
+        |> Utils.List.findAdjacent
+            (\documentResultOrHole ->
+                case documentResultOrHole of
+                    Nothing ->
+                        False
+
+                    Just documentResult ->
+                        documentResult.document.id == documentId
+            )
+        |> Maybe.andThen
+            (\( prevMaybe, thisMaybe, nextMaybe ) ->
+                thisMaybe
+                    |> Maybe.map
+                        (\this ->
+                            ( Maybe.Extra.join prevMaybe
+                            , this
+                            , Maybe.Extra.join nextMaybe
+                            )
+                        )
+            )
 
 
 {-| -}
