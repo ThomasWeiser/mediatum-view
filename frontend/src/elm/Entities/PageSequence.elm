@@ -2,7 +2,7 @@ module Entities.PageSequence exposing
     ( PageSequence, init
     , PresentationSegments, presentationSegments
     , canLoadMore, remoteDataIsSuccess
-    , findAdjacentDocuments
+    , firstDocument, findAdjacentDocuments
     , statusOfNeededWindow, requestWindow, updatePageResult
     )
 
@@ -19,7 +19,7 @@ The segmentation of the listing into pages reflects the history of requests to p
 
 @docs canLoadMore, remoteDataIsSuccess
 
-@docs findAdjacentDocuments
+@docs firstDocument, findAdjacentDocuments
 
 @docs statusOfNeededWindow, requestWindow, updatePageResult
 
@@ -50,12 +50,6 @@ type alias InternalSegments =
 -}
 type alias PresentationSegments =
     List (ApiData (List DocumentResult))
-
-
-{-| A list of document results, which may be Nothing to denote a hole in the sequence
--}
-type alias PartialListOfDocumentResults =
-    List (Maybe DocumentResult)
 
 
 {-| Return an empty page sequence
@@ -89,9 +83,20 @@ presentationSegments limit (PageSequence array complete) =
         array
 
 
-{-| Construct PartialListOfDocumentResults from PresentationSegments.
+{-| Get the first document from PresentationSegments if existent and cached
 -}
-partialListOfDocumentResults : PresentationSegments -> PartialListOfDocumentResults
+firstDocument : PresentationSegments -> Maybe DocumentResult
+firstDocument thePresentationSegments =
+    thePresentationSegments
+        |> List.head
+        |> Maybe.andThen RemoteData.toMaybe
+        |> Maybe.andThen List.head
+
+
+{-| Construct a flattened version of PresentationSegments.
+Segments with missing ApiData are represented by an element with value of Nothing.
+-}
+partialListOfDocumentResults : PresentationSegments -> List (Maybe DocumentResult)
 partialListOfDocumentResults thePresentationSegments =
     thePresentationSegments
         |> List.map

@@ -166,12 +166,32 @@ view context model =
 viewNavigationButtons : Context -> Html Msg
 viewNavigationButtons context =
     let
-        ( maybePrevDocumentId, maybeNextDocumentId ) =
-            adjacentDocumentIds context
+        targetDocumentIds =
+            getTargetDocumentIds context |> Debug.log "targetDocumentIds"
     in
     Html.div []
         [ Html.button
-            (case maybePrevDocumentId of
+            (case targetDocumentIds.first of
+                Nothing ->
+                    [ Html.Attributes.type_ "button"
+                    , Html.Attributes.disabled True
+                    ]
+
+                Just firstvDocumentId ->
+                    [ Html.Attributes.type_ "button"
+                    , Html.Events.onClick
+                        (ReturnNavigation
+                            (Navigation.ShowDocument context.selection.scope firstvDocumentId)
+                        )
+                    ]
+            )
+            [ Localization.text context.config
+                { en = "First Result"
+                , de = "erstes Resultat der Liste"
+                }
+            ]
+        , Html.button
+            (case targetDocumentIds.prev of
                 Nothing ->
                     [ Html.Attributes.type_ "button"
                     , Html.Attributes.disabled True
@@ -191,7 +211,7 @@ viewNavigationButtons context =
                 }
             ]
         , Html.button
-            (case maybeNextDocumentId of
+            (case targetDocumentIds.next of
                 Nothing ->
                     [ Html.Attributes.type_ "button"
                     , Html.Attributes.disabled True
@@ -213,19 +233,47 @@ viewNavigationButtons context =
         ]
 
 
-adjacentDocumentIds : Context -> ( Maybe DocumentId, Maybe DocumentId )
-adjacentDocumentIds context =
-    Cache.getDocumentsPages
-        context.cache
-        ( Config.getMaskName MasksConfig.MaskForListing context.config
-        , context.selection
-        )
-        |> PageSequence.presentationSegments context.limit
-        |> PageSequence.findAdjacentDocuments context.documentIdFromSearch.id
-        |> Maybe.Extra.unwrap
-            ( Nothing, Nothing )
-            (\( maybePrevDocumentResult, thisDocumentResult, maybeNextDocumentResult ) ->
-                ( maybePrevDocumentResult |> Maybe.map (.document >> .id)
-                , maybeNextDocumentResult |> Maybe.map (.document >> .id)
+getTargetDocumentIds :
+    Context
+    ->
+        { first : Maybe DocumentId
+        , prev : Maybe DocumentId
+        , next : Maybe DocumentId
+        }
+getTargetDocumentIds context =
+    let
+        presentationSegments =
+            Cache.getDocumentsPages
+                context.cache
+                ( Config.getMaskName MasksConfig.MaskForListing context.config
+                , context.selection
                 )
-            )
+                |> PageSequence.presentationSegments context.limit
+
+        first =
+            PageSequence.firstDocument presentationSegments
+                |> Maybe.map (.document >> .id)
+                |> Maybe.andThen
+                    (\firstId ->
+                        if firstId == context.documentIdFromSearch.id then
+                            Nothing
+
+                        else
+                            Just firstId
+                    )
+
+        prevAndNext =
+            presentationSegments
+                |> PageSequence.findAdjacentDocuments context.documentIdFromSearch.id
+                |> Maybe.Extra.unwrap
+                    ( Nothing, Nothing )
+                    (\( maybePrevDocumentResult, thisDocumentResult, maybeNextDocumentResult ) ->
+                        ( maybePrevDocumentResult |> Maybe.map (.document >> .id)
+                        , maybeNextDocumentResult |> Maybe.map (.document >> .id)
+                        )
+                    )
+    in
+    { first = first
+    , prev = Tuple.first prevAndNext
+    , next = Tuple.second prevAndNext
+    }
