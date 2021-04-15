@@ -1,7 +1,7 @@
 module Entities.PageSequence exposing
     ( PageSequence, init
     , PresentationSegments, presentationSegments
-    , canLoadMore, remoteDataIsSuccess
+    , canLoadMore, remoteDataIsSuccess, extent
     , firstDocument, findAdjacentDocuments
     , statusOfNeededWindow, requestWindow, updatePageResult
     )
@@ -17,7 +17,7 @@ The segmentation of the listing into pages reflects the history of requests to p
 
 @docs PresentationSegments, presentationSegments
 
-@docs canLoadMore, remoteDataIsSuccess
+@docs canLoadMore, remoteDataIsSuccess, extent
 
 @docs firstDocument, findAdjacentDocuments
 
@@ -25,9 +25,11 @@ The segmentation of the listing into pages reflects the history of requests to p
 
 -}
 
+import Api.Fragments exposing (documentsPage)
 import Array exposing (Array)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import Maybe.Extra
+import Mediatum.Object.Metadatatype exposing (documents)
 import RemoteData exposing (RemoteData(..))
 import Types exposing (Window)
 import Types.ApiData exposing (ApiData)
@@ -138,7 +140,7 @@ findAdjacentDocuments documentId thePresentationSegments =
 {-| -}
 canLoadMore : Int -> PageSequence -> Bool
 canLoadMore limit (PageSequence array complete) =
-    not complete || limit < numberOfResults array
+    not complete || limit < numberOfRequestedResults array
 
 
 {-| -}
@@ -150,11 +152,36 @@ remoteDataIsSuccess (PageSequence array complete) =
             (Tuple.second >> RemoteData.isSuccess)
 
 
+{-| Returns the number of results so far, and an indication if there may be more.
+-}
+extent : PageSequence -> ( Int, Bool )
+extent (PageSequence array complete) =
+    let
+        ( knownResultsCount, allSegmentsSuccessfullyLoaded ) =
+            Array.foldl
+                (\( elementLength, elementApiData ) ( sum, successful ) ->
+                    elementApiData
+                        |> RemoteData.unwrap
+                            ( sum, False )
+                            (\documentsPage ->
+                                ( sum + List.length documentsPage.content
+                                , successful
+                                )
+                            )
+                )
+                ( 0, True )
+                array
+    in
+    ( knownResultsCount
+    , allSegmentsSuccessfullyLoaded && complete
+    )
+
+
 {-| Determine if a given page sequence fulfills the needs to show a given window of a listing
 -}
 statusOfNeededWindow : Int -> PageSequence -> Needs.Status
 statusOfNeededWindow limit (PageSequence array complete) =
-    if limit > numberOfResults array && not complete then
+    if limit > numberOfRequestedResults array && not complete then
         NotRequested
 
     else
@@ -179,7 +206,7 @@ requestWindow : Int -> PageSequence -> ( Maybe ( Int, Window ), PageSequence )
 requestWindow limit ((PageSequence array complete) as pageSequence) =
     let
         currentLength =
-            numberOfResults array
+            numberOfRequestedResults array
     in
     if complete || limit <= currentLength then
         ( Nothing
@@ -215,8 +242,8 @@ updatePageResult pageIndex window apiData (PageSequence segments complete) =
         )
 
 
-numberOfResults : InternalSegments -> Int
-numberOfResults array =
+numberOfRequestedResults : InternalSegments -> Int
+numberOfRequestedResults array =
     Array.foldl
         (\( elementLength, elementApiData ) sum ->
             elementLength + sum

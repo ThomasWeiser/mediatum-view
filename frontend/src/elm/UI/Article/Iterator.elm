@@ -21,11 +21,15 @@ module UI.Article.Iterator exposing
 -}
 
 import Cache exposing (Cache)
+import Cache.Derive
 import Entities.PageSequence as PageSequence exposing (PageSequence)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Maybe.Extra
+import Mediatum.Object.FacetValue exposing (count)
+import RemoteData exposing (RemoteData)
+import String.Format
 import Types exposing (DocumentIdFromSearch)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
@@ -133,7 +137,7 @@ update context msg model =
 view : Context -> Model -> Html Msg
 view context model =
     Html.div []
-        [ viewNavigationButtons context
+        [ viewHeader context
         , Html.div
             [ Html.Attributes.style "display" "flex" ]
             [ Html.div
@@ -163,15 +167,66 @@ view context model =
         ]
 
 
-viewNavigationButtons : Context -> Html Msg
-viewNavigationButtons context =
+type alias Linkage =
+    { selectionDocumentCount : Maybe Int
+    , listingDocumentCount : Int
+    , listingIsComplete : Bool
+    , currentNumber : Maybe Int
+    , firstId : Maybe DocumentId
+    , prevId : Maybe DocumentId
+    , nextId : Maybe DocumentId
+    }
+
+
+viewHeader : Context -> Html Msg
+viewHeader context =
     let
-        targetDocumentIds =
-            getTargetDocumentIds context |> Debug.log "targetDocumentIds"
+        linkage =
+            getLinkage context
     in
     Html.div []
+        [ viewNavigationButtons context linkage
+        , Html.text (resultNumberText context linkage)
+        ]
+
+
+resultNumberText : Context -> Linkage -> String
+resultNumberText context linkage =
+    let
+        count =
+            linkage.selectionDocumentCount
+                |> Maybe.withDefault linkage.listingDocumentCount
+
+        orMore =
+            (linkage.selectionDocumentCount == Nothing)
+                && not linkage.listingIsComplete
+    in
+    Localization.string context.config
+        (if orMore then
+            if count == 0 then
+                { en = "Result {{}}"
+                , de = "Resultat {{}}"
+                }
+
+            else
+                { en = "Result {{}} of at least {{}}"
+                , de = "Resultat {{}} von mindestens {{}}"
+                }
+
+         else
+            { en = "Result {{}} of {{}}"
+            , de = "Resultat {{}} von {{}}"
+            }
+        )
+        |> String.Format.value (Maybe.Extra.unwrap "..." String.fromInt linkage.currentNumber)
+        |> String.Format.value (String.fromInt count)
+
+
+viewNavigationButtons : Context -> Linkage -> Html Msg
+viewNavigationButtons context linkage =
+    Html.div []
         [ Html.button
-            (case targetDocumentIds.first of
+            (case linkage.firstId of
                 Nothing ->
                     [ Html.Attributes.type_ "button"
                     , Html.Attributes.disabled True
@@ -191,7 +246,7 @@ viewNavigationButtons context =
                 }
             ]
         , Html.button
-            (case targetDocumentIds.prev of
+            (case linkage.prevId of
                 Nothing ->
                     [ Html.Attributes.type_ "button"
                     , Html.Attributes.disabled True
@@ -211,7 +266,7 @@ viewNavigationButtons context =
                 }
             ]
         , Html.button
-            (case targetDocumentIds.next of
+            (case linkage.nextId of
                 Nothing ->
                     [ Html.Attributes.type_ "button"
                     , Html.Attributes.disabled True
@@ -233,22 +288,26 @@ viewNavigationButtons context =
         ]
 
 
-getTargetDocumentIds :
-    Context
-    ->
-        { first : Maybe DocumentId
-        , prev : Maybe DocumentId
-        , next : Maybe DocumentId
-        }
-getTargetDocumentIds context =
+getLinkage : Context -> Linkage
+getLinkage context =
     let
-        presentationSegments =
+        pageSequence =
             Cache.getDocumentsPages
                 context.cache
                 ( Config.getMaskName MasksConfig.MaskForListing context.config
                 , context.selection
                 )
+
+        presentationSegments =
+            pageSequence
                 |> PageSequence.presentationSegments context.limit
+
+        selectionDocumentCount =
+            Cache.Derive.getDocumentCount context.cache context.selection
+                |> RemoteData.toMaybe
+
+        ( listingDocumentCount, listingIsComplete ) =
+            PageSequence.extent pageSequence
 
         first =
             PageSequence.firstDocument presentationSegments
@@ -262,18 +321,23 @@ getTargetDocumentIds context =
                             Just firstId
                     )
 
-        prevAndNext =
+        adjacent =
             presentationSegments
                 |> PageSequence.findAdjacentDocuments context.documentIdFromSearch.id
                 |> Maybe.Extra.unwrap
-                    ( Nothing, Nothing )
+                    { current = Nothing, prev = Nothing, next = Nothing }
                     (\( maybePrevDocumentResult, thisDocumentResult, maybeNextDocumentResult ) ->
-                        ( maybePrevDocumentResult |> Maybe.map (.document >> .id)
-                        , maybeNextDocumentResult |> Maybe.map (.document >> .id)
-                        )
+                        { current = Just thisDocumentResult.number
+                        , prev = maybePrevDocumentResult |> Maybe.map (.document >> .id)
+                        , next = maybeNextDocumentResult |> Maybe.map (.document >> .id)
+                        }
                     )
     in
-    { first = first
-    , prev = Tuple.first prevAndNext
-    , next = Tuple.second prevAndNext
+    { selectionDocumentCount = selectionDocumentCount
+    , listingDocumentCount = listingDocumentCount
+    , listingIsComplete = listingIsComplete
+    , currentNumber = adjacent.current
+    , firstId = first
+    , prevId = adjacent.prev
+    , nextId = adjacent.next
     }
