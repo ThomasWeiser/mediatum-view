@@ -22,6 +22,7 @@ module UI.Article.Iterator exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
+import Constants
 import Entities.PageSequence as PageSequence exposing (PageSequence)
 import Html exposing (Html)
 import Html.Attributes
@@ -72,6 +73,7 @@ type Msg
     = ListingMsg Listing.Msg
     | DetailsMsg Details.Msg
     | ReturnNavigation Navigation
+    | LoadMore
 
 
 {-| -}
@@ -132,6 +134,15 @@ update context msg model =
             , Navigate navigation
             )
 
+        LoadMore ->
+            ( model
+            , Cmd.none
+            , Navigate
+                (Navigation.SetLimit
+                    (Constants.incrementLimitOnLoadMore context.limit)
+                )
+            )
+
 
 {-| -}
 view : Context -> Model -> Html Msg
@@ -171,6 +182,7 @@ type alias Linkage =
     { selectionDocumentCount : Maybe Int
     , listingDocumentCount : Int
     , listingIsComplete : Bool
+    , canLoadMore : Bool
     , currentNumber : Maybe Int
     , firstId : Maybe DocumentId
     , prevId : Maybe DocumentId
@@ -268,9 +280,15 @@ viewNavigationButtons context linkage =
         , Html.button
             (case linkage.nextId of
                 Nothing ->
-                    [ Html.Attributes.type_ "button"
-                    , Html.Attributes.disabled True
-                    ]
+                    if linkage.canLoadMore then
+                        [ Html.Attributes.type_ "button"
+                        , Html.Events.onClick LoadMore
+                        ]
+
+                    else
+                        [ Html.Attributes.type_ "button"
+                        , Html.Attributes.disabled True
+                        ]
 
                 Just nextDocumentId ->
                     [ Html.Attributes.type_ "button"
@@ -309,6 +327,9 @@ getLinkage context =
         ( listingDocumentCount, listingIsComplete ) =
             PageSequence.extent pageSequence
 
+        canLoadMore =
+            PageSequence.canLoadMore context.limit pageSequence
+
         first =
             PageSequence.firstDocument presentationSegments
                 |> Maybe.map (.document >> .id)
@@ -336,6 +357,7 @@ getLinkage context =
     { selectionDocumentCount = selectionDocumentCount
     , listingDocumentCount = listingDocumentCount
     , listingIsComplete = listingIsComplete
+    , canLoadMore = canLoadMore
     , currentNumber = adjacent.current
     , firstId = first
     , prevId = adjacent.prev

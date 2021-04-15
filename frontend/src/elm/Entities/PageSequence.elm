@@ -2,7 +2,7 @@ module Entities.PageSequence exposing
     ( PageSequence, init
     , PresentationSegments, presentationSegments
     , canLoadMore, remoteDataIsSuccess, extent
-    , firstDocument, findAdjacentDocuments
+    , firstDocument, findAdjacentDocuments, findIndex
     , statusOfNeededWindow, requestWindow, updatePageResult
     )
 
@@ -19,7 +19,7 @@ The segmentation of the listing into pages reflects the history of requests to p
 
 @docs canLoadMore, remoteDataIsSuccess, extent
 
-@docs firstDocument, findAdjacentDocuments
+@docs firstDocument, findAdjacentDocuments, findIndex
 
 @docs statusOfNeededWindow, requestWindow, updatePageResult
 
@@ -28,6 +28,7 @@ The segmentation of the listing into pages reflects the history of requests to p
 import Api.Fragments exposing (documentsPage)
 import Array exposing (Array)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
+import List.Extra
 import Maybe.Extra
 import Mediatum.Object.Metadatatype exposing (documents)
 import RemoteData exposing (RemoteData(..))
@@ -134,6 +135,28 @@ findAdjacentDocuments documentId thePresentationSegments =
                             , Maybe.Extra.join nextMaybe
                             )
                         )
+            )
+
+
+{-| Find a document by id and return its index, i.e. the number given in the DocumentResult
+-}
+findIndex : DocumentId -> PresentationSegments -> Maybe Int
+findIndex documentId thePresentationSegments =
+    thePresentationSegments
+        |> List.Extra.findMap
+            (RemoteData.unwrap
+                Nothing
+                (\documentResults ->
+                    documentResults
+                        |> List.Extra.findMap
+                            (\documentResult ->
+                                if documentResult.document.id == documentId then
+                                    Just documentResult.number
+
+                                else
+                                    Nothing
+                            )
+                )
             )
 
 

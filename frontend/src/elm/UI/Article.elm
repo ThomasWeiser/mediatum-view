@@ -158,6 +158,19 @@ needs config facetAspects presentation =
                 )
 
         IteratorPresentation selection limit documentIdFromSearch ->
+            let
+                maybeIndexOfDocument =
+                    Cache.getDocumentsPages
+                        context.cache
+                        ( Config.getMaskName MasksConfig.MaskForListing context.config
+                        , context.selection
+                        )
+
+                presentationSegments =
+                    pageSequence
+                        |> PageSequence.presentationSegments context.limit
+                            PageSequence.findIndex
+            in
             Types.Needs.batch
                 [ needs config facetAspects (DocumentPresentation (Just selection.scope) documentIdFromSearch)
                 , needs config facetAspects (ListingPresentation selection limit)
