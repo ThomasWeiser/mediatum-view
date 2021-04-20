@@ -34,6 +34,7 @@ import Maybe.Extra
 import RemoteData
 import Types.Aspect exposing (Aspect)
 import Types.Config as Config exposing (Config)
+import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Config.MasksConfig as MasksConfig
 import Types.Id exposing (FolderId)
 import Types.Navigation exposing (Navigation)
@@ -109,9 +110,33 @@ initialModel presentation =
 
 
 {-| -}
-needs : Config -> List Aspect -> Presentation -> Cache.Needs
-needs config facetAspects presentation =
-    case presentation of
+needs : Context -> Cache.Needs
+needs context =
+    let
+        facetAspects =
+            FacetAspect.aspects context.config.facetAspects
+
+        needsOfDocumentPresentation maybeFolderId documentIdFromSearch =
+            Cache.NeedDocumentFromSearch
+                (Config.getMaskName MasksConfig.MaskForDetails context.config)
+                documentIdFromSearch
+                |> Types.Needs.atomic
+
+        needsOfListingPresentation selection limit =
+            Types.Needs.sequence
+                (Types.Needs.atomic <|
+                    Cache.NeedDocumentsPage
+                        (Config.getMaskName MasksConfig.MaskForListing context.config)
+                        selection
+                        limit
+                )
+                (Types.Needs.batch
+                    [ Types.Needs.atomic <| Cache.NeedFolderCounts selection
+                    , Types.Needs.atomic <| Cache.NeedFacets selection facetAspects
+                    ]
+                )
+    in
+    case context.presentation of
         GenericPresentation genericParameters ->
             case genericParameters of
                 Nothing ->
@@ -123,11 +148,11 @@ needs config facetAspects presentation =
                             maybeDocumentIdFromSearch
                                 |> Maybe.map
                                     (Cache.NeedDocumentFromSearch
-                                        (Config.getMaskName MasksConfig.MaskForDetails config)
+                                        (Config.getMaskName MasksConfig.MaskForDetails context.config)
                                     )
                     in
                     [ Cache.NeedGenericNode
-                        (Config.getMaskName MasksConfig.MaskForDetails config)
+                        (Config.getMaskName MasksConfig.MaskForDetails context.config)
                         nodeIdOne
                     ]
                         |> Maybe.Extra.cons maybeNeedTwo
@@ -135,45 +160,18 @@ needs config facetAspects presentation =
                         |> Types.Needs.batch
 
         DocumentPresentation maybeFolderId documentIdFromSearch ->
-            Cache.NeedDocumentFromSearch
-                (Config.getMaskName MasksConfig.MaskForDetails config)
-                documentIdFromSearch
-                |> Types.Needs.atomic
+            needsOfDocumentPresentation maybeFolderId documentIdFromSearch
 
         CollectionPresentation folderId ->
             Types.Needs.none
 
         ListingPresentation selection limit ->
-            Types.Needs.sequence
-                (Types.Needs.atomic <|
-                    Cache.NeedDocumentsPage
-                        (Config.getMaskName MasksConfig.MaskForListing config)
-                        selection
-                        limit
-                )
-                (Types.Needs.batch
-                    [ Types.Needs.atomic <| Cache.NeedFolderCounts selection
-                    , Types.Needs.atomic <| Cache.NeedFacets selection facetAspects
-                    ]
-                )
+            needsOfListingPresentation selection limit
 
         IteratorPresentation selection limit documentIdFromSearch ->
-            let
-                maybeIndexOfDocument =
-                    Cache.getDocumentsPages
-                        context.cache
-                        ( Config.getMaskName MasksConfig.MaskForListing context.config
-                        , context.selection
-                        )
-
-                presentationSegments =
-                    pageSequence
-                        |> PageSequence.presentationSegments context.limit
-                            PageSequence.findIndex
-            in
             Types.Needs.batch
-                [ needs config facetAspects (DocumentPresentation (Just selection.scope) documentIdFromSearch)
-                , needs config facetAspects (ListingPresentation selection limit)
+                [ needsOfDocumentPresentation (Just selection.scope) documentIdFromSearch
+                , needsOfListingPresentation selection limit
                 ]
 
 
