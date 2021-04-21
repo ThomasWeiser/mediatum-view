@@ -177,7 +177,7 @@ needs context =
                         ( Config.getMaskName MasksConfig.MaskForListing context.config
                         , selection
                         )
-                        |> PageSequence.presentationSegments limit
+                        |> PageSequence.presentationSegmentsAll
                         |> PageSequence.findIndex documentIdFromSearch.id
 
                 raisedLimit =

@@ -1,6 +1,6 @@
 module Entities.PageSequence exposing
     ( PageSequence, init
-    , PresentationSegments, presentationSegments
+    , PresentationSegments, presentationSegmentsAll, presentationSegmentsLimited
     , canLoadMore, remoteDataIsSuccess, extent
     , firstDocument, findAdjacentDocuments, findIndex
     , statusOfNeededWindow, requestWindow, updatePageResult
@@ -15,7 +15,7 @@ The segmentation of the listing into pages reflects the history of requests to p
 
 @docs PageSequence, init
 
-@docs PresentationSegments, presentationSegments
+@docs PresentationSegments, presentationSegmentsAll, presentationSegmentsLimited
 
 @docs canLoadMore, remoteDataIsSuccess, extent
 
@@ -64,8 +64,8 @@ init =
 
 {-| Construct a subsequence that comprises the given window of the listing.
 -}
-presentationSegments : Int -> PageSequence -> PresentationSegments
-presentationSegments limit (PageSequence array complete) =
+presentationSegmentsLimited : Int -> PageSequence -> PresentationSegments
+presentationSegmentsLimited limit (PageSequence array complete) =
     foldrWithLimit
         (\lengthSoFar ( elementLength, elementApiData ) accu ->
             RemoteData.map
@@ -82,6 +82,19 @@ presentationSegments limit (PageSequence array complete) =
                 :: accu
         )
         limit
+        []
+        array
+
+
+{-| Construct a subsequence that comprises the given window of the listing.
+-}
+presentationSegmentsAll : PageSequence -> PresentationSegments
+presentationSegmentsAll (PageSequence array complete) =
+    Array.foldr
+        (\( elementLength, elementApiData ) accu ->
+            RemoteData.map .content elementApiData
+                :: accu
+        )
         []
         array
 

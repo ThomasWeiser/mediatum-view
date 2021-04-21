@@ -318,7 +318,7 @@ getLinkage context =
 
         presentationSegments =
             pageSequence
-                |> PageSequence.presentationSegments context.limit
+                |> PageSequence.presentationSegmentsAll
 
         selectionDocumentCount =
             Cache.Derive.getDocumentCount context.cache context.selection

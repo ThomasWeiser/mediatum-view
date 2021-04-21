@@ -182,7 +182,7 @@ view context model =
 viewPageSequence : Context -> PageSequence -> Html Msg
 viewPageSequence context pageSequence =
     Html.div []
-        (PageSequence.presentationSegments context.limit pageSequence
+        (PageSequence.presentationSegmentsLimited context.limit pageSequence
             |> List.map
                 (viewPageApiData context)
             |> List.intersperse (Html.hr [] [])
