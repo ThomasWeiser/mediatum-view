@@ -26,8 +26,9 @@ module UI.Article exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
-import Entities.Document
+import Constants
 import Entities.FolderCounts exposing (FolderCounts)
+import Entities.PageSequence as PageSequence
 import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
@@ -169,9 +170,31 @@ needs context =
             needsOfListingPresentation selection limit
 
         IteratorPresentation selection limit documentIdFromSearch ->
+            let
+                maybeIndexOfDocument =
+                    Cache.getDocumentsPages
+                        context.cache
+                        ( Config.getMaskName MasksConfig.MaskForListing context.config
+                        , selection
+                        )
+                        |> PageSequence.presentationSegments limit
+                        |> PageSequence.findIndex documentIdFromSearch.id
+
+                adjustedLimit =
+                    case maybeIndexOfDocument of
+                        Nothing ->
+                            Constants.adjustLimitOnUnlistedDocument limit
+
+                        Just indexOfDocument ->
+                            if indexOfDocument == limit then
+                                Constants.incrementLimitOnLoadMore limit
+
+                            else
+                                limit
+            in
             Types.Needs.batch
                 [ needsOfDocumentPresentation (Just selection.scope) documentIdFromSearch
-                , needsOfListingPresentation selection limit
+                , needsOfListingPresentation selection adjustedLimit
                 ]
 
 
