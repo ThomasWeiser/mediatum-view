@@ -236,7 +236,7 @@ resultNumberText context linkage =
 
 viewNavigationButtons : Context -> Linkage -> Html Msg
 viewNavigationButtons context linkage =
-    Html.div []
+    Html.div [] <|
         [ Html.button
             (case linkage.firstId of
                 Nothing ->
@@ -257,53 +257,75 @@ viewNavigationButtons context linkage =
                 , de = "erstes Resultat der Liste"
                 }
             ]
-        , Html.button
-            (case linkage.prevId of
-                Nothing ->
-                    [ Html.Attributes.type_ "button"
-                    , Html.Attributes.disabled True
-                    ]
-
-                Just prevDocumentId ->
-                    [ Html.Attributes.type_ "button"
-                    , Html.Events.onClick
-                        (ReturnNavigation
-                            (Navigation.ShowDocument context.selection.scope prevDocumentId)
-                        )
-                    ]
-            )
-            [ Localization.text context.config
-                { en = "Previous Result"
-                , de = "vorheriges Resultat"
-                }
-            ]
-        , Html.button
-            (case linkage.nextId of
-                Nothing ->
-                    if linkage.canLoadMore then
-                        [ Html.Attributes.type_ "button"
-                        , Html.Events.onClick LoadMore
-                        ]
-
-                    else
-                        [ Html.Attributes.type_ "button"
-                        , Html.Attributes.disabled True
-                        ]
-
-                Just nextDocumentId ->
-                    [ Html.Attributes.type_ "button"
-                    , Html.Events.onClick
-                        (ReturnNavigation
-                            (Navigation.ShowDocument context.selection.scope nextDocumentId)
-                        )
-                    ]
-            )
-            [ Localization.text context.config
-                { en = "Next Result"
-                , de = "nächstes Resultat"
-                }
-            ]
         ]
+            ++ (if linkage.currentNumber == Nothing then
+                    [ Html.button
+                        (if linkage.canLoadMore then
+                            [ Html.Attributes.type_ "button"
+                            , Html.Events.onClick LoadMore
+                            ]
+
+                         else
+                            [ Html.Attributes.type_ "button"
+                            , Html.Attributes.disabled True
+                            ]
+                        )
+                        [ Localization.text context.config
+                            { en = "Load More Results"
+                            , de = "weitere Ergebnisse laden"
+                            }
+                        ]
+                    ]
+
+                else
+                    [ Html.button
+                        (case linkage.prevId of
+                            Nothing ->
+                                [ Html.Attributes.type_ "button"
+                                , Html.Attributes.disabled True
+                                ]
+
+                            Just prevDocumentId ->
+                                [ Html.Attributes.type_ "button"
+                                , Html.Events.onClick
+                                    (ReturnNavigation
+                                        (Navigation.ShowDocument context.selection.scope prevDocumentId)
+                                    )
+                                ]
+                        )
+                        [ Localization.text context.config
+                            { en = "Previous Result"
+                            , de = "vorheriges Resultat"
+                            }
+                        ]
+                    , Html.button
+                        (case linkage.nextId of
+                            Nothing ->
+                                if linkage.canLoadMore then
+                                    [ Html.Attributes.type_ "button"
+                                    , Html.Events.onClick LoadMore
+                                    ]
+
+                                else
+                                    [ Html.Attributes.type_ "button"
+                                    , Html.Attributes.disabled True
+                                    ]
+
+                            Just nextDocumentId ->
+                                [ Html.Attributes.type_ "button"
+                                , Html.Events.onClick
+                                    (ReturnNavigation
+                                        (Navigation.ShowDocument context.selection.scope nextDocumentId)
+                                    )
+                                ]
+                        )
+                        [ Localization.text context.config
+                            { en = "Next Result"
+                            , de = "nächstes Resultat"
+                            }
+                        ]
+                    ]
+               )
 
 
 getLinkage : Context -> Linkage
