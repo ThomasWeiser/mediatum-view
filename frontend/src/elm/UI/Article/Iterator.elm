@@ -309,8 +309,6 @@ viewNavigationButtons context linkage =
                         (linkage.nextId
                             |> Maybe.map
                                 (Navigation.ShowDocument context.selection.scope >> ReturnNavigation)
-                            |> Maybe.Extra.orElse
-                                (linkage.canLoadMore |> Utils.ifElse (Just LoadMore) Nothing)
                         )
                         [ Localization.text context.config
                             { en = "Next Result"
