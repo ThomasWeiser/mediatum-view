@@ -213,25 +213,46 @@ resultNumberText context linkage =
             (linkage.selectionDocumentCount == Nothing)
                 && not linkage.listingIsComplete
     in
-    Localization.string context.config
-        (if orMore then
-            if count == 0 then
-                { en = "Result {{}}"
-                , de = "Resultat {{}}"
-                }
+    case linkage.currentNumber of
+        Just knownCurrentNumber ->
+            Localization.string context.config
+                (if orMore then
+                    if count == 0 then
+                        { en = "Result {{}}"
+                        , de = "Resultat {{}}"
+                        }
 
-            else
-                { en = "Result {{}} of at least {{}}"
-                , de = "Resultat {{}} von mindestens {{}}"
-                }
+                    else
+                        { en = "Result {{}} of at least {{}}"
+                        , de = "Resultat {{}} von mindestens {{}}"
+                        }
 
-         else
-            { en = "Result {{}} of {{}}"
-            , de = "Resultat {{}} von {{}}"
-            }
-        )
-        |> String.Format.value (Maybe.Extra.unwrap "..." String.fromInt linkage.currentNumber)
-        |> String.Format.value (String.fromInt count)
+                 else
+                    { en = "Result {{}} of {{}}"
+                    , de = "Resultat {{}} von {{}}"
+                    }
+                )
+                |> String.Format.value (String.fromInt knownCurrentNumber)
+                |> String.Format.value (String.fromInt count)
+
+        Nothing ->
+            Localization.string context.config
+                (if linkage.listingIsComplete then
+                    { en = "This document does not appear in the {{}} results."
+                    , de = "Dokument nicht in den {{}} Resultaten vorhanden"
+                    }
+
+                 else if count == 0 then
+                    { en = "Document not found yet"
+                    , de = "Dokument bisher nicht gefunden"
+                    }
+
+                 else
+                    { en = "Document not found in the first {{}} results"
+                    , de = "Dokument nicht in den ersten {{}} Resultaten gefunden"
+                    }
+                )
+                |> String.Format.value (String.fromInt linkage.listingDocumentCount)
 
 
 viewNavigationButtons : Context -> Linkage -> Html Msg
