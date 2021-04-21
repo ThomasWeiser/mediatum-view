@@ -171,7 +171,7 @@ needs context =
 
         IteratorPresentation selection limit documentIdFromSearch ->
             let
-                maybeIndexOfDocument =
+                remoteMaybeIndexOfDocument =
                     Cache.getDocumentsPages
                         context.cache
                         ( Config.getMaskName MasksConfig.MaskForListing context.config
@@ -181,16 +181,19 @@ needs context =
                         |> PageSequence.findIndex documentIdFromSearch.id
 
                 raisedLimit =
-                    case maybeIndexOfDocument of
-                        Nothing ->
+                    case remoteMaybeIndexOfDocument of
+                        RemoteData.Success Nothing ->
                             Constants.raiseLimitOnUnlistedDocument limit
 
-                        Just indexOfDocument ->
+                        RemoteData.Success (Just indexOfDocument) ->
                             if indexOfDocument == limit then
                                 Constants.incrementLimitOnLoadMore limit
 
                             else
                                 limit
+
+                        _ ->
+                            limit
             in
             Types.Needs.batch
                 [ needsOfDocumentPresentation (Just selection.scope) documentIdFromSearch

@@ -151,26 +151,47 @@ findAdjacentDocuments documentId thePresentationSegments =
             )
 
 
-{-| Find a document by id and return its index, i.e. the number given in the DocumentResult
--}
-findIndex : DocumentId -> PresentationSegments -> Maybe Int
-findIndex documentId thePresentationSegments =
-    thePresentationSegments
-        |> List.Extra.findMap
-            (RemoteData.unwrap
-                Nothing
-                (\documentResults ->
-                    documentResults
-                        |> List.Extra.findMap
-                            (\documentResult ->
-                                if documentResult.document.id == documentId then
-                                    Just documentResult.number
+{-| Find a document by id and return its index, i.e. the number given in the DocumentResult.
 
-                                else
-                                    Nothing
-                            )
-                )
-            )
+  - Returns `Success (Just index)` if the document is found.
+  - Returns `Success Nothing` if the document is not found and all segments are successfully loaded.
+  - Returns a non-`Success` RemoteData value otherwise.
+
+-}
+findIndex : DocumentId -> PresentationSegments -> ApiData (Maybe Int)
+findIndex documentId thePresentationSegments =
+    let
+        list : List (ApiData (Maybe Int))
+        list =
+            thePresentationSegments
+                |> List.map
+                    (RemoteData.map
+                        (\documentResults ->
+                            documentResults
+                                |> List.Extra.findMap
+                                    (\documentResult ->
+                                        if documentResult.document.id == documentId then
+                                            Just documentResult.number
+
+                                        else
+                                            Nothing
+                                    )
+                        )
+                    )
+
+        maybeIndex : Maybe Int
+        maybeIndex =
+            list
+                |> List.Extra.findMap
+                    (RemoteData.unwrap Nothing identity)
+    in
+    if maybeIndex /= Nothing then
+        Success maybeIndex
+
+    else
+        list
+            |> RemoteData.fromList
+            |> RemoteData.map (always Nothing)
 
 
 {-| -}
