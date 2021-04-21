@@ -194,7 +194,14 @@ needs context =
             in
             Types.Needs.batch
                 [ needsOfDocumentPresentation (Just selection.scope) documentIdFromSearch
-                , needsOfListingPresentation selection adjustedLimit
+                , Types.Needs.sequence
+                    (needsOfListingPresentation selection limit)
+                    (if adjustedLimit > limit then
+                        needsOfListingPresentation selection adjustedLimit
+
+                     else
+                        Types.Needs.none
+                    )
                 ]
 
 
