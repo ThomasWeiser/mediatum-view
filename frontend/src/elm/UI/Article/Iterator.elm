@@ -271,13 +271,17 @@ viewNavigationButtons context linkage =
                         , Html.Events.onClick msg
                         ]
                 )
+
+        buttonNavigationToDocumentId maybeId =
+            button
+                (maybeId
+                    |> Maybe.map
+                        (Navigation.ShowDocument context.selection.scope >> ReturnNavigation)
+                )
     in
     Html.div [] <|
-        [ button
-            (linkage.firstId
-                |> Maybe.map
-                    (Navigation.ShowDocument context.selection.scope >> ReturnNavigation)
-            )
+        [ buttonNavigationToDocumentId
+            linkage.firstId
             [ Localization.text context.config
                 { en = "First Result"
                 , de = "erstes Resultat der Liste"
@@ -295,21 +299,15 @@ viewNavigationButtons context linkage =
                     ]
 
                 else
-                    [ button
-                        (linkage.prevId
-                            |> Maybe.map
-                                (Navigation.ShowDocument context.selection.scope >> ReturnNavigation)
-                        )
+                    [ buttonNavigationToDocumentId
+                        linkage.prevId
                         [ Localization.text context.config
                             { en = "Previous Result"
                             , de = "vorheriges Resultat"
                             }
                         ]
-                    , button
-                        (linkage.nextId
-                            |> Maybe.map
-                                (Navigation.ShowDocument context.selection.scope >> ReturnNavigation)
-                        )
+                    , buttonNavigationToDocumentId
+                        linkage.nextId
                         [ Localization.text context.config
                             { en = "Next Result"
                             , de = "nächstes Resultat"
