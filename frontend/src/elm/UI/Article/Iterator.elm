@@ -257,21 +257,26 @@ resultNumberText context linkage =
 
 viewNavigationButtons : Context -> Linkage -> Html Msg
 viewNavigationButtons context linkage =
-    Html.div [] <|
-        [ Html.button
-            (case linkage.firstId of
-                Nothing ->
-                    [ Html.Attributes.type_ "button"
-                    , Html.Attributes.disabled True
-                    ]
+    let
+        button maybeMsg =
+            Html.button
+                (case maybeMsg of
+                    Nothing ->
+                        [ Html.Attributes.type_ "button"
+                        , Html.Attributes.disabled True
+                        ]
 
-                Just firstvDocumentId ->
-                    [ Html.Attributes.type_ "button"
-                    , Html.Events.onClick
-                        (ReturnNavigation
-                            (Navigation.ShowDocument context.selection.scope firstvDocumentId)
-                        )
-                    ]
+                    Just msg ->
+                        [ Html.Attributes.type_ "button"
+                        , Html.Events.onClick msg
+                        ]
+                )
+    in
+    Html.div [] <|
+        [ button
+            (linkage.firstId
+                |> Maybe.map
+                    (Navigation.ShowDocument context.selection.scope >> ReturnNavigation)
             )
             [ Localization.text context.config
                 { en = "First Result"
@@ -280,17 +285,8 @@ viewNavigationButtons context linkage =
             ]
         ]
             ++ (if linkage.currentNumber == Nothing then
-                    [ Html.button
-                        (if linkage.canLoadMore then
-                            [ Html.Attributes.type_ "button"
-                            , Html.Events.onClick LoadMore
-                            ]
-
-                         else
-                            [ Html.Attributes.type_ "button"
-                            , Html.Attributes.disabled True
-                            ]
-                        )
+                    [ button
+                        (linkage.canLoadMore |> Utils.ifElse (Just LoadMore) Nothing)
                         [ Localization.text context.config
                             { en = "Load More Results"
                             , de = "weitere Ergebnisse laden"
@@ -299,46 +295,22 @@ viewNavigationButtons context linkage =
                     ]
 
                 else
-                    [ Html.button
-                        (case linkage.prevId of
-                            Nothing ->
-                                [ Html.Attributes.type_ "button"
-                                , Html.Attributes.disabled True
-                                ]
-
-                            Just prevDocumentId ->
-                                [ Html.Attributes.type_ "button"
-                                , Html.Events.onClick
-                                    (ReturnNavigation
-                                        (Navigation.ShowDocument context.selection.scope prevDocumentId)
-                                    )
-                                ]
+                    [ button
+                        (linkage.prevId
+                            |> Maybe.map
+                                (Navigation.ShowDocument context.selection.scope >> ReturnNavigation)
                         )
                         [ Localization.text context.config
                             { en = "Previous Result"
                             , de = "vorheriges Resultat"
                             }
                         ]
-                    , Html.button
-                        (case linkage.nextId of
-                            Nothing ->
-                                if linkage.canLoadMore then
-                                    [ Html.Attributes.type_ "button"
-                                    , Html.Events.onClick LoadMore
-                                    ]
-
-                                else
-                                    [ Html.Attributes.type_ "button"
-                                    , Html.Attributes.disabled True
-                                    ]
-
-                            Just nextDocumentId ->
-                                [ Html.Attributes.type_ "button"
-                                , Html.Events.onClick
-                                    (ReturnNavigation
-                                        (Navigation.ShowDocument context.selection.scope nextDocumentId)
-                                    )
-                                ]
+                    , button
+                        (linkage.nextId
+                            |> Maybe.map
+                                (Navigation.ShowDocument context.selection.scope >> ReturnNavigation)
+                            |> Maybe.Extra.orElse
+                                (linkage.canLoadMore |> Utils.ifElse (Just LoadMore) Nothing)
                         )
                         [ Localization.text context.config
                             { en = "Next Result"
