@@ -180,10 +180,10 @@ needs context =
                         |> PageSequence.presentationSegments limit
                         |> PageSequence.findIndex documentIdFromSearch.id
 
-                adjustedLimit =
+                raisedLimit =
                     case maybeIndexOfDocument of
                         Nothing ->
-                            Constants.adjustLimitOnUnlistedDocument limit
+                            Constants.raiseLimitOnUnlistedDocument limit
 
                         Just indexOfDocument ->
                             if indexOfDocument == limit then
@@ -196,8 +196,8 @@ needs context =
                 [ needsOfDocumentPresentation (Just selection.scope) documentIdFromSearch
                 , Types.Needs.sequence
                     (needsOfListingPresentation selection limit)
-                    (if adjustedLimit > limit then
-                        needsOfListingPresentation selection adjustedLimit
+                    (if raisedLimit > limit then
+                        needsOfListingPresentation selection raisedLimit
 
                      else
                         Types.Needs.none

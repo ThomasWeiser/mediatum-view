@@ -1,13 +1,13 @@
 module Constants exposing
     ( apiUrl, graphqlOperationNamePrefix
-    , incrementLimitOnLoadMore, adjustLimitOnUnlistedDocument
+    , incrementLimitOnLoadMore, raiseLimitOnUnlistedDocument
     , maxAttributeLengthInListingView
     )
 
 {-| Configurable values
 
 @docs apiUrl, graphqlOperationNamePrefix
-@docs incrementLimitOnLoadMore, adjustLimitOnUnlistedDocument
+@docs incrementLimitOnLoadMore, raiseLimitOnUnlistedDocument
 @docs maxAttributeLengthInListingView
 
 -}
@@ -49,8 +49,8 @@ incrementLimitOnLoadMore limit =
 
 
 {-| -}
-adjustLimitOnUnlistedDocument : Int -> Int
-adjustLimitOnUnlistedDocument =
+raiseLimitOnUnlistedDocument : Int -> Int
+raiseLimitOnUnlistedDocument =
     Basics.Extra.atLeast 100
 
 
