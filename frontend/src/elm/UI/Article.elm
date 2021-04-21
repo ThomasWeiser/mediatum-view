@@ -33,6 +33,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
 import RemoteData
+import Types.ApiData exposing (ApiData)
 import Types.Aspect exposing (Aspect)
 import Types.Config as Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
@@ -171,6 +172,7 @@ needs context =
 
         IteratorPresentation selection limit documentIdFromSearch ->
             let
+                remoteMaybeIndexOfDocument : ApiData (Maybe Int)
                 remoteMaybeIndexOfDocument =
                     Cache.getDocumentsPages
                         context.cache
@@ -182,9 +184,6 @@ needs context =
 
                 raisedLimit =
                     case remoteMaybeIndexOfDocument of
-                        RemoteData.Success Nothing ->
-                            Constants.raiseLimitOnUnlistedDocument limit
-
                         RemoteData.Success (Just indexOfDocument) ->
                             if indexOfDocument == limit then
                                 Constants.incrementLimitOnLoadMore limit

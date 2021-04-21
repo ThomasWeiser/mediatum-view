@@ -1,13 +1,13 @@
 module Constants exposing
     ( apiUrl, graphqlOperationNamePrefix
-    , incrementLimitOnLoadMore, raiseLimitOnUnlistedDocument
+    , incrementLimitOnLoadMore
     , maxAttributeLengthInListingView
     )
 
 {-| Configurable values
 
 @docs apiUrl, graphqlOperationNamePrefix
-@docs incrementLimitOnLoadMore, raiseLimitOnUnlistedDocument
+@docs incrementLimitOnLoadMore
 @docs maxAttributeLengthInListingView
 
 -}
@@ -46,12 +46,6 @@ incrementLimitOnLoadMore limit =
 
     else
         ((limit + 149) // 100) * 100
-
-
-{-| -}
-raiseLimitOnUnlistedDocument : Int -> Int
-raiseLimitOnUnlistedDocument =
-    Basics.Extra.atLeast 100
 
 
 {-| -}
