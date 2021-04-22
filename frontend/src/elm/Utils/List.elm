@@ -23,8 +23,8 @@ import List.Extra
 
 {-| Conditionally add an element to the front of a list.
 -}
-consIf : a -> Bool -> List a -> List a
-consIf element condition list =
+consIf : Bool -> a -> List a -> List a
+consIf condition element list =
     if condition then
         element :: list
 
@@ -32,10 +32,10 @@ consIf element condition list =
         list
 
 
-{-| Conditionally append a list (first parameter) to the front of another list.
+{-| Conditionally append a list (second parameter) to the front of another list.
 -}
-appendIf : List a -> Bool -> List a -> List a
-appendIf conditionalFirstList condition secondList =
+appendIf : Bool -> List a -> List a -> List a
+appendIf condition conditionalFirstList secondList =
     if condition then
         List.append conditionalFirstList secondList
 
@@ -43,10 +43,10 @@ appendIf conditionalFirstList condition secondList =
         secondList
 
 
-{-| Conditionally append a list (first parameter) to the end of another list.
+{-| Conditionally append a list (second parameter) to the end of another list.
 -}
-appendWithIf : List a -> Bool -> List a -> List a
-appendWithIf conditionalSecondList condition firstList =
+appendWithIf : Bool -> List a -> List a -> List a
+appendWithIf condition conditionalSecondList firstList =
     if condition then
         List.append firstList conditionalSecondList
 
