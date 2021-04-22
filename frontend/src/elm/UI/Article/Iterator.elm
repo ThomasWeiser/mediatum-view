@@ -42,6 +42,7 @@ import Types.Selection exposing (Selection)
 import UI.Article.Details as Details
 import UI.Article.Listing as Listing
 import Utils
+import Utils.List
 
 
 {-| -}
@@ -272,48 +273,62 @@ viewNavigationButtons context linkage =
                         ]
                 )
 
-        buttonNavigationToDocumentId maybeId =
+        buttonNavigationToDocumentId maybeId loadMore =
             button
                 (maybeId
                     |> Maybe.map
-                        (Navigation.ShowDocument context.selection.scope >> ReturnNavigation)
+                        (\id ->
+                            ReturnNavigation
+                                (Navigation.ListOfNavigations
+                                    ([ Navigation.ShowDocument context.selection.scope id ]
+                                        |> Utils.List.consIf loadMore
+                                            (Navigation.SetLimit
+                                                (Constants.incrementLimitOnLoadMore context.limit)
+                                            )
+                                    )
+                                )
+                        )
                 )
     in
     Html.div [] <|
         [ buttonNavigationToDocumentId
             linkage.firstId
+            False
             [ Localization.text context.config
                 { en = "First Result"
                 , de = "erstes Resultat der Liste"
                 }
             ]
         ]
-            ++ (if linkage.currentNumber == Nothing then
-                    [ button
-                        (linkage.canLoadMore |> Utils.ifElse (Just LoadMore) Nothing)
-                        [ Localization.text context.config
-                            { en = "Load More Results"
-                            , de = "weitere Ergebnisse laden"
-                            }
+            ++ (case linkage.currentNumber of
+                    Nothing ->
+                        [ button
+                            (linkage.canLoadMore |> Utils.ifElse (Just LoadMore) Nothing)
+                            [ Localization.text context.config
+                                { en = "Load More Results"
+                                , de = "weitere Ergebnisse laden"
+                                }
+                            ]
                         ]
-                    ]
 
-                else
-                    [ buttonNavigationToDocumentId
-                        linkage.prevId
-                        [ Localization.text context.config
-                            { en = "Previous Result"
-                            , de = "vorheriges Resultat"
-                            }
+                    Just currentNumber ->
+                        [ buttonNavigationToDocumentId
+                            linkage.prevId
+                            False
+                            [ Localization.text context.config
+                                { en = "Previous Result"
+                                , de = "vorheriges Resultat"
+                                }
+                            ]
+                        , buttonNavigationToDocumentId
+                            linkage.nextId
+                            (currentNumber == context.limit)
+                            [ Localization.text context.config
+                                { en = "Next Result"
+                                , de = "nächstes Resultat"
+                                }
+                            ]
                         ]
-                    , buttonNavigationToDocumentId
-                        linkage.nextId
-                        [ Localization.text context.config
-                            { en = "Next Result"
-                            , de = "nächstes Resultat"
-                            }
-                        ]
-                    ]
                )
 
 
