@@ -226,11 +226,6 @@ viewSearchMatching config =
         >> Localization.text config
 
 
-maxAttributeStringLength : Int
-maxAttributeStringLength =
-    80
-
-
 keys :
     { author : Regex.Regex
     , congressOrJournal : Regex.Regex
