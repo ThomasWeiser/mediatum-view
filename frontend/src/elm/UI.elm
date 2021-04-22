@@ -14,6 +14,7 @@ import Cache exposing (Cache)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Types.AdjustmentToSetup as AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.Config exposing (Config)
 import Types.Localization as Localization exposing (Language)
 import Types.Navigation as Navigation exposing (Navigation)
@@ -46,7 +47,7 @@ Mainly used to report navigational requests.
 type Return
     = NoReturn
     | Navigate Navigation
-    | SwitchUILanguage Language
+    | AdjustSetup AdjustmentToSetup
 
 
 {-| The model comprises the models of the sub-components.
@@ -137,7 +138,7 @@ update context msg model =
         UserSelectedUILanguage language ->
             ( model
             , Cmd.none
-            , SwitchUILanguage language
+            , AdjustSetup (AdjustmentToSetup.UserSelectedUILanguage language)
             )
 
         TreeMsg subMsg ->

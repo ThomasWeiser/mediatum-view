@@ -15,9 +15,9 @@ module App exposing
 import Cache exposing (Cache)
 import Cmd.Extra
 import Html exposing (Html)
+import Types.AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.Config as Config exposing (Config)
 import Types.DebugInfo exposing (DebugInfo, debugInfo)
-import Types.Localization exposing (Language)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation as Presentation exposing (Presentation(..))
@@ -39,7 +39,7 @@ Internal route changes are reported to the [`Main`](Main) module this way.
 -}
 type Return
     = NoReturn
-    | SwitchUILanguage Language
+    | AdjustSetup AdjustmentToSetup
     | ReflectRoute Route
 
 
@@ -182,8 +182,8 @@ update context msg model =
                 SubNoReturn ->
                     ( model1, NoReturn )
 
-                SubReturnSwitchUILanguage language ->
-                    ( model1, SwitchUILanguage language )
+                SubReturnAdjustSetup adjustment ->
+                    ( model1, AdjustSetup adjustment )
 
                 SubReturnNavigate navigation ->
                     let
@@ -207,7 +207,7 @@ update context msg model =
 type SubReturn
     = SubNoReturn
     | SubReturnNavigate Navigation
-    | SubReturnSwitchUILanguage Language
+    | SubReturnAdjustSetup AdjustmentToSetup
 
 
 updateSubModel : Context -> Msg -> Model -> ( Model, Cmd Msg, SubReturn )
@@ -247,8 +247,8 @@ updateSubModel context msg model =
                         UI.Navigate navigation ->
                             ( model1, SubReturnNavigate navigation )
 
-                        UI.SwitchUILanguage language ->
-                            ( model1, SubReturnSwitchUILanguage language )
+                        UI.AdjustSetup adjustment ->
+                            ( model1, SubReturnAdjustSetup adjustment )
             in
             ( model2
             , Cmd.map UIMsg uiCmd

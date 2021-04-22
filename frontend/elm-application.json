@@ -28,6 +28,7 @@
         "Pagination.Relay.Page",
         "Pagination.Relay.Pagination",
         "Setup",
+        "Types.AdjustmentToSetup",
         "Types.ApiData",
         "Types.Aspect",
         "Types.Config.FacetAspectConfig",
