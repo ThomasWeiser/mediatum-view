@@ -29,6 +29,7 @@ import Types.Selection exposing (FtsFilters, GlobalFts, Sorting)
 type Navigation
     = ListOfNavigations (List Navigation)
     | ShowDocument FolderId DocumentId
+    | ShowListingWithoutDocument
     | ShowListingWithFolder FolderId
     | ShowListingWithSearchAndFtsFilter GlobalFts FtsFilters Sorting
     | ShowListingWithAddedFacetFilter Aspect String
@@ -80,6 +81,17 @@ alterRoute config cache navigation route =
                     Route.TwoIds
                         (folderId |> Id.asNodeId)
                         (documentId |> Id.asNodeId)
+            }
+
+        ShowListingWithoutDocument ->
+            { route
+                | path =
+                    case route.path of
+                        Route.TwoIds idOne idTwo ->
+                            Route.OneId idOne
+
+                        _ ->
+                            route.path
             }
 
         ShowListingWithFolder folderId ->

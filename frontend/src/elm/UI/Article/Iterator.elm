@@ -260,29 +260,32 @@ resultNumberText context linkage =
 viewNavigationButtons : Context -> Linkage -> Html Msg
 viewNavigationButtons context linkage =
     let
-        buttonNavigation maybeDocumentId loadMore =
-            let
-                navigations =
-                    maybeDocumentId
-                        |> Maybe.Extra.unwrap []
-                            (\id -> [ Navigation.ShowDocument context.selection.scope id ])
-                        |> Utils.List.consIf (loadMore && linkage.canLoadMore)
-                            (Navigation.SetLimit (Constants.incrementLimitOnLoadMore context.limit))
-            in
+        buttonListOfNavigations listOfNavigations =
             Html.button
-                (if List.isEmpty navigations then
+                (if List.isEmpty listOfNavigations then
                     [ Html.Attributes.type_ "button"
                     , Html.Attributes.disabled True
                     ]
 
                  else
                     [ Html.Attributes.type_ "button"
-                    , Html.Events.onClick (ReturnNavigation (Navigation.ListOfNavigations navigations))
+                    , Html.Events.onClick (ReturnNavigation (Navigation.ListOfNavigations listOfNavigations))
                     ]
                 )
+
+        buttonNavigationInResults maybeDocumentId loadMore =
+            let
+                listOfNavigations =
+                    maybeDocumentId
+                        |> Maybe.Extra.unwrap []
+                            (\id -> [ Navigation.ShowDocument context.selection.scope id ])
+                        |> Utils.List.consIf (loadMore && linkage.canLoadMore)
+                            (Navigation.SetLimit (Constants.incrementLimitOnLoadMore context.limit))
+            in
+            buttonListOfNavigations listOfNavigations
     in
     Html.div [] <|
-        [ buttonNavigation
+        [ buttonNavigationInResults
             linkage.firstId
             False
             [ Localization.text context.config
@@ -293,7 +296,7 @@ viewNavigationButtons context linkage =
         ]
             ++ (case linkage.currentNumber of
                     Nothing ->
-                        [ buttonNavigation
+                        [ buttonNavigationInResults
                             Nothing
                             True
                             [ Localization.text context.config
@@ -304,7 +307,7 @@ viewNavigationButtons context linkage =
                         ]
 
                     Just currentNumber ->
-                        [ buttonNavigation
+                        [ buttonNavigationInResults
                             linkage.prevId
                             (currentNumber - 1 > context.limit)
                             [ Localization.text context.config
@@ -312,7 +315,7 @@ viewNavigationButtons context linkage =
                                 , de = "vorheriges Resultat"
                                 }
                             ]
-                        , buttonNavigation
+                        , buttonNavigationInResults
                             linkage.nextId
                             (currentNumber >= context.limit)
                             [ Localization.text context.config
@@ -322,6 +325,14 @@ viewNavigationButtons context linkage =
                             ]
                         ]
                )
+            ++ [ buttonListOfNavigations
+                    [ Navigation.ShowListingWithoutDocument ]
+                    [ Localization.text context.config
+                        { en = "Back to Results"
+                        , de = "zurück zur Liste"
+                        }
+                    ]
+               ]
 
 
 getLinkage : Context -> Linkage
