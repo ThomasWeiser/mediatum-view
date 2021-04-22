@@ -227,23 +227,35 @@ resultNumberText context linkage =
                 |> String.Format.value (String.fromInt count)
 
         Nothing ->
-            Localization.string context.config
-                (if linkage.listingIsComplete then
-                    { en = "This document does not appear in the {{}} results."
+            if linkage.listingIsComplete then
+                Localization.string context.config
+                    { en = "This document is not present in the {{}} results."
                     , de = "Dokument nicht in den {{}} Resultaten vorhanden"
                     }
+                    |> String.Format.value (String.fromInt linkage.listingDocumentCount)
 
-                 else if count == 0 then
+            else if count == 0 then
+                Localization.string context.config
                     { en = "Document not found yet"
                     , de = "Dokument bisher nicht gefunden"
                     }
 
-                 else
-                    { en = "Document not found in the first {{}} results"
-                    , de = "Dokument nicht in den ersten {{}} Resultaten gefunden"
-                    }
-                )
-                |> String.Format.value (String.fromInt linkage.listingDocumentCount)
+            else
+                case linkage.selectionDocumentCount of
+                    Nothing ->
+                        Localization.string context.config
+                            { en = "Document not found in the first {{}} results"
+                            , de = "Dokument nicht in den ersten {{}} Resultaten gefunden"
+                            }
+                            |> String.Format.value (String.fromInt linkage.listingDocumentCount)
+
+                    Just totalCount ->
+                        Localization.string context.config
+                            { en = "Document not found in the first {{}} results of a total of {{}} results"
+                            , de = "Dokument nicht in den ersten {{}} von insgesamt {{}} Resultaten gefunden"
+                            }
+                            |> String.Format.value (String.fromInt linkage.listingDocumentCount)
+                            |> String.Format.value (String.fromInt totalCount)
 
 
 viewNavigationButtons : Context -> Linkage -> Html Msg
