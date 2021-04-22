@@ -1,5 +1,5 @@
 module Utils.List exposing
-    ( consIf
+    ( consIf, appendIf, appendWithIf
     , findMap
     , findAdjacent
     , findByMapping, filterByMapping, filterByNotMapping, replaceOnMapping, setOnMapping, updateOnMapping
