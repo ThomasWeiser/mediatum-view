@@ -307,7 +307,7 @@ viewNavigationButtons context linkage =
                     Just currentNumber ->
                         [ buttonNavigation
                             linkage.prevId
-                            False
+                            (currentNumber - 1 > context.limit)
                             [ Localization.text context.config
                                 { en = "Previous Result"
                                 , de = "vorheriges Resultat"
@@ -315,7 +315,7 @@ viewNavigationButtons context linkage =
                             ]
                         , buttonNavigation
                             linkage.nextId
-                            (currentNumber == context.limit)
+                            (currentNumber >= context.limit)
                             [ Localization.text context.config
                                 { en = "Next Result"
                                 , de = "nächstes Resultat"
