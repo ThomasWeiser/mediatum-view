@@ -64,6 +64,7 @@ type Return
 type alias Model =
     { listing : Listing.Model
     , details : Details.Model
+    , showListing : Bool
     }
 
 
@@ -72,6 +73,7 @@ type Msg
     = ListingMsg Listing.Msg
     | DetailsMsg Details.Msg
     | ReturnNavigation Navigation
+    | SetShowListing Bool
 
 
 {-| -}
@@ -79,6 +81,7 @@ initialModel : Model
 initialModel =
     { listing = Listing.initialModel
     , details = Details.initialModel
+    , showListing = False
     }
 
 
@@ -132,26 +135,36 @@ update context msg model =
             , Navigate navigation
             )
 
+        SetShowListing newState ->
+            ( { model | showListing = newState }
+            , Cmd.none
+            , NoReturn
+            )
+
 
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
     Html.div []
-        [ viewHeader context
+        [ viewHeader context model
         , Html.div
             [ Html.Attributes.style "display" "flex" ]
-            [ Html.div
-                [ Html.Attributes.style "flex" "1" ]
-                [ Listing.view
-                    { config = context.config
-                    , cache = context.cache
-                    , route = context.route
-                    , selection = context.selection
-                    , limit = context.limit
-                    }
-                    model.listing
-                    |> Html.map ListingMsg
-                ]
+            [ if model.showListing then
+                Html.div
+                    [ Html.Attributes.style "flex" "1" ]
+                    [ Listing.view
+                        { config = context.config
+                        , cache = context.cache
+                        , route = context.route
+                        , selection = context.selection
+                        , limit = context.limit
+                        }
+                        model.listing
+                        |> Html.map ListingMsg
+                    ]
+
+              else
+                Html.text ""
             , Html.div
                 [ Html.Attributes.style "flex" "1" ]
                 [ Details.view
@@ -179,8 +192,8 @@ type alias Linkage =
     }
 
 
-viewHeader : Context -> Html Msg
-viewHeader context =
+viewHeader : Context -> Model -> Html Msg
+viewHeader context model =
     let
         linkage =
             getLinkage context
@@ -188,6 +201,24 @@ viewHeader context =
     Html.div []
         [ viewNavigationButtons context linkage
         , Html.text (resultNumberText context linkage)
+        , Html.div [] [ viewListingCheckbox context model ]
+        ]
+
+
+viewListingCheckbox : Context -> Model -> Html Msg
+viewListingCheckbox context model =
+    Html.label
+        []
+        [ Html.input
+            [ Html.Attributes.type_ "checkbox"
+            , Html.Attributes.checked model.showListing
+            , Html.Events.onClick (SetShowListing (not model.showListing))
+            ]
+            []
+        , Localization.text context.config
+            { en = " Also show result list [UX Test]"
+            , de = " Zeige auch Ergebnisliste [UX Test]"
+            }
         ]
 
 
