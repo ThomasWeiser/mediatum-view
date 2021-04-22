@@ -20,9 +20,6 @@ module UI.Article.Listing exposing
 
 -}
 
--- import Article.Iterator as Iterator
--- import Pagination.Offset.Page as Page exposing (Page, PageResult)
-
 import Cache exposing (Cache)
 import Constants
 import Entities.Document as Document exposing (Document)
@@ -65,8 +62,7 @@ type Return
 
 {-| -}
 type alias Model =
-    { -- , iterator : Maybe Iterator.Model
-    }
+    {}
 
 
 {-| -}
@@ -75,24 +71,10 @@ type Msg
     | LoadMore
 
 
-
--- | IteratorMsg Iterator.Msg
-{-
-   iteratorContext : Context -> Model -> Iterator.Context DocumentResult
-   iteratorContext context model =
-       { cache = context.cache
-       , folder = context.ftsQuery.folder
-       , itemList = Maybe.Extra.unwrap [] Page.entries model.pageResult.page
-       , itemId = .document >> .id
-       }
--}
-
-
 {-| -}
 initialModel : Model
 initialModel =
-    { -- , iterator = Nothing
-    }
+    {}
 
 
 {-| -}
@@ -110,53 +92,10 @@ update context msg model =
 
         SelectDocument documentId ->
             ( model
-              {- { model
-                   | iterator =
-                       Just
-                           (Iterator.initialModel
-                               (iteratorContext context model)
-                               documentId
-                           )
-                 }
-              -}
             , Cmd.none
             , Navigate
                 (Navigation.ShowDocument context.selection.scope documentId)
             )
-
-
-
-{-
-   IteratorMsg subMsg ->
-       case model.iterator of
-           Nothing ->
-               ( model, Cmd.none, NoReturn )
-
-           Just iterator ->
-               let
-                   ( subModel, subCmd, subReturn ) =
-                       Iterator.update
-                           (iteratorContext context model)
-                           subMsg
-                           iterator
-               in
-               ( { model
-                   | iterator =
-                       if subReturn == Iterator.CloseIterator then
-                           Nothing
-
-                       else
-                           Just subModel
-                 }
-               , Cmd.map IteratorMsg subCmd
-               , case subReturn of
-                   Iterator.ShowDocument id ->
-                       ShowDocument id
-
-                   _ ->
-                       NoReturn
-               )
--}
 
 
 {-| -}
@@ -171,8 +110,6 @@ view context model =
                 )
     in
     Html.div [] <|
-        -- case model.iterator of
-        -- Nothing ->
         [ viewPageSequence context pageSequence
         , viewFooter context pageSequence
         ]
