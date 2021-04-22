@@ -200,27 +200,26 @@ resultNumberText context linkage =
             linkage.selectionDocumentCount
                 |> Maybe.withDefault linkage.listingDocumentCount
 
-        orMore =
-            (linkage.selectionDocumentCount == Nothing)
-                && not linkage.listingIsComplete
+        countIsTotal =
+            (linkage.selectionDocumentCount /= Nothing)
+                || linkage.listingIsComplete
     in
     case linkage.currentNumber of
         Just knownCurrentNumber ->
             Localization.string context.config
-                (if orMore then
-                    if count == 0 then
-                        { en = "Result {{}}"
-                        , de = "Resultat {{}}"
-                        }
+                (if count == 0 then
+                    { en = "Result {{}}"
+                    , de = "Resultat {{}}"
+                    }
 
-                    else
-                        { en = "Result {{}} of at least {{}}"
-                        , de = "Resultat {{}} von mindestens {{}}"
-                        }
-
-                 else
+                 else if countIsTotal then
                     { en = "Result {{}} of {{}}"
                     , de = "Resultat {{}} von {{}}"
+                    }
+
+                 else
+                    { en = "Result {{}} of at least {{}}"
+                    , de = "Resultat {{}} von mindestens {{}}"
                     }
                 )
                 |> String.Format.value (String.fromInt knownCurrentNumber)
