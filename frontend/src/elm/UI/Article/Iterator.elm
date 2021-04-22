@@ -74,7 +74,6 @@ type Msg
     = ListingMsg Listing.Msg
     | DetailsMsg Details.Msg
     | ReturnNavigation Navigation
-    | LoadMore
 
 
 {-| -}
@@ -133,15 +132,6 @@ update context msg model =
             ( model
             , Cmd.none
             , Navigate navigation
-            )
-
-        LoadMore ->
-            ( model
-            , Cmd.none
-            , Navigate
-                (Navigation.SetLimit
-                    (Constants.incrementLimitOnLoadMore context.limit)
-                )
             )
 
 
@@ -259,39 +249,29 @@ resultNumberText context linkage =
 viewNavigationButtons : Context -> Linkage -> Html Msg
 viewNavigationButtons context linkage =
     let
-        button maybeMsg =
+        buttonNavigation maybeDocumentId loadMore =
+            let
+                navigations =
+                    maybeDocumentId
+                        |> Maybe.Extra.unwrap []
+                            (\id -> [ Navigation.ShowDocument context.selection.scope id ])
+                        |> Utils.List.consIf (loadMore && linkage.canLoadMore)
+                            (Navigation.SetLimit (Constants.incrementLimitOnLoadMore context.limit))
+            in
             Html.button
-                (case maybeMsg of
-                    Nothing ->
-                        [ Html.Attributes.type_ "button"
-                        , Html.Attributes.disabled True
-                        ]
+                (if List.isEmpty navigations then
+                    [ Html.Attributes.type_ "button"
+                    , Html.Attributes.disabled True
+                    ]
 
-                    Just msg ->
-                        [ Html.Attributes.type_ "button"
-                        , Html.Events.onClick msg
-                        ]
-                )
-
-        buttonNavigationToDocumentId maybeId loadMore =
-            button
-                (maybeId
-                    |> Maybe.map
-                        (\id ->
-                            ReturnNavigation
-                                (Navigation.ListOfNavigations
-                                    ([ Navigation.ShowDocument context.selection.scope id ]
-                                        |> Utils.List.consIf loadMore
-                                            (Navigation.SetLimit
-                                                (Constants.incrementLimitOnLoadMore context.limit)
-                                            )
-                                    )
-                                )
-                        )
+                 else
+                    [ Html.Attributes.type_ "button"
+                    , Html.Events.onClick (ReturnNavigation (Navigation.ListOfNavigations navigations))
+                    ]
                 )
     in
     Html.div [] <|
-        [ buttonNavigationToDocumentId
+        [ buttonNavigation
             linkage.firstId
             False
             [ Localization.text context.config
@@ -302,8 +282,9 @@ viewNavigationButtons context linkage =
         ]
             ++ (case linkage.currentNumber of
                     Nothing ->
-                        [ button
-                            (linkage.canLoadMore |> Utils.ifElse (Just LoadMore) Nothing)
+                        [ buttonNavigation
+                            Nothing
+                            True
                             [ Localization.text context.config
                                 { en = "Load More Results"
                                 , de = "weitere Ergebnisse laden"
@@ -312,7 +293,7 @@ viewNavigationButtons context linkage =
                         ]
 
                     Just currentNumber ->
-                        [ buttonNavigationToDocumentId
+                        [ buttonNavigation
                             linkage.prevId
                             False
                             [ Localization.text context.config
@@ -320,7 +301,7 @@ viewNavigationButtons context linkage =
                                 , de = "vorheriges Resultat"
                                 }
                             ]
-                        , buttonNavigationToDocumentId
+                        , buttonNavigation
                             linkage.nextId
                             (currentNumber == context.limit)
                             [ Localization.text context.config
