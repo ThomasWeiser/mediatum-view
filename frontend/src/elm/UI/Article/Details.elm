@@ -20,7 +20,6 @@ module UI.Article.Details exposing
 
 -}
 
-import Api
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
 import Entities.Markup

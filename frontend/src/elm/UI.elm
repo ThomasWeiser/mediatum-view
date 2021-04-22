@@ -11,12 +11,10 @@ module UI exposing
 -}
 
 import Cache exposing (Cache)
-import Entities.Document exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Types.Config exposing (Config)
-import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Localization as Localization exposing (Language)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs

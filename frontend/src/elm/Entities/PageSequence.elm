@@ -25,12 +25,10 @@ The segmentation of the listing into pages reflects the history of requests to p
 
 -}
 
-import Api.Fragments exposing (documentsPage)
 import Array exposing (Array)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import List.Extra
 import Maybe.Extra
-import Mediatum.Object.Metadatatype exposing (documents)
 import RemoteData exposing (RemoteData(..))
 import Types exposing (Window)
 import Types.ApiData exposing (ApiData)

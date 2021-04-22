@@ -23,13 +23,12 @@ module UI.Article.Iterator exposing
 import Cache exposing (Cache)
 import Cache.Derive
 import Constants
-import Entities.PageSequence as PageSequence exposing (PageSequence)
+import Entities.PageSequence as PageSequence
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Maybe.Extra
-import Mediatum.Object.FacetValue exposing (count)
-import RemoteData exposing (RemoteData)
+import RemoteData
 import String.Format
 import Types exposing (DocumentIdFromSearch)
 import Types.Config as Config exposing (Config)
@@ -41,7 +40,6 @@ import Types.Route exposing (Route)
 import Types.Selection exposing (Selection)
 import UI.Article.Details as Details
 import UI.Article.Listing as Listing
-import Utils
 import Utils.List
 
 

@@ -16,7 +16,6 @@ import Cache exposing (Cache)
 import Cmd.Extra
 import Html exposing (Html)
 import Types.Config as Config exposing (Config)
-import Types.Config.MasksConfig as MasksConfig
 import Types.DebugInfo exposing (DebugInfo, debugInfo)
 import Types.Localization exposing (Language)
 import Types.Navigation as Navigation exposing (Navigation)

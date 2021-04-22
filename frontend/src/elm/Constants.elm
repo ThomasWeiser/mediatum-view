@@ -12,8 +12,6 @@ module Constants exposing
 
 -}
 
-import Basics.Extra
-
 
 {-| Endpoint for backend's GraphQL service.
 -}

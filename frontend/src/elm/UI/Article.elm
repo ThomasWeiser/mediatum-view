@@ -34,7 +34,6 @@ import Html.Attributes
 import Maybe.Extra
 import RemoteData
 import Types.ApiData exposing (ApiData)
-import Types.Aspect exposing (Aspect)
 import Types.Config as Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Config.MasksConfig as MasksConfig
@@ -48,7 +47,6 @@ import UI.Article.Details
 import UI.Article.Generic
 import UI.Article.Iterator
 import UI.Article.Listing
-import UI.Icons exposing (search)
 import UI.Widgets.Breadcrumbs
 import Utils
 
