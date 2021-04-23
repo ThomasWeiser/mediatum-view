@@ -47,6 +47,7 @@ type Presentation
     | CollectionPresentation FolderId
     | DocumentPresentation (Maybe FolderId) DocumentIdFromSearch
     | ListingPresentation Selection Int
+    | IteratorPresentation Selection Int DocumentIdFromSearch
 
 
 {-| -}
@@ -67,17 +68,21 @@ getFolderId cache presentation =
         ListingPresentation selection limit ->
             Just selection.scope
 
+        IteratorPresentation selection limit documentIdFromSearch ->
+            Just selection.scope
+
 
 {-| -}
 fromRoute : Config -> Cache -> Route -> Presentation
 fromRoute config cache route =
     let
+        cannotShowListing folderType =
+            (route.parameters.globalFts == Nothing)
+                && FilterList.isEmpty route.parameters.ftsFilters
+                && (folderType == DisplayAsCollection)
+
         folderPresentation folderId folderType =
-            if
-                (route.parameters.globalFts == Nothing)
-                    && FilterList.isEmpty route.parameters.ftsFilters
-                    && (folderType == DisplayAsCollection)
-            then
+            if cannotShowListing folderType then
                 CollectionPresentation folderId
 
             else
@@ -133,12 +138,27 @@ fromRoute config cache route =
                     |> RemoteData.toMaybe
             of
                 Just ( NodeIsFolder folderType, NodeIsDocument ) ->
-                    DocumentPresentation
-                        (Just (nodeIdOne |> Id.asFolderId))
-                        (DocumentIdFromSearch
-                            (nodeIdTwo |> Id.asDocumentId)
-                            route.parameters.globalFts
-                        )
+                    if cannotShowListing folderType then
+                        DocumentPresentation
+                            (Just (nodeIdOne |> Id.asFolderId))
+                            (DocumentIdFromSearch
+                                (nodeIdTwo |> Id.asDocumentId)
+                                route.parameters.globalFts
+                            )
+
+                    else
+                        IteratorPresentation
+                            { scope = nodeIdOne |> Id.asFolderId
+                            , globalFts = route.parameters.globalFts
+                            , ftsFilters = route.parameters.ftsFilters
+                            , facetFilters = route.parameters.facetFilters
+                            , sorting = route.parameters.sorting
+                            }
+                            route.parameters.limit
+                            (DocumentIdFromSearch
+                                (nodeIdTwo |> Id.asDocumentId)
+                                route.parameters.globalFts
+                            )
 
                 _ ->
                     GenericPresentation

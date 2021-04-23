@@ -20,177 +20,376 @@ module UI.Article.Iterator exposing
 
 -}
 
-import Article.Details as Details
+import Cache exposing (Cache)
+import Cache.Derive
+import Constants
+import Entities.PageSequence as PageSequence
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Maybe.Extra
-import Types exposing (Document, DocumentId, Folder)
-import Utils
+import RemoteData
+import String.Format
+import Types exposing (DocumentIdFromSearch)
+import Types.Config as Config exposing (Config)
+import Types.Config.MasksConfig as MasksConfig
+import Types.Id exposing (DocumentId)
+import Types.Localization as Localization
+import Types.Navigation as Navigation exposing (Navigation)
+import Types.Route exposing (Route)
+import Types.Selection exposing (Selection)
+import UI.Article.Details as Details
+import UI.Article.Listing as Listing
+import Utils.List
 
 
 {-| -}
-type alias Context item =
-    { cache : Cache
-    , folder : Folder
-    , itemList : List item
-    , itemId : item -> DocumentId
+type alias Context =
+    { config : Config
+    , cache : Cache
+    , route : Route
+    , selection : Selection
+    , limit : Int
+    , documentIdFromSearch : DocumentIdFromSearch
     }
 
 
 {-| -}
 type Return
     = NoReturn
-    | ShowDocument DocumentId
-    | CloseIterator
-    | UpdateCacheWithModifiedDocument Document
+    | Navigate Navigation
 
 
 {-| -}
 type alias Model =
-    { currentId : DocumentId
+    { listing : Listing.Model
     , details : Details.Model
     }
 
 
 {-| -}
 type Msg
-    = DetailsMsg Details.Msg
-    | Show
-    | Close
-    | Select DocumentId
+    = ListingMsg Listing.Msg
+    | DetailsMsg Details.Msg
+    | ReturnNavigation Navigation
 
 
 {-| -}
-initialModel : Context item -> DocumentId -> Model
-initialModel context documentId =
-    let
-        subModel =
-            Details.initialModel
-                { cache = context.cache
-                , detailsQuery =
-                    { folder = context.folder
-                    , documentId = documentId
-                    , filters = Types.filterNone
-                    }
-                }
-    in
-    { currentId = documentId
-    , details = subModel
+initialModel : Model
+initialModel =
+    { listing = Listing.initialModel
+    , details = Details.initialModel
     }
 
 
 {-| -}
-update : Context item -> Msg -> Model -> ( Model, Cmd Msg, Return )
+update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
+        ListingMsg subMsg ->
+            let
+                ( subModel, subCmd, subReturn ) =
+                    Listing.update
+                        { config = context.config
+                        , cache = context.cache
+                        , route = context.route
+                        , selection = context.selection
+                        , limit = context.limit
+                        }
+                        subMsg
+                        model.listing
+            in
+            ( { model | listing = subModel }
+            , Cmd.map ListingMsg subCmd
+            , case subReturn of
+                Listing.NoReturn ->
+                    NoReturn
+
+                Listing.Navigate navigation ->
+                    Navigate navigation
+            )
+
         DetailsMsg subMsg ->
             let
                 ( subModel, subCmd, subReturn ) =
                     Details.update
-                        { cache = context.cache
-                        , detailsQuery =
-                            { folder = context.folder
-                            , documentId = model.currentId
-                            , filters = Types.filterNone
-                            }
+                        { config = context.config
+                        , cache = context.cache
+                        , route = context.route
+                        , documentIdFromSearch = context.documentIdFromSearch
                         }
                         subMsg
                         model.details
             in
             ( { model | details = subModel }
             , Cmd.map DetailsMsg subCmd
-            , case subReturn of
-                Details.NoReturn ->
-                    NoReturn
-
-                Details.UpdateCacheWithModifiedDocument document ->
-                    UpdateCacheWithModifiedDocument document
+            , NoReturn
             )
 
-        Close ->
-            ( model, Cmd.none, CloseIterator )
-
-        Show ->
-            ( model, Cmd.none, ShowDocument model.currentId )
-
-        Select documentId ->
-            ( initialModel context documentId
+        ReturnNavigation navigation ->
+            ( model
             , Cmd.none
-            , NoReturn
+            , Navigate navigation
             )
 
 
 {-| -}
-view : Context item -> Model -> Html Msg
+view : Context -> Model -> Html Msg
 view context model =
+    Html.div []
+        [ viewHeader context model
+        , Html.div
+            [ Html.Attributes.style "display" "flex" ]
+            [ if context.config.iteratorShowsListing then
+                Html.div
+                    [ Html.Attributes.style "flex" "1" ]
+                    [ Listing.view
+                        { config = context.config
+                        , cache = context.cache
+                        , route = context.route
+                        , selection = context.selection
+                        , limit = context.limit
+                        }
+                        model.listing
+                        |> Html.map ListingMsg
+                    ]
+
+              else
+                Html.text ""
+            , Html.div
+                [ Html.Attributes.style "flex" "1" ]
+                [ Details.view
+                    { config = context.config
+                    , cache = context.cache
+                    , route = context.route
+                    , documentIdFromSearch = context.documentIdFromSearch
+                    }
+                    model.details
+                    |> Html.map DetailsMsg
+                ]
+            ]
+        ]
+
+
+type alias Linkage =
+    { selectionDocumentCount : Maybe Int
+    , listingDocumentCount : Int
+    , listingIsComplete : Bool
+    , canLoadMore : Bool
+    , currentNumber : Maybe Int
+    , firstId : Maybe DocumentId
+    , prevId : Maybe DocumentId
+    , nextId : Maybe DocumentId
+    }
+
+
+viewHeader : Context -> Model -> Html Msg
+viewHeader context model =
     let
+        linkage =
+            getLinkage context
+    in
+    Html.div []
+        [ viewNavigationButtons context linkage
+        , Html.text (resultNumberText context linkage)
+        ]
+
+
+resultNumberText : Context -> Linkage -> String
+resultNumberText context linkage =
+    let
+        count =
+            linkage.selectionDocumentCount
+                |> Maybe.withDefault linkage.listingDocumentCount
+
+        countIsTotal =
+            (linkage.selectionDocumentCount /= Nothing)
+                || linkage.listingIsComplete
+    in
+    case linkage.currentNumber of
+        Just knownCurrentNumber ->
+            Localization.string context.config
+                (if count == 0 then
+                    { en = "Result {{}}"
+                    , de = "Resultat {{}}"
+                    }
+
+                 else if countIsTotal then
+                    { en = "Result {{}} of {{}}"
+                    , de = "Resultat {{}} von {{}}"
+                    }
+
+                 else
+                    { en = "Result {{}} of at least {{}}"
+                    , de = "Resultat {{}} von mindestens {{}}"
+                    }
+                )
+                |> String.Format.value (String.fromInt knownCurrentNumber)
+                |> String.Format.value (String.fromInt count)
+
+        Nothing ->
+            if linkage.listingIsComplete then
+                Localization.string context.config
+                    { en = "This document is not present in the {{}} results."
+                    , de = "Dokument nicht in den {{}} Resultaten vorhanden"
+                    }
+                    |> String.Format.value (String.fromInt linkage.listingDocumentCount)
+
+            else if count == 0 then
+                Localization.string context.config
+                    { en = "Document not found yet"
+                    , de = "Dokument bisher nicht gefunden"
+                    }
+
+            else
+                case linkage.selectionDocumentCount of
+                    Nothing ->
+                        Localization.string context.config
+                            { en = "Document not found in the first {{}} results"
+                            , de = "Dokument nicht in den ersten {{}} Resultaten gefunden"
+                            }
+                            |> String.Format.value (String.fromInt linkage.listingDocumentCount)
+
+                    Just totalCount ->
+                        Localization.string context.config
+                            { en = "Document not found in the first {{}} results of a total of {{}} results"
+                            , de = "Dokument nicht in den ersten {{}} von insgesamt {{}} Resultaten gefunden"
+                            }
+                            |> String.Format.value (String.fromInt linkage.listingDocumentCount)
+                            |> String.Format.value (String.fromInt totalCount)
+
+
+viewNavigationButtons : Context -> Linkage -> Html Msg
+viewNavigationButtons context linkage =
+    let
+        buttonListOfNavigations listOfNavigations =
+            Html.button
+                (if List.isEmpty listOfNavigations then
+                    [ Html.Attributes.type_ "button"
+                    , Html.Attributes.disabled True
+                    ]
+
+                 else
+                    [ Html.Attributes.type_ "button"
+                    , Html.Events.onClick (ReturnNavigation (Navigation.ListOfNavigations listOfNavigations))
+                    ]
+                )
+
+        buttonNavigationInResults maybeDocumentId loadMore =
+            let
+                listOfNavigations =
+                    maybeDocumentId
+                        |> Maybe.Extra.unwrap []
+                            (\id -> [ Navigation.ShowDocument context.selection.scope id ])
+                        |> Utils.List.consIf (loadMore && linkage.canLoadMore)
+                            (Navigation.SetLimit (Constants.incrementLimitOnLoadMore context.limit))
+            in
+            buttonListOfNavigations listOfNavigations
+    in
+    Html.div [] <|
+        buttonNavigationInResults
+            linkage.firstId
+            False
+            [ Localization.text context.config
+                { en = "First Result"
+                , de = "erstes Resultat der Liste"
+                }
+            ]
+            :: (case linkage.currentNumber of
+                    Nothing ->
+                        [ buttonNavigationInResults
+                            Nothing
+                            True
+                            [ Localization.text context.config
+                                { en = "Load More Results"
+                                , de = "weitere Ergebnisse laden"
+                                }
+                            ]
+                        ]
+
+                    Just currentNumber ->
+                        [ buttonNavigationInResults
+                            linkage.prevId
+                            (currentNumber - 1 > context.limit)
+                            [ Localization.text context.config
+                                { en = "Previous Result"
+                                , de = "vorheriges Resultat"
+                                }
+                            ]
+                        , buttonNavigationInResults
+                            linkage.nextId
+                            (currentNumber >= context.limit)
+                            [ Localization.text context.config
+                                { en = "Next Result"
+                                , de = "nächstes Resultat"
+                                }
+                            ]
+                        ]
+               )
+            ++ [ buttonListOfNavigations
+                    [ Navigation.ShowListingWithoutDocument ]
+                    [ Localization.text context.config
+                        { en = "Back to Results"
+                        , de = "zurück zur Liste"
+                        }
+                    ]
+               ]
+
+
+getLinkage : Context -> Linkage
+getLinkage context =
+    let
+        pageSequence =
+            Cache.getDocumentsPages
+                context.cache
+                ( Config.getMaskName MasksConfig.MaskForListing context.config
+                , context.selection
+                )
+
+        presentationSegments =
+            pageSequence
+                |> PageSequence.presentationSegmentsAll
+
+        selectionDocumentCount =
+            Cache.Derive.getDocumentCount context.cache context.selection
+                |> RemoteData.toMaybe
+
+        ( listingDocumentCount, listingIsComplete ) =
+            PageSequence.extent pageSequence
+
+        canLoadMore =
+            PageSequence.canLoadMore context.limit pageSequence
+
         first =
-            List.head context.itemList
-                |> Maybe.map context.itemId
-                |> Maybe.Extra.filter ((/=) model.currentId)
+            PageSequence.firstDocument presentationSegments
+                |> Maybe.map (.document >> .id)
+                |> Maybe.andThen
+                    (\firstId ->
+                        if firstId == context.documentIdFromSearch.id then
+                            Nothing
 
-        prev =
-            case adjacent of
-                Just ( Just prevItem, _, _ ) ->
-                    Just (context.itemId prevItem)
-
-                _ ->
-                    Nothing
-
-        next =
-            case adjacent of
-                Just ( _, _, Just nextItem ) ->
-                    Just (context.itemId nextItem)
-
-                _ ->
-                    Nothing
+                        else
+                            Just firstId
+                    )
 
         adjacent =
-            Utils.findAdjacent
-                (\item -> context.itemId item == model.currentId)
-                context.itemList
-
-        selectButtonAttrs maybeId =
-            Maybe.Extra.unwrap
-                [ Html.Attributes.type_ "button"
-                , Html.Attributes.disabled True
-                ]
-                (\id -> [ Html.Events.onClick (Select id) ])
-                maybeId
+            presentationSegments
+                |> PageSequence.findAdjacentDocuments context.documentIdFromSearch.id
+                |> Maybe.Extra.unwrap
+                    { current = Nothing, prev = Nothing, next = Nothing }
+                    (\( maybePrevDocumentResult, thisDocumentResult, maybeNextDocumentResult ) ->
+                        { current = Just thisDocumentResult.number
+                        , prev = maybePrevDocumentResult |> Maybe.map (.document >> .id)
+                        , next = maybeNextDocumentResult |> Maybe.map (.document >> .id)
+                        }
+                    )
     in
-    Html.div
-        [ Html.Attributes.class "iterator" ]
-        [ Html.div
-            [ Html.Attributes.class "input-group" ]
-            [ Html.button
-                [ Html.Attributes.type_ "button"
-                , Html.Events.onClick Show
-                ]
-                [ Html.text "Show" ]
-            , Html.button
-                [ Html.Attributes.type_ "button"
-                , Html.Events.onClick Close
-                ]
-                [ Html.text "All Results" ]
-            , Html.button
-                (selectButtonAttrs first)
-                [ Html.text "First" ]
-            , Html.button
-                (selectButtonAttrs prev)
-                [ Html.text "Prev" ]
-            , Html.button
-                (selectButtonAttrs next)
-                [ Html.text "Next" ]
-            ]
-        , Details.view
-            { cache = context.cache
-            , detailsQuery =
-                { folder = context.folder
-                , documentId = model.currentId
-                , filters = Types.filterNone
-                }
-            }
-            model.details
-            |> Html.map DetailsMsg
-        ]
+    { selectionDocumentCount = selectionDocumentCount
+    , listingDocumentCount = listingDocumentCount
+    , listingIsComplete = listingIsComplete
+    , canLoadMore = canLoadMore
+    , currentNumber = adjacent.current
+    , firstId = first
+    , prevId = adjacent.prev
+    , nextId = adjacent.next
+    }

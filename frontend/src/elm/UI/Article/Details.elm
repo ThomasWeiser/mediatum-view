@@ -20,7 +20,6 @@ module UI.Article.Details exposing
 
 -}
 
-import Api
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
 import Entities.Markup
@@ -28,7 +27,6 @@ import Entities.Residence as Residence exposing (Residence)
 import Html exposing (Html)
 import Html.Attributes
 import List.Nonempty
-import Maybe.Extra
 import RemoteData
 import Types exposing (DocumentIdFromSearch)
 import Types.Config as Config exposing (Config)
@@ -122,33 +120,6 @@ viewDocument context model document residence =
         , viewSearchMatching context.config document.searchMatching
         , viewResidence context residence
         ]
-
-
-viewSearchMatching_1 : Config -> Maybe Document.SearchMatching -> Html msg
-viewSearchMatching_1 config =
-    Maybe.Extra.unwrap
-        { en = "", de = "" }
-        (\{ attributes, fulltext } ->
-            case ( attributes, fulltext ) of
-                ( False, False ) ->
-                    { en = "", de = "" }
-
-                ( True, False ) ->
-                    { en = "Search term found in metadata"
-                    , de = "Suchbegriff in Metadaten gefunden"
-                    }
-
-                ( False, True ) ->
-                    { en = "Search term found in fulltext"
-                    , de = "Suchbegriff in Volltext gefunden"
-                    }
-
-                ( True, True ) ->
-                    { en = "Search term found in metadata and fulltext"
-                    , de = "Suchbegriff in Metadaten und Volltext gefunden"
-                    }
-        )
-        >> Localization.text config
 
 
 viewSearchMatching : Config -> Maybe Document.SearchMatching -> Html msg

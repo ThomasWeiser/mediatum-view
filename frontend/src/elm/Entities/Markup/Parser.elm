@@ -11,7 +11,7 @@ module Entities.Markup.Parser exposing
 -}
 
 import Maybe.Extra
-import Parser exposing (..)
+import Parser exposing ((|.), (|=), Parser)
 
 
 startTag : String
@@ -57,7 +57,7 @@ parse text =
 For testing this property we expose the function that returns a Result nevertheless.
 
 -}
-parseTestable : String -> Result (List DeadEnd) Segments
+parseTestable : String -> Result (List Parser.DeadEnd) Segments
 parseTestable text =
     Parser.run
         theParser
@@ -73,24 +73,24 @@ postprocess =
 
 theParser : Parser Segments
 theParser =
-    getSource
-        |> andThen
+    Parser.getSource
+        |> Parser.andThen
             (\source ->
-                loop [] (parserOuterLoop source)
+                Parser.loop [] (parserOuterLoop source)
             )
 
 
 {-| Loop through a sequence of text and markup element fragments
 -}
-parserOuterLoop : String -> Segments -> Parser (Step Segments Segments)
+parserOuterLoop : String -> Segments -> Parser (Parser.Step Segments Segments)
 parserOuterLoop source state =
-    getOffset
-        |> andThen
+    Parser.getOffset
+        |> Parser.andThen
             (\startOffset ->
-                loop
+                Parser.loop
                     ()
                     (parserInnerLoop source startOffset)
-                    |> map
+                    |> Parser.map
                         (\innerLoopValue ->
                             let
                                 newState =
@@ -99,10 +99,10 @@ parserOuterLoop source state =
                                         |> Maybe.Extra.cons innerLoopValue.maybeElementFragment
                             in
                             if innerLoopValue.maybeElementFragment == Nothing then
-                                Done (List.reverse newState)
+                                Parser.Done (List.reverse newState)
 
                             else
-                                Loop newState
+                                Parser.Loop newState
                         )
             )
 
@@ -115,7 +115,7 @@ type alias InnerLoopValue =
 
 {-| Chomp regular text, followed by either a markup element or the end of input
 -}
-parserInnerLoop : String -> Int -> () -> Parser (Step () InnerLoopValue)
+parserInnerLoop : String -> Int -> () -> Parser (Parser.Step () InnerLoopValue)
 parserInnerLoop source startOffset _ =
     let
         innerLoopValue : Int -> Maybe Segment -> InnerLoopValue
@@ -129,24 +129,24 @@ parserInnerLoop source startOffset _ =
             , maybeElementFragment = maybeElementFragment
             }
     in
-    oneOf
-        [ succeed
-            (\endOffset -> Done (innerLoopValue endOffset Nothing))
-            |. end
-            |= getOffset
-        , succeed
-            (\endOffset element -> Done (innerLoopValue endOffset (Just element)))
-            |= getOffset
-            |= backtrackable parserFtsElement
-        , succeed (Loop ())
-            |. chompIf (always True)
+    Parser.oneOf
+        [ Parser.succeed
+            (\endOffset -> Parser.Done (innerLoopValue endOffset Nothing))
+            |. Parser.end
+            |= Parser.getOffset
+        , Parser.succeed
+            (\endOffset element -> Parser.Done (innerLoopValue endOffset (Just element)))
+            |= Parser.getOffset
+            |= Parser.backtrackable parserFtsElement
+        , Parser.succeed (Parser.Loop ())
+            |. Parser.chompIf (always True)
         ]
 
 
 parserFtsElement : Parser Segment
 parserFtsElement =
-    succeed Fts
-        |. symbol startTag
-        |= getChompedString
-            (chompUntil endTag)
-        |. symbol endTag
+    Parser.succeed Fts
+        |. Parser.symbol startTag
+        |= Parser.getChompedString
+            (Parser.chompUntil endTag)
+        |. Parser.symbol endTag

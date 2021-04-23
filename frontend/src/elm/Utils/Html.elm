@@ -15,11 +15,10 @@ module Utils.Html exposing
 
 -}
 
-import Cache
 import Cache.Derive
 import Html exposing (Attribute, Html)
 import Html.Attributes
-import Types.ApiData as ApiData exposing (ApiData, ApiError)
+import Types.ApiData as ApiData exposing (ApiError)
 
 
 {-| -}

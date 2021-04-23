@@ -1,5 +1,5 @@
 module Utils.List exposing
-    ( prependIf
+    ( consIf, appendIf, appendWithIf
     , findMap
     , findAdjacent
     , findByMapping, filterByMapping, filterByNotMapping, replaceOnMapping, setOnMapping, updateOnMapping
@@ -9,7 +9,7 @@ module Utils.List exposing
 
 {-|
 
-@docs prependIf
+@docs consIf, appendIf, appendWithIf
 @docs findMap
 @docs findAdjacent
 @docs findByMapping, filterByMapping, filterByNotMapping, replaceOnMapping, setOnMapping, updateOnMapping
@@ -23,13 +23,35 @@ import List.Extra
 
 {-| Conditionally add an element to the front of a list.
 -}
-prependIf : a -> Bool -> List a -> List a
-prependIf element condition list =
+consIf : Bool -> a -> List a -> List a
+consIf condition element list =
     if condition then
         element :: list
 
     else
         list
+
+
+{-| Conditionally append a list (second parameter) to the front of another list.
+-}
+appendIf : Bool -> List a -> List a -> List a
+appendIf condition conditionalFirstList secondList =
+    if condition then
+        List.append conditionalFirstList secondList
+
+    else
+        secondList
+
+
+{-| Conditionally append a list (second parameter) to the end of another list.
+-}
+appendWithIf : Bool -> List a -> List a -> List a
+appendWithIf condition conditionalSecondList firstList =
+    if condition then
+        List.append firstList conditionalSecondList
+
+    else
+        firstList
 
 
 {-| Find the first element that maps to a `Just b` and return this mapping.

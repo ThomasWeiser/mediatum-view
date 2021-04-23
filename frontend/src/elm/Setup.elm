@@ -18,6 +18,7 @@ import App
 import Html exposing (Html)
 import Json.Decode as JD
 import Maybe.Extra
+import Types.AdjustmentToSetup as AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.Config as Config exposing (Config)
 import Types.Localization as Localization exposing (Language)
 import Types.Route as Route exposing (Route)
@@ -74,8 +75,8 @@ init flagsJsonValue route =
                     flags.navigatorLanguage
                     flags.storedSelectedUILanguage
     in
-    ( { navigatorLanguage = Nothing
-      , userSelectedUILanguage = Nothing
+    ( { navigatorLanguage = flags.navigatorLanguage
+      , userSelectedUILanguage = flags.storedSelectedUILanguage
       , delayedInitWithRoute = Just route
       , config = config
       , app = App.initEmptyModel
@@ -164,6 +165,31 @@ updateModelFromRoute route model =
     }
 
 
+{-| -}
+adjust : AdjustmentToSetup -> Model -> ( Model, Cmd Msg )
+adjust adjustment model =
+    case adjustment of
+        AdjustmentToSetup.UserSelectedUILanguage userSelectedUILanguage ->
+            ( { model
+                | userSelectedUILanguage = Just userSelectedUILanguage
+                , config =
+                    model.config
+                        |> Config.adjustUILanguage
+                            model.navigatorLanguage
+                            (Just userSelectedUILanguage)
+              }
+            , saveSelectedUILanguageTag
+                (Localization.languageToLanguageTag userSelectedUILanguage)
+            )
+
+        AdjustmentToSetup.IteratorShowsListing state ->
+            ( { model
+                | config = model.config |> Config.adjustIteratorShowsListing state
+              }
+            , Cmd.none
+            )
+
+
 {-| Gather the needs from the App and signal them to the cache.
 -}
 requestNeeds : Model -> ( Model, Cmd Msg )
@@ -249,7 +275,7 @@ update msg model =
                 ( appModel, appCmd, appReturn ) =
                     App.update (appContext model) appMsg model.app
 
-                ( model1, saveSelectedUILanguageCmd, return ) =
+                ( model1, adjustSetupCmd, return ) =
                     case appReturn of
                         App.NoReturn ->
                             ( model
@@ -257,19 +283,13 @@ update msg model =
                             , NoReturn
                             )
 
-                        App.SwitchUILanguage language ->
+                        App.AdjustSetup adjustment ->
                             let
-                                model1a =
-                                    { model | userSelectedUILanguage = Just language }
+                                ( model1a, cmd1 ) =
+                                    adjust adjustment model
                             in
-                            ( { model1a
-                                | config =
-                                    model1a.config
-                                        |> Config.adjustUILanguage
-                                            model1a.navigatorLanguage
-                                            model1a.userSelectedUILanguage
-                              }
-                            , saveSelectedUILanguageTag (Localization.languageToLanguageTag language)
+                            ( model1a
+                            , cmd1
                             , NoReturn
                             )
 
@@ -282,9 +302,10 @@ update msg model =
             ( { model1
                 | app = appModel
               }
-            , [ appCmd, saveSelectedUILanguageCmd ]
-                |> Cmd.batch
-                |> Cmd.map AppMsg
+            , Cmd.batch
+                [ appCmd |> Cmd.map AppMsg
+                , adjustSetupCmd
+                ]
             , return
             )
 

@@ -11,12 +11,11 @@ module UI exposing
 -}
 
 import Cache exposing (Cache)
-import Entities.Document exposing (Document)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Types.AdjustmentToSetup as AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.Config exposing (Config)
-import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Localization as Localization exposing (Language)
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
@@ -48,7 +47,7 @@ Mainly used to report navigational requests.
 type Return
     = NoReturn
     | Navigate Navigation
-    | SwitchUILanguage Language
+    | AdjustSetup AdjustmentToSetup
 
 
 {-| The model comprises the models of the sub-components.
@@ -71,7 +70,7 @@ type alias Model =
 {-| Standard message type, wrapping the messages of the sub-components.
 -}
 type Msg
-    = UserSelectedUILanguage Language
+    = ReturnAdjustmentToSetup AdjustmentToSetup
     | TreeMsg UI.Tree.Msg
     | FacetsMsg UI.Facets.Msg
     | ControlsMsg UI.Controls.Msg
@@ -101,10 +100,7 @@ needs context model =
             , presentation = context.presentation
             }
             model.tree
-        , UI.Article.needs
-            context.config
-            (FacetAspect.aspects context.config.facetAspects)
-            context.presentation
+        , UI.Article.needs context
         ]
 
 
@@ -139,10 +135,10 @@ updateOnChangedPresentation context model =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
-        UserSelectedUILanguage language ->
+        ReturnAdjustmentToSetup adjustment ->
             ( model
             , Cmd.none
-            , SwitchUILanguage language
+            , AdjustSetup adjustment
             )
 
         TreeMsg subMsg ->
@@ -263,9 +259,12 @@ view context model =
                         [ Html.text "WIP" ]
                     , Html.div
                         [ Html.Attributes.style "float" "right" ]
-                        [ UI.Widgets.LanguageSelect.view
+                        [ viewListingCheckbox context
+                        , UI.Widgets.LanguageSelect.view
                             context.config.uiLanguage
-                            UserSelectedUILanguage
+                            (\language ->
+                                ReturnAdjustmentToSetup (AdjustmentToSetup.UserSelectedUILanguage language)
+                            )
                         , Html.img
                             [ Html.Attributes.alt "TUM Logo"
                             , Html.Attributes.src "/logo_tum.png"
@@ -316,4 +315,24 @@ view context model =
                     }
                     model.article
             ]
+        ]
+
+
+viewListingCheckbox : Context -> Html Msg
+viewListingCheckbox context =
+    Html.label
+        [ Html.Attributes.class "test-checkbox" ]
+        [ Html.input
+            [ Html.Attributes.type_ "checkbox"
+            , Html.Attributes.checked context.config.iteratorShowsListing
+            , Html.Events.onClick
+                (ReturnAdjustmentToSetup
+                    (AdjustmentToSetup.IteratorShowsListing (not context.config.iteratorShowsListing))
+                )
+            ]
+            []
+        , Localization.text context.config
+            { en = " Test: Iterator shows result list"
+            , de = " Test: Iterator zeigt Ergebnisliste"
+            }
         ]

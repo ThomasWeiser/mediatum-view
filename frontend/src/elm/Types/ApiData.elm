@@ -24,6 +24,8 @@ import Api
 import RemoteData exposing (RemoteData)
 
 
+{-| An `ApiData` is a specialization of `RemoteData` with a custom error type `Api.Error`.
+-}
 type alias ApiData a =
     RemoteData ApiError a
 

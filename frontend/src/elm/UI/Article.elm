@@ -26,14 +26,16 @@ module UI.Article exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
-import Entities.Document
+import Constants
 import Entities.FolderCounts exposing (FolderCounts)
+import Entities.PageSequence as PageSequence
 import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
 import RemoteData
-import Types.Aspect exposing (Aspect)
+import Types.ApiData exposing (ApiData)
 import Types.Config as Config exposing (Config)
+import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Config.MasksConfig as MasksConfig
 import Types.Id exposing (FolderId)
 import Types.Navigation exposing (Navigation)
@@ -43,6 +45,7 @@ import Types.Route exposing (Route)
 import UI.Article.Collection
 import UI.Article.Details
 import UI.Article.Generic
+import UI.Article.Iterator
 import UI.Article.Listing
 import UI.Widgets.Breadcrumbs
 import Utils
@@ -74,6 +77,7 @@ type Content
     | CollectionModel UI.Article.Collection.Model
     | ListingModel UI.Article.Listing.Model
     | DetailsModel UI.Article.Details.Model
+    | IteratorModel UI.Article.Iterator.Model
 
 
 {-| -}
@@ -82,6 +86,7 @@ type Msg
     | CollectionMsg UI.Article.Collection.Msg
     | ListingMsg UI.Article.Listing.Msg
     | DetailsMsg UI.Article.Details.Msg
+    | IteratorMsg UI.Article.Iterator.Msg
 
 
 {-| -}
@@ -100,11 +105,38 @@ initialModel presentation =
         ListingPresentation selection limit ->
             { content = ListingModel UI.Article.Listing.initialModel }
 
+        IteratorPresentation selection limit documentIdFromSearch ->
+            { content = IteratorModel UI.Article.Iterator.initialModel }
+
 
 {-| -}
-needs : Config -> List Aspect -> Presentation -> Cache.Needs
-needs config facetAspects presentation =
-    case presentation of
+needs : Context -> Cache.Needs
+needs context =
+    let
+        facetAspects =
+            FacetAspect.aspects context.config.facetAspects
+
+        needsOfDocumentPresentation maybeFolderId documentIdFromSearch =
+            Cache.NeedDocumentFromSearch
+                (Config.getMaskName MasksConfig.MaskForDetails context.config)
+                documentIdFromSearch
+                |> Types.Needs.atomic
+
+        needsOfListingPresentation selection limit =
+            Types.Needs.sequence
+                (Types.Needs.atomic <|
+                    Cache.NeedDocumentsPage
+                        (Config.getMaskName MasksConfig.MaskForListing context.config)
+                        selection
+                        limit
+                )
+                (Types.Needs.batch
+                    [ Types.Needs.atomic <| Cache.NeedFolderCounts selection
+                    , Types.Needs.atomic <| Cache.NeedFacets selection facetAspects
+                    ]
+                )
+    in
+    case context.presentation of
         GenericPresentation genericParameters ->
             case genericParameters of
                 Nothing ->
@@ -116,11 +148,11 @@ needs config facetAspects presentation =
                             maybeDocumentIdFromSearch
                                 |> Maybe.map
                                     (Cache.NeedDocumentFromSearch
-                                        (Config.getMaskName MasksConfig.MaskForDetails config)
+                                        (Config.getMaskName MasksConfig.MaskForDetails context.config)
                                     )
                     in
                     [ Cache.NeedGenericNode
-                        (Config.getMaskName MasksConfig.MaskForDetails config)
+                        (Config.getMaskName MasksConfig.MaskForDetails context.config)
                         nodeIdOne
                     ]
                         |> Maybe.Extra.cons maybeNeedTwo
@@ -128,27 +160,49 @@ needs config facetAspects presentation =
                         |> Types.Needs.batch
 
         DocumentPresentation maybeFolderId documentIdFromSearch ->
-            Cache.NeedDocumentFromSearch
-                (Config.getMaskName MasksConfig.MaskForDetails config)
-                documentIdFromSearch
-                |> Types.Needs.atomic
+            needsOfDocumentPresentation maybeFolderId documentIdFromSearch
 
         CollectionPresentation folderId ->
             Types.Needs.none
 
         ListingPresentation selection limit ->
-            Types.Needs.sequence
-                (Types.Needs.atomic <|
-                    Cache.NeedDocumentsPage
-                        (Config.getMaskName MasksConfig.MaskForListing config)
-                        selection
-                        limit
-                )
-                (Types.Needs.batch
-                    [ Types.Needs.atomic <| Cache.NeedFolderCounts selection
-                    , Types.Needs.atomic <| Cache.NeedFacets selection facetAspects
-                    ]
-                )
+            needsOfListingPresentation selection limit
+
+        IteratorPresentation selection limit documentIdFromSearch ->
+            let
+                remoteMaybeIndexOfDocument : ApiData (Maybe Int)
+                remoteMaybeIndexOfDocument =
+                    Cache.getDocumentsPages
+                        context.cache
+                        ( Config.getMaskName MasksConfig.MaskForListing context.config
+                        , selection
+                        )
+                        |> PageSequence.presentationSegmentsAll
+                        |> PageSequence.findIndex documentIdFromSearch.id
+
+                raisedLimit =
+                    case remoteMaybeIndexOfDocument of
+                        RemoteData.Success (Just indexOfDocument) ->
+                            if indexOfDocument == limit then
+                                Constants.incrementLimitOnLoadMore limit
+
+                            else
+                                limit
+
+                        _ ->
+                            limit
+            in
+            Types.Needs.batch
+                [ needsOfDocumentPresentation (Just selection.scope) documentIdFromSearch
+                , Types.Needs.sequence
+                    (needsOfListingPresentation selection limit)
+                    (if raisedLimit > limit then
+                        needsOfListingPresentation selection raisedLimit
+
+                     else
+                        Types.Needs.none
+                    )
+                ]
 
 
 {-| -}
@@ -165,6 +219,10 @@ folderCountsForQuery context =
             Nothing
 
         ListingPresentation selection limit ->
+            Cache.Derive.folderCountsOnPath context.config context.cache selection
+                |> Just
+
+        IteratorPresentation selection limit documentIdFromSearch ->
             Cache.Derive.folderCountsOnPath context.config context.cache selection
                 |> Just
 
@@ -237,6 +295,32 @@ update context msg model =
                     NoReturn
             )
 
+        ( IteratorMsg subMsg, IteratorModel subModel, IteratorPresentation selection limit documentIdFromSearch ) ->
+            let
+                ( subModel1, subCmd, subReturn ) =
+                    UI.Article.Iterator.update
+                        { config = context.config
+                        , cache = context.cache
+                        , route = context.route
+                        , selection = selection
+                        , limit = limit
+                        , documentIdFromSearch = documentIdFromSearch
+                        }
+                        subMsg
+                        subModel
+            in
+            ( { model | content = IteratorModel subModel1 }
+            , Cmd.map IteratorMsg subCmd
+            )
+                |> Utils.tupleAddThird
+                    (case subReturn of
+                        UI.Article.Iterator.NoReturn ->
+                            NoReturn
+
+                        UI.Article.Iterator.Navigate navigation ->
+                            Navigate navigation
+                    )
+
         _ ->
             -- Message doesn't match model; should never happen.
             -- Or model doesn't match presentation; should never happen.
@@ -306,6 +390,18 @@ viewContent context model =
                 }
                 subModel
                 |> Html.map DetailsMsg
+
+        ( IteratorModel subModel, IteratorPresentation selection limit documentIdFromSearch ) ->
+            UI.Article.Iterator.view
+                { config = context.config
+                , cache = context.cache
+                , route = context.route
+                , selection = selection
+                , limit = limit
+                , documentIdFromSearch = documentIdFromSearch
+                }
+                subModel
+                |> Html.map IteratorMsg
 
         _ ->
             -- Model doesn't match query-context; should never happen.

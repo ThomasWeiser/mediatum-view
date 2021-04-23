@@ -93,19 +93,25 @@ update context msg model =
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
-    case context.presentation of
-        ListingPresentation selection _ ->
-            Html.div
-                [ Html.Attributes.class "facets-bar" ]
-                (List.map
-                    (viewFacet context selection)
-                    context.config.facetAspects
-                )
+    Html.div
+        [ Html.Attributes.class "facets-bar" ]
+    <|
+        case context.presentation of
+            ListingPresentation selection _ ->
+                viewFacets context selection
 
-        _ ->
-            Html.div [ Html.Attributes.class "facets-bar" ]
-                [ Html.text ""
-                ]
+            IteratorPresentation selection _ _ ->
+                viewFacets context selection
+
+            _ ->
+                [ Html.text "" ]
+
+
+viewFacets : Context -> Selection -> List (Html Msg)
+viewFacets context selection =
+    List.map
+        (viewFacet context selection)
+        context.config.facetAspects
 
 
 viewFacet : Context -> Selection -> FacetAspectConfig -> Html Msg
