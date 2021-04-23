@@ -47,16 +47,25 @@ header .title {
 header .subtitle {
   font-size: 80%;
 }
-.language-select {
+header .language-select {
   margin-right: 20px;
   font-size: initial;
   font-weight: initial;
 }
-.language-select .selected {
+header .language-select .selected {
   font-weight: bold;
 }
-.language-select .language-option:hover {
+header .language-select .language-option:hover {
   text-decoration: underline;
+}
+header .test-checkbox {
+  margin-right: 40px;
+  font-size: initial;
+  font-weight: initial;
+  color: #aaa
+}
+header .test-checkbox:hover {
+  color: #777
 }
 
 main {

@@ -2,7 +2,7 @@ module Types.Config exposing
     ( Config
     , init
     , updateFromServerSetup
-    , adjustUILanguage
+    , adjustUILanguage, adjustIteratorShowsListing
     , getMaskName
     )
 
@@ -13,7 +13,7 @@ Most values are defined in the server and fetched dynamically.
 @docs Config
 @docs init
 @docs updateFromServerSetup
-@docs adjustUILanguage
+@docs adjustUILanguage, adjustIteratorShowsListing
 @docs getMaskName
 
 -}
@@ -42,6 +42,7 @@ type alias Config =
     , ftsAspects : List FtsAspectConfig
     , facetAspects : List FacetAspectConfig
     , masks : MasksConfig
+    , iteratorShowsListing : Bool
     }
 
 
@@ -59,6 +60,7 @@ init =
     , ftsAspects = []
     , facetAspects = []
     , masks = MasksConfig.init
+    , iteratorShowsListing = False
     }
 
 
@@ -73,6 +75,15 @@ adjustUILanguage navigatorLanguage userSelectedUILanguage config =
             ]
                 |> Maybe.Extra.orList
                 |> Maybe.withDefault Localization.LangEn
+    }
+
+
+{-| Set the `uiLanguage` from given `navigatorLanguage` and `userSelectedUILanguage`
+-}
+adjustIteratorShowsListing : Bool -> Config -> Config
+adjustIteratorShowsListing newState config =
+    { config
+        | iteratorShowsListing = newState
     }
 
 

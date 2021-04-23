@@ -64,7 +64,6 @@ type Return
 type alias Model =
     { listing : Listing.Model
     , details : Details.Model
-    , showListing : Bool
     }
 
 
@@ -73,7 +72,6 @@ type Msg
     = ListingMsg Listing.Msg
     | DetailsMsg Details.Msg
     | ReturnNavigation Navigation
-    | SetShowListing Bool
 
 
 {-| -}
@@ -81,7 +79,6 @@ initialModel : Model
 initialModel =
     { listing = Listing.initialModel
     , details = Details.initialModel
-    , showListing = False
     }
 
 
@@ -135,12 +132,6 @@ update context msg model =
             , Navigate navigation
             )
 
-        SetShowListing newState ->
-            ( { model | showListing = newState }
-            , Cmd.none
-            , NoReturn
-            )
-
 
 {-| -}
 view : Context -> Model -> Html Msg
@@ -149,7 +140,7 @@ view context model =
         [ viewHeader context model
         , Html.div
             [ Html.Attributes.style "display" "flex" ]
-            [ if model.showListing then
+            [ if context.config.iteratorShowsListing then
                 Html.div
                     [ Html.Attributes.style "flex" "1" ]
                     [ Listing.view
@@ -201,24 +192,6 @@ viewHeader context model =
     Html.div []
         [ viewNavigationButtons context linkage
         , Html.text (resultNumberText context linkage)
-        , Html.div [] [ viewListingCheckbox context model ]
-        ]
-
-
-viewListingCheckbox : Context -> Model -> Html Msg
-viewListingCheckbox context model =
-    Html.label
-        []
-        [ Html.input
-            [ Html.Attributes.type_ "checkbox"
-            , Html.Attributes.checked model.showListing
-            , Html.Events.onClick (SetShowListing (not model.showListing))
-            ]
-            []
-        , Localization.text context.config
-            { en = " Also show result list [UX Test]"
-            , de = " Zeige auch Ergebnisliste [UX Test]"
-            }
         ]
 
 
@@ -314,7 +287,7 @@ viewNavigationButtons context linkage =
             buttonListOfNavigations listOfNavigations
     in
     Html.div [] <|
-        [ buttonNavigationInResults
+        buttonNavigationInResults
             linkage.firstId
             False
             [ Localization.text context.config
@@ -322,8 +295,7 @@ viewNavigationButtons context linkage =
                 , de = "erstes Resultat der Liste"
                 }
             ]
-        ]
-            ++ (case linkage.currentNumber of
+            :: (case linkage.currentNumber of
                     Nothing ->
                         [ buttonNavigationInResults
                             Nothing
