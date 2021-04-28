@@ -65,6 +65,17 @@ header .test-checkbox {
 header .test-checkbox:hover {
   color: #777
 }
+footer a {
+  color: #333;
+  text-decoration: none;
+}
+footer .footer-left > * {
+  margin-right: 1em;
+}
+footer .footer-right > * {
+  float: right;
+  margin-left: 1em;
+}
 
 main {
   flex: 1;

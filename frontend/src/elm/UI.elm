@@ -333,6 +333,28 @@ view context model =
                     }
                     model.article
             ]
+        , Html.footer [] <|
+            let
+                item href en de =
+                    Html.a
+                        [ Html.Attributes.href href ]
+                        [ Localization.text context.config { en = en, de = de } ]
+            in
+            -- TODO: Fix the links. We currently cannot show ids like "604993_12"
+            [ Html.span
+                [ Html.Attributes.class "footer-right" ]
+                [ item "/604993_12" "Nutzungsrechte" "Nutzungsrechte"
+                , item "/604993_9" "Privacy" "Datenschutz"
+                , item "/604993_13" "Impressum" "Impressum"
+                ]
+            , Html.span
+                [ Html.Attributes.class "footer-left" ]
+                [ item "mailto:mediatum@ub.tum.de" "mediatum@ub.tum.de" "mediatum@ub.tum.de"
+                , item "/604993_15" "Contact" "Kontakt"
+                , item "/604993_17" "About mediaTUM" "Über mediaTUM"
+                , item "/604993_14" "Help" "Hilfe"
+                ]
+            ]
         ]
 
 
