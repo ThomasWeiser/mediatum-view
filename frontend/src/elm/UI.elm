@@ -239,25 +239,11 @@ view context model =
     Html.div [ Html.Attributes.class "page-container" ]
         [ UI.Icons.definitions
         , Html.header []
-            [ Html.h2 []
-                [ Html.div []
-                    [ Html.a
-                        [ Html.Attributes.class "title"
-                        , Html.Attributes.href "/"
-                        ]
-                        [ Html.text "mediaTUM view" ]
-                    , Html.span
-                        [ Html.Attributes.class "subtitle"
-                        , Html.Attributes.title
-                            (Localization.string context.config
-                                { en = "You may click here to start an example query."
-                                , de = "Hier klicken, um Beispiel-Anfrage zu starten."
-                                }
-                            )
-                        , Html.Events.onClick (ControlsMsg UI.Controls.submitExampleQuery)
-                        ]
-                        [ Html.text "WIP" ]
-                    , Html.div
+            [ Html.div
+                [ Html.Attributes.class "tum-header" ]
+                [ Html.div
+                    [ Html.Attributes.class "tum-links" ]
+                    [ Html.div
                         [ Html.Attributes.style "float" "right" ]
                         [ viewListingCheckbox context
                         , UI.Widgets.LanguageSelect.view
@@ -265,11 +251,43 @@ view context model =
                             (\language ->
                                 ReturnAdjustmentToSetup (AdjustmentToSetup.UserSelectedUILanguage language)
                             )
-                        , Html.img
-                            [ Html.Attributes.alt "TUM Logo"
-                            , Html.Attributes.src "/logo_tum.png"
+                        , Html.a
+                            [ Html.Attributes.href "https://www.tum.de/" ]
+                            [ Html.img
+                                [ Html.Attributes.alt "TUM Logo"
+                                , Html.Attributes.src "/logo_tum.png"
+                                ]
+                                []
                             ]
-                            []
+                        ]
+                    , Html.div []
+                        [ Html.div []
+                            [ Html.a
+                                [ Html.Attributes.href "/" ]
+                                [ Localization.text context.config
+                                    { en = "University Bibliography"
+                                    , de = "Hochschulbibliographie"
+                                    }
+                                ]
+                            ]
+                        , Html.div []
+                            [ Html.a
+                                [ Html.Attributes.href "https://www.ub.tum.de/" ]
+                                [ Localization.text context.config
+                                    { en = "University Library"
+                                    , de = "Universitätsbibliothek"
+                                    }
+                                ]
+                            ]
+                        , Html.div []
+                            [ Html.a
+                                [ Html.Attributes.href "https://www.tum.de/" ]
+                                [ Localization.text context.config
+                                    { en = "Technical University of Munich"
+                                    , de = "Technische Universität München"
+                                    }
+                                ]
+                            ]
                         ]
                     ]
                 ]
