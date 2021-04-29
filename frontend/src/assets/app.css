@@ -228,8 +228,11 @@ a.document:hover {
 .listing .attribute.title {
   font-style: italic;
 }
-.attribute .highlight {
-  color: red;
+.attribute .highlight-search-term {
+  background-color: #d5de70;
+}
+.attribute .unparsable {
+  background-color: rgb(255, 0, 255);
 }
 .no-more-results {
   font-style: italic;
