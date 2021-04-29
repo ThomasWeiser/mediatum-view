@@ -3,7 +3,6 @@ module UI.Controls exposing
     , Return(..)
     , Model
     , Msg
-    , submitExampleQuery
     , initialModel
     , updateFromRoute, update
     , view
@@ -15,7 +14,6 @@ module UI.Controls exposing
 @docs Return
 @docs Model
 @docs Msg
-@docs submitExampleQuery
 @docs initialModel
 @docs updateFromRoute, update
 @docs view
@@ -79,13 +77,6 @@ type Msg
     | RemoveFacetFilter Aspect
     | SetSorting Sorting
     | Submit
-    | SubmitExampleQuery
-
-
-{-| -}
-submitExampleQuery : Msg
-submitExampleQuery =
-    SubmitExampleQuery
 
 
 {-| -}
@@ -194,24 +185,6 @@ update context msg model =
             ( model
             , Cmd.none
             , navigate model
-            )
-
-        SubmitExampleQuery ->
-            let
-                model1 =
-                    { model
-                        | globalFtsText = "variable"
-                        , ftsFilterLines =
-                            model.ftsFilterLines
-                                |> Utils.List.setOnMapping Tuple.first
-                                    ( Aspect.fromString "person", "Helmut" )
-                                |> Utils.List.setOnMapping Tuple.first
-                                    ( Aspect.fromString "title", "Method" )
-                    }
-            in
-            ( model1
-            , Cmd.none
-            , navigate model1
             )
 
 
