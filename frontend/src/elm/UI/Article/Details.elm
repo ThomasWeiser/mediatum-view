@@ -170,8 +170,7 @@ viewAttribute attribute =
                     [ Html.Attributes.class "attribute" ]
                     [ Html.td [] [ Html.text attribute.name ]
                     , Html.td []
-                        [ Entities.Markup.view value
-                        ]
+                        (Entities.Markup.view value)
                     ]
 
         Nothing ->

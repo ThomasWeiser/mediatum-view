@@ -14,7 +14,6 @@
             "elm/core": "1.0.5",
             "elm/html": "1.0.0",
             "elm/json": "1.1.3",
-            "elm/parser": "1.1.0",
             "elm/regex": "1.0.0",
             "elm/svg": "1.0.1",
             "elm/time": "1.0.0",
@@ -23,6 +22,7 @@
             "elm-community/list-extra": "8.3.0",
             "elm-community/maybe-extra": "5.2.0",
             "elm-community/string-extra": "4.0.1",
+            "hecrj/html-parser": "2.4.0",
             "jorgengranseth/elm-string-format": "1.0.1",
             "krisajenkins/remotedata": "6.0.1",
             "matthewsj/elm-ordering": "2.0.0",
@@ -33,9 +33,11 @@
             "elm/bytes": "1.0.8",
             "elm/file": "1.0.5",
             "elm/http": "2.0.0",
+            "elm/parser": "1.1.0",
             "elm/random": "1.0.0",
             "elm/virtual-dom": "1.0.2",
-            "lukewestby/elm-string-interpolate": "1.0.4"
+            "lukewestby/elm-string-interpolate": "1.0.4",
+            "rtfeldman/elm-hex": "1.0.0"
         }
     },
     "test-dependencies": {

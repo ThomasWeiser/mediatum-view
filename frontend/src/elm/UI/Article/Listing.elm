@@ -273,9 +273,13 @@ viewAttribute attribute =
                             value
                                 |> Entities.Markup.trim Constants.maxAttributeLengthInListingView
                                 |> Entities.Markup.view
+                                |> Html.span []
                      in
                      if isField keys.year then
-                        [ value |> Entities.Markup.normalizeYear |> Entities.Markup.view
+                        [ value
+                            |> Entities.Markup.normalizeYear
+                            |> Entities.Markup.view
+                            |> Html.span []
                         , Html.text ". "
                         ]
 
