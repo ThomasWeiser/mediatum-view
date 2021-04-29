@@ -1,5 +1,6 @@
 module Entities.Markup exposing
     ( Markup
+    , FlagUnparsable(..)
     , parse
     , empty, plainText, normalizeYear
     , isEmpty
@@ -9,6 +10,7 @@ module Entities.Markup exposing
 {-|
 
 @docs Markup
+@docs FlagUnparsable
 @docs parse
 @docs empty, plainText, normalizeYear
 @docs isEmpty
@@ -29,6 +31,12 @@ type Markup
     = Markup (List Node)
 
 
+type FlagUnparsable
+    = None
+    | DivClass String
+    | SpanClass String
+
+
 {-| An empty markup text, i.e. an empty list of segments
 -}
 empty : Markup
@@ -45,15 +53,29 @@ isEmpty (Markup nodes) =
 
 {-| Parse a string with markup.
 -}
-parse : String -> Markup
-parse inputString =
+parse : FlagUnparsable -> String -> Markup
+parse flagUnparsable inputString =
     inputString
         |> Html.Parser.run
         |> Result.withDefault
             -- TODO: Currently, on a parser error we fall-back to the whole input string-
             --       We should probably have some better solution here.
-            --       Maybe we should also flag the fall-back with a CSS class.
-            [ Html.Parser.Text inputString ]
+            [ case flagUnparsable of
+                None ->
+                    Html.Parser.Text inputString
+
+                DivClass class ->
+                    Html.Parser.Element
+                        "div"
+                        [ ( "class", class ) ]
+                        [ Html.Parser.Text inputString ]
+
+                SpanClass class ->
+                    Html.Parser.Element
+                        "span"
+                        [ ( "class", class ) ]
+                        [ Html.Parser.Text inputString ]
+            ]
         |> Markup
 
 

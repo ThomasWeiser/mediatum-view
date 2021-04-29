@@ -662,7 +662,10 @@ decoderAttributeList =
                 (Json.Decode.field "width" Json.Decode.int)
                 (Json.Decode.field "value"
                     (Json.Decode.string
-                        |> Json.Decode.map Entities.Markup.parse
+                        |> Json.Decode.map
+                            (Entities.Markup.parse
+                                (Entities.Markup.SpanClass "unparsable")
+                            )
                         |> Json.Decode.maybe
                     )
                 )
