@@ -532,7 +532,7 @@ _GraphQL notation:_
             longname
         }
         name
-        valuesByMask(maskName: maskName, highlightText: optionalHighlightText)
+        valuesByMask(maskName: maskName, highlightSearchTerm: optionalHighlightSearchTerm)
     }
 
 -}
@@ -562,7 +562,7 @@ documentByMask maskName maybeSearchTerm =
             (Mediatum.Object.Document.valuesByMask
                 (\optionals ->
                     { optionals
-                        | highlightText =
+                        | highlightSearchTerm =
                             maybeSearchTerm
                                 |> Maybe.Extra.unwrap
                                     Absent

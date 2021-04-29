@@ -71,7 +71,8 @@ orderingWindow =
             (Ordering.byField .limit)
 
 
-{-| A type to query a document id, possibly together with a search term for highlight markup.
+{-| A type to query a document id, possibly together with a search term
+for highlighting found search term occurences.
 -}
 type alias DocumentIdFromSearch =
     { id : DocumentId

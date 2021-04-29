@@ -131,18 +131,7 @@ trim length0 (Markup nodes) =
     Markup nodes
 
 
-{-| Map markup to a Html.span element. Fts segments get marked with class "highlight".
-
-    view (parse "foo <mediatum:fts>bar</mediatum:fts> baz")
-        == Html.span []
-            [ Html.text "foo "
-            , Html.span
-                [ Html.Attributes.class "highlight" ]
-                [ Html.text "bar" ]
-            , Html.text " baz"
-            ]
-
--}
+{-| -}
 view : Markup -> List (Html msg)
 view (Markup nodes) =
     -- TODO: Possibly use a custom implementaton of Html.Parser.Util.toVirtualDom:
