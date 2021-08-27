@@ -19,9 +19,10 @@ module Entities.Markup exposing
 -}
 
 import Html exposing (Html)
-import Html.Attributes
 import Html.Parser exposing (Node)
 import Html.Parser.Util
+import List.Extra
+import Maybe.Extra
 import String.Extra
 
 
@@ -81,7 +82,7 @@ parse flagUnparsable inputString =
 
 {-| The parsed text with markup removed
 
-    plaintext (parse "foo <mediatum:fts>bar</mediatum:fts> baz")
+    plaintext (parse "foo <span>bar</span> baz")
         == "foo bar baz"
 
 -}
@@ -110,25 +111,87 @@ plainText (Markup topNodes) =
 {-| Years are sometime formatted as "2020-00-00T00:00:00".
 For a nicer display we take just the first segment and only the first 4 characters of it.
 
-    normalizeYear (parse "<mediatum:fts>2020</mediatum:fts>-00-00T00:00:00")
-        == Markup [ Fts "2020" ]
+    normalizeYear (parse "<span>2020</span>-00-00T00:00:00")
+        == parse "2020"
+
+Note: Currently we don't preserve the markup structure. This should get implemented someday!
 
 -}
 normalizeYear : Markup -> Markup
-normalizeYear (Markup nodes) =
+normalizeYear markup =
     -- TODO
-    Markup nodes
+    Markup
+        [ Html.Parser.Text
+            (plainText markup |> String.left 4)
+        ]
 
 
 {-| Limits the length of the Markup approximately to a certain number of characters.
-
-We don't cut within Fts segments. So the result may be a bit longer then given.
-
 -}
 trim : Int -> Markup -> Markup
-trim length0 (Markup nodes) =
-    -- TODO
-    Markup nodes
+trim lengthLimit (Markup topNodes) =
+    let
+        _ =
+            Debug.log "trim" (Markup topNodes)
+
+        stepNode : Int -> Node -> ( Int, Maybe Node )
+        stepNode residual node =
+            if residual <= 0 then
+                ( residual, Nothing )
+
+            else
+                case node of
+                    Html.Parser.Text text ->
+                        let
+                            -- TODO: This can degrade bad if residual is small and text is long
+                            trunc =
+                                String.Extra.softBreak residual text
+                                    |> List.head
+                                    |> Maybe.withDefault ""
+                        in
+                        ( residual - String.length text
+                        , Just (Html.Parser.Text trunc)
+                        )
+
+                    Html.Parser.Element tag attributes subNodes ->
+                        stepNodes residual subNodes
+                            |> Tuple.mapSecond
+                                (Html.Parser.Element tag attributes
+                                    >> Just
+                                )
+
+                    Html.Parser.Comment comment ->
+                        ( residual, Just node )
+
+        stepNodes : Int -> List Node -> ( Int, List Node )
+        stepNodes residual nodes =
+            nodes
+                |> List.Extra.mapAccuml
+                    (\residual1 subNode ->
+                        let
+                            ( r2, n2 ) =
+                                stepNode residual subNode
+                        in
+                        ( residual1 - r2, n2 )
+                    )
+                    residual
+                |> Tuple.mapSecond Maybe.Extra.values
+
+        ( resultingResidual, resultingNodes ) =
+            stepNodes lengthLimit topNodes
+    in
+    (if resultingResidual >= 0 then
+        resultingNodes
+
+     else
+        [ Html.Parser.Element "span"
+            [ ( "class", "with-ellipisis" ) ]
+            resultingNodes
+        , Html.Parser.Text " ..."
+        ]
+    )
+        |> Markup
+        |> Debug.log "tri="
 
 
 {-| -}

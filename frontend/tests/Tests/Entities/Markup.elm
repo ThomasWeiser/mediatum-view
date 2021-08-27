@@ -17,7 +17,7 @@ all =
             [ testText "" <|
                 plainText
                     >> Expect.equal ""
-            , testText "foo <mediatum:fts>bar</mediatum:fts> baz" <|
+            , testText "foo <span>bar</span> baz" <|
                 plainText
                     >> Expect.equal "foo bar baz"
             ]
@@ -30,15 +30,15 @@ all =
                 normalizeYear
                     >> plainText
                     >> Expect.equal "2020"
-            , testText "<mediatum:fts>2020</mediatum:fts>-00-00T00:00:00" <|
+            , testText "<span>2020</span>-00-00T00:00:00" <|
                 normalizeYear
                     >> plainText
                     >> Expect.equal "2020"
-            , testText "<mediatum:fts>2020-00-00</mediatum:fts>T00:00:00" <|
+            , testText "<span>2020-00-00</span>T00:00:00" <|
                 normalizeYear
                     >> plainText
                     >> Expect.equal "2020"
-            , testText "2020-00-<mediatum:fts>00</mediatum:fts>T00:00:00" <|
+            , testText "2020-00-<span>00</span>T00:00:00" <|
                 normalizeYear
                     >> plainText
                     >> Expect.equal "2020"
@@ -52,5 +52,5 @@ testText : String -> (Markup -> Expect.Expectation) -> Test
 testText textToParse expectationOnMarkup =
     test ("text = \"" ++ textToParse ++ "\"") <|
         \_ ->
-            parse textToParse
+            parse (DivClass "unparsable") textToParse
                 |> expectationOnMarkup
