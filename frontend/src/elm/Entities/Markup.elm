@@ -5,6 +5,7 @@ module Entities.Markup exposing
     , empty, plainText, normalizeYear
     , isEmpty
     , trim, view
+    , toHtmlString
     )
 
 {-|
@@ -15,6 +16,7 @@ module Entities.Markup exposing
 @docs empty, plainText, normalizeYear
 @docs isEmpty
 @docs trim, view
+@docs toHtmlString
 
 -}
 
@@ -53,14 +55,16 @@ isEmpty (Markup nodes) =
 
 
 {-| Parse a string with markup.
+
+Note: On a parser error we currently fall-back to the whole input string.
+We should probably have some better solution here.
+
 -}
 parse : FlagUnparsable -> String -> Markup
 parse flagUnparsable inputString =
     inputString
         |> Html.Parser.run
         |> Result.withDefault
-            -- TODO: Currently, on a parser error we fall-back to the whole input string-
-            --       We should probably have some better solution here.
             [ case flagUnparsable of
                 None ->
                     Html.Parser.Text inputString
@@ -119,7 +123,6 @@ Note: Currently we don't preserve the markup structure. This should get implemen
 -}
 normalizeYear : Markup -> Markup
 normalizeYear markup =
-    -- TODO
     Markup
         [ Html.Parser.Text
             (plainText markup |> String.left 4)
@@ -131,9 +134,6 @@ normalizeYear markup =
 trim : Int -> Markup -> Markup
 trim lengthLimit (Markup topNodes) =
     let
-        _ =
-            Debug.log "trim" (Markup topNodes)
-
         stepNode : Int -> Node -> ( Int, Maybe Node )
         stepNode residual node =
             if residual <= 0 then
@@ -143,7 +143,6 @@ trim lengthLimit (Markup topNodes) =
                 case node of
                     Html.Parser.Text text ->
                         let
-                            -- TODO: This can degrade bad if residual is small and text is long
                             trunc =
                                 String.Extra.softBreak residual text
                                     |> List.head
@@ -166,15 +165,7 @@ trim lengthLimit (Markup topNodes) =
         stepNodes : Int -> List Node -> ( Int, List Node )
         stepNodes residual nodes =
             nodes
-                |> List.Extra.mapAccuml
-                    (\residual1 subNode ->
-                        let
-                            ( r2, n2 ) =
-                                stepNode residual subNode
-                        in
-                        ( residual1 - r2, n2 )
-                    )
-                    residual
+                |> List.Extra.mapAccuml stepNode residual
                 |> Tuple.mapSecond Maybe.Extra.values
 
         ( resultingResidual, resultingNodes ) =
@@ -191,13 +182,20 @@ trim lengthLimit (Markup topNodes) =
         ]
     )
         |> Markup
-        |> Debug.log "tri="
 
 
-{-| -}
+{-| Convert Markup to Elm's Html nodes
+-}
 view : Markup -> List (Html msg)
 view (Markup nodes) =
-    -- TODO: Possibly use a custom implementaton of Html.Parser.Util.toVirtualDom:
-    --        - To efficiently add nodes to the end of the list
-    --        - To strip out comment nodes
     Html.Parser.Util.toVirtualDom nodes
+
+
+{-| Turn a Markup back into a list of HTML strings. Used for testing purposes only.
+-}
+toHtmlString : Markup -> String
+toHtmlString (Markup nodes) =
+    List.map
+        Html.Parser.nodeToString
+        nodes
+        |> String.concat
