@@ -155,6 +155,7 @@ trim lengthLimit (Markup topNodes) =
                                     |> List.head
                                     |> Maybe.withDefault ""
                                     |> String.left hardLengthLimit
+                                    |> workaroundSoftBreakIssue text
                         in
                         ( residual - String.length text
                         , Just (Html.Parser.Text trunc)
@@ -190,6 +191,23 @@ trim lengthLimit (Markup topNodes) =
         ]
     )
         |> Markup
+
+
+workaroundSoftBreakIssue : String -> String -> String
+workaroundSoftBreakIssue org trunc =
+    let
+        startsWithWhitespace s =
+            let
+                left1 =
+                    String.left 1 s
+            in
+            left1 /= "" && String.Extra.isBlank left1
+    in
+    if startsWithWhitespace org && not (startsWithWhitespace trunc) then
+        " " ++ trunc
+
+    else
+        trunc
 
 
 {-| Convert Markup to Elm's Html nodes

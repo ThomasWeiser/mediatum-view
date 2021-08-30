@@ -70,6 +70,21 @@ all =
                 \_ ->
                     String.Extra.softBreak 7 "ab cd ef gh ij kl mo"
                         |> Expect.equal [ "ab cd ", "ef gh ", "ij kl ", "mo" ]
+            , test "String.Extra.softBreak C 1" <|
+                \_ ->
+                    String.Extra.softBreak 7 " abcd efgh "
+                        |> Expect.equal [ " abcd ", "efgh " ]
+            , -- Issue with String.Extra.softBreak, eating the initial whitespace if truncuating:
+              -- We use a workaround in `trim`.
+              -- TODO: Report upstream to elm-community/string-extra
+              test "String.Extra.softBreak C 2" <|
+                \_ ->
+                    String.Extra.softBreak 7 " abcdefgh "
+                        |> Expect.equal [ "abcdefgh " ]
+            , test "String.Extra.softBreak C 3" <|
+                \_ ->
+                    String.Extra.softBreak 3 "  ab  cd  ef  gh  "
+                        |> Expect.equal [ "  ", "ab  ", "cd  ", "ef  ", "gh  " ]
             ]
         , describe "trim 0"
             [ testText "" <|
@@ -142,6 +157,16 @@ all =
                 trim 14
                     >> toHtmlString
                     >> Expect.equal "*b<u>cd<v>ef<w>gh</w>ij</v>kl</u>mn"
+            ]
+        , describe "trim regression test, working around String.Extra.softBreak bug"
+            [ testText "<span><span class=\"highlight-search-term\">von</span> Soosten, Per</span>" <|
+                trim 7
+                    >> toHtmlString
+                    >> Expect.equal "<span class=\"with-ellipisis\"><span><span class=\"highlight-search-term\">von</span> Soosten, </span></span> ..."
+            , testText "<span class=\"highlight-search-term\">von</span> Soosten, Per" <|
+                trim 7
+                    >> toHtmlString
+                    >> Expect.equal "<span class=\"with-ellipisis\"><span class=\"highlight-search-term\">von</span> Soosten, </span> ..."
             ]
         , describe "normalizeYear"
             [ testText "" <|
