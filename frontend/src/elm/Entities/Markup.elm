@@ -130,10 +130,17 @@ normalizeYear markup =
 
 
 {-| Limits the length of the Markup approximately to a certain number of characters.
+
+Care is taken not to truncate words, unless they are longer than 2\*lengthLimit.
+
 -}
 trim : Int -> Markup -> Markup
 trim lengthLimit (Markup topNodes) =
     let
+        hardLengthLimit : Int
+        hardLengthLimit =
+            lengthLimit * 2
+
         stepNode : Int -> Node -> ( Int, Maybe Node )
         stepNode residual node =
             if residual <= 0 then
@@ -147,6 +154,7 @@ trim lengthLimit (Markup topNodes) =
                                 String.Extra.softBreak residual text
                                     |> List.head
                                     |> Maybe.withDefault ""
+                                    |> String.left hardLengthLimit
                         in
                         ( residual - String.length text
                         , Just (Html.Parser.Text trunc)

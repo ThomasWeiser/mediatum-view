@@ -90,14 +90,18 @@ all =
                 trim 7
                     >> toHtmlString
                     >> Expect.equal ""
-            , testText "abcdefghijklmnop" <|
+            , testText "abcdefghijkl" <|
                 trim 7
                     >> toHtmlString
-                    >> Expect.equal "<span class=\"with-ellipisis\">abcdefghijklmnop</span> ..."
+                    >> Expect.equal "<span class=\"with-ellipisis\">abcdefghijkl</span> ..."
             , testText "abcdefghi jklmnopqrst" <|
                 trim 7
                     >> toHtmlString
                     >> Expect.equal "<span class=\"with-ellipisis\">abcdefghi </span> ..."
+            , testText "abcdefghijklmnopqrst" <|
+                trim 7
+                    >> toHtmlString
+                    >> Expect.equal "<span class=\"with-ellipisis\">abcdefghijklmn</span> ..."
             , testText "ab cd ef gh ij kl mn op" <|
                 trim 7
                     >> toHtmlString
