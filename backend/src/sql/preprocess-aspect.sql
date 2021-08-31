@@ -1,26 +1,5 @@
 
 
-drop table if exists preprocess.aspect_def cascade;
-create table preprocess.aspect_def (
-    name text primary key,
-    keys text[],
-    split_at_semicolon boolean,
-    normalize_year boolean
-);
-insert into preprocess.aspect_def values
-    ('type', array['type'], false, false),
-    ('origin', array['origin'], false, false),
-    ('subject', array['subject'], true, false),
-    ('subject2', array['subject2'], true, false),
-    ('title', array['title', 'title-translated', 'title-contrib'], false, false),
-    ('author', array['author', 'author-contrib', 'author.fullname_comma'], true, false),
-    ('person', array['author', 'author-contrib', 'author.fullname_comma', 'advisor', 'referee'], true, false),
-    ('keywords', array['keywords', 'keywords-translated'], true, false),
-    ('description', array['description', 'description-translated'], false, false),
-    ('year', array['year', 'year-accepted'], false, true)
-;
-
-
 drop table if exists preprocess.aspect cascade;
 create table preprocess.aspect (
 	nid int4 references mediatum.node(id) on delete cascade,
@@ -114,7 +93,7 @@ create view preprocess.aspect_view as
     from
         mediatum.node as document,
         mediatum.nodetype,
-        preprocess.aspect_def
+        config.aspect_def
     where
         document.schema is not null
         and document.type = nodetype.name
