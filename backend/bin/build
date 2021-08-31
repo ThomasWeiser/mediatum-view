@@ -6,6 +6,7 @@ p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -v ON_ERROR_STOP=o
 
 $p src/sql/check_prerequisites.sql
 $p src/sql/drop_all.sql
+$p src/sql/create-tables.sql
 $p src/sql/types.sql
 $p src/sql/auxiliary.sql
 $p src/sql/entities.sql

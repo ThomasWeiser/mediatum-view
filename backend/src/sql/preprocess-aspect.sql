@@ -1,15 +1,4 @@
 
-
-drop table if exists preprocess.aspect cascade;
-create table preprocess.aspect (
-	nid int4 references mediatum.node(id) on delete cascade,
-    name text,
-    values text[] not null,
-	tsvec tsvector not null,
-    primary key (nid, name)
-);
-
-
 create or replace function preprocess.prepare_values (values_array text[])
     -- 1. Eliminate duplicate values with stable sort order
     --    (cf https://dba.stackexchange.com/a/211502).
@@ -67,7 +56,6 @@ create or replace function preprocess.some_attributes_as_array (attrs jsonb, key
 $$ language sql immutable strict;
 
 
-
 create or replace function preprocess.some_attributes_as_text (attrs jsonb, keys text[], split_at_semicolon boolean, normalize_year boolean)
     returns text as $$
 	select
@@ -121,19 +109,5 @@ insert into preprocess.aspect (nid, name, values, tsvec)
 set session client_min_messages to notice;
 
 ------------------------------------
-
-create index if not exists aspect_rum_tsvector_ops
-    on preprocess.aspect
- using rum (tsvec rum_tsvector_ops)
-;
-
-create index if not exists aspect_rum_tsvector_addon_ops
-    on preprocess.aspect
- using rum (tsvec rum_tsvector_addon_ops, name)
-  with (attach ='name', to = 'tsvec')
- ;
-
--- TODO: Create index on (name, values), using gin utilizing extension btree_gin
---       See https://stackoverflow.com/q/31945601
 
 analyze preprocess.aspect;

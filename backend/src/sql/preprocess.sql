@@ -1,17 +1,6 @@
 
 -- Preprocess data for FTS and create appropriate indexes
 
-drop schema if exists preprocess cascade;
-create schema if not exists preprocess;
-
-
-create table preprocess.ufts (
-	nid int4 primary key references mediatum.node(id) on delete cascade,
-	"year" int4 null,
-	recency int4 null,
-	tsvec tsvector null
-);
-
 create or replace function preprocess.year_from_attrs
     ( attrs jsonb
     )
@@ -67,7 +56,7 @@ $$ language plpgsql immutable;
 
 create or replace view preprocess.ufts_as_view as
     select
-    node.id as id,
+    node.id as nid,
     preprocess.year_from_attrs(node.attrs) as "year",
     - node.id as recency,
     preprocess.unified_tsvec_from_attrs_and_fulltext(node.attrs, node.fulltext) as tsvec
@@ -80,24 +69,15 @@ create or replace view preprocess.ufts_as_view as
 set session client_min_messages to warning;
 
 insert into preprocess.ufts (nid, "year", recency, tsvec)
-  select * 
-  from preprocess.ufts_as_view
-  -- limit 2000 -- For testing the code one may just process a small fraction of the data
+    select * 
+    from preprocess.ufts_as_view
+    -- where nid > 601000 and nid < 602000 -- For testing: process some well-known documents only
+    -- where nid > 1515316
+    -- limit 2000 -- For testing the code one may just process a small fraction of the data
 ;
 
 -- Reset message level to default
 set session client_min_messages to notice;
-
--- Index for queryies ordered by distance between tsvector and tsquery
-create index if not exists ufts_rum_tsvector_ops
-    on preprocess.ufts
- using rum (tsvec rum_tsvector_ops);
-
--- Index for queryies ordered by recency
-create index if not exists ufts_rum_tsvector_addon_ops
-    on preprocess.ufts
- using rum (tsvec rum_tsvector_addon_ops, recency)
-  with (attach ='recency', to = 'tsvec');
 
 
 analyze preprocess.ufts;
