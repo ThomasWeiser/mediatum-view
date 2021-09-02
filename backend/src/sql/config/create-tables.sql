@@ -15,12 +15,12 @@ create table if not exists config.aspect_def (
 );
 
 create table if not exists config.aspect_fts (
-    aspect text primary key references config.aspect_def (name),
+    aspect text primary key references config.aspect_def (name) on delete cascade,
     label jsonb not null
 );
 
 create table if not exists config.aspect_facet (
-    aspect text primary key references config.aspect_def (name),
+    aspect text primary key references config.aspect_def (name) on delete cascade,
     label jsonb not null
 );
 
