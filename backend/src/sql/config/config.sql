@@ -9,6 +9,17 @@ insert into config.application values
     -- ('hsb', array[1459256, 1433088, 1433089, 1515316]) -- Multiple root folders, using a directory first and then several years of hsb
     -- ('hsb', array[1433088, 1433089, 1515316, 1459256]) -- Multiple root folders, using several years of hsb first, and a directory last
     -- ('hsb', '{}') -- No root folder, for testing only
+    on conflict (name) do update set toplevel_folder_ids = excluded.toplevel_folder_ids
+;
+
+delete from config.masks_by_purpose;
+delete from config.aspect_facet;
+delete from config.aspect_fts;
+delete from config.aspect_def;
+
+insert into config.masks_by_purpose values
+    ('listing', '{"en": "nodesmall_en", "de": "nodesmall"}'::jsonb),
+    ('details', '{"en": "nodebig_en", "de": "nodebig"}'::jsonb)
 ;
 
 insert into config.aspect_def values
@@ -41,9 +52,4 @@ insert into config.aspect_facet values
     ('person', '{"en": "Person", "de": "Person"}'::jsonb),
     ('keywords', '{"en": "Keywords", "de": "Stichworte"}'::jsonb),
     ('year', '{"en": "Year", "de": "Jahr"}'::jsonb)
-;
-
-insert into config.masks_by_purpose values
-    ('listing', '{"en": "nodesmall_en", "de": "nodesmall"}'::jsonb),
-    ('details', '{"en": "nodebig_en", "de": "nodebig"}'::jsonb)
 ;
