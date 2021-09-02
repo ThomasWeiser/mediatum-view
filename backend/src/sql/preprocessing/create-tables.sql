@@ -1,37 +1,5 @@
 
-------------------------------------------------------------------
-
-create schema if not exists config;
 create schema if not exists preprocess;
-
-------------------------------------------------------------------
-
-create table if not exists config.application (
-    name text primary key,
-    toplevel_folder_ids int4[]
-);
-
-create table if not exists config.aspect_def (
-    name text primary key,
-    keys text[],
-    split_at_semicolon boolean,
-    normalize_year boolean
-);
-
-create table if not exists config.aspect_fts (
-    aspect text primary key references config.aspect_def (name),
-    label jsonb not null
-);
-
-create table if not exists config.aspect_facet (
-    aspect text primary key references config.aspect_def (name),
-    label jsonb not null
-);
-
-create table if not exists config.masks_by_purpose (
-    purpose text not null,
-    mask_names jsonb not null
-);
 
 ------------------------------------------------------------------
 
@@ -66,7 +34,7 @@ create table if not exists preprocess.aspect (
 );
 
 
--- TODO: Possibly defer index creation after filling in the of preprocessed data.
+-- TODO: Possibly defer index creation after filling in the preprocessed data.
 
 create index if not exists aspect_rum_tsvector_ops
     on preprocess.aspect

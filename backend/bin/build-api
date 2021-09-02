@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e # Abort execution on first failing command
+
+p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -v ON_ERROR_STOP=on -f"
+
+$p src/sql/check-prerequisites.sql
+$p src/sql/api/drop.sql
+$p src/sql/api/types.sql
+$p src/sql/api/auxiliary.sql
+$p src/sql/api/entities.sql
+$p src/sql/api/api-setup.sql
+$p src/sql/api/api-node.sql
+$p src/sql/api/api-meta.sql
+$p src/sql/api/api-folder.sql
+$p src/sql/api/api-document.sql
+$p src/sql/api/api-fts.sql
+$p src/sql/api/api-facets.sql
+$p src/sql/api/api-mutation.sql
+

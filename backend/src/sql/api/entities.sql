@@ -3,8 +3,7 @@
 -- from mediaTUM's generic node table.
 
 
-drop schema if exists entity CASCADE;
-create schema entity;
+create schema if not exists entity;
 
 
 create materialized view entity.folder_node as
@@ -344,3 +343,21 @@ create or replace view entity.document_mask_value_list as
         ) as values
     from (select * from entity.document_mask_fields order by maskitem_orderpos) as q
     group by document_id, mask_name;
+
+------------------------------------------------------------------
+
+-- Possible index on table noderelation
+
+/* Add this index only if proven useful.
+   Up to now we don't have a query that would profit from it.
+   Caution: I've experienced some performance loss _with_ the index,
+            when checking for node lineage using a `exists` sub-query on noderelation.
+            Without this index the planner uses the pkey index and is a bit faster.
+
+-- We have already a multi-column index (nid, cid, distance) from primary key.
+-- For enumerating parents we add a multi-column index (cid, nid) here.
+create index if not exists ix_mediatum_noderelation_cid_nid
+    on noderelation
+ using btree (cid, nid);
+*/
+

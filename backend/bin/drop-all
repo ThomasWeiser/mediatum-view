@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -e # Abort execution on first failing command
+
+p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -f"
+
+$p src/sql/preprocessing/truncate.sql
+$p src/sql/drop-all.sql

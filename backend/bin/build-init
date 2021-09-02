@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e # Abort execution on first failing command
+
+p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -v ON_ERROR_STOP=on -f"
+
+$p src/sql/check-prerequisites.sql
+$p src/sql/config/drop.sql
+$p src/sql/config/create-tables.sql
+$p src/sql/config/config.sql
+$p src/sql/preprocessing/create-tables.sql

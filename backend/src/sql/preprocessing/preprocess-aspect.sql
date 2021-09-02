@@ -70,9 +70,7 @@ create or replace function preprocess.some_attributes_as_tsvector (attrs jsonb, 
 $$ language sql immutable strict;
 
 
-drop view if exists preprocess.aspect_view;
-
-create view preprocess.aspect_view as
+create or replace view preprocess.aspect_view as
     select
         document.id as nid,
         aspect_def.name as name,
