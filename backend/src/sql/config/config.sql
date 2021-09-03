@@ -45,7 +45,7 @@ insert into config.aspect_fts values
 
 insert into config.aspect_facet values
     ('type', '{"en": "Document type", "de": "Dokumenttyp"}'::jsonb),
-    ('subject', '{"en": "Document type", "de": "Dokumenttyp"}'::jsonb),
+    ('subject', '{"en": "Subject group", "de": "Fachgebiet"}'::jsonb),
     ('subject2', '{"en": "TUM classification", "de": "TU-Systematik"}'::jsonb),
     ('origin', '{"en": "Institution", "de": "Institution"}'::jsonb),
     ('author', '{"en": "Author", "de": "Autor"}'::jsonb),
