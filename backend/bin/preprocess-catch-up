@@ -6,7 +6,7 @@ set -e # Abort execution on first failing command
 # export PGOPTIONS='-c mediatum.preprocessing_limit=2000 -c mediatum.preprocessing_min_node_id=1515316'
 
 PGOPTIONS+=''
-#PGOPTIONS+=' -c mediatum.preprocessing_limit=11000 '
+#PGOPTIONS+=' -c mediatum.preprocessing_limit=2200 '
 #PGOPTIONS+=' -c mediatum.preprocessing_min_node_id=1515316 '
 #PGOPTIONS+=' -c mediatum.preprocessing_max_node_id=999999999 '
 export PGOPTIONS

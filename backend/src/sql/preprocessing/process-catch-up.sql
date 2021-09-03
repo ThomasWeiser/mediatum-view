@@ -12,12 +12,12 @@
 
 ------------------------------------
 
--- Output possibly configured limits
+-- Output current values of possible configuration limits
 
 select
-    current_setting('mediatum.preprocessing_min_node_id', true)::int as "mediatum.preprocessing_min_node_id",
-    current_setting('mediatum.preprocessing_max_node_id', true)::int as "mediatum.preprocessing_max_node_id",
-    current_setting('mediatum.preprocessing_limit', true)::int as "mediatum.preprocessing_limit";
+    current_setting('mediatum.preprocessing_min_node_id', true)::int as "preprocessing_min_node_id",
+    current_setting('mediatum.preprocessing_max_node_id', true)::int as "preprocessing_max_node_id",
+    current_setting('mediatum.preprocessing_limit', true)::int as "preprocessing_limit";
 
 ------------------------------------
 
@@ -25,8 +25,8 @@ select
 -- We don't mind that such long lexemes don't get indexed.
 set session client_min_messages to warning;
 
-insert into preprocess.ufts (nid, "year", recency, tsvec)
-    select * 
+insert into preprocess.ufts (nid, year, recency, tsvec)
+    select nid, year, recency, tsvec
     from preprocess.ufts_as_view
     -- For testing the code one may just process a fraction of the data
     -- by using the custom configuration parameters below
@@ -49,11 +49,10 @@ set session client_min_messages to warning;
 
 insert into preprocess.aspect (nid, name, values, tsvec)
     select nid, name, values, tsvec
-    from preprocess.aspect_view
+    from preprocess.aspect_as_view
     where (nid >= current_setting('mediatum.preprocessing_min_node_id', true)::int) is not false
       and (nid <= current_setting('mediatum.preprocessing_max_node_id', true)::int) is not false
     limit current_setting('mediatum.preprocessing_limit', true)::int * 10
-    -- on conflict(nid, "name")
     on conflict on constraint aspect_pkey do nothing
 ;
 

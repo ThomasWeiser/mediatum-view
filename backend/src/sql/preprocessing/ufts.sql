@@ -34,13 +34,15 @@ create or replace function preprocess.unified_tsvec_from_attrs_and_fulltext
                     ),
                 'A')
 			||
-			setweight(to_tsvector(
-                'english_german'
-                -- Limit the fulltext length to avoid "string is too long for tsvector (... bytes, max 1048575 bytes)"
-                , left(
-                    coalesce (fulltext, ''),
-                    1048000)
-                ), 'D');
+			setweight(
+                to_tsvector(
+                    'english_german'
+                    -- Limit the fulltext length to avoid "string is too long for tsvector (... bytes, max 1048575 bytes)"
+                    , left(
+                        coalesce (fulltext, ''),
+                        1048000)
+                    ),
+                'D');
 
         exception
             when others then
@@ -57,7 +59,7 @@ $$ language plpgsql immutable;
 create or replace view preprocess.ufts_as_view as
     select
     node.id as nid,
-    preprocess.year_from_attrs(node.attrs) as "year",
+    preprocess.year_from_attrs(node.attrs) as year,
     - node.id as recency,
     preprocess.unified_tsvec_from_attrs_and_fulltext(node.attrs, node.fulltext) as tsvec
     from mediatum.node
@@ -68,15 +70,15 @@ create or replace function preprocess.update_ufts_on_node_upsert()
     returns trigger
     as $$
     begin
-        insert into preprocess.ufts (nid, "year", recency, tsvec)
-            select * 
+        insert into preprocess.ufts (nid, year, recency, tsvec)
+            select nid, year, recency, tsvec
             from preprocess.ufts_as_view
             where ufts_as_view.nid = new.id
             and (nid >= current_setting('mediatum.preprocessing_min_node_id', true)::int) is not false
             and (nid <= current_setting('mediatum.preprocessing_max_node_id', true)::int) is not false
             on conflict on constraint ufts_pkey
             do update set 
-                "year" = excluded."year",
+                year = excluded.year,
                 recency = excluded.recency,
                 tsvec = excluded.tsvec
         ;
