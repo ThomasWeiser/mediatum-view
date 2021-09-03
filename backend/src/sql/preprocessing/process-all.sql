@@ -33,6 +33,19 @@ set session client_min_messages to notice;
 
 analyze preprocess.ufts;
 
+-- Create the indexes not before now, when the tables are already filled. This is more efficient than updating the indexes row by row.
+
+-- Index for queryies ordered by distance between tsvector and tsquery
+create index if not exists ufts_rum_tsvector_ops
+    on preprocess.ufts
+ using rum (tsvec rum_tsvector_ops);
+
+-- Index for queryies ordered by recency
+create index if not exists ufts_rum_tsvector_addon_ops
+    on preprocess.ufts
+ using rum (tsvec rum_tsvector_addon_ops, recency)
+  with (attach ='recency', to = 'tsvec');
+
 ------------------------------------
 
 -- Suppress notices about "Word is too long to be indexed. Words longer than 2047 characters are ignored."
@@ -51,3 +64,20 @@ insert into preprocess.aspect (nid, name, values, tsvec)
 set session client_min_messages to notice;
 
 analyze preprocess.aspect;
+
+-- Create the indexes not before now, when the tables are already filled. This is more efficient than updating the indexes row by row.
+
+create index if not exists aspect_rum_tsvector_ops
+    on preprocess.aspect
+ using rum (tsvec rum_tsvector_ops)
+;
+
+create index if not exists aspect_rum_tsvector_addon_ops
+    on preprocess.aspect
+ using rum (tsvec rum_tsvector_addon_ops, name)
+  with (attach ='name', to = 'tsvec')
+ ;
+
+-- TODO: Possibly create index on (name, values), using gin utilizing extension btree_gin
+--       See https://stackoverflow.com/q/31945601
+
