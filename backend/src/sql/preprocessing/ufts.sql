@@ -63,3 +63,24 @@ create or replace view preprocess.ufts_as_view as
     from mediatum.node
 ;
 
+
+create or replace function preprocess.update_ufts_on_node_upsert()
+    returns trigger
+    as $$
+    begin
+        insert into preprocess.ufts (nid, "year", recency, tsvec)
+            select * 
+            from preprocess.ufts_as_view
+            where ufts_as_view.nid = new.id
+            and (nid >= current_setting('mediatum.preprocessing_min_node_id', true)::int) is not false
+            and (nid <= current_setting('mediatum.preprocessing_max_node_id', true)::int) is not false
+            on conflict on constraint ufts_pkey
+            do update set 
+                "year" = excluded."year",
+                recency = excluded.recency,
+                tsvec = excluded.tsvec
+        ;
+
+        return new;
+    end;
+$$ language plpgsql;

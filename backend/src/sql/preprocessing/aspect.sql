@@ -87,3 +87,23 @@ create or replace view preprocess.aspect_view as
 ;
 
 
+create or replace function preprocess.update_aspect_on_node_upsert()
+    returns trigger
+    as $$
+    begin
+        insert into preprocess.aspect (nid, name, values, tsvec)
+            select nid, name, values, tsvec
+            from preprocess.aspect_view
+            where aspect_view.nid = new.id
+            and (nid >= current_setting('mediatum.preprocessing_min_node_id', true)::int) is not false
+            and (nid <= current_setting('mediatum.preprocessing_max_node_id', true)::int) is not false
+            on conflict on constraint aspect_pkey
+            do update set 
+                values = excluded.values,
+                tsvec = excluded.tsvec
+        ;
+
+        return new;
+    end;
+$$ language plpgsql;
+
