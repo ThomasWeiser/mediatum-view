@@ -13,7 +13,7 @@ create or replace function preprocess.prepare_values (values_array text[])
         where element is not null
         order by element,index
     ) sub
-$$ language sql immutable strict;
+$$ language sql immutable strict parallel safe;
 
 
 create or replace function preprocess.normalize_value (value text, normalize_year boolean)
@@ -33,7 +33,7 @@ create or replace function preprocess.normalize_value (value text, normalize_yea
             , 1048000
         )
         
-$$ language sql immutable strict;
+$$ language sql immutable strict parallel safe;
 
 
 create or replace function preprocess.some_attributes_as_array (attrs jsonb, keys text[], split_at_semicolon boolean, normalize_year boolean)
@@ -53,21 +53,21 @@ create or replace function preprocess.some_attributes_as_array (attrs jsonb, key
             )
         end
     )
-$$ language sql immutable strict;
+$$ language sql immutable strict parallel safe;
 
 
 create or replace function preprocess.some_attributes_as_text (attrs jsonb, keys text[], split_at_semicolon boolean, normalize_year boolean)
     returns text as $$
 	select
         array_to_string(preprocess.some_attributes_as_array(attrs, keys, split_at_semicolon, normalize_year), ' ')
-$$ language sql immutable strict;
+$$ language sql immutable strict parallel safe;
 
 
 create or replace function preprocess.some_attributes_as_tsvector (attrs jsonb, keys text[], split_at_semicolon boolean, normalize_year boolean)
     returns tsvector as $$
 	select
         to_tsvector('english_german', preprocess.some_attributes_as_text(attrs, keys, split_at_semicolon, normalize_year))
-$$ language sql immutable strict;
+$$ language sql immutable strict parallel safe;
 
 
 create or replace view preprocess.aspect_as_view as

@@ -14,7 +14,7 @@ create or replace function preprocess.year_from_attrs
                 raise notice 'invalid year: "%".  returning null.', (attrs #>> '{year}');
                 return null;
     end;
-$$ language plpgsql immutable;
+$$ language plpgsql immutable parallel safe;
 
 create or replace function preprocess.unified_tsvec_from_attrs_and_fulltext
     ( attrs jsonb
@@ -53,7 +53,7 @@ create or replace function preprocess.unified_tsvec_from_attrs_and_fulltext
 
                 return null;
     end;
-$$ language plpgsql immutable;
+$$ language plpgsql immutable parallel safe;
 
 
 create or replace view preprocess.ufts_as_view as
