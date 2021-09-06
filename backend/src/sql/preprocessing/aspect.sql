@@ -87,6 +87,26 @@ create or replace view preprocess.aspect_as_view as
 ;
 
 
+create or replace view preprocess.aspect_missing as
+    (   select
+            document.id as nid,
+            aspect_def.name as name
+        from
+            mediatum.node as document,
+            mediatum.nodetype,
+            config.aspect_def
+        where
+            document.schema is not null
+            and document.type = nodetype.name
+            and not nodetype.is_container
+    )
+    except
+    (   select nid, name
+        from preprocess.aspect
+    )
+;
+
+
 create or replace function preprocess.update_aspect_on_node_upsert()
     returns trigger
     as $$

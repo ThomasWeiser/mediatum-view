@@ -66,6 +66,17 @@ create or replace view preprocess.ufts_as_view as
 ;
 
 
+create or replace view preprocess.ufts_missing as
+    (   select node.id as nid
+        from mediatum.node
+    )
+    except
+    (   select nid
+        from preprocess.aspect
+    )
+;
+
+
 create or replace function preprocess.update_ufts_on_node_upsert()
     returns trigger
     as $$

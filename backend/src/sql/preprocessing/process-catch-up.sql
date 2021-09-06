@@ -26,12 +26,12 @@ select
 set session client_min_messages to warning;
 
 insert into preprocess.ufts (nid, year, recency, tsvec)
-    select nid, year, recency, tsvec
-    from preprocess.ufts_as_view
-    -- For testing the code one may just process a fraction of the data
-    -- by using the custom configuration parameters below
-    where (nid >= current_setting('mediatum.preprocessing_min_node_id', true)::int) is not false
-      and (nid <= current_setting('mediatum.preprocessing_max_node_id', true)::int) is not false
+    select ufts_as_view.nid, ufts_as_view.year, ufts_as_view.recency, ufts_as_view.tsvec
+    from preprocess.ufts_as_view, preprocess.ufts_missing
+    where 
+    	ufts_as_view.nid = ufts_missing.nid
+      and (ufts_as_view.nid >= current_setting('mediatum.preprocessing_min_node_id', true)::int) is not false
+      and (ufts_as_view.nid <= current_setting('mediatum.preprocessing_max_node_id', true)::int) is not false
     limit current_setting('mediatum.preprocessing_limit', true)::int
     on conflict on constraint ufts_pkey do nothing
 ;
@@ -48,13 +48,16 @@ analyze preprocess.ufts;
 set session client_min_messages to warning;
 
 insert into preprocess.aspect (nid, name, values, tsvec)
-    select nid, name, values, tsvec
-    from preprocess.aspect_as_view
-    where (nid >= current_setting('mediatum.preprocessing_min_node_id', true)::int) is not false
-      and (nid <= current_setting('mediatum.preprocessing_max_node_id', true)::int) is not false
+    select aspect_as_view.nid, aspect_as_view.name, aspect_as_view.values, aspect_as_view.tsvec
+    from preprocess.aspect_as_view,
+         preprocess.aspect_missing
+    where aspect_as_view.nid = aspect_missing.nid and aspect_as_view.name = aspect_missing.name
+      and (aspect_as_view.nid >= current_setting('mediatum.preprocessing_min_node_id', true)::int) is not false
+      and (aspect_as_view.nid <= current_setting('mediatum.preprocessing_max_node_id', true)::int) is not false
     limit current_setting('mediatum.preprocessing_limit', true)::int * 10
     on conflict on constraint aspect_pkey do nothing
 ;
+
 
 -- Reset message level to default
 set session client_min_messages to notice;
