@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Start the backend by running postgraphile with the appropriate configuration.
+
+
 mkdir -p export
 
 # Log created SQL queries

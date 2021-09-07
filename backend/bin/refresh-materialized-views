@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Refresh all materialized views.
+#
+# Materialized views are used to access folders, metadatatypes, metafields, etc.
+# The data is extracted from the nodes table for performance reasons.
+# Refreshing should be done whenever relevant changes should be visible on the API.
+# May also be called periodically (e.g. hourly or daily).
+
+
 set -e # Abort execution on first failing command
 
 p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -v ON_ERROR_STOP=on -f"

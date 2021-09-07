@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Create all functions, view etc. needed for data preprocessing.
+
+
 set -e # Abort execution on first failing command
 
 p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -v ON_ERROR_STOP=on -f"

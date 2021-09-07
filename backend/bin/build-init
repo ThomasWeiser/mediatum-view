@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# Build the initial database structures:
+# 1. Check prerequisites (i.e. needed PostgreSQL extensions).
+# 2. Define tables and data for app configuration.
+# 3. Create the tables for preprocessed data.
+
+
 set -e # Abort execution on first failing command
 
 p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -v ON_ERROR_STOP=on -f"

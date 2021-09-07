@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Preprocess those nodes that are not yet preprocessed.
+#
+# If you created the triggers to update the preprocessed data,
+# you usually won't need to catch up manually.
+
+
 set -e # Abort execution on first failing command
 
 # For testing we may preprocess just some subset of all nodes by using the following custom configuration paramters:
