@@ -1,36 +1,4 @@
 
-
-drop table if exists preprocess.aspect_def cascade;
-create table preprocess.aspect_def (
-    name text primary key,
-    keys text[],
-    split_at_semicolon boolean,
-    normalize_year boolean
-);
-insert into preprocess.aspect_def values
-    ('type', array['type'], false, false),
-    ('origin', array['origin'], false, false),
-    ('subject', array['subject'], true, false),
-    ('subject2', array['subject2'], true, false),
-    ('title', array['title', 'title-translated', 'title-contrib'], false, false),
-    ('author', array['author', 'author-contrib', 'author.fullname_comma'], true, false),
-    ('person', array['author', 'author-contrib', 'author.fullname_comma', 'advisor', 'referee'], true, false),
-    ('keywords', array['keywords', 'keywords-translated'], true, false),
-    ('description', array['description', 'description-translated'], false, false),
-    ('year', array['year', 'year-accepted'], false, true)
-;
-
-
-drop table if exists preprocess.aspect cascade;
-create table preprocess.aspect (
-	nid int4 references mediatum.node(id) on delete cascade,
-    name text,
-    values text[] not null,
-	tsvec tsvector not null,
-    primary key (nid, name)
-);
-
-
 create or replace function preprocess.prepare_values (values_array text[])
     -- 1. Eliminate duplicate values with stable sort order
     --    (cf https://dba.stackexchange.com/a/211502).
@@ -45,7 +13,7 @@ create or replace function preprocess.prepare_values (values_array text[])
         where element is not null
         order by element,index
     ) sub
-$$ language sql immutable strict;
+$$ language sql immutable strict parallel safe;
 
 
 create or replace function preprocess.normalize_value (value text, normalize_year boolean)
@@ -65,7 +33,7 @@ create or replace function preprocess.normalize_value (value text, normalize_yea
             , 1048000
         )
         
-$$ language sql immutable strict;
+$$ language sql immutable strict parallel safe;
 
 
 create or replace function preprocess.some_attributes_as_array (attrs jsonb, keys text[], split_at_semicolon boolean, normalize_year boolean)
@@ -85,27 +53,24 @@ create or replace function preprocess.some_attributes_as_array (attrs jsonb, key
             )
         end
     )
-$$ language sql immutable strict;
-
+$$ language sql immutable strict parallel safe;
 
 
 create or replace function preprocess.some_attributes_as_text (attrs jsonb, keys text[], split_at_semicolon boolean, normalize_year boolean)
     returns text as $$
 	select
         array_to_string(preprocess.some_attributes_as_array(attrs, keys, split_at_semicolon, normalize_year), ' ')
-$$ language sql immutable strict;
+$$ language sql immutable strict parallel safe;
 
 
 create or replace function preprocess.some_attributes_as_tsvector (attrs jsonb, keys text[], split_at_semicolon boolean, normalize_year boolean)
     returns tsvector as $$
 	select
         to_tsvector('english_german', preprocess.some_attributes_as_text(attrs, keys, split_at_semicolon, normalize_year))
-$$ language sql immutable strict;
+$$ language sql immutable strict parallel safe;
 
 
-drop view if exists preprocess.aspect_view;
-
-create view preprocess.aspect_view as
+create or replace view preprocess.aspect_as_view as
     select
         document.id as nid,
         aspect_def.name as name,
@@ -114,7 +79,7 @@ create view preprocess.aspect_view as
     from
         mediatum.node as document,
         mediatum.nodetype,
-        preprocess.aspect_def
+        config.aspect_def
     where
         document.schema is not null
         and document.type = nodetype.name
@@ -122,39 +87,43 @@ create view preprocess.aspect_view as
 ;
 
 
-------------------------------------
-
-delete from preprocess.aspect;   
-
--- Suppress notices about "Word is too long to be indexed. Words longer than 2047 characters are ignored."
--- We don't mind that such long lexemes don't get indexed.
-set session client_min_messages to warning;
-
-insert into preprocess.aspect (nid, name, values, tsvec)
-    select nid, name, values, tsvec
-    from preprocess.aspect_view
-    -- where nid > 601000 and nid < 602000 -- For testing: process some well-known documents only
-    -- where nid > 1515316
-    -- limit 44000 -- For testing: process only a smaller number of rows
+create or replace view preprocess.aspect_missing as
+    (   select
+            document.id as nid,
+            aspect_def.name as name
+        from
+            mediatum.node as document,
+            mediatum.nodetype,
+            config.aspect_def
+        where
+            document.schema is not null
+            and document.type = nodetype.name
+            and not nodetype.is_container
+    )
+    except
+    (   select nid, name
+        from preprocess.aspect
+    )
 ;
 
--- Reset message level to default
-set session client_min_messages to notice;
 
-------------------------------------
+create or replace function preprocess.update_aspect_on_node_upsert()
+    returns trigger
+    as $$
+    begin
+        insert into preprocess.aspect (nid, name, values, tsvec)
+            select nid, name, values, tsvec
+            from preprocess.aspect_as_view
+            where aspect_as_view.nid = new.id
+            and (nid >= current_setting('mediatum.preprocessing_min_node_id', true)::int) is not false
+            and (nid <= current_setting('mediatum.preprocessing_max_node_id', true)::int) is not false
+            on conflict on constraint aspect_pkey
+            do update set 
+                values = excluded.values,
+                tsvec = excluded.tsvec
+        ;
 
-create index if not exists aspect_rum_tsvector_ops
-    on preprocess.aspect
- using rum (tsvec rum_tsvector_ops)
-;
+        return new;
+    end;
+$$ language plpgsql;
 
-create index if not exists aspect_rum_tsvector_addon_ops
-    on preprocess.aspect
- using rum (tsvec rum_tsvector_addon_ops, name)
-  with (attach ='name', to = 'tsvec')
- ;
-
--- TODO: Create index on (name, values), using gin utilizing extension btree_gin
---       See https://stackoverflow.com/q/31945601
-
-analyze preprocess.aspect;

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Drop all database changes introduced by this backend.
+
+
+p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -f"
+
+# Make sure to reclaim disk space allocated by preprocessed data by truncating these tables.
+$p src/sql/preprocessing/create-tables.sql # Avoid error message in case that the tables don't exist.
+$p src/sql/preprocessing/truncate.sql
+
+$p src/sql/drop-all.sql

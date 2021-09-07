@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Create triggers for updating the preprocessed data when rows are inserted or updated in table mediatum.node.
+
+
+p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -v ON_ERROR_STOP=on -f"
+
+$p src/sql/preprocessing/create-triggers.sql

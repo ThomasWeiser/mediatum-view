@@ -3,6 +3,9 @@
 -- regarding full-text search.
 
 
+create schema if not exists debug;
+
+
 create or replace function aux.fts_limited_by_rank
     ( folder_id int4
     , fts_query tsquery

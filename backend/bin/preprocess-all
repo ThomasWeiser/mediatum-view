@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Preprocess all nodes from scratch.
+
+
+set -e # Abort execution on first failing command
+
+# For testing we may preprocess just some subset of all nodes by using the following custom configuration paramters:
+# export PGOPTIONS='-c mediatum.preprocessing_limit=2000 -c mediatum.preprocessing_min_node_id=1515316'
+
+PGOPTIONS+=''
+#PGOPTIONS+=' -c mediatum.preprocessing_limit=2000 '
+#PGOPTIONS+=' -c mediatum.preprocessing_min_node_id=1515316 '
+#PGOPTIONS+=' -c mediatum.preprocessing_max_node_id=999999999 '
+export PGOPTIONS
+
+p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -v ON_ERROR_STOP=on -f"
+
+$p src/sql/check-prerequisites.sql
+$p src/sql/preprocessing/process-all.sql

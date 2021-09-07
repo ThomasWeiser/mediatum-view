@@ -1,11 +1,7 @@
 
 -- Definitions of the types publicly exposed as GraphQL objects.
 
-drop schema if exists api cascade;
-drop schema if exists debug cascade;
-
 create schema if not exists api;
-create schema if not exists debug;
 create schema if not exists aux;
 
 
@@ -435,12 +431,3 @@ comment on column api.facet_value.count is
     'The number of occurences of the facet.';
 
 
-create type debug.mediatum_node as
-    ( id int4
-	, "type" varchar
-	, "schema" varchar
-	, "name" varchar
-	, orderpos int4
-	, fulltext varchar
-	, subnode boolean
-    );

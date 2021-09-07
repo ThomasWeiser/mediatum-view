@@ -2,6 +2,19 @@
 -- Functions used during development, that link the public GraphQL types with the mediaTUM node table.
 -- Useful when examining the structure of the node table.
 
+create schema if not exists debug;
+
+
+create type debug.mediatum_node as
+    ( id int4
+	, "type" varchar
+	, "schema" varchar
+	, "name" varchar
+	, orderpos int4
+	, fulltext varchar
+	, subnode boolean
+    );
+
 
 create or replace function debug.all_nodes (
         type text,

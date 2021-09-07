@@ -9,7 +9,8 @@ The new code lives in these PostgreSQL schemas:
 
 | Schema    | Description                              |
 | --------- | ---------------------------------------- |
-| `preprocess`  | A table `ufts` with preprocessed `tsvector` values for full text search. |
+| `config`  | Tables for configuring the application (top-level folders, aspects, masks) |
+| `preprocess`  | Tables `ufts` and `aspect` with preprocessed `tsvector` values for full text search. |
 | `entity`  | Views (some of them materialized) that map the original generic node structure to the specific entities of interest. |
 | `api`     | Types and functions that define the GraphQL schema and the resolvers implementing the GraphQL operations. |
 | `aux`     | Helper functions                         |
@@ -24,7 +25,7 @@ On top of that we use [PostGraphile](https://www.graphile.org/postgraphile/) (fo
 
 In general, we use an up-to-date version of PostgreSQL. 
 
-Currently we are using version 11.5.
+Currently we are using version 13.3.
 
 Minimum required version is 10.
 
@@ -99,15 +100,21 @@ In order to create those schemas you may have to grant the permission to do so t
 $ psql -d $MEDIATUM_DATABASE_NAME -c "GRANT CREATE ON DATABASE $MEDIATUM_DATABASE_NAME TO $MEDIATUM_DATABASE_USER;"
 ```
 
-To submit the new code to a running mediaTUM database execute the SQL and PL/pgSQL code as listed in `bin/preprocess` and `bin/build`.
+To submit the new code to a running mediaTUM database execute the SQL and PL/pgSQL code with the appropriate scripts in `bin/`.
 Please review these scripts before using them.
 
-Preprocessing the fulltext data to build the FTS index takes some time, e.g. about 30 minutes for a mediaTUM installation with 300000 nodes.
-
 ```sh
-$ bin/preprocess
-$ bin/build
+$ bin/build-init
+$ bin/build-preprocess
+$ bin/build-api
+$ bin/preprocess-all
+$ bin/enable-update-triggers
+$ bin/preprocess-catch-up
 ```
+
+Preprocessing the fulltext and meta-data to build the FTS index takes some time, e.g. about 60 minutes for a mediaTUM installation with 600000 nodes.
+
+You may drop all changes introduced by this backend via `bin/drop-all`.
 
 ## Running PostGraphile
 
@@ -118,3 +125,16 @@ $ bin/start
 ```
 
 If all goes well you will see two URLs: One for the GraphQL endpoint, and one for [Graph*i*QL](https://github.com/graphql/graphiql). You may want to open the latter for a handy in-browser tool to explore the resulting API and its built-in documentation.
+
+## Database Maintenance
+
+You probably want to enable updating of the preprocessed data automatically by running the script `bin/enable-update-triggers`.
+Alternatively you may use the script `bin/preprocess-catch-up` periodically to add missing preprocessed data.
+
+Note that changes to the table `config.aspect_def` don't trigger an update of table `preprocess.aspect` automatically. Please run `bin/preprocess-catch-up` manually in this case. This will also delete obsolete preprocessed aspect data if you have removed some aspect definitions.
+
+We use some materialized views for performance reasons.
+Currently these are: `folder`, `folder_node`, `mapping`, `mappingfield`, `mask`, `maskitem`, `metadatatype`, `metafield`, which are all defined within schema `entity`. They are all derived from the related specialized node types from table `mediatum.node`.
+
+These materialized views need to be kept up-to-date via the script `bin/refresh-materialized-views`, either periodically or when needed.
+Refreshing needs about 40 seconds, so it may be run e.g. hourly.

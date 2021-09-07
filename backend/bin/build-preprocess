@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Create all functions, view etc. needed for data preprocessing.
+
+
+set -e # Abort execution on first failing command
+
+p="psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER -v ON_ERROR_STOP=on -f"
+
+$p src/sql/check-prerequisites.sql
+$p src/sql/preprocessing/drop.sql
+$p src/sql/preprocessing/create-tables.sql
+$p src/sql/preprocessing/ufts.sql
+$p src/sql/preprocessing/aspect.sql
