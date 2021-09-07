@@ -72,7 +72,7 @@ create or replace view preprocess.ufts_missing as
     )
     except
     (   select nid
-        from preprocess.aspect
+        from preprocess.ufts
     )
 ;
 
