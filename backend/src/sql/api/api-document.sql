@@ -175,30 +175,6 @@ comment on function api.document_folders (document api.document) is
     'Gets the list of all folders in which the document appears.';
 
 
-create or replace function api.document_attributes
-    ( document api.document
-    , keys text[]
-    )
-    returns jsonb as $$
-    select aux.get_document_attributes (document, keys)
-$$ language sql stable;
-
-comment on function api.document_attributes (document api.document, keys text[]) is
-    'Gets the node attributes of this document as a JSON value, optionally filtered by a list of keys.';
-
-
-create or replace function api.document_system_attributes
-    ( document api.document
-    , keys text[]
-    )
-    returns jsonb as $$
-    select aux.get_node_system_attributes (document.id, keys)
-$$ language sql stable;
-
-comment on function api.document_system_attributes (document api.document, keys text[]) is
-    'Gets the node system attributes of this document as a JSON value, optionally filtered by a list of keys.';
-
-
 create or replace function api.document_metadatatype
     ( document api.document
     )
@@ -209,23 +185,6 @@ $$ language sql stable;
 
 comment on function api.document_metadatatype (document api.document) is
     'Gets the meta data type of this document.';
-
-
-create or replace function api.metadatatype_documents
-    ( mdt api.metadatatype
-    , type text
-    , name text
-    )
-    returns setof api.document as $$
-    select document.*
-    from entity.node as document
-    where document.schema = mdt.name
-      and (metadatatype_documents.type is null or document.type = metadatatype_documents.type)
-      and (metadatatype_documents.name is null or document.name = metadatatype_documents.name)
-$$ language sql stable;
-
-comment on function api.metadatatype_documents (mdt api.metadatatype, type text, name text) is
-    'Reads and enables pagination through all documents having this meta data type, optionally filtered by type and name.';
 
 
 create or replace function api.document_from_search
