@@ -9,7 +9,7 @@
         "direct": {
             "Janiczek/cmd-extra": "1.1.0",
             "RomanErnst/erl": "2.1.1",
-            "dillonkearns/elm-graphql": "5.0.2",
+            "dillonkearns/elm-graphql": "5.0.6",
             "elm/browser": "1.0.2",
             "elm/core": "1.0.5",
             "elm/html": "1.0.0",
@@ -19,14 +19,14 @@
             "elm/time": "1.0.0",
             "elm/url": "1.0.0",
             "elm-community/basics-extra": "4.1.0",
-            "elm-community/list-extra": "8.3.0",
+            "elm-community/list-extra": "8.4.0",
             "elm-community/maybe-extra": "5.2.0",
             "elm-community/string-extra": "4.0.1",
             "hecrj/html-parser": "2.4.0",
             "jorgengranseth/elm-string-format": "1.0.1",
             "krisajenkins/remotedata": "6.0.1",
             "matthewsj/elm-ordering": "2.0.0",
-            "mgold/elm-nonempty-list": "4.1.0",
+            "mgold/elm-nonempty-list": "4.2.0",
             "rtfeldman/elm-sorter-experiment": "2.1.1"
         },
         "indirect": {
