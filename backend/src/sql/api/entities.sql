@@ -54,6 +54,13 @@ create unique index ix_folder_id on entity.folder (id);
 create index ix_folder_name on entity.folder (name);
 
 
+create or replace function entity.superfolder (child api.folder)
+    returns api.folder as $$
+    select * from entity.folder
+    where folder.id = child.parent_id
+$$ language sql stable;
+
+
 create materialized view entity.metadatatype as
     select
         node.id,

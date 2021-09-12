@@ -27,18 +27,6 @@ comment on function api.all_folders (name text, ids int4[], parent_ids int4[], i
     ' optionally filtered by name, list of ids, list of parentIds, isRoot and isCollection, and searchable by name.';
 
 
-create or replace function api.folder_by_id
-    ( id int4
-    )
-    returns api.folder as $$
-    select * from entity.folder
-    where entity.folder.id = folder_by_id.id
-$$ language sql strict stable;
-
-comment on function api.folder_by_id (id int4) is
-    'Gets a folder by its mediaTUM node id.';
-
-
 create or replace function api.folder_subfolders
     ( parent api.folder
     , name text
@@ -58,18 +46,6 @@ comment on function api.folder_subfolders (parent api.folder, name text, is_coll
     'Reads and enables pagination through all sub-folders of this folder, optionally filtered by name and isCollection, and searchable by name.';
 
 
-create or replace function api.folder_superfolder
-    ( child api.folder
-    )
-    returns api.folder as $$
-    select * from entity.folder
-    where folder.id = child.parent_id
-$$ language sql stable;
-
-comment on function api.folder_superfolder (child api.folder) is
-    'Gets the super-folder of this folder. Returns null if this folder is at the root.';
-
-
 create or replace function api.folder_lineage
     ( current_folder api.folder
     )
@@ -77,7 +53,7 @@ create or replace function api.folder_lineage
     declare lineage api.folder[] := array[current_folder];
     begin
         loop
-            current_folder := api.folder_superfolder (current_folder);
+            current_folder := entity.superfolder (current_folder);
             if current_folder is null then
                 exit;
             else
@@ -90,3 +66,5 @@ $$ language plpgsql stable;
 
 comment on function api.folder_lineage (current_folder api.folder) is
     'Gets a list of folders representing the path from the folder up to the root of the hierarchy.';
+
+
