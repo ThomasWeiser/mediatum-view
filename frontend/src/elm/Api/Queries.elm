@@ -3,7 +3,7 @@ module Api.Queries exposing
     , folders, subfolders
     , selectionDocumentsPage, selectionFolderCounts, selectionFacets
     , documentDetails
-    , genericNode, authorSearch
+    , genericNode
     )
 
 {-| Definitions of all specific GraphQL queries needed in the application.
@@ -40,7 +40,7 @@ In reality it's just function calling.
 
 # Miscellaneous Queries
 
-@docs genericNode, authorSearch
+@docs genericNode
 
 -}
 
@@ -446,57 +446,6 @@ selectionFacets selection aspects limit =
         )
         |> SelectionSet.nonNullOrFail
         |> SelectionSet.map Facet.facetsValuesFromDict
-
-
-{-| Get a page of documents found by searching on an author's name.
-
-The result is paginated according to the Relay specification.
-
-Up to now this query function is only a preliminary draft.
-
-_GraphQL notation:_
-
-    query {
-        authorSearch(
-            folderId: $folderId
-            text: $searchTerm
-            first: $optionalRelayPaginationArgument
-            last: $optionalRelayPaginationArgument
-            before: $optionalRelayPaginationArgument
-            after: $optionalRelayPaginationArgument
-        ) {
-            edges {
-                node {
-                    ...documentByMask
-                }
-            }
-        }
-    }
-
--}
-authorSearch :
-    String
-    -> Int
-    -> Maybe (Pagination.Relay.Page.Page Document)
-    -> Pagination.Relay.Pagination.Position
-    -> FolderId
-    -> String
-    -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-authorSearch maskName limit referencePage paginationPosition folderId searchString =
-    Mediatum.Query.authorSearch
-        (Pagination.Relay.Pagination.paginationArguments
-            limit
-            referencePage
-            paginationPosition
-        )
-        { folderId = Id.toInt folderId
-        , text = searchString
-        }
-        (Connection.connection
-            Api.Fragments.graphqlDocumentObjects
-            (Api.Fragments.documentByMask maskName Nothing)
-        )
-        |> SelectionSet.nonNullOrFail
 
 
 {-| Get the basic properties of a document selected by its mediaTUM id

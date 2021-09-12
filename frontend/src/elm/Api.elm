@@ -7,8 +7,7 @@ module Api exposing
 {-| This module and its sub-modules are responsible
 for communicating with the GraphQL API of mediaTUM's backend.
 
-The available queries and mutations are located in the modules
-`Api.Queries` and `Api.Mutations`.
+The available queries are located in the modules `Api.Queries`.
 
 
 # Types
