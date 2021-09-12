@@ -1,31 +1,43 @@
 module Entities.Markup exposing
     ( Markup
+    , FlagUnparsable(..)
     , parse
     , empty, plainText, normalizeYear
     , isEmpty
     , trim, view
+    , toHtmlString
     )
 
 {-|
 
 @docs Markup
+@docs FlagUnparsable
 @docs parse
 @docs empty, plainText, normalizeYear
 @docs isEmpty
 @docs trim, view
+@docs toHtmlString
 
 -}
 
-import Entities.Markup.Parser exposing (Segment(..), Segments)
 import Html exposing (Html)
-import Html.Attributes
+import Html.Parser exposing (Node)
+import Html.Parser.Util
+import List.Extra
+import Maybe.Extra
 import String.Extra
 
 
 {-| A text with markup. Internaly represented as a list of segments.
 -}
 type Markup
-    = Markup Segments
+    = Markup (List Node)
+
+
+type FlagUnparsable
+    = None
+    | DivClass String
+    | SpanClass String
 
 
 {-| An empty markup text, i.e. an empty list of segments
@@ -38,136 +50,178 @@ empty =
 {-| Determine if the Markup contains no text
 -}
 isEmpty : Markup -> Bool
-isEmpty (Markup segments) =
-    segments == []
+isEmpty (Markup nodes) =
+    nodes == []
 
 
-{-| Decompose a string with markup.
+{-| Parse a string with markup.
 
-    parse "foo <mediatum:fts>bar</mediatum:fts> baz"
-        == Markup
-            [ Text "foo "
-            , Fts "bar"
-            , Text " baz"
-            ]
+Note: On a parser error we currently fall-back to the whole input string.
+We should probably have some better solution here.
 
 -}
-parse : String -> Markup
-parse =
-    Markup << Entities.Markup.Parser.parse
+parse : FlagUnparsable -> String -> Markup
+parse flagUnparsable inputString =
+    inputString
+        |> Html.Parser.run
+        |> Result.withDefault
+            [ case flagUnparsable of
+                None ->
+                    Html.Parser.Text inputString
+
+                DivClass class ->
+                    Html.Parser.Element
+                        "div"
+                        [ ( "class", class ) ]
+                        [ Html.Parser.Text inputString ]
+
+                SpanClass class ->
+                    Html.Parser.Element
+                        "span"
+                        [ ( "class", class ) ]
+                        [ Html.Parser.Text inputString ]
+            ]
+        |> Markup
 
 
 {-| The parsed text with markup removed
 
-    plaintext (parse "foo <mediatum:fts>bar</mediatum:fts> baz")
+    plaintext (parse "foo <span>bar</span> baz")
         == "foo bar baz"
 
 -}
 plainText : Markup -> String
-plainText (Markup segments) =
-    segments
-        |> List.map segmentText
-        |> String.concat
+plainText (Markup topNodes) =
+    let
+        plainTextFromNodes nodes =
+            List.map
+                (\node ->
+                    case node of
+                        Html.Parser.Text text ->
+                            text
+
+                        Html.Parser.Element tag attributes subNodes ->
+                            plainTextFromNodes subNodes
+
+                        Html.Parser.Comment comment ->
+                            ""
+                )
+                nodes
+                |> String.concat
+    in
+    plainTextFromNodes topNodes
 
 
 {-| Years are sometime formatted as "2020-00-00T00:00:00".
 For a nicer display we take just the first segment and only the first 4 characters of it.
 
-    normalizeYear (parse "<mediatum:fts>2020</mediatum:fts>-00-00T00:00:00")
-        == Markup [ Fts "2020" ]
+    normalizeYear (parse "<span>2020</span>-00-00T00:00:00")
+        == parse "2020"
+
+Note: Currently we don't preserve the markup structure. This should get implemented someday!
 
 -}
 normalizeYear : Markup -> Markup
-normalizeYear (Markup segments) =
-    segments
-        |> List.take 1
-        |> List.map
-            (mapSegment
-                (String.left 4)
-            )
-        |> Markup
+normalizeYear markup =
+    Markup
+        [ Html.Parser.Text
+            (plainText markup |> String.left 4)
+        ]
 
 
 {-| Limits the length of the Markup approximately to a certain number of characters.
 
-We don't cut within Fts segments. So the result may be a bit longer then given.
+Care is taken not to truncate words, unless they are longer than 2\*lengthLimit.
 
 -}
 trim : Int -> Markup -> Markup
-trim length0 (Markup segments0) =
+trim lengthLimit (Markup topNodes) =
     let
-        step length segments =
-            if length <= 0 then
-                []
+        hardLengthLimit : Int
+        hardLengthLimit =
+            lengthLimit * 2
+
+        stepNode : Int -> Node -> ( Int, Maybe Node )
+        stepNode residual node =
+            if residual <= 0 then
+                ( residual, Nothing )
 
             else
-                case segments of
-                    [] ->
-                        []
+                case node of
+                    Html.Parser.Text text ->
+                        let
+                            trunc =
+                                String.Extra.softBreak residual text
+                                    |> List.head
+                                    |> Maybe.withDefault ""
+                                    |> String.left hardLengthLimit
+                                    |> workaroundSoftBreakIssue text
+                        in
+                        ( residual - String.length text
+                        , Just (Html.Parser.Text trunc)
+                        )
 
-                    segment :: tail ->
-                        case segment of
-                            Text string ->
-                                let
-                                    trunc =
-                                        String.Extra.softEllipsis length string
-                                in
-                                if trunc == string then
-                                    Text string :: step (length - String.length string) tail
+                    Html.Parser.Element tag attributes subNodes ->
+                        stepNodes residual subNodes
+                            |> Tuple.mapSecond
+                                (Html.Parser.Element tag attributes
+                                    >> Just
+                                )
 
-                                else
-                                    [ Text trunc ]
+                    Html.Parser.Comment comment ->
+                        ( residual, Just node )
 
-                            Fts string ->
-                                Fts string :: step (length - String.length string) tail
+        stepNodes : Int -> List Node -> ( Int, List Node )
+        stepNodes residual nodes =
+            nodes
+                |> List.Extra.mapAccuml stepNode residual
+                |> Tuple.mapSecond Maybe.Extra.values
+
+        ( resultingResidual, resultingNodes ) =
+            stepNodes lengthLimit topNodes
     in
-    Markup (step length0 segments0)
+    (if resultingResidual >= 0 then
+        resultingNodes
+
+     else
+        [ Html.Parser.Element "span"
+            [ ( "class", "with-ellipisis" ) ]
+            resultingNodes
+        , Html.Parser.Text " ..."
+        ]
+    )
+        |> Markup
 
 
-{-| Map markup to a Html.span element. Fts segments get marked with class "highlight".
+workaroundSoftBreakIssue : String -> String -> String
+workaroundSoftBreakIssue org trunc =
+    let
+        startsWithWhitespace s =
+            let
+                left1 =
+                    String.left 1 s
+            in
+            left1 /= "" && String.Extra.isBlank left1
+    in
+    if startsWithWhitespace org && not (startsWithWhitespace trunc) then
+        " " ++ trunc
 
-    view (parse "foo <mediatum:fts>bar</mediatum:fts> baz")
-        == Html.span []
-            [ Html.text "foo "
-            , Html.span
-                [ Html.Attributes.class "highlight" ]
-                [ Html.text "bar" ]
-            , Html.text " baz"
-            ]
+    else
+        trunc
 
+
+{-| Convert Markup to Elm's Html nodes
 -}
-view : Markup -> Html msg
-view (Markup segments) =
-    segments
-        |> List.map
-            (\segment ->
-                case segment of
-                    Text t ->
-                        Html.text t
-
-                    Fts t ->
-                        Html.span
-                            [ Html.Attributes.class "highlight" ]
-                            [ Html.text t ]
-            )
-        |> Html.span []
+view : Markup -> List (Html msg)
+view (Markup nodes) =
+    Html.Parser.Util.toVirtualDom nodes
 
 
-mapSegment : (String -> String) -> Segment -> Segment
-mapSegment mapping segment =
-    case segment of
-        Text s ->
-            Text (mapping s)
-
-        Fts s ->
-            Fts (mapping s)
-
-
-segmentText : Segment -> String
-segmentText segment =
-    case segment of
-        Text s ->
-            s
-
-        Fts s ->
-            s
+{-| Turn a Markup back into a list of HTML strings. Used for testing purposes only.
+-}
+toHtmlString : Markup -> String
+toHtmlString (Markup nodes) =
+    List.map
+        Html.Parser.nodeToString
+        nodes
+        |> String.concat

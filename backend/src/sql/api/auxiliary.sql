@@ -61,7 +61,8 @@ $$ language plpgsql immutable;
 
 create or replace function aux.ts_headline_options (highlight_all boolean)
     returns text as $$
-    declare delimiter text := 'StartSel=<mediatum:fts>, StopSel=</mediatum:fts>';
+    declare delimiter text := 'StartSel="<span class=''highlight-search-term''>", StopSel="</span>"';
+    -- declare delimiter text := 'StartSel=<b>, StopSel=</b>';
     begin
         if highlight_all then
             return delimiter || ', HighlightAll=true';

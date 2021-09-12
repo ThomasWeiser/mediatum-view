@@ -532,7 +532,7 @@ _GraphQL notation:_
             longname
         }
         name
-        valuesByMask(maskName: maskName, highlightText: optionalHighlightText)
+        valuesByMask(maskName: maskName, highlightSearchTerm: optionalHighlightSearchTerm)
     }
 
 -}
@@ -562,7 +562,7 @@ documentByMask maskName maybeSearchTerm =
             (Mediatum.Object.Document.valuesByMask
                 (\optionals ->
                     { optionals
-                        | highlightText =
+                        | highlightSearchTerm =
                             maybeSearchTerm
                                 |> Maybe.Extra.unwrap
                                     Absent
@@ -662,7 +662,10 @@ decoderAttributeList =
                 (Json.Decode.field "width" Json.Decode.int)
                 (Json.Decode.field "value"
                     (Json.Decode.string
-                        |> Json.Decode.map Entities.Markup.parse
+                        |> Json.Decode.map
+                            (Entities.Markup.parse
+                                (Entities.Markup.SpanClass "unparsable")
+                            )
                         |> Json.Decode.maybe
                     )
                 )

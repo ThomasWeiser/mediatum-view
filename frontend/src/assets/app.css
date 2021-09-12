@@ -228,9 +228,14 @@ a.document:hover {
 .listing .attribute.title {
   font-style: italic;
 }
-.attribute .highlight {
-  color: red;
+.attribute .highlight-search-term {
+  background-color: #d5de70;
 }
+/* For development and testing: Highlight unparsable Html with an eye-catching background-color
+.attribute .unparsable {
+  background-color: rgb(238, 2, 238);
+}
+*/
 .no-more-results {
   font-style: italic;
 }

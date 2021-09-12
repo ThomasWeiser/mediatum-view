@@ -282,7 +282,7 @@ comment on function api.document_from_search_attributes_matching (document_from_
 create or replace function api.document_values_by_mask
     ( document api.document
     , mask_name text
-    , highlight_text text default ''
+    , highlight_search_term text default ''
     )
     returns jsonb as $$
     select
@@ -295,12 +295,12 @@ create or replace function api.document_values_by_mask
                 'width',
                 maskitem_width,
                 'value',
-                case when highlight_text = '' then
+                case when highlight_search_term = '' then
                     value
                 else
                     ts_headline
                         ( value
-                        , aux.custom_to_tsquery (highlight_text)
+                        , aux.custom_to_tsquery (highlight_search_term)
                         , aux.ts_headline_options (true)
                         )
                 end
@@ -312,6 +312,6 @@ create or replace function api.document_values_by_mask
 $$ language sql strict stable parallel safe;
 
 
-comment on function api.document_values_by_mask (document api.document, mask_name text, highlightText text) is
+comment on function api.document_values_by_mask (document api.document, mask_name text, highlight_search_term text) is
     'Gets the meta field values of this document as a JSON value, selected by a named mask. '
-    'Optionally mark the occurences of a search term given as highlightText.';
+    'Optionally mark the occurences of a search term given as highlightSearchTerm.';

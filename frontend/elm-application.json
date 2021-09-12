@@ -18,7 +18,6 @@
         "Entities.Folder",
         "Entities.FolderCounts",
         "Entities.GenericNode",
-        "Entities.Markup.Parser",
         "Entities.Markup",
         "Entities.PageSequence",
         "Entities.Residence",
