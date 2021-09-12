@@ -250,31 +250,3 @@ comment on function api.fts_documents_page (folder_id int4, text text, aspect_te
          that the given aspect tests are allowed to be used for fts or facet filtering.
          One option would be to check them against the tables config.aspect_fts and config.aspect_facet.
  */
-
-----------------------------------------------------
-
-
-create or replace function api.author_search
-    ( folder_id int4
-    , text text
-    )
-    returns setof api.document as $$
-    select
-        node.id,
-        node.type,
-        node.schema,
-        node.name,
-        node.orderpos,
-        node.attrs
-    from aux.custom_to_tsquery (text) as tsq,
-         mediatum.node
-    where aux.test_node_lineage (folder_id, node.id)
-      and mediatum.to_tsvector_safe (
-            'german'::regconfig,
-            replace (node.attrs ->> 'author.surname', ';', ' ')
-          )
-          @@ tsq;
-$$ language sql strict stable rows 100 parallel safe;
-
-comment on function api.author_search (folder_id int4, text text) is
-    'Reads and enables pagination through all documents within a folder, filtered by a keyword search though the documents'' author.';
