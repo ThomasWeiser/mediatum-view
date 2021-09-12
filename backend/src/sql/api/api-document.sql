@@ -203,7 +203,8 @@ create or replace function api.document_metadatatype
     ( document api.document
     )
     returns api.metadatatype as $$
-    select api.metadatatype_by_name (document.schema)
+    select * from entity.metadatatype
+    where entity.metadatatype.name = document.schema
 $$ language sql stable;
 
 comment on function api.document_metadatatype (document api.document) is
