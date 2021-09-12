@@ -3,9 +3,6 @@
 -- regarding full-text search.
 
 
-create schema if not exists debug;
-
-
 create or replace function aux.fts_limited_by_rank
     ( folder_id int4
     , fts_query tsquery
@@ -198,81 +195,6 @@ create or replace function aux.fts_documents_paginated
                          when 'by_rank' then f.distance
             end
 $$ language sql stable parallel safe rows 100;
-
-
--- Static SQL version. Not used due to degraded performance.
-create or replace function debug.fts_documents_page_static_sql
-    ( folder_id int4
-    , text text
-    , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
-    , sorting api.fts_sorting default 'by_rank'
-    , "limit" integer default 10
-    , "offset" integer default 0
-    )
-    returns api.document_result_page as $$
-
-        with search_result as (
-                select *
-                from aux.fts_documents_paginated
-                    ( folder_id
-                    , text
-                    , aspect_tests
-                    , attribute_tests
-                    , sorting
-                    , "limit", "offset"
-                    )
-            )
-        select
-            "offset" as "offset",
-            coalesce(
-                (select every(has_next_page) from search_result), false
-            ) as has_next_page,
-            array (
-            select row(number, distance, recency, year, document)::api.document_result
-                from search_result
-            ) as content
-        ;
-$$ language sql strict stable parallel safe;
-
--- PLpgSQL version. Not used due to degraded performance.
-create or replace function debug.fts_documents_page_plpgsql
-    ( folder_id int4
-    , text text
-    , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
-    , sorting api.fts_sorting default 'by_rank'
-    , "limit" integer default 10
-    , "offset" integer default 0
-    )
-    returns api.document_result_page as $$
-    declare res api.document_result_page;
-
-    begin
-        select
-            "offset",
-            coalesce
-                ( bool_or (has_next_page)
-                , false
-                ) as has_next_page,
-            coalesce
-                ( array_agg (row (number, distance, recency, year, document)::api.document_result)
-                , array[]::api.document_result[]
-                ) as content
-        into res
-        from
-            aux.fts_documents_paginated
-                ( folder_id
-                , text
-                , aspect_tests
-                , attribute_tests
-                , sorting
-                , "limit", "offset"
-                )
-        ;
-        return res;
-    end;
-$$ language plpgsql strict stable parallel safe;
 
 
 create or replace function api.fts_documents_page
