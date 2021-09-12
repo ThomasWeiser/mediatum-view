@@ -64,9 +64,6 @@ import Mediatum.Object.GenericNode
 import Mediatum.Object.Setup
 import Mediatum.Object.SetupConfig
 import Mediatum.Query
-import Pagination.Relay.Connection as Connection
-import Pagination.Relay.Page
-import Pagination.Relay.Pagination
 import Types exposing (DocumentIdFromSearch, Window)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.FacetValue as Facet exposing (FacetsValues)
