@@ -489,8 +489,7 @@ selectionToFolderId selection =
 
 type alias OptionalArgumentsForSelection a =
     { a
-        | attributeTests : OptionalArgument (List (Maybe Mediatum.InputObject.AttributeTestInput))
-        , aspectTests : OptionalArgument (List (Maybe Mediatum.InputObject.AspectTestInput))
+        | aspectTests : OptionalArgument (List (Maybe Mediatum.InputObject.AspectTestInput))
     }
 
 

@@ -11,7 +11,6 @@ create or replace function aux.fts_documents_tsquery_docset
     ( folder_id int4
     , fts_query tsquery
     , aspect_internal_tests aux.aspect_internal_tests
-    , attribute_tests api.attribute_test[]
     )
     returns api.docset
     as $$ 
@@ -28,7 +27,6 @@ create or replace function aux.fts_documents_tsquery_docset
             join aux.node_lineage on document.id = node_lineage.descendant
             where folder_id = node_lineage.ancestor
             and aux.check_aspect_internal_tests (document.id, aspect_internal_tests)
-            and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
             ;
         else
             select folder_id
@@ -57,9 +55,6 @@ create or replace function aux.fts_documents_tsquery_docset
                         where nid = folder_id and cid = fts.id
                         )
                 and aux.check_aspect_internal_tests (document.id, aspect_internal_tests)
-                and ( attribute_tests = '{}' or 
-                        aux.jsonb_test_list (document.attrs, attribute_tests)
-                    )
             ;
         end if;
         return res;
@@ -70,7 +65,6 @@ $$ language plpgsql strict stable parallel safe;
 create or replace function api.all_documents_docset
     ( folder_id int4
     , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
     )
     returns api.docset as $$
     begin
@@ -78,13 +72,12 @@ create or replace function api.all_documents_docset
           ( folder_id
           , ''::tsquery
           , aux.internalize_aspect_tests (aspect_tests)
-          , attribute_tests
           );
     end;
 $$ language plpgsql strict stable parallel safe;
 
 
-comment on function api.all_documents_docset (folder_id int4, aspect_tests api.aspect_test[], attribute_tests api.attribute_test[]) is
+comment on function api.all_documents_docset (folder_id int4, aspect_tests api.aspect_test[]) is
     'Perform a documents listing on a folder to provide a list of document ids, '
     'intended to be consumed by a facet-counting function.'
 ;
@@ -94,7 +87,6 @@ create or replace function api.fts_documents_docset
     ( folder_id int4
     , text text
     , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
     )
     returns api.docset
     as $$ 
@@ -103,7 +95,6 @@ create or replace function api.fts_documents_docset
           ( folder_id
           , aux.custom_to_tsquery (text)
           , aux.internalize_aspect_tests (aspect_tests)
-          , attribute_tests
           );
     end;
 $$ language plpgsql strict stable parallel safe;
@@ -112,7 +103,6 @@ comment on function api.fts_documents_docset
     ( folder_id int4
     , text text
     , aspect_tests api.aspect_test[]
-    , attribute_tests api.attribute_test[]
     ) is
     'Perform a full-text search to provide a list of document ids, '
     'intended to be consumed by a facet-counting function.'
@@ -121,7 +111,6 @@ comment on function api.fts_documents_docset
 
 create or replace function api.docset_subfolder_counts
     ( docset api.docset
-    , parent_folder_id int4 default null
     )
     returns setof api.folder_count as $$
     begin
@@ -139,7 +128,7 @@ create or replace function api.docset_subfolder_counts
                                 )
               )::integer
             from entity.folder
-            where folder.parent_id = coalesce (parent_folder_id, docset.folder_id)
+            where folder.parent_id = docset.folder_id
         ;
     end;
 $$ language plpgsql stable parallel safe rows 50;
@@ -147,7 +136,6 @@ $$ language plpgsql stable parallel safe rows 50;
 
 comment on function api.docset_subfolder_counts
     ( docset api.docset
-    , parent_folder_id int4
     ) is
     'Count the distribution of the docset in relation to the subfolders of a folder.'
 ;
