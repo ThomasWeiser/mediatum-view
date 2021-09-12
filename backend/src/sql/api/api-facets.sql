@@ -11,7 +11,6 @@ create or replace function aux.fts_documents_tsquery_docset
     ( folder_id int4
     , fts_query tsquery
     , aspect_internal_tests aux.aspect_internal_tests
-    , attribute_tests api.attribute_test[]
     )
     returns api.docset
     as $$ 
@@ -28,7 +27,6 @@ create or replace function aux.fts_documents_tsquery_docset
             join aux.node_lineage on document.id = node_lineage.descendant
             where folder_id = node_lineage.ancestor
             and aux.check_aspect_internal_tests (document.id, aspect_internal_tests)
-            and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
             ;
         else
             select folder_id
@@ -57,9 +55,6 @@ create or replace function aux.fts_documents_tsquery_docset
                         where nid = folder_id and cid = fts.id
                         )
                 and aux.check_aspect_internal_tests (document.id, aspect_internal_tests)
-                and ( attribute_tests = '{}' or 
-                        aux.jsonb_test_list (document.attrs, attribute_tests)
-                    )
             ;
         end if;
         return res;
@@ -70,7 +65,6 @@ $$ language plpgsql strict stable parallel safe;
 create or replace function api.all_documents_docset
     ( folder_id int4
     , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
     )
     returns api.docset as $$
     begin
@@ -78,13 +72,12 @@ create or replace function api.all_documents_docset
           ( folder_id
           , ''::tsquery
           , aux.internalize_aspect_tests (aspect_tests)
-          , attribute_tests
           );
     end;
 $$ language plpgsql strict stable parallel safe;
 
 
-comment on function api.all_documents_docset (folder_id int4, aspect_tests api.aspect_test[], attribute_tests api.attribute_test[]) is
+comment on function api.all_documents_docset (folder_id int4, aspect_tests api.aspect_test[]) is
     'Perform a documents listing on a folder to provide a list of document ids, '
     'intended to be consumed by a facet-counting function.'
 ;
@@ -94,7 +87,6 @@ create or replace function api.fts_documents_docset
     ( folder_id int4
     , text text
     , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
     )
     returns api.docset
     as $$ 
@@ -103,7 +95,6 @@ create or replace function api.fts_documents_docset
           ( folder_id
           , aux.custom_to_tsquery (text)
           , aux.internalize_aspect_tests (aspect_tests)
-          , attribute_tests
           );
     end;
 $$ language plpgsql strict stable parallel safe;
@@ -112,7 +103,6 @@ comment on function api.fts_documents_docset
     ( folder_id int4
     , text text
     , aspect_tests api.aspect_test[]
-    , attribute_tests api.attribute_test[]
     ) is
     'Perform a full-text search to provide a list of document ids, '
     'intended to be consumed by a facet-counting function.'
@@ -121,7 +111,6 @@ comment on function api.fts_documents_docset
 
 create or replace function api.docset_subfolder_counts
     ( docset api.docset
-    , parent_folder_id int4 default null
     )
     returns setof api.folder_count as $$
     begin
@@ -139,7 +128,7 @@ create or replace function api.docset_subfolder_counts
                                 )
               )::integer
             from entity.folder
-            where folder.parent_id = coalesce (parent_folder_id, docset.folder_id)
+            where folder.parent_id = docset.folder_id
         ;
     end;
 $$ language plpgsql stable parallel safe rows 50;
@@ -147,111 +136,10 @@ $$ language plpgsql stable parallel safe rows 50;
 
 comment on function api.docset_subfolder_counts
     ( docset api.docset
-    , parent_folder_id int4
     ) is
     'Count the distribution of the docset in relation to the subfolders of a folder.'
 ;
     
-
-create or replace function api.docset_facet_by_metadatatype
-    ( docset api.docset
-    )
-    returns setof api.facet_value as $$
-        select 
-            document.schema,
-            count(document.schema)::integer
-        from entity.document
-        where document.id = ANY (docset.id_list)
-        group by document.schema
-        order by count(document.schema) desc, document.schema
-        ;
-$$ language sql stable parallel safe rows 50;
-
-
-comment on function api.docset_facet_by_metadatatype
-    ( docset api.docset
-    ) is
-    'Gather the most frequent values of the metadatatype name within the docset. '
-;
-
-
-create or replace function api.docset_facet_by_metadatatype_longname
-    ( docset api.docset
-    )
-    returns setof api.facet_value as $$
-        select
-            aux.normalize_facet_value(metadatatype.longname),
-            count(aux.normalize_facet_value(metadatatype.longname))::integer
-        from entity.document
-        join entity.metadatatype on document.schema = metadatatype.name
-        where document.id = ANY (docset.id_list)
-        group by aux.normalize_facet_value(metadatatype.longname)
-        order by count(aux.normalize_facet_value(metadatatype.longname)) desc, aux.normalize_facet_value(metadatatype.longname)
-        ;
-$$ language sql stable parallel safe rows 50;
-
-
-comment on function api.docset_facet_by_metadatatype_longname
-    ( docset api.docset
-    ) is
-    'Gather the most frequent values of the metadatatype longname within the docset. '
-    'In case of a missing longname the value is indicated as the empty string.'
-;
-
-
-create or replace function api.docset_facet_by_key
-    ( docset api.docset
-    , key text
-    )
-    returns setof api.facet_value as $$
-        select
-            aux.normalize_facet_value(document.attrs ->> key),
-            count(aux.normalize_facet_value(document.attrs ->> key))::integer
-        from entity.document
-        where document.id = ANY (docset.id_list)
-        group by aux.normalize_facet_value(document.attrs ->> key)
-        order by count(aux.normalize_facet_value(document.attrs ->> key)) desc, aux.normalize_facet_value(document.attrs ->> key)
-        ;
-$$ language sql strict stable parallel safe rows 50;
-
-comment on function api.docset_facet_by_key
-    ( docset api.docset
-    , key text
-    ) is
-    'Gather the most frequent values of a facet within the docset. '
-    'The facet in question is specified by a JSON attribute key. '
-    'Documents without this key indicate the value as the empty string.'
-;
-
-
-create or replace function api.docset_facet_by_mask
-    ( docset api.docset
-    , mask_name text
-    , maskitem_name text
-    )
-    returns setof api.facet_value as $$
-        select
-            aux.normalize_facet_value(v.value),
-            count(aux.normalize_facet_value(v.value))::integer
-        from entity.document_mask_fields as v
-        where v.document_id = ANY (docset.id_list)
-        and v.mask_name = docset_facet_by_mask.mask_name
-        and v.maskitem_name = docset_facet_by_mask.maskitem_name
-        group by aux.normalize_facet_value(v.value)
-        order by count(aux.normalize_facet_value(v.value)) desc, aux.normalize_facet_value(v.value)
-        ;
-$$ language sql strict stable parallel safe rows 50;
-
-comment on function api.docset_facet_by_mask
-    ( docset api.docset
-    , mask_name text
-    , maskitem_name text
-    ) is
-    'Gather the most frequent values of a facet within the docset. '
-    'The facet in question is specified by maskName and maskitemName. '
-    'Documents without the corresponding key indicate the value as the empty string.'
-;
-
 
 create or replace function api.docset_facet_by_aspect
     ( docset api.docset
@@ -285,205 +173,3 @@ comment on function api.docset_facet_by_aspect
          One option would be to check them against the table config.aspect_facet.
  */
 
-create or replace function api.all_documents_facet_by_key
-    ( folder_id int4
-    , key text
-    , type text
-    , name text
-    , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
-    )
-    returns setof api.facet_value as $$
-        select
-            aux.normalize_facet_value(document.attrs ->> key),
-            count (aux.normalize_facet_value(document.attrs ->> key))::integer
-        from entity.document
-        join aux.node_lineage on document.id = node_lineage.descendant
-        where folder_id = node_lineage.ancestor
-        and (all_documents_facet_by_key.type is null or document.type = all_documents_facet_by_key.type)
-        and (all_documents_facet_by_key.name is null or document.name = all_documents_facet_by_key.name)
-        and aux.check_aspect_internal_tests (document.id, aux.internalize_aspect_tests (aspect_tests))
-        and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
-        group by aux.normalize_facet_value(document.attrs ->> key)
-        order by count(aux.normalize_facet_value(document.attrs ->> key)) desc, aux.normalize_facet_value(document.attrs ->> key)
-        ;
-$$ language sql stable rows 10000;
-
-comment on function api.all_documents_facet_by_key
-    ( folder_id int4
-    , key text
-    , type text
-    , name text
-    , aspect_tests api.aspect_test[]
-    , attribute_tests api.attribute_test[]
-    ) is
-    'Gather the most frequent values of a facet within all documents of a folder. '
-    'The facet in question is specified by a JSON attribute key. '
-    'Documents without this key indicate the value as the empty string. '
-    'Note: When dealing with large sets of documents, this function may be faster '
-    'than composing the functions "all_documents_docset" and "docset_facet_by_key". '
-    'On the other hand, with smaller sets of documents, it may be slower.'
-;
-
-
-/* Alternatively we may mark the function as strict in order to mark the required arguments.
-   Performance seems equivalent here. But see also notes on function api.all_documents_facet_by_mask_strict.
-*/
-create or replace function api.all_documents_facet_by_key_strict
-    ( folder_id int4
-    , key text
-    , type text default 'use null instead of this surrogate dummy'
-    , name text default 'use null instead of this surrogate dummy'
-    , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
-    )
-    returns setof api.facet_value as $$
-        select
-            aux.normalize_facet_value(document.attrs ->> key),
-            count (aux.normalize_facet_value(document.attrs ->> key))::integer
-        from entity.document
-        join aux.node_lineage on document.id = node_lineage.descendant
-        where folder_id = node_lineage.ancestor
-        and (all_documents_facet_by_key_strict.type = 'use null instead of this surrogate dummy' or document.type = all_documents_facet_by_key_strict.type)
-        and (all_documents_facet_by_key_strict.name = 'use null instead of this surrogate dummy' or document.name = all_documents_facet_by_key_strict.name)
-        and aux.check_aspect_internal_tests (document.id, aux.internalize_aspect_tests (aspect_tests))
-        and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
-        group by aux.normalize_facet_value(document.attrs ->> key)
-        order by count(aux.normalize_facet_value(document.attrs ->> key)) desc, aux.normalize_facet_value(document.attrs ->> key)
-        ;
-$$ language sql strict stable rows 10000;
-
-comment on function api.all_documents_facet_by_key_strict
-    ( folder_id int4
-    , key text
-    , type text
-    , name text
-    , aspect_tests api.aspect_test[]
-    , attribute_tests api.attribute_test[]
-    ) is
-    '@deprecated '
-    'Experimental version of function allDocumentsFacetByKey, '
-    'having the appropriate parameters marked as required. '
-;
-
-
-create or replace function api.all_documents_facet_by_mask
-    ( folder_id int4
-    , mask_name text
-    , maskitem_name text
-    , type text
-    , name text
-    , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
-    )
-    returns setof api.facet_value as $$
-        select
-            aux.normalize_facet_value(v.value),
-            count(aux.normalize_facet_value(v.value))::integer
-        from entity.document_mask_fields as v
-        join aux.node_lineage on v.document_id = node_lineage.descendant
-        where folder_id = node_lineage.ancestor
-        and (all_documents_facet_by_mask.type is null or v.document_type = all_documents_facet_by_mask.type)
-        and (all_documents_facet_by_mask.name is null or v.document_name = all_documents_facet_by_mask.name)
-        and aux.check_aspect_internal_tests (v.document_id, aux.internalize_aspect_tests (aspect_tests))
-        and (attribute_tests = '{}' or aux.jsonb_test_list (v.document_attrs, attribute_tests))
-        and v.mask_name = all_documents_facet_by_mask.mask_name
-        and v.maskitem_name = all_documents_facet_by_mask.maskitem_name
-        group by aux.normalize_facet_value(v.value)
-        order by count(aux.normalize_facet_value(v.value)) desc, aux.normalize_facet_value(v.value)
-        ;
-$$ language sql stable rows 10000;
-
-comment on function api.all_documents_facet_by_mask
-    ( folder_id int4
-    , mask_name text
-    , maskitem_name text
-    , type text
-    , name text
-    , aspect_tests api.aspect_test[]
-    , attribute_tests api.attribute_test[]
-    ) is
-    'Gather the most frequent values of a facet within all documents of a folder. '
-    'The facet in question is specified by maskName and maskitemName. '
-    'Documents without the corresponding key indicate the value as the empty string. '
-    'Note: When dealing with large sets of documents, this function may be faster '
-    'than composing the functions "all_documents_docset" and "docset_facet_by_mask". '
-    'On the other hand, with smaller sets of documents, it may be slower.'
-;
-
-/* We would like to mark the function as strict in order to mark the required arguments.
-   Unfortunately, this results in heavily degraded performance.
-*/
-create or replace function api.all_documents_facet_by_mask_strict
-    ( folder_id int4
-    , mask_name text
-    , maskitem_name text
-    , type text default 'use null instead of this surrogate dummy'
-    , name text default 'use null instead of this surrogate dummy'
-    , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
-    )
-    returns setof api.facet_value as $$
-        select
-            aux.normalize_facet_value(v.value),
-            count(aux.normalize_facet_value(v.value))::integer
-        from entity.document_mask_fields as v
-        join aux.node_lineage on v.document_id = node_lineage.descendant
-        where folder_id = node_lineage.ancestor
-        and (all_documents_facet_by_mask_strict.type = 'use null instead of this surrogate dummy' or v.document_type = all_documents_facet_by_mask_strict.type)
-        and (all_documents_facet_by_mask_strict.name = 'use null instead of this surrogate dummy' or v.document_name = all_documents_facet_by_mask_strict.name)
-        and aux.check_aspect_internal_tests (v.document_id, aux.internalize_aspect_tests (aspect_tests))
-        and (attribute_tests = '{}' or aux.jsonb_test_list (v.document_attrs, attribute_tests))
-        and v.mask_name = all_documents_facet_by_mask_strict.mask_name
-        and v.maskitem_name = all_documents_facet_by_mask_strict.maskitem_name
-        group by aux.normalize_facet_value(v.value)
-        order by count(aux.normalize_facet_value(v.value)) desc, aux.normalize_facet_value(v.value)
-        ;
-$$ language sql strict stable rows 10000;
-
-comment on function api.all_documents_facet_by_mask_strict
-    ( folder_id int4
-    , mask_name text
-    , maskitem_name text
-    , type text
-    , name text
-    , aspect_tests api.aspect_test[]
-    , attribute_tests api.attribute_test[]
-    ) is
-    '@deprecated '
-    'Experimental version of function allDocumentsFacetByMask, '
-    'having the appropriate parameters marked as required. '
-    'Performance may be degraded. '
-;
-
-
-create or replace function api.all_documents_facet_by_aspect
-    ( folder_id int4
-    , aspect_name text
-    , type text
-    , name text
-    , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
-    )
-    returns setof api.facet_value as $$
-        select
-            value,
-            count(value)::integer
-        from
-            entity.document,
-            aux.node_lineage,
-            preprocess.aspect,
-            unnest (aspect.values) as value
-        where document.id = node_lineage.descendant
-        and aspect.nid = document.id
-        and aspect.name = aspect_name
-        and folder_id = node_lineage.ancestor
-        and (all_documents_facet_by_aspect.type is null or document.type = all_documents_facet_by_aspect.type)
-        and (all_documents_facet_by_aspect.name is null or document.name = all_documents_facet_by_aspect.name)
-        and aux.check_aspect_internal_tests (document.id, aux.internalize_aspect_tests (aspect_tests))
-        and (attribute_tests = '{}' or aux.jsonb_test_list (document.attrs, attribute_tests))
-
-        group by value
-        order by count(value) desc, value
-        ;
-$$ language sql stable rows 10000;

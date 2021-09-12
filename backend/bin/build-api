@@ -14,10 +14,8 @@ $p src/sql/api/auxiliary.sql
 $p src/sql/api/entities.sql
 $p src/sql/api/api-setup.sql
 $p src/sql/api/api-node.sql
-$p src/sql/api/api-meta.sql
 $p src/sql/api/api-folder.sql
 $p src/sql/api/api-document.sql
 $p src/sql/api/api-fts.sql
 $p src/sql/api/api-facets.sql
-$p src/sql/api/api-mutation.sql
 

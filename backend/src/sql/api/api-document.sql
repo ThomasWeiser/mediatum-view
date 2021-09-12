@@ -5,10 +5,7 @@
 
 create or replace function aux.all_documents_limited
     ( folder_id int4
-    , type text
-    , name text
     , aspect_internal_tests aux.aspect_internal_tests
-    , attribute_tests api.attribute_test[]
     , "limit" integer
     )
     returns setof api.document
@@ -23,18 +20,12 @@ create or replace function aux.all_documents_limited
         '    from entity.document'
         '    join aux.node_lineage on document.id = node_lineage.descendant'
         '    where $1 = node_lineage.ancestor'
-        '    and ($2 is null or document.type = $2)'
-        '    and ($3 is null or document.name = $3)'
-        '    and aux.check_aspect_internal_tests (document.id, $4)'
-        '    and ($5 = ''{}'' or aux.jsonb_test_list (document.attrs, $5))'
+        '    and aux.check_aspect_internal_tests (document.id, $2)'
         '    order by document.id desc'
-        '    limit $6'
+        '    limit $3'
         using
             folder_id,
-            all_documents_limited.type,
-            all_documents_limited.name,
             aspect_internal_tests,
-            attribute_tests,
             "limit";
     end;
 $$ language plpgsql stable parallel safe rows 100;
@@ -42,10 +33,7 @@ $$ language plpgsql stable parallel safe rows 100;
 
 create or replace function aux.all_documents_paginated
     ( folder_id int4
-    , type text
-    , name text
     , aspect_internal_tests aux.aspect_internal_tests
-    , attribute_tests api.attribute_test[]
     , "limit" integer
     , "offset" integer
     )
@@ -68,10 +56,7 @@ create or replace function aux.all_documents_paginated
                 , (count(*) over ()) > "limit" + "offset"
             from aux.all_documents_limited
                 ( folder_id
-                , type
-                , name
                 , aspect_internal_tests
-                , attribute_tests
                 , "limit" + "offset" + 1
                 ) as f
             order by f.id desc
@@ -83,10 +68,7 @@ $$ language plpgsql stable parallel safe rows 100;
 
 create or replace function api.all_documents_page
     ( folder_id int4
-    , type text default 'use null instead of this surrogate dummy'
-    , name text default 'use null instead of this surrogate dummy'
     , aspect_tests api.aspect_test[] default '{}'
-    , attribute_tests api.attribute_test[] default '{}'
     , "limit" integer default 10
     , "offset" integer default 0
     )
@@ -96,10 +78,7 @@ create or replace function api.all_documents_page
                 select *
                 from aux.all_documents_paginated
                     ( folder_id
-                    , nullif(type, 'use null instead of this surrogate dummy')
-                    , nullif(name, 'use null instead of this surrogate dummy')
                     , aux.internalize_aspect_tests (aspect_tests)
-                    , attribute_tests
                     , "limit", "offset"
                     )
             )
@@ -141,8 +120,8 @@ As a consequnce it's currently not possible to to declare some of the parameters
 */
 
 
-comment on function api.all_documents_page (folder_id int4, type text, name text, aspect_tests api.aspect_test[] , attribute_tests api.attribute_test[], "limit" integer, "offset" integer) is
-    'Reads and enables pagination through all documents in a folder, optionally filtered by type and name and a list of aspect and attribute tests';
+comment on function api.all_documents_page (folder_id int4, aspect_tests api.aspect_test[], "limit" integer, "offset" integer) is
+    'Reads and enables pagination through all documents in a folder, optionally filtered by a list of aspect tests';
 
 
 create or replace function api.document_by_id
@@ -175,56 +154,16 @@ comment on function api.document_folders (document api.document) is
     'Gets the list of all folders in which the document appears.';
 
 
-create or replace function api.document_attributes
-    ( document api.document
-    , keys text[]
-    )
-    returns jsonb as $$
-    select aux.get_document_attributes (document, keys)
-$$ language sql stable;
-
-comment on function api.document_attributes (document api.document, keys text[]) is
-    'Gets the node attributes of this document as a JSON value, optionally filtered by a list of keys.';
-
-
-create or replace function api.document_system_attributes
-    ( document api.document
-    , keys text[]
-    )
-    returns jsonb as $$
-    select aux.get_node_system_attributes (document.id, keys)
-$$ language sql stable;
-
-comment on function api.document_system_attributes (document api.document, keys text[]) is
-    'Gets the node system attributes of this document as a JSON value, optionally filtered by a list of keys.';
-
-
 create or replace function api.document_metadatatype
     ( document api.document
     )
     returns api.metadatatype as $$
-    select api.metadatatype_by_name (document.schema)
+    select * from entity.metadatatype
+    where entity.metadatatype.name = document.schema
 $$ language sql stable;
 
 comment on function api.document_metadatatype (document api.document) is
     'Gets the meta data type of this document.';
-
-
-create or replace function api.metadatatype_documents
-    ( mdt api.metadatatype
-    , type text
-    , name text
-    )
-    returns setof api.document as $$
-    select document.*
-    from entity.node as document
-    where document.schema = mdt.name
-      and (metadatatype_documents.type is null or document.type = metadatatype_documents.type)
-      and (metadatatype_documents.name is null or document.name = metadatatype_documents.name)
-$$ language sql stable;
-
-comment on function api.metadatatype_documents (mdt api.metadatatype, type text, name text) is
-    'Reads and enables pagination through all documents having this meta data type, optionally filtered by type and name.';
 
 
 create or replace function api.document_from_search

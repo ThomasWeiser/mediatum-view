@@ -4,7 +4,6 @@ module Api.Fragments exposing
     , folderAndSubfolderCounts, folderCount, facetByAspect
     , documentsPage, documentResult, documentByMask, documentResidence
     , nonNullElementsOfMaybeListOrFail
-    , graphqlDocumentObjects
     )
 
 {-| Definitions of GraphQL subqueries used in the toplevel queries.
@@ -34,11 +33,6 @@ module Api.Fragments exposing
 
 @docs nonNullElementsOfMaybeListOrFail
 
-
-# Relay Connection Utility
-
-@docs graphqlDocumentObjects
-
 -}
 
 import Entities.Document as Document exposing (Document)
@@ -58,8 +52,6 @@ import Mediatum.Object.Document
 import Mediatum.Object.DocumentFromSearch
 import Mediatum.Object.DocumentResult
 import Mediatum.Object.DocumentResultPage
-import Mediatum.Object.DocumentsConnection
-import Mediatum.Object.DocumentsEdge
 import Mediatum.Object.FacetAspectConfig
 import Mediatum.Object.FacetValue
 import Mediatum.Object.FacetValuesConnection
@@ -70,10 +62,8 @@ import Mediatum.Object.FoldersConnection
 import Mediatum.Object.FtsAspectConfig
 import Mediatum.Object.MasksPurposeConfig
 import Mediatum.Object.Metadatatype
-import Mediatum.Object.PageInfo
 import Mediatum.Object.Translation
 import Mediatum.Scalar
-import Pagination.Relay.Connection as Connection
 import String.Extra
 import Types exposing (FolderDisplay(..), WindowPage)
 import Types.Aspect as Aspect exposing (Aspect)
@@ -227,7 +217,7 @@ folder =
                     (Utils.ifElse DisplayAsCollection DisplayAsDirectory)
             )
         |> SelectionSet.with
-            (Mediatum.Object.Folder.numSubfolder
+            (Mediatum.Object.Folder.hasSubfolder
                 |> SelectionSet.nonNullOrFail
             )
 
@@ -670,22 +660,3 @@ decoderAttributeList =
                     )
                 )
         ]
-
-
-{-| Configuration object for abstracting Relay pagination functions
-referring to a list of documents.
-
-It contains all the selection set functions needed for building
-queries according to the Relay pagination specification.
-
--}
-graphqlDocumentObjects : Connection.GraphqlObjects {} Mediatum.Object.DocumentsConnection Mediatum.Object.DocumentsEdge Mediatum.Object.Document Mediatum.Object.PageInfo Mediatum.Scalar.Cursor Document
-graphqlDocumentObjects =
-    { totalCount = Mediatum.Object.DocumentsConnection.totalCount
-    , pageInfo = Mediatum.Object.DocumentsConnection.pageInfo
-    , edges = Mediatum.Object.DocumentsConnection.edges
-    , cursor = Mediatum.Object.DocumentsEdge.cursor
-    , node = Mediatum.Object.DocumentsEdge.node
-    , hasNextPage = Mediatum.Object.PageInfo.hasNextPage
-    , hasPreviousPage = Mediatum.Object.PageInfo.hasPreviousPage
-    }

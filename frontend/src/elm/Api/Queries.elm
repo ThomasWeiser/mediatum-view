@@ -3,7 +3,7 @@ module Api.Queries exposing
     , folders, subfolders
     , selectionDocumentsPage, selectionFolderCounts, selectionFacets
     , documentDetails
-    , genericNode, authorSearch
+    , genericNode
     )
 
 {-| Definitions of all specific GraphQL queries needed in the application.
@@ -40,7 +40,7 @@ In reality it's just function calling.
 
 # Miscellaneous Queries
 
-@docs genericNode, authorSearch
+@docs genericNode
 
 -}
 
@@ -64,9 +64,6 @@ import Mediatum.Object.GenericNode
 import Mediatum.Object.Setup
 import Mediatum.Object.SetupConfig
 import Mediatum.Query
-import Pagination.Relay.Connection as Connection
-import Pagination.Relay.Page
-import Pagination.Relay.Pagination
 import Types exposing (DocumentIdFromSearch, Window)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.FacetValue as Facet exposing (FacetsValues)
@@ -448,57 +445,6 @@ selectionFacets selection aspects limit =
         |> SelectionSet.map Facet.facetsValuesFromDict
 
 
-{-| Get a page of documents found by searching on an author's name.
-
-The result is paginated according to the Relay specification.
-
-Up to now this query function is only a preliminary draft.
-
-_GraphQL notation:_
-
-    query {
-        authorSearch(
-            folderId: $folderId
-            text: $searchTerm
-            first: $optionalRelayPaginationArgument
-            last: $optionalRelayPaginationArgument
-            before: $optionalRelayPaginationArgument
-            after: $optionalRelayPaginationArgument
-        ) {
-            edges {
-                node {
-                    ...documentByMask
-                }
-            }
-        }
-    }
-
--}
-authorSearch :
-    String
-    -> Int
-    -> Maybe (Pagination.Relay.Page.Page Document)
-    -> Pagination.Relay.Pagination.Position
-    -> FolderId
-    -> String
-    -> SelectionSet (Pagination.Relay.Page.Page Document) Graphql.Operation.RootQuery
-authorSearch maskName limit referencePage paginationPosition folderId searchString =
-    Mediatum.Query.authorSearch
-        (Pagination.Relay.Pagination.paginationArguments
-            limit
-            referencePage
-            paginationPosition
-        )
-        { folderId = Id.toInt folderId
-        , text = searchString
-        }
-        (Connection.connection
-            Api.Fragments.graphqlDocumentObjects
-            (Api.Fragments.documentByMask maskName Nothing)
-        )
-        |> SelectionSet.nonNullOrFail
-
-
 {-| Get the basic properties of a document selected by its mediaTUM id
 together with the document's attributes selected by the mediaTUM mask "nodebig"
 and the document's residence.
@@ -543,8 +489,7 @@ selectionToFolderId selection =
 
 type alias OptionalArgumentsForSelection a =
     { a
-        | attributeTests : OptionalArgument (List (Maybe Mediatum.InputObject.AttributeTestInput))
-        , aspectTests : OptionalArgument (List (Maybe Mediatum.InputObject.AspectTestInput))
+        | aspectTests : OptionalArgument (List (Maybe Mediatum.InputObject.AspectTestInput))
     }
 
 

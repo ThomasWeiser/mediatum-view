@@ -4,7 +4,6 @@ module Entities.Folder exposing
     , dummy
     , init
     , isRoot
-    , hasSubfolder
     )
 
 {-| A folder is either a collection or a directory.
@@ -16,7 +15,6 @@ Folders are arranged in a hierarchy, with collections at the top and directories
 @docs dummy
 @docs init
 @docs isRoot
-@docs hasSubfolder
 
 -}
 
@@ -31,7 +29,7 @@ type alias Folder =
     , parent : Maybe FolderId
     , name : String
     , display : FolderDisplay
-    , numSubfolder : Int
+    , hasSubfolder : Bool
     }
 
 
@@ -51,18 +49,18 @@ dummy =
     , parent = Nothing
     , name = ""
     , display = DisplayAsCollection
-    , numSubfolder = 0
+    , hasSubfolder = False
     }
 
 
 {-| -}
-init : FolderId -> Maybe FolderId -> String -> FolderDisplay -> Int -> Folder
-init id maybeParentId name display numSubfolder =
+init : FolderId -> Maybe FolderId -> String -> FolderDisplay -> Bool -> Folder
+init id maybeParentId name display hasSubfolder =
     { id = id
     , parent = maybeParentId
     , name = name
     , display = display
-    , numSubfolder = numSubfolder
+    , hasSubfolder = hasSubfolder
     }
 
 
@@ -70,9 +68,3 @@ init id maybeParentId name display numSubfolder =
 isRoot : Folder -> Bool
 isRoot folder =
     folder.parent == Nothing
-
-
-{-| -}
-hasSubfolder : Folder -> Bool
-hasSubfolder folder =
-    folder.numSubfolder > 0
