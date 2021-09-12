@@ -217,7 +217,7 @@ folder =
                     (Utils.ifElse DisplayAsCollection DisplayAsDirectory)
             )
         |> SelectionSet.with
-            (Mediatum.Object.Folder.numSubfolder
+            (Mediatum.Object.Folder.hasSubfolder
                 |> SelectionSet.nonNullOrFail
             )
 

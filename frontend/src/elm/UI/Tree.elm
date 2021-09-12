@@ -246,14 +246,14 @@ viewFolderLine folder maybeCount selected expanded =
             [ ( "folder-head", True )
             , ( "collection", folder.display == DisplayAsCollection )
             , ( "directory", folder.display == DisplayAsDirectory )
-            , ( "collapsed", Folder.hasSubfolder folder && not expanded )
-            , ( "expanded", Folder.hasSubfolder folder && expanded )
-            , ( "leaf", not (Folder.hasSubfolder folder) )
+            , ( "collapsed", folder.hasSubfolder && not expanded )
+            , ( "expanded", folder.hasSubfolder && expanded )
+            , ( "leaf", not folder.hasSubfolder )
             , ( "selected", selected )
             ]
         ]
         [ Html.div []
-            [ if Folder.hasSubfolder folder then
+            [ if folder.hasSubfolder then
                 UI.Icons.expando
 
               else

@@ -16,6 +16,7 @@ create materialized view entity.folder_node as
 create unique index ix_folder_mode on entity.folder_node (id);   
 
 
+-- TODO: We don't need to count the subfolders. We just want to know if there are any.
 create or replace view entity.subfolder_count as
 	select
         folder_node.id as id,
@@ -41,7 +42,7 @@ create materialized view entity.folder as
         node.name as name,
         node.orderpos as orderpos,
         node.type in ('collections', 'collection') as is_collection,
-        subfolder_count.num_subfolder as num_subfolder
+        subfolder_count.num_subfolder > 0 as has_subfolder
     from entity.folder_node as node
     join mediatum.nodemapping as to_parent on node.id = to_parent.cid
     join mediatum.node as parent on to_parent.nid = parent.id

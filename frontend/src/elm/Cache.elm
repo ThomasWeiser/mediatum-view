@@ -557,7 +557,7 @@ insertAsFolders listOfNewFolders cache =
         , subfolderIds =
             listOfNewFolders
                 |> List.filter
-                    (\folder -> folder.numSubfolder == 0)
+                    (\folder -> not folder.hasSubfolder)
                 |> List.foldl
                     (\folder ->
                         Sort.Dict.insert folder.id (Success [])

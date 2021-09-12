@@ -22,7 +22,7 @@ create type api.folder as
     , "name" text
 	, orderpos int4
 	, is_collection boolean
-	, num_subfolder integer
+	, has_subfolder boolean
     );
 
 comment on type api.folder is
@@ -37,8 +37,8 @@ comment on column api.folder.orderpos is
     'A number indicating the position of this folder among its siblings';
 comment on column api.folder.is_collection is
 	'A folder can be a collection (true) or a directory (false)';
-comment on column api.folder.num_subfolder is
-    'Number of subfolders of this folder';
+comment on column api.folder.has_subfolder is
+    'Does this folder have at least one subfolder?';
 
 
 create type api.metadatatype as
