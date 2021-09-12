@@ -37,13 +37,13 @@
   },
   "homepage": "https://github.com/ThomasWeiser/mediatum-view#readme",
   "devDependencies": {
-    "elm-doc-preview": "^5.0.3",
+    "elm-doc-preview": "^5.0.5",
     "elm-live": "^4.0.2",
-    "elm-test": "^0.19.1-revision4",
-    "elm-tooling": "^0.5.0"
+    "elm-test": "^0.19.1-revision7",
+    "elm-tooling": "^1.5.0"
   },
   "dependencies": {
-    "@dillonkearns/elm-graphql": "^4.0.3",
+    "@dillonkearns/elm-graphql": "^4.2.2",
     "ncp": "^2.0.0",
     "rimraf": "^3.0.2"
   }
