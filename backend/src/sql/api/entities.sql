@@ -166,80 +166,6 @@ create unique index ix_maskitem_id on entity.maskitem (id);
 create index ix_maskitem_parent_id on entity.maskitem (parent_id);
 
 
-create materialized view entity.maskitem_recursive as
-    with recursive descendant as (
-        select
-            node.id as id,
-            mask.id as mask_id,
-            mask.metadatatype_id as metadatatype_id,
-            null::int4 as superitem_id,
-            1 as depth,
-            node.name as name,
-            node.orderpos as orderpos,
-            node.attrs ->> 'type' as type,
-            (coalesce (node.attrs ->> 'fieldtype', 'standard')) as fieldtype,
-            (node.attrs ->> 'width')::int4 as width,
-            (node.attrs ->> 'required' = '1') as is_required
-        from entity.mask
-        join mediatum.nodemapping on mask.id = nodemapping.nid
-        join mediatum.node on node.id = nodemapping.cid
-        where node.type = 'maskitem'
-        union ALL
-        select
-            node.id as id,
-            parent.mask_id as mask_id,
-            parent.metadatatype_id as metadatatype_id,
-            parent.id as superitem_id,
-            parent.depth + 1 as depth,
-            node.name as name,
-            node.orderpos as orderpos,
-            node.attrs ->> 'type' as type,
-            (coalesce (node.attrs ->> 'fieldtype', 'standard')) as fieldtype,
-            (node.attrs ->> 'width')::int4 as width,
-            (node.attrs ->> 'required' = '1') as is_required
-        from descendant as parent
-        join mediatum.nodemapping on parent.id = nodemapping.nid
-        join mediatum.node on node.id = nodemapping.cid
-        where node.type = 'maskitem'
-    )
-    select *
-    from descendant
-    order by orderpos;
-
-
-create materialized view entity.mapping as
-    select
-        node.id as id,
-        node.name as name,
-        node.orderpos as orderpos,
-        node.attrs ->> 'mappingtype' as type,
-        node.attrs ->> 'description' as description
-    from mediatum.node as parent
-    join mediatum.nodemapping on parent.id = nodemapping.nid
-    join mediatum.node on node.id = nodemapping.cid
-    where parent.type = 'mappings'
-      and node.type = 'mapping'
-      -- TODO: How to deal with attribute active? It may be 0, 1 or absent.
-      and (not node.attrs ? 'active' or node.attrs ->> 'active' = '1')
-      and node.name is not null
-    order by node.orderpos;
-
-
-create materialized view entity.mappingfield as
-    select
-        node.id as id,
-        mapping.id as mapping_id,
-        node.name as name,
-        node.orderpos as orderpos,
-        node.attrs ->> 'description'  as description,
-        node.attrs ->> 'mandatory' = 'True' as is_mandatory
-    from entity.mapping
-    join mediatum.nodemapping on mapping.id = nodemapping.nid
-    join mediatum.node on node.id = nodemapping.cid
-    where node.type = 'mappingfield'
-    order by node.orderpos;
-
-
 create or replace view entity.document as
     select
         node.id,
@@ -311,46 +237,6 @@ create index ix_metadatatype_mask_fields on entity.metadatatype_mask_fields
     (metadatatype_name, mask_name, maskitem_name);
 */    
    
-
-create or replace view entity.document_mask_value_object as
-    select
-        document_id,
-        mask_name,
-        jsonb_object_agg (
-            metafield_name,
-            jsonb_build_object (
-                'name',
-                maskitem_name,
-                'orderpos',
-                maskitem_orderpos,
-                'width',
-                maskitem_width,
-                'value',
-                value
-            )
-        ) as values
-    from entity.document_mask_fields
-    group by document_id, mask_name;
-
-
-create or replace view entity.document_mask_value_list as
-    select
-        document_id,
-        mask_name,
-        jsonb_agg (
-            jsonb_build_object (
-                'field',
-                metafield_name,
-                'name',
-                maskitem_name,
-                'width',
-                maskitem_width,
-                'value',
-                value
-            )
-        ) as values
-    from (select * from entity.document_mask_fields order by maskitem_orderpos) as q
-    group by document_id, mask_name;
 
 ------------------------------------------------------------------
 
