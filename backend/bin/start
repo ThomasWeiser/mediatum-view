@@ -24,7 +24,7 @@ DATABASE_SUPER_USER="postgres"
 node_modules/.bin/postgraphile \
     --host localhost \
     --connection postgres://$DATABASE_SUPER_USER@localhost:5432/$MEDIATUM_DATABASE_NAME \
-    --default-role $MEDIATUM_DATABASE_USER \
+    --default-role $MEDIATUM_DATABASE_USER_VIEW_API \
     --schema api \
     --cors  \
     --export-schema-graphql export/schema-export.graphql \

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Run psql and connect to the database as a superuser for maintenance tasks.
+
+
+psql -d $MEDIATUM_DATABASE_NAME -U $MEDIATUM_DATABASE_USER_VIEW_API $*

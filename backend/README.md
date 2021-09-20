@@ -31,11 +31,12 @@ Minimum required version is 10.
 
 ### Configuration Variables
 
-We use environment variables to configure the database name and the database user.
+We use environment variables to configure the database name and the relevant database users.
 
 ```sh
 $ export MEDIATUM_DATABASE_NAME="mediatum"
 $ export MEDIATUM_DATABASE_USER="mediatum"
+$ export MEDIATUM_DATABASE_USER_VIEW_API="mediatum_view_api"
 ```
 
 ### RUM
@@ -94,10 +95,17 @@ $ npm install
 ## Installation
 
 The new code lives in dedicated schemas as noted above. 
-In order to create those schemas you may have to grant the permission to do so to the database user:
+In order to create those schemas you may have to grant the permission to do so to the database user that is used to build the database application:
 
 ```sh
 $ psql -d $MEDIATUM_DATABASE_NAME -c "GRANT CREATE ON DATABASE $MEDIATUM_DATABASE_NAME TO $MEDIATUM_DATABASE_USER;"
+```
+
+We need a new database user with restricted privileges that will be used to access the API functions.
+Note that to create this user you need the privilege `CREATEROLE`, e.g. as a superuser.
+
+```sh
+$ psql -d $MEDIATUM_DATABASE_NAME -c "CREATE ROLE $MEDIATUM_DATABASE_USER_VIEW_API LOGIN;"
 ```
 
 To submit the new code to a running mediaTUM database execute the SQL and PL/pgSQL code with the appropriate scripts in `bin/`.
@@ -115,6 +123,12 @@ $ bin/preprocess-catch-up
 Preprocessing the fulltext and meta-data to build the FTS index takes some time, e.g. about 60 minutes for a mediaTUM installation with 600000 nodes.
 
 You may drop all changes introduced by this backend via `bin/drop-all`.
+
+You may also want to drop the newly introduced role used for accessing the API:
+
+```sh
+$ psql -d $MEDIATUM_DATABASE_NAME -c "DROP OWNED BY $MEDIATUM_DATABASE_USER_VIEW_API; DROP ROLE $MEDIATUM_DATABASE_USER_VIEW_API;"
+```
 
 ## Running PostGraphile
 

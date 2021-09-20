@@ -18,4 +18,4 @@ $p src/sql/api/api-folder.sql
 $p src/sql/api/api-document.sql
 $p src/sql/api/api-fts.sql
 $p src/sql/api/api-facets.sql
-
+$p src/sql/api/grant-privileges.sql
