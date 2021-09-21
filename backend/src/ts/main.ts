@@ -23,6 +23,9 @@ const databaseConnectionUrl = "postgres://" + databaseConnectionUser + "@localho
 
 const app = express();
 
+import expressCompression = require('compression');
+app.use(expressCompression({ threshold: 0 }));
+
 app.use(
     postgraphile(
         databaseConnectionUrl,

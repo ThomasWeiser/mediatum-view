@@ -22,10 +22,12 @@
     "start": "ts-node src/ts/main.ts"
   },
   "dependencies": {
+    "compression": "^1.7.4",
     "express": "^4.17.1",
     "postgraphile": "~4.12.3"
   },
   "devDependencies": {
+    "@types/compression": "^1.7.2",
     "@types/express": "^4.17.13",
     "@types/node": "^16.9.4",
     "ts-node": "^10.2.1",
