@@ -15,8 +15,11 @@ if (!TIER || !validTiers.includes(TIER)) {
 const databaseSuperUser = "postgres"; // Necessary for using "watch" option in dev
 const port = 5000;
 const statementTimeout = "30s";
-const rateLimitWindow = 1 * 60 * 1000; // 60 seconds
-const rateLimitCount = 100; // limit each key (i.e. IP) to 100 requests per window
+const rateLimitWindow = 10 * 60 * 1000; // 10 minutes
+const rateLimitCount = 500; // limit each key (i.e. IP) to 500 requests per window
+const speedLimitWindows = 30 * 60 * 1000;
+const speedLimitAfter = 100; // allow 100 unlimited requests per window, then...
+const speedLimitDelay = 2; // ... begin adding 2ms of delay per request
 
 const databaseConnectionUser = TIER == 'dev' ? databaseSuperUser : process.env.MEDIATUM_DATABASE_USER_VIEW_API;
 const databaseConnectionUrl = "postgres://" + databaseConnectionUser + "@localhost:5432/" + process.env.MEDIATUM_DATABASE_NAME;
@@ -49,6 +52,14 @@ app.use(rateLimit({
     windowMs: rateLimitWindow,
     max: rateLimitCount,
     headers: false
+}));
+
+
+import slowDown from "express-slow-down";
+app.use(slowDown({
+    windowMs: speedLimitWindows,
+    delayAfter: speedLimitAfter,
+    delayMs: speedLimitDelay
 }));
 
 
