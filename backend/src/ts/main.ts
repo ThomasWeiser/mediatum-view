@@ -36,5 +36,5 @@ app.use(
 
 app.listen(port);
 
-console.log("mediaTUM View - PostGraphile listening on port %d", port);
+console.log(`mediaTUM View - PostGraphile listening on port ${port}`);
 
