@@ -1,5 +1,28 @@
 {
+  "name": "mediatum-view-backend",
+  "version": "1.0.0",
+  "description": "Backend serving GraphQL API of mediaTUM",
+  "author": "Thomas Weiser",
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ThomasWeiser/mediatum-view.git"
+  },
+  "keywords": [
+    "mediatum",
+    "tum",
+    "media-server",
+    "library-database",
+    "webapp",
+    "postgresql",
+    "graphql",
+    "elm"
+  ],
+  "scripts": {
+    "start": "node src/js/main.js"
+  },
   "dependencies": {
+    "express": "^4.17.1",
     "postgraphile": "~4.12.3"
   }
 }

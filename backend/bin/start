@@ -1,6 +1,9 @@
 #!/bin/sh
 
-# Start the backend by running postgraphile with the appropriate configuration.
+# Start the backend by running postgraphile via its CLI with the appropriate configuration.
+
+# Note that normally we use PostGraphile in library mode, not by calling it via its command-line interface.
+# So, use this script only if you have a special reason to do so.
 
 
 mkdir -p export
@@ -19,7 +22,7 @@ mkdir -p export
 # - For postgraphile's inspection mechanism to work we need to connect as a database super user.
 # - Actual queries are performed as database user $MEDIATUM_DATABASE_USER.
 
-DATABASE_SUPER_USER="postgres"
+DATABASE_SUPER_USER="postgres" # Necessary for using "watch" option
 
 node_modules/.bin/postgraphile \
     --host localhost \
