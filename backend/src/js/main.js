@@ -8,6 +8,7 @@ const app = express();
 
 const databaseSuperUser = "postgres"; // Necessary for using "watch" option
 const port = 5000;
+const statementTimeout = "30s"
 
 const databaseConnectionUrl = "postgres://" + databaseSuperUser + "@localhost:5432/" + process.env.MEDIATUM_DATABASE_NAME;
 
@@ -25,6 +26,9 @@ app.use(
             setofFunctionsContainNulls: false,
             legacyRelations: "omit",
             ignoreRBAC: false,
+            pgSettings: {
+                statement_timeout: statementTimeout,
+            },
             allowExplain: false
         }
     )
