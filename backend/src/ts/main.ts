@@ -1,6 +1,6 @@
 
-const express = require("express");
-const { postgraphile } = require("postgraphile");
+import express from 'express';
+import { postgraphile, PostGraphileOptions } from "postgraphile";
 
 type Tier = 'dev' | 'prod';
 const validTiers = ['dev', 'prod'];
@@ -12,9 +12,9 @@ if (!TIER || !validTiers.includes(TIER)) {
     process.exit(1);
 }
 
-const databaseSuperUser = "postgres"; // Necessary for using "watch" option in dev
+const databaseSuperUser = 'postgres'; // Necessary when using "watch" option in dev
 const port = 5000;
-const statementTimeout = "30s";
+const statementTimeout = '30s';
 const rateLimitWindow = 10 * 60 * 1000; // 10 minutes
 const rateLimitCount = 500; // limit each key (i.e. IP) to 500 requests per window
 const speedLimitWindows = 30 * 60 * 1000;
@@ -22,7 +22,7 @@ const speedLimitAfter = 100; // allow 100 unlimited requests per window, then...
 const speedLimitDelay = 2; // ... begin adding 2ms of delay per request
 
 const databaseConnectionUser = TIER == 'dev' ? databaseSuperUser : process.env.MEDIATUM_DATABASE_USER_VIEW_API;
-const databaseConnectionUrl = "postgres://" + databaseConnectionUser + "@localhost:5432/" + process.env.MEDIATUM_DATABASE_NAME;
+const databaseConnectionUrl = `postgres://${databaseConnectionUser}@localhost:5432/${process.env.MEDIATUM_DATABASE_NAME}`;
 
 // ----------------------------------------------------------------
 
@@ -30,24 +30,24 @@ const app = express();
 app.disable('x-powered-by');
 
 
-import expressCompression = require('compression');
+import expressCompression from 'compression';
 app.use(expressCompression({ threshold: 0 }));
 
 
 /* You may use helmet ("Express.js security with HTTP headers") here:
-import helmet = require('helmet');
+import helmet from 'helmet';
 app.use(helmet());
 */
 
 
 /* You may use morgan ("HTTP request logger middleware") here:
 // Should be configured to your needs.
-import morgan = require('morgan');
+import morgan from 'morgan';
 app.use(morgan('tiny'));
 */
 
 
-import rateLimit from "express-rate-limit";
+import rateLimit from 'express-rate-limit';
 app.use(rateLimit({
     windowMs: rateLimitWindow,
     max: rateLimitCount,
@@ -55,7 +55,7 @@ app.use(rateLimit({
 }));
 
 
-import slowDown from "express-slow-down";
+import slowDown from 'express-slow-down';
 app.use(slowDown({
     windowMs: speedLimitWindows,
     delayAfter: speedLimitAfter,
@@ -63,29 +63,49 @@ app.use(slowDown({
 }));
 
 
+const exposedSchema = 'api';
+
+const postgraphileOptionsCommon: PostGraphileOptions = {
+    pgDefaultRole: process.env.MEDIATUM_DATABASE_USER_VIEW_API,
+    enableCors: true,
+    setofFunctionsContainNulls: false,
+    legacyRelations: 'omit',
+    ignoreRBAC: false,
+    pgSettings: {
+        statement_timeout: statementTimeout,
+    }
+};
+
+const postgraphileOptionsDev: PostGraphileOptions = {
+    exportGqlSchemaPath: 'export/schema-export.graphql',
+    watchPg: true,
+    graphiql: true,
+    enhanceGraphiql: true,
+    allowExplain: true,
+};
+
+const postgraphileOptionsProd: PostGraphileOptions = {
+    watchPg: false,
+    graphiql: false
+};
+
+const postgraphileOptions: PostGraphileOptions = {
+    ...postgraphileOptionsCommon
+    , ...(TIER == 'dev' ? postgraphileOptionsDev : {})
+    , ...(TIER == 'prod' ? postgraphileOptionsProd : {})
+}
+
+
 app.use(
     postgraphile(
         databaseConnectionUrl,
-        "api",
-        {
-            pgDefaultRole: process.env.MEDIATUM_DATABASE_USER_VIEW_API,
-            enableCors: true,
-            exportGqlSchemaPath: TIER == 'dev' ? 'export/schema-export.graphql' : null,
-            watchPg: TIER == 'dev',
-            graphiql: TIER == 'dev',
-            enhanceGraphiql: TIER == 'dev',
-            allowExplain: TIER == 'dev',
-            setofFunctionsContainNulls: false,
-            legacyRelations: "omit",
-            ignoreRBAC: false,
-            pgSettings: {
-                statement_timeout: statementTimeout,
-            }
-        }
+        exposedSchema,
+        postgraphileOptions
     )
 );
 
-app.listen(port);
+app.listen(port, () => {
+    console.log(`mediaTUM View - PostGraphile listening on port ${port} `);
+});
 
-console.log(`mediaTUM View - PostGraphile listening on port ${port}`);
 
