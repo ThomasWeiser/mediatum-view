@@ -14,7 +14,9 @@ if (!TIER || !validTiers.includes(TIER)) {
 
 const databaseSuperUser = "postgres"; // Necessary for using "watch" option in dev
 const port = 5000;
-const statementTimeout = "30s"
+const statementTimeout = "30s";
+const rateLimitWindow = 1 * 60 * 1000; // 60 seconds
+const rateLimitCount = 100; // limit each key (i.e. IP) to 100 requests per window
 
 const databaseConnectionUser = TIER == 'dev' ? databaseSuperUser : process.env.MEDIATUM_DATABASE_USER_VIEW_API;
 const databaseConnectionUrl = "postgres://" + databaseConnectionUser + "@localhost:5432/" + process.env.MEDIATUM_DATABASE_NAME;
@@ -22,9 +24,37 @@ const databaseConnectionUrl = "postgres://" + databaseConnectionUser + "@localho
 // ----------------------------------------------------------------
 
 const app = express();
+app.disable('x-powered-by');
+
 
 import expressCompression = require('compression');
 app.use(expressCompression({ threshold: 0 }));
+
+
+/* You may use helmet ("Express.js security with HTTP headers") here:
+import helmet = require('helmet');
+app.use(helmet());
+*/
+
+
+/* You may use morgan ("HTTP request logger middleware") here:
+// Should be configured to your needs.
+import morgan = require('morgan');
+app.use(morgan('tiny'));
+*/
+
+
+import rateLimit from "express-rate-limit";
+// Enable if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
+// see https://expressjs.com/en/guide/behind-proxies.html
+// app.set('trust proxy', 1);
+
+app.use(rateLimit({
+    windowMs: rateLimitWindow,
+    max: rateLimitCount,
+    headers: false
+}));
+
 
 app.use(
     postgraphile(
