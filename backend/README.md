@@ -14,8 +14,6 @@ The new code lives in these PostgreSQL schemas:
 | `entity`  | Views (some of them materialized) that map the original generic node structure to the specific entities of interest. |
 | `api`     | Types and functions that define the GraphQL schema and the resolvers implementing the GraphQL operations. |
 | `aux`     | Helper functions                         |
-| `debug`   | Additional GraphQL functions conveying between the original node table and the exported GraphQL schema. |
-| `examine` | For experimental SQL code used to examine the original database structure. |
 
 On top of that we use [PostGraphile](https://www.graphile.org/postgraphile/) (formerly known as PostGraphQL), to expose the functions from PostgreSQL schema `api` (and optionally from schema `debug`) as a GraphQL service.
 
