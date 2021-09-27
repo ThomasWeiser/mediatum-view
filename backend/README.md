@@ -118,25 +118,27 @@ $ bin/enable-update-triggers
 $ bin/preprocess-catch-up
 ```
 
-Preprocessing the fulltext and meta-data to build the FTS index takes some time, e.g. about 60 minutes for a mediaTUM installation with 600000 nodes.
-
-You may drop all changes introduced by this backend via `bin/drop-all`.
-
-You may also want to drop the newly introduced role used for accessing the API:
-
-```sh
-$ psql -d $MEDIATUM_DATABASE_NAME -c "DROP OWNED BY $MEDIATUM_DATABASE_USER_VIEW_API; DROP ROLE $MEDIATUM_DATABASE_USER_VIEW_API;"
-```
+Preprocessing the fulltext and meta-data to build the FTS index takes some time, e.g. about 120 minutes for a mediaTUM installation with 700000 nodes.
 
 ## Running PostGraphile
 
-See `bin/start` for the necessary parameters when starting PostGraphile. Please review and customize the configuration in that script (e.g. database connection and binding the service to a network interface), then run:
+We use PostGraphile in [library mode](https://www.graphile.org/postgraphile/usage-library/), embedded in a simple [Express](https://expressjs.com/) setup. The relevant options are set in `src/ts/main.ts`. Please review and customize these settings (e.g. database connection and binding the service to a network interface).
+
+The backend may be run in one of two tiers, `dev` and `prod`.
 
 ```sh
-$ bin/start
+$ export TIER=dev # or prod
 ```
 
-If all goes well you will see two URLs: One for the GraphQL endpoint, and one for [Graph*i*QL](https://github.com/graphql/graphiql). You may want to open the latter for a handy in-browser tool to explore the resulting API and its built-in documentation.
+Start the backend via npm:
+
+```sh
+$ npm start
+```
+
+In tier `dev` you may explore the exposed API and its documentation via [Graph*i*QL](https://github.com/graphql/graphiql) at the URL `http://localhost:5000/graphiql`.
+
+For production use you may also consult the suggestions from the [PostGraphile documentation](https://www.graphile.org/postgraphile/production/).
 
 ## Database Maintenance
 
@@ -146,7 +148,18 @@ Alternatively you may use the script `bin/preprocess-catch-up` periodically to a
 Note that changes to the table `config.aspect_def` don't trigger an update of table `preprocess.aspect` automatically. Please run `bin/preprocess-catch-up` manually in this case. This will also delete obsolete preprocessed aspect data if you have removed some aspect definitions.
 
 We use some materialized views for performance reasons.
-Currently these are: `folder`, `folder_node`, `mapping`, `mappingfield`, `mask`, `maskitem`, `metadatatype`, `metafield`, which are all defined within schema `entity`. They are all derived from the related specialized node types from table `mediatum.node`.
+Currently these are: `folder`, `folder_node`, `mask`, `maskitem`, `metadatatype`, `metafield`, which are all defined within schema `entity`. They are derived from the related node types in table `mediatum.node`.
 
 These materialized views need to be kept up-to-date via the script `bin/refresh-materialized-views`, either periodically or when needed.
-Refreshing needs about 40 seconds, so it may be run e.g. hourly.
+Refreshing needs about 7 seconds, so it may be run e.g. hourly.
+
+## Deinstallation
+
+You may drop all changes introduced by this backend via `bin/drop-all`.
+
+You may also want to drop the newly introduced role used for accessing the API:
+
+```sh
+$ psql -d $MEDIATUM_DATABASE_NAME -c "DROP OWNED BY $MEDIATUM_DATABASE_USER_VIEW_API; DROP ROLE $MEDIATUM_DATABASE_USER_VIEW_API;"
+```
+
