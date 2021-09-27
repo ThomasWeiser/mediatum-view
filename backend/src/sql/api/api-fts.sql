@@ -173,7 +173,7 @@ create or replace function aux.fts_documents_paginated
             , text
             , aux.internalize_aspect_tests (aspect_tests)
             , sorting
-            , "limit"
+            , least ("limit", 200) -- For API security we restrict the maximum allowed limit
             , "offset"
             ) as f
         join entity.document as d on d.id = f.id

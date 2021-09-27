@@ -12,6 +12,7 @@
 -- Grant all privileges needed when accessing the API.
 
 grant usage on schema
+    public,
     mediatum,
     config,
     preprocess,
