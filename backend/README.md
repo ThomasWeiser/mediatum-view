@@ -124,10 +124,10 @@ Preprocessing the fulltext and meta-data to build the FTS index takes some time,
 
 We use PostGraphile in [library mode](https://www.graphile.org/postgraphile/usage-library/), embedded in a simple [Express](https://expressjs.com/) setup. The relevant options are set in `src/ts/main.ts`. Please review and customize these settings (e.g. database connection and binding the service to a network interface).
 
-The backend may be run in one of two tiers, `dev` and `prod`.
+The backend may be run in one of two tiers, `development` and `production`.
 
 ```sh
-$ export TIER=dev # or prod
+$ export NODE_ENV=development # or production
 ```
 
 Start the backend via npm:
@@ -136,7 +136,7 @@ Start the backend via npm:
 $ npm start
 ```
 
-In tier `dev` you may explore the exposed API and its documentation via [Graph*i*QL](https://github.com/graphql/graphiql) at the URL `http://localhost:5000/graphiql`.
+In tier `development` you may explore the exposed API and its documentation via [Graph*i*QL](https://github.com/graphql/graphiql) at the URL `http://localhost:5000/graphiql`.
 
 For production use you may also consult the suggestions from the [PostGraphile documentation](https://www.graphile.org/postgraphile/production/).
 
