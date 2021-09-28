@@ -10,8 +10,7 @@ create materialized view entity.folder_node as
     select *
     from mediatum.node
     where node.type in ('collections', 'collection', 'directory')
-    and node.name is not null
-    and aux.is_public_today (node.id);
+    and node.name is not null;
    
 create unique index ix_folder_mode on entity.folder_node (id);   
 
@@ -27,12 +26,13 @@ create or replace view entity.subfolder_count as
 	    select nodemapping.nid as id
 		from mediatum.nodemapping
 		join entity.folder_node on folder_node.id = nodemapping.cid
+        where aux.is_public_today (nodemapping.cid)
 	) as subfolder
 	on folder_node.id = subfolder.id
     group by (folder_node.id);
 
 
-create materialized view entity.folder as
+create materialized view entity.folder_unchecked as
     select
         node.id as id,
         case when node.type = 'collections'
@@ -51,8 +51,14 @@ create materialized view entity.folder as
     order by node.orderpos;
 
 
-create unique index ix_folder_id on entity.folder (id);
-create index ix_folder_name on entity.folder (name);
+create unique index ix_folder_id on entity.folder_unchecked (id);
+create index ix_folder_name on entity.folder_unchecked (name);
+
+
+create or replace view entity.folder as
+    select *
+    from entity.folder_unchecked
+    where aux.is_public_today (folder_unchecked.id);
 
 
 create or replace function entity.superfolder (child api.folder)
