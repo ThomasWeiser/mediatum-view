@@ -6,17 +6,17 @@ import bunyan from 'bunyan';
 
 var log = bunyan.createLogger({ name: 'mediatum-view' });
 
-type Tier = 'dev' | 'prod';
-const validTiers = ['dev', 'prod'];
+type NodeEnv = 'development' | 'production';
+const validNodeEnvValues = ['development', 'production'];
 
-const TIER = process.env.TIER as Tier;
+const NODE_ENV = process.env.NODE_ENV as NodeEnv;
 
-if (!TIER || !validTiers.includes(TIER)) {
-    console.error(`The TIER environment variable is required but was either not specified or is set to an invalid value: ${String(TIER)}.`);
+if (!NODE_ENV || !validNodeEnvValues.includes(NODE_ENV)) {
+    console.error(`The NODE_ENV environment variable is required but was either not specified or is set to an invalid value: ${String(NODE_ENV)}.`);
     process.exit(1);
 }
 
-const databaseSuperUser = 'postgres'; // Necessary when using "watch" option in dev
+const databaseSuperUser = 'postgres'; // Necessary when using "watch" option in development
 const port = 5000;
 const statementTimeout = '30s';
 const rateLimitWindow = 10 * 60 * 1000; // 10 minutes
@@ -25,7 +25,7 @@ const speedLimitWindows = 30 * 60 * 1000;
 const speedLimitAfter = 100; // allow 100 unlimited requests per window, then...
 const speedLimitDelay = 2; // ... begin adding 2ms of delay per request
 
-const databaseConnectionUser = TIER == 'dev' ? databaseSuperUser : process.env.MEDIATUM_DATABASE_USER_VIEW_API;
+const databaseConnectionUser = NODE_ENV == 'development' ? databaseSuperUser : process.env.MEDIATUM_DATABASE_USER_VIEW_API;
 const databaseConnectionUrl = `postgres://${databaseConnectionUser}@localhost:5432/${process.env.MEDIATUM_DATABASE_NAME}`;
 
 // ----------------------------------------------------------------
@@ -80,7 +80,7 @@ const postgraphileOptionsCommon: PostGraphileOptions = {
     }
 };
 
-const postgraphileOptionsDev: PostGraphileOptions = {
+const postgraphileOptionsDevelopment: PostGraphileOptions = {
     extendedErrors: ["hint", "detail", "errcode"],
     // extendedErrors: ['severity', 'code', 'detail', 'hint', 'position', 'internalPosition', 'internalQuery', 'where', 'schema', 'table', 'column', 'dataType', 'constraint', 'file', 'line', 'routine'],
     // showErrorStack: true,
@@ -91,7 +91,7 @@ const postgraphileOptionsDev: PostGraphileOptions = {
     allowExplain: true,
 };
 
-const postgraphileOptionsProd: PostGraphileOptions = {
+const postgraphileOptionsProduction: PostGraphileOptions = {
     handleErrors: handleErrorsProd,
     watchPg: false,
     graphiql: false
@@ -115,8 +115,8 @@ function handleErrorsProd(errors: readonly GraphQLError[]): any[] {
 
 const postgraphileOptions: PostGraphileOptions = {
     ...postgraphileOptionsCommon
-    , ...(TIER == 'dev' ? postgraphileOptionsDev : {})
-    , ...(TIER == 'prod' ? postgraphileOptionsProd : {})
+    , ...(NODE_ENV == 'development' ? postgraphileOptionsDevelopment : {})
+    , ...(NODE_ENV == 'production' ? postgraphileOptionsProduction : {})
 }
 
 
