@@ -2,6 +2,9 @@
 import express from 'express';
 import { postgraphile, PostGraphileOptions } from "postgraphile";
 import { GraphQLError } from "graphql";
+import bunyan from 'bunyan';
+
+var log = bunyan.createLogger({ name: 'mediatum-view' });
 
 type Tier = 'dev' | 'prod';
 const validTiers = ['dev', 'prod'];
@@ -96,10 +99,11 @@ const postgraphileOptionsProd: PostGraphileOptions = {
 
 function handleErrorsProd(errors: readonly GraphQLError[]): any[] {
     return errors.map((error) => {
-        console.warn("GraphQLError: %o", {
-            // Log the error
-            message: error.message,
-            path: error.path
+        log.error({
+            graphQLError: {
+                message: error.message,
+                path: error.path
+            }
         });
         return {
             // This is the GraphQL error response to the client.
