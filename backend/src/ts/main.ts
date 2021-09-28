@@ -1,6 +1,7 @@
 
 import express from 'express';
 import { postgraphile, PostGraphileOptions } from "postgraphile";
+import { GraphQLError } from "graphql";
 
 type Tier = 'dev' | 'prod';
 const validTiers = ['dev', 'prod'];
@@ -77,6 +78,9 @@ const postgraphileOptionsCommon: PostGraphileOptions = {
 };
 
 const postgraphileOptionsDev: PostGraphileOptions = {
+    extendedErrors: ["hint", "detail", "errcode"],
+    // extendedErrors: ['severity', 'code', 'detail', 'hint', 'position', 'internalPosition', 'internalQuery', 'where', 'schema', 'table', 'column', 'dataType', 'constraint', 'file', 'line', 'routine'],
+    // showErrorStack: true,
     exportGqlSchemaPath: 'export/schema-export.graphql',
     watchPg: true,
     graphiql: true,
@@ -85,9 +89,25 @@ const postgraphileOptionsDev: PostGraphileOptions = {
 };
 
 const postgraphileOptionsProd: PostGraphileOptions = {
+    handleErrors: handleErrorsProd,
     watchPg: false,
     graphiql: false
 };
+
+function handleErrorsProd(errors: readonly GraphQLError[]): any[] {
+    return errors.map((error) => {
+        console.warn("GraphQLError: %o", {
+            // Log the error
+            message: error.message,
+            path: error.path
+        });
+        return {
+            // This is the GraphQL error response to the client.
+            // We will not expose any error details in production mode.
+            message: 'API error'
+        };
+    });
+}
 
 const postgraphileOptions: PostGraphileOptions = {
     ...postgraphileOptionsCommon
