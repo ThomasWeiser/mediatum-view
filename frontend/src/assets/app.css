@@ -1,4 +1,52 @@
 
+:root {
+    /* Colors from TUM corporate design
+    ** https://portal.mytum.de/corporatedesign/livingstyleguide/section-12.html
+    */
+
+    --color-lochmara: #3070b3;
+    --color-royalblue: #4889ce;
+    --color-nightrider: #333333;
+    --color-white: #ffffff;
+    --color-citrus: #a0af00;
+    --color-tahitigold: #e37222;
+
+    --color-solitude-light: #f3f7f8;
+    --color-whitesmoke: #f7f7f7;
+    --color-whitesmoke-darker: #f4f4f4;
+    --color-gainsboro: #e6e6e6;
+    --color-solitude: #dbe2e9;
+    --color-verylightgrey: #cdcdcd;
+    --color-darkgray: #b3b3b3;
+    --color-suvagrey: #8a8a8a;
+    --color-grey: #777777;
+    --color-empress: #737373;
+    --color-charcoal: #4c4c4c;
+    --color-black: #000000;    
+
+    --color-citrus-lighter: #d3e233;
+    --color-tahitigold-lighter: #ffa555;
+
+    /* Colors picked for functional elements
+    */
+
+    --color-text: var(--color-nightrider);
+    --color-text-light: var(--color-grey);
+    --color-primary: var(--color-lochmara);
+    --color-primary-lighter: var(--color-royalblue);
+    --color-spot-1: var(--color-citrus);
+    --color-spot-1-lighter: var(--color-citrus-lighter);
+    --color-input-border: var(--color-verylightgrey);
+    --color-input-border-selected: var(--color-grey);
+    --color-button-background: var(--color-whitesmoke-darker);
+    --color-nav-background: var(--color-whitesmoke-darker);
+    --color-spinner-small-base: var(--color-nightrider);
+    --color-spinner-small-blink: var(--color-verylightgrey);
+    --color-hover-background: var(--color-gainsboro);
+
+
+}
+
 html {
   box-sizing: border-box;
 }
@@ -9,7 +57,7 @@ body {
   margin: 0 1em;
   line-height: 1.5;
   padding: 0;
-  color: #333;
+  color: var(--color-text);
 }
 body, input {
   font-family: "Roboto", "Helvetica", "Arial", sans-serif;
@@ -22,11 +70,11 @@ body, input {
   flex-direction: column;
 }
 .color {
-  color: #3070b3;
+  color: var(--color-primary);
 }
 
 a {
-  color: #4889ce;
+  color: var(--color-primary-lighter);
   text-decoration: none;
 }
 a:hover {
@@ -43,7 +91,7 @@ header .tum-header {
   line-height: initial;
 }
 header .tum-links a {
-  color: #3070b3;
+  color: var(--color-primary);
 }
 header .language-select {
   margin-right: 20px;
@@ -60,13 +108,13 @@ header .test-checkbox {
   margin-right: 40px;
   font-size: initial;
   font-weight: initial;
-  color: #aaa
+  color: var(--color-darkgray);
 }
 header .test-checkbox:hover {
-  color: #777
+  color: var(--color-grey);
 }
 footer a {
-  color: #333;
+  color: var(--color-text);
   text-decoration: none;
 }
 footer .footer-left > * {
@@ -88,7 +136,7 @@ aside {
   /* border-right: 1px solid grey; */
 }
 aside nav {
-  background-color: #f7f7f7;
+  background-color: var(--color-nav-background);
   padding: 0.6em;
 }
 article {
@@ -110,7 +158,7 @@ article {
   flex: 1;
   display: flex;
   align-items: center;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-input-border);
   /* margin-right: 1rem; */
 }
 .search-bar .search-input {
@@ -174,26 +222,22 @@ button:not(:disabled):not(.disabled) {
 button:disabled, button.disabled {
   opacity: .65;
 }
-button, select, .filter-inputs {
+button, select {
   user-select: none;
   border: 1px solid;
   padding: .375rem .75rem;
   font-size: 1rem;
   border-radius: .4rem;
 
-  color: #333333;
+  color: var(--color-text);
 
-  background-color: #f4f4f4;
-  border-color: #e6e6e6;
+  background-color: var(--color-button-background);
+  border-color: var(--color-input-border);
 }
 button.selected {
-  border: 2px solid #999
+  border: 2px solid var(--color-input-border-selected)
 }
-button.filter-button, .filter-inputs {
-  /*
-  background-color: #e2e4d0;
-  border-color: #b4b977;
-  */
+button.filter-button {
   padding: 0.25rem .75rem;
 }
 
@@ -204,7 +248,7 @@ button.filter-button, .filter-inputs {
   border: 1px solid transparent;
 }
 .document:hover {
-  border: 1px solid #a0af00;
+  border: 1px solid var(--color-spot-1);
 }
 a.document {
   color: unset;
@@ -214,13 +258,13 @@ a.document:hover {
   text-decoration: unset;
 }
 .document .metadatatype {
-  color: #4889ce;
+  color: var(--color-primary);
 }
 .listing .attributes {
   margin-left: 2em;
 }
 .listing .attribute:hover {
-  background-color: #eee;
+  background-color: var(--color-hover-background);
 }
 .listing .author {
   font-weight: bold;
@@ -229,7 +273,7 @@ a.document:hover {
   font-style: italic;
 }
 .attribute .highlight-search-term {
-  background-color: #d5de70;
+  background-color: var(--color-spot-1-lighter);
 }
 /* For development and testing: Highlight unparsable Html with an eye-catching background-color
 .attribute .unparsable {
@@ -252,7 +296,7 @@ ul.folder-list ul.folder-list {
 }
 .details .header .metadatatype
 {
-  color: #3070b3;
+  color: var(--color-primary);
 }
 
 .folder-head {
@@ -260,7 +304,7 @@ ul.folder-list ul.folder-list {
   transition: color .2s;
 }
 .folder-head.selected {
-  color: #a0af00;
+  color: var(--color-spot-1);
 }
 .folder-head .folder-name {
   padding-left: 0.6em;
@@ -300,7 +344,7 @@ ul.folder-list ul.folder-list {
   text-align: center;
 }
 .error {
-  color: #3070b3;
+  color: var(--color-primary);
 }
 .residence {
   margin-top: 4ex;
@@ -314,7 +358,7 @@ ul.folder-list ul.folder-list {
 }
 .breadcrumbs {
   font-size: 80%;
-  color: #737373
+  color: var(--color-text-light);
 }
 .breadcrumbs a {
   color: inherit;
@@ -333,10 +377,7 @@ ul.folder-list ul.folder-list {
   padding-left: 0.4em;
 }
 
-.facets-bar {
-}
 .facet-box {
-  background-color: #f7f7f7;
   margin-top: 1ex;
 }
 .facet-head {
@@ -369,7 +410,7 @@ ul.folder-list ul.folder-list {
   font-style: italic;
 }
 .facet-value-selected {
-  color: #a0af00;
+  color: var(--color-spot-1);
 }
 .facet-value-count {
   margin-left: 0.2em;
@@ -382,8 +423,8 @@ ul.folder-list ul.folder-list {
   width: 4px;
   height: 4px;
   border-radius: 2px;
-  background-color:#333;
-  color: #333;
+  background-color:var(--color-spinner-small-base);
+  color: var(--color-spinner-small-base);
   animation: spinner-small 1s infinite alternate;
 }
 
@@ -411,6 +452,6 @@ ul.folder-list ul.folder-list {
 }
 
 @keyframes spinner-small {
-  0% { background-color: #333; }
-  60%, 100% { background-color: #ccc; }
+  0% { background-color: var(--color-spinner-small-base); }
+  60%, 100% { background-color: var(--color-spinner-small-blink); }
 }
