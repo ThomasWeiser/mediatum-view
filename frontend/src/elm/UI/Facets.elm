@@ -182,8 +182,8 @@ viewFacetSelection config aspect selectedValue maybeCount =
         [ Html.span
             [ Html.Attributes.class "facet-value-text" ]
             [ Localization.text config
-                { en = "<< All"
-                , de = "<< zurück"
+                { en = "<< Any"
+                , de = "<< beliebig"
                 }
             ]
         ]
