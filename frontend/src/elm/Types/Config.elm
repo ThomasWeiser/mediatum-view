@@ -39,6 +39,7 @@ type alias Config =
     , maxLimit : Int
     , defaultSorting : Selection.Sorting
     , numberOfFacetValues : Int
+    , numberOfFacetValuesShortList : Int
     , ftsAspects : List FtsAspectConfig
     , facetAspects : List FacetAspectConfig
     , masks : MasksConfig
@@ -57,6 +58,7 @@ init =
     , maxLimit = 1000
     , defaultSorting = Selection.ByRank
     , numberOfFacetValues = 20
+    , numberOfFacetValuesShortList = 5
     , ftsAspects = []
     , facetAspects = []
     , masks = MasksConfig.init

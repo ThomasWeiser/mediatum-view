@@ -269,6 +269,10 @@ ul.folder-list ul.folder-list {
   text-decoration: underline;
 }
 
+.folder-head.toplevel {
+  font-weight: bold;
+}
+
 .svg-icon {
   display: inline-block;
   width: 1.5ex;
@@ -335,22 +339,25 @@ ul.folder-list ul.folder-list {
   background-color: #f7f7f7;
   margin-top: 1ex;
 }
+.facet-head {
+  display: flex;
+}
 .facet-name {
+  padding-left: 0.6em;
   font-weight: bold;
 }
-.facet-values {
-  max-height: 13.5ex;
-  overflow-y: auto;
+.facet-body {
+  margin-left: 1.4em;
 }
-.facet-values ul {
+.facet-values {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.facet-value-line {
+.facet-line {
   display: flex;
 }
-.facet-value-line:hover {
+.facet-clickable:hover .facet-value-text, .facet-clickable:hover .facet-name {
   text-decoration: underline;
 }
 .facet-value-text {
@@ -358,8 +365,11 @@ ul.folder-list ul.folder-list {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.facet-value-selected .facet-value-text {
-  font-weight: bold;
+.facet-special-action .facet-value-text {
+  font-style: italic;
+}
+.facet-value-selected {
+  color: #a0af00;
 }
 .facet-value-count {
   margin-left: 0.2em;

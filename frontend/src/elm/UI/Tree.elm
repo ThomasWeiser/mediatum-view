@@ -155,13 +155,14 @@ view context model maybeFolderCounts =
         [ viewListOfFolders
             context
             model
+            True
             maybeFolderCounts
             (RemoteData.Success context.config.toplevelFolderIds)
         ]
 
 
-viewListOfFolders : Context -> Model -> Maybe FolderCounts -> ApiData (List FolderId) -> Html Msg
-viewListOfFolders context model maybeFolderCounts apiDataFolderIds =
+viewListOfFolders : Context -> Model -> Bool -> Maybe FolderCounts -> ApiData (List FolderId) -> Html Msg
+viewListOfFolders context model isToplevel maybeFolderCounts apiDataFolderIds =
     Html.ul [ Html.Attributes.class "folder-list" ] <|
         case apiDataFolderIds of
             RemoteData.NotAsked ->
@@ -174,7 +175,7 @@ viewListOfFolders context model maybeFolderCounts apiDataFolderIds =
                 List.map
                     (\id ->
                         Html.li []
-                            [ viewFolderTree context model maybeFolderCounts id ]
+                            [ viewFolderTree context model isToplevel maybeFolderCounts id ]
                     )
                     folderIds
 
@@ -182,8 +183,8 @@ viewListOfFolders context model maybeFolderCounts apiDataFolderIds =
                 [ Html.li [] [ Utils.Html.viewApiError apiError ] ]
 
 
-viewFolderTree : Context -> Model -> Maybe FolderCounts -> FolderId -> Html Msg
-viewFolderTree context model maybeFolderCounts id =
+viewFolderTree : Context -> Model -> Bool -> Maybe FolderCounts -> FolderId -> Html Msg
+viewFolderTree context model isToplevel maybeFolderCounts id =
     Html.div [] <|
         case Cache.get context.cache.folders id of
             RemoteData.NotAsked ->
@@ -218,6 +219,7 @@ viewFolderTree context model maybeFolderCounts id =
                     [ Html.Events.onClick (Select id) ]
                     [ viewFolderLine
                         folder
+                        isToplevel
                         (maybeFolderCounts
                             |> Maybe.andThen (Sort.Dict.get folder.id)
                         )
@@ -228,6 +230,7 @@ viewFolderTree context model maybeFolderCounts id =
                     viewListOfFolders
                         context
                         model
+                        False
                         maybeFolderCounts
                         (Cache.get context.cache.subfolderIds id)
 
@@ -239,11 +242,12 @@ viewFolderTree context model maybeFolderCounts id =
                 [ Utils.Html.viewApiError apiError ]
 
 
-viewFolderLine : Folder -> Maybe Int -> Bool -> Bool -> Html msg
-viewFolderLine folder maybeCount selected expanded =
+viewFolderLine : Folder -> Bool -> Maybe Int -> Bool -> Bool -> Html msg
+viewFolderLine folder isToplevel maybeCount selected expanded =
     Html.div
         [ Html.Attributes.classList
             [ ( "folder-head", True )
+            , ( "toplevel", isToplevel )
             , ( "collection", folder.display == DisplayAsCollection )
             , ( "directory", folder.display == DisplayAsDirectory )
             , ( "collapsed", folder.hasSubfolder && not expanded )
