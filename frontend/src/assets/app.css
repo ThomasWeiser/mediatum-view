@@ -335,8 +335,15 @@ ul.folder-list ul.folder-list {
   background-color: #f7f7f7;
   margin-top: 1ex;
 }
+.facet-head {
+  display: flex;
+}
 .facet-name {
+  padding-left: 0.6em;
   font-weight: bold;
+}
+.facet-body {
+  margin-left: 1.4em;
 }
 .facet-values {
   margin: 0;
@@ -346,7 +353,7 @@ ul.folder-list ul.folder-list {
 .facet-line {
   display: flex;
 }
-.facet-clickable:hover .facet-value-text {
+.facet-clickable:hover .facet-value-text, .facet-clickable:hover .facet-name {
   text-decoration: underline;
 }
 .facet-value-text {

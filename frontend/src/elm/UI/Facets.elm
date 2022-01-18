@@ -57,20 +57,25 @@ type Return
 
 {-| -}
 type alias Model =
-    { showLongList : Sort.Dict.Dict Aspect Bool }
+    { showLongList : Sort.Dict.Dict Aspect Bool
+    , showCollapsed : Sort.Dict.Dict Aspect Bool
+    }
 
 
 {-| -}
 type Msg
     = SelectFacetValue Aspect String
     | SelectFacetUnfilter Aspect
+    | ShowFacetCollapsed Aspect Bool
     | ShowFacetLongList Aspect Bool
 
 
 {-| -}
 initialModel : Model
 initialModel =
-    { showLongList = Sort.Dict.empty (Utils.sorter Aspect.ordering) }
+    { showLongList = Sort.Dict.empty (Utils.sorter Aspect.ordering)
+    , showCollapsed = Sort.Dict.empty (Utils.sorter Aspect.ordering)
+    }
 
 
 {-| -}
@@ -89,6 +94,14 @@ update context msg model =
             , Cmd.none
             , Navigate
                 (Navigation.ShowListingWithRemovedFacetFilter aspect)
+            )
+
+        ShowFacetCollapsed aspect state ->
+            ( { model
+                | showCollapsed = Sort.Dict.insert aspect state model.showCollapsed
+              }
+            , Cmd.none
+            , NoReturn
             )
 
         ShowFacetLongList aspect state ->
@@ -126,50 +139,68 @@ viewFacets context model selection =
 
 viewFacet : Context -> Model -> Selection -> FacetAspectConfig -> Html Msg
 viewFacet context model selection facetAspectConfig =
+    let
+        showCollapsed =
+            Sort.Dict.get facetAspectConfig.aspect model.showCollapsed
+                |> Maybe.withDefault False
+    in
     Html.nav
         [ Html.Attributes.class "facet-box" ]
         [ Html.div
-            [ Html.Attributes.class "facet-name" ]
-            [ Localization.text context.config facetAspectConfig.label ]
-        , Html.div
-            []
-            (case FilterList.get facetAspectConfig.aspect selection.facetFilters of
-                Just selectedValue ->
-                    viewFacetSelection
-                        context.config
-                        facetAspectConfig.aspect
-                        selectedValue
-                        (Cache.Derive.getDocumentCount context.cache selection
-                            |> RemoteData.toMaybe
-                        )
+            [ Html.Attributes.class "facet-head facet-clickable"
+            , Html.Events.onClick (ShowFacetCollapsed facetAspectConfig.aspect (not showCollapsed))
+            , Html.Attributes.classList
+                [ ( "expanded", not showCollapsed ) ]
+            ]
+            [ Html.div []
+                [ UI.Icons.expando ]
+            , Html.div
+                [ Html.Attributes.class "facet-name" ]
+                [ Localization.text context.config facetAspectConfig.label ]
+            ]
+        , if showCollapsed then
+            Html.text ""
 
-                Nothing ->
-                    case
-                        Cache.get
-                            context.cache.facetsValues
-                            ( selection
-                            , FacetAspect.aspects context.config.facetAspects
+          else
+            Html.div
+                [ Html.Attributes.class "facet-body" ]
+                (case FilterList.get facetAspectConfig.aspect selection.facetFilters of
+                    Just selectedValue ->
+                        viewFacetSelection
+                            context.config
+                            facetAspectConfig.aspect
+                            selectedValue
+                            (Cache.Derive.getDocumentCount context.cache selection
+                                |> RemoteData.toMaybe
                             )
-                    of
-                        RemoteData.NotAsked ->
-                            -- Should never happen
-                            [ UI.Icons.spinnerSmall ]
 
-                        RemoteData.Loading ->
-                            [ UI.Icons.spinnerSmall ]
-
-                        RemoteData.Failure error ->
-                            [ Utils.Html.viewApiError error ]
-
-                        RemoteData.Success facetsValues ->
-                            viewFacetValues
-                                context.config
-                                model
-                                facetAspectConfig.aspect
-                                (Sort.Dict.get facetAspectConfig.aspect facetsValues
-                                    |> Maybe.withDefault []
+                    Nothing ->
+                        case
+                            Cache.get
+                                context.cache.facetsValues
+                                ( selection
+                                , FacetAspect.aspects context.config.facetAspects
                                 )
-            )
+                        of
+                            RemoteData.NotAsked ->
+                                -- Should never happen
+                                [ UI.Icons.spinnerSmall ]
+
+                            RemoteData.Loading ->
+                                [ UI.Icons.spinnerSmall ]
+
+                            RemoteData.Failure error ->
+                                [ Utils.Html.viewApiError error ]
+
+                            RemoteData.Success facetsValues ->
+                                viewFacetValues
+                                    context.config
+                                    model
+                                    facetAspectConfig.aspect
+                                    (Sort.Dict.get facetAspectConfig.aspect facetsValues
+                                        |> Maybe.withDefault []
+                                    )
+                )
         ]
 
 
