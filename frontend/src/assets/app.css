@@ -269,6 +269,10 @@ ul.folder-list ul.folder-list {
   text-decoration: underline;
 }
 
+.folder-head.toplevel {
+  font-weight: bold;
+}
+
 .svg-icon {
   display: inline-block;
   width: 1.5ex;
@@ -364,8 +368,8 @@ ul.folder-list ul.folder-list {
 .facet-special-action .facet-value-text {
   font-style: italic;
 }
-.facet-value-selected .facet-value-text {
-  font-weight: bold;
+.facet-value-selected {
+  color: #a0af00;
 }
 .facet-value-count {
   margin-left: 0.2em;
