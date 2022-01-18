@@ -339,24 +339,23 @@ ul.folder-list ul.folder-list {
   font-weight: bold;
 }
 .facet-values {
-  max-height: 13.5ex;
-  overflow-y: auto;
-}
-.facet-values ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.facet-value-line {
+.facet-line {
   display: flex;
 }
-.facet-value-line:hover {
+.facet-clickable:hover .facet-value-text {
   text-decoration: underline;
 }
 .facet-value-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.facet-special-action .facet-value-text {
+  font-style: italic;
 }
 .facet-value-selected .facet-value-text {
   font-weight: bold;
