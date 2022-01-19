@@ -1,7 +1,9 @@
 
 -- 
 
-insert into config.application values
+insert into config.application 
+    (name, toplevel_folder_ids)
+values
     -- ('hsb', array[604993]) -- 604993 is the root node
     ('hsb', array[1433087]) -- 1433087 is the "Hochschulbibliographie" node
     -- ('hsb', array[1433088, 1433089, 1515316]) -- Multiple root folders, using several years of hsb
@@ -17,12 +19,16 @@ delete from config.aspect_facet;
 delete from config.aspect_fts;
 delete from config.aspect_def;
 
-insert into config.masks_by_purpose values
+insert into config.masks_by_purpose
+    (purpose, mask_names)
+values
     ('listing', '{"en": "nodesmall_en", "de": "nodesmall"}'::jsonb),
     ('details', '{"en": "nodebig_en", "de": "nodebig"}'::jsonb)
 ;
 
-insert into config.aspect_def values
+insert into config.aspect_def
+    (name, keys, split_at_semicolon, normalize_year)
+values
     ('type', array['type'], false, false),
     ('origin', array['origin'], false, false),
     ('subject', array['subject'], true, false),
@@ -35,7 +41,9 @@ insert into config.aspect_def values
     ('year', array['year', 'year-accepted'], false, true)
 ;
 
-insert into config.aspect_fts values
+insert into config.aspect_fts
+    (aspect, label)
+values
     ('title', '{"en": "Title", "de": "Titel"}'::jsonb),
     ('author', '{"en": "Author", "de": "Autor"}'::jsonb),
     ('person', '{"en": "Person", "de": "Person"}'::jsonb),
@@ -43,7 +51,9 @@ insert into config.aspect_fts values
     ('description', '{"en": "Abstract", "de": "Kurzfassung"}'::jsonb)
 ;
 
-insert into config.aspect_facet values
+insert into config.aspect_facet
+    (aspect, label)
+values
     ('type', '{"en": "Document type", "de": "Dokumenttyp"}'::jsonb),
     ('subject', '{"en": "Subject group", "de": "Fachgebiet"}'::jsonb),
     ('subject2', '{"en": "TUM classification", "de": "TU-Systematik"}'::jsonb),
