@@ -7,7 +7,7 @@
 /* TODO:
     Currently we skip existing rows via PostgreSQL's "upsert" mechanism, i.e. "on conflict ... do nothing".
     This seems to be not as efficient as it could be, so we should consider alternative methods later.
-    E.g. using temporary tables holding the idenitifiers of those nodes thawt need to be preprocessed.
+    E.g. using temporary tables holding the idenitifiers of those nodes that need to be preprocessed.
 */
 
 ------------------------------------
