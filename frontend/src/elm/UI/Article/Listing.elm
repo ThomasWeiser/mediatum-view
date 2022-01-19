@@ -181,10 +181,16 @@ viewDocument context number document =
             context
             (Navigation.ShowDocument context.selection.scope document.id)
         ]
-        [ Html.div [ Html.Attributes.class "metadatatype" ]
-            [ Html.span [ Html.Attributes.class "result-number" ]
-                [ Html.text <| String.fromInt number ++ ". "
-                , Html.text document.metadatatypeName
+        [ Html.div [ Html.Attributes.class "header" ]
+            [ Html.div [ Html.Attributes.class "header-left" ]
+                [ Html.span [ Html.Attributes.class "result-number" ]
+                    [ Html.text <| String.fromInt number ++ ". " ]
+                , Html.span [ Html.Attributes.class "metadatatype" ]
+                    [ Html.text document.metadatatypeName ]
+                ]
+            , Html.div [ Html.Attributes.class "header-right" ]
+                [ Html.span [ Html.Attributes.class "found-locations" ]
+                    [ viewSearchMatching context.config document.searchMatching ]
                 ]
             ]
         , Html.div
@@ -195,7 +201,6 @@ viewDocument context number document =
                 viewAttribute
                 document.attributes
             )
-        , viewSearchMatching context.config document.searchMatching
         ]
 
 

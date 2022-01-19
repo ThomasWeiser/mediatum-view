@@ -257,8 +257,26 @@ a.document {
 a.document:hover {
   text-decoration: unset;
 }
-.document .metadatatype {
+.document .header {
+  display: flex;
+  align-items: center;
+}
+.document .header .header-left, .document .header .header-right {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.document .header-left {
+  flex: 0 1 auto;
   color: var(--color-primary);
+}
+.document .header-right {
+  margin-left: 1em;
+  flex: 1 1 15%;
+  height: 100%;
+  text-align: right;
+  font-size: 80%;
+  color: var(--color-text-light);
 }
 .listing .attributes {
   margin-left: 2em;
