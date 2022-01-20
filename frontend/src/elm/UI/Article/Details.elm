@@ -22,7 +22,7 @@ module UI.Article.Details exposing
 
 import Cache exposing (Cache)
 import Entities.Document as Document exposing (Document)
-import Entities.Markup
+import Entities.Markup exposing (Markup)
 import Entities.Residence as Residence exposing (Residence)
 import Html exposing (Html)
 import Html.Attributes
@@ -108,18 +108,45 @@ viewDocument context model document residence =
         [ Html.div [ Html.Attributes.class "header" ]
             [ Html.div [ Html.Attributes.class "metadatatype" ]
                 [ Html.text document.metadatatypeName ]
-            , Html.div [ Html.Attributes.class "author" ]
-                [ Html.text document.name ]
             ]
         , Html.table []
-            [ Html.tbody [] <|
-                List.map
-                    viewAttribute
-                    document.attributes
+            [ Html.tbody []
+                (viewPotentialDissertationAuthor context.config document
+                    :: List.map
+                        viewAttribute
+                        document.attributes
+                )
             ]
         , viewSearchMatching context.config document.searchMatching
         , viewResidence context residence
         ]
+
+
+{-| Work around a peculiarity of the current TUM database, regarding documents with schema `diss`.
+
+When queried by mask `nodebig` or `nodebig_en`, there is no maskitem which contains the author's name.
+But for most documents with schema `diss` the author's name is given by the document's name,
+which is a separate column in table `mediatum.node`.
+
+So, in these cases we add a synthetical attribute to display the author's name.
+
+-}
+viewPotentialDissertationAuthor : Config -> Document -> Html Msg
+viewPotentialDissertationAuthor config document =
+    if document.metadatatypeName == "Dissertation" then
+        viewAttribute
+            { name =
+                Localization.string config { en = "Author", de = "Autor" }
+            , value =
+                Just
+                    (Entities.Markup.parse
+                        (Entities.Markup.SpanClass "unparsable")
+                        document.name
+                    )
+            }
+
+    else
+        Html.text ""
 
 
 viewSearchMatching : Config -> Maybe Document.SearchMatching -> Html msg
@@ -158,7 +185,7 @@ viewSearchMatching config maybeSearchMatching =
                         }
 
 
-viewAttribute : Document.Attribute -> Html msg
+viewAttribute : { a | name : String, value : Maybe Markup } -> Html msg
 viewAttribute attribute =
     case attribute.value of
         Just value ->
