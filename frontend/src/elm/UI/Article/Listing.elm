@@ -215,17 +215,17 @@ viewSearchMatching config =
 
                 ( True, False ) ->
                     { en = "Search term found in metadata"
-                    , de = "Suchbegriff in Metadaten gefunden"
+                    , de = "Fundstellen in Metadaten"
                     }
 
                 ( False, True ) ->
                     { en = "Search term found in fulltext"
-                    , de = "Suchbegriff in Volltext gefunden"
+                    , de = "Fundstellen in Volltext"
                     }
 
                 ( True, True ) ->
                     { en = "Search term found in metadata and fulltext"
-                    , de = "Suchbegriff in Metadaten und Volltext gefunden"
+                    , de = "Fundstellen in Metadaten und Volltext"
                     }
         )
         >> Localization.text config
