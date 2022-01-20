@@ -181,11 +181,15 @@ viewDocument context number document =
             context
             (Navigation.ShowDocument context.selection.scope document.id)
         ]
-        [ Html.div [ Html.Attributes.class "metadatatype" ]
-            [ Html.span [ Html.Attributes.class "result-number" ]
-                [ Html.text <| String.fromInt number ++ ". "
-                , Html.text document.metadatatypeName
+        [ Html.div [ Html.Attributes.class "header" ]
+            [ Html.div [ Html.Attributes.class "header-left" ]
+                [ Html.span [ Html.Attributes.class "result-number" ]
+                    [ Html.text <| String.fromInt number ++ ". " ]
+                , Html.span [ Html.Attributes.class "metadatatype" ]
+                    [ Html.text document.metadatatypeName ]
                 ]
+            , Html.div [ Html.Attributes.class "header-right" ]
+                [ viewSearchMatching context.config document.searchMatching ]
             ]
         , Html.div
             [ Html.Attributes.class "attributes"
@@ -195,35 +199,58 @@ viewDocument context number document =
                 viewAttribute
                 document.attributes
             )
-        , viewSearchMatching context.config document.searchMatching
         ]
 
 
 viewSearchMatching : Config -> Maybe Document.SearchMatching -> Html msg
-viewSearchMatching config =
-    Maybe.Extra.unwrap
-        { en = "", de = "" }
-        (\{ attributes, fulltext } ->
-            case ( attributes, fulltext ) of
-                ( False, False ) ->
-                    { en = "", de = "" }
+viewSearchMatching config maybeSearchMatching =
+    let
+        ( noticeShort, noticeLong ) =
+            case maybeSearchMatching of
+                Nothing ->
+                    ( "", "" )
 
-                ( True, False ) ->
-                    { en = "Search term found in metadata"
-                    , de = "Suchbegriff in Metadaten gefunden"
-                    }
+                Just { attributes, fulltext } ->
+                    Tuple.mapBoth
+                        (Localization.string config)
+                        (Localization.string config)
+                    <|
+                        case ( attributes, fulltext ) of
+                            ( False, False ) ->
+                                ( { en = "", de = "" }, { en = "", de = "" } )
 
-                ( False, True ) ->
-                    { en = "Search term found in fulltext"
-                    , de = "Suchbegriff in Volltext gefunden"
-                    }
+                            ( True, False ) ->
+                                ( { en = "Search term found in metadata"
+                                  , de = "Fundstellen in Metadaten"
+                                  }
+                                , { en = "Search term found in metadata"
+                                  , de = "Suchbegriff in Metadaten gefunden"
+                                  }
+                                )
 
-                ( True, True ) ->
-                    { en = "Search term found in metadata and fulltext"
-                    , de = "Suchbegriff in Metadaten und Volltext gefunden"
-                    }
-        )
-        >> Localization.text config
+                            ( False, True ) ->
+                                ( { en = "Search term found in fulltext"
+                                  , de = "Fundstellen in Volltext"
+                                  }
+                                , { en = "Search term found in fulltext"
+                                  , de = "Suchbegriff in Volltext gefunden"
+                                  }
+                                )
+
+                            ( True, True ) ->
+                                ( { en = "Search term found in metadata and fulltext"
+                                  , de = "Fundstellen in Metadaten und Volltext"
+                                  }
+                                , { en = "Search term found in metadata and fulltext"
+                                  , de = "Suchbegriff in Metadaten und Volltext gefunden"
+                                  }
+                                )
+    in
+    Html.span
+        [ Html.Attributes.class "found-locations"
+        , Html.Attributes.title noticeLong
+        ]
+        [ Html.text noticeShort ]
 
 
 keys :
