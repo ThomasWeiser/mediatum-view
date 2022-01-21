@@ -2,10 +2,12 @@ module Entities.Markup exposing
     ( Markup
     , FlagUnparsable(..)
     , parse
-    , empty, plainText, normalizeYear
+    , empty, plainText
+    , normalizeYear
     , isEmpty
     , trim, view
     , toHtmlString
+    , fixSpacesAfterSeparators
     )
 
 {-|
@@ -13,7 +15,8 @@ module Entities.Markup exposing
 @docs Markup
 @docs FlagUnparsable
 @docs parse
-@docs empty, plainText, normalizeYear
+@docs empty, plainText
+@docs normalizeYear, fixSpaceInSemicolonSeparatedList
 @docs isEmpty
 @docs trim, view
 @docs toHtmlString
@@ -25,6 +28,7 @@ import Html.Parser exposing (Node)
 import Html.Parser.Util
 import List.Extra
 import Maybe.Extra
+import Regex
 import String.Extra
 
 
@@ -127,6 +131,47 @@ normalizeYear markup =
         [ Html.Parser.Text
             (plainText markup |> String.left 4)
         ]
+
+
+{-| Lists of author names are mostly separated by commas or semicolons without subsequent spaces.
+This function inserts spaces accordingly.
+
+Relevant attributes should not contain Html tags. So we don't descend into sub-nodes.
+
+-}
+fixSpacesAfterSeparators : Markup -> Markup
+fixSpacesAfterSeparators (Markup topNodes) =
+    topNodes
+        |> List.map
+            (\node ->
+                case node of
+                    Html.Parser.Text text ->
+                        text
+                            |> Regex.replace
+                                regexSemicolonFollowedBy
+                                (\match ->
+                                    case match.submatches of
+                                        [ Just separator, Just alpha ] ->
+                                            separator ++ " " ++ alpha
+
+                                        _ ->
+                                            -- case should never happen
+                                            match.match
+                                )
+                            |> Html.Parser.Text
+
+                    _ ->
+                        node
+            )
+        |> Markup
+
+
+regexSemicolonFollowedBy : Regex.Regex
+regexSemicolonFollowedBy =
+    -- If the package elm/regex could handle the Unicode flag, we could use ";\\p{Alpha}"
+    "(;|,)([a-zA-ZöäüÖÄÜß])"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
 
 
 {-| Limits the length of the Markup approximately to a certain number of characters.
