@@ -21,6 +21,7 @@ module UI.Article.Details exposing
 -}
 
 import Cache exposing (Cache)
+import Constants
 import Entities.Document as Document exposing (Document)
 import Entities.Markup exposing (Markup)
 import Entities.Residence as Residence exposing (Residence)
@@ -31,6 +32,7 @@ import RemoteData
 import Types exposing (DocumentIdFromSearch)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
+import Types.Id as Id
 import Types.Localization as Localization
 import Types.Route exposing (Route)
 import UI.Icons
@@ -105,7 +107,15 @@ view context model =
 viewDocument : Context -> Model -> Document -> Residence -> Html Msg
 viewDocument context model document residence =
     Html.div []
-        [ Html.div [ Html.Attributes.class "header" ]
+        [ Html.div
+            [ Html.Attributes.class "thumbnail" ]
+            [ Html.img
+                [ Html.Attributes.src
+                    (Constants.contentServerUrls.presentation document.id)
+                ]
+                []
+            ]
+        , Html.div [ Html.Attributes.class "header" ]
             [ Html.div [ Html.Attributes.class "metadatatype" ]
                 [ Html.text document.metadatatypeName ]
             ]
