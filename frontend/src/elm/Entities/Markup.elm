@@ -3,11 +3,11 @@ module Entities.Markup exposing
     , FlagUnparsable(..)
     , parse
     , empty, plainText
-    , normalizeYear
+    , normalizeYear, normalizeYearMonth
     , isEmpty
     , trim, view
     , toHtmlString
-    , fixSpacesAfterSeparators
+    , fixSpacesAfterSeparators, normalizeYearMonthDay
     )
 
 {-|
@@ -16,7 +16,8 @@ module Entities.Markup exposing
 @docs FlagUnparsable
 @docs parse
 @docs empty, plainText
-@docs normalizeYear, fixSpaceInSemicolonSeparatedList
+@docs normalizeYear, normalizeYearMonth
+@docs fixSpaceInSemicolonSeparatedList
 @docs isEmpty
 @docs trim, view
 @docs toHtmlString
@@ -130,6 +131,31 @@ normalizeYear markup =
     Markup
         [ Html.Parser.Text
             (plainText markup |> String.left 4)
+        ]
+
+
+{-| Attribute "yearmonth" are mostly formatted as "2020-03-00T00:00:00".
+For a nicer display we take just the first segment and only the first 7 characters of it.
+
+    normalizeYear (parse "<span>2020</span>-03-00T00:00:00")
+        == parse "2020-03"
+
+Note: Currently we don't preserve the markup structure. This should get implemented someday!
+
+-}
+normalizeYearMonth : Markup -> Markup
+normalizeYearMonth markup =
+    Markup
+        [ Html.Parser.Text
+            (plainText markup |> String.left 7)
+        ]
+
+
+normalizeYearMonthDay : Markup -> Markup
+normalizeYearMonthDay markup =
+    Markup
+        [ Html.Parser.Text
+            (plainText markup |> String.left 10)
         ]
 
 

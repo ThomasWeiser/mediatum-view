@@ -23,16 +23,16 @@ module UI.Article.Details exposing
 import Cache exposing (Cache)
 import Constants
 import Entities.Document as Document exposing (Document)
-import Entities.Markup exposing (Markup)
+import Entities.Markup as Markup exposing (Markup)
 import Entities.Residence as Residence exposing (Residence)
 import Html exposing (Html)
 import Html.Attributes
 import List.Nonempty
+import Regex
 import RemoteData
 import Types exposing (DocumentIdFromSearch)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
-import Types.Id as Id
 import Types.Localization as Localization
 import Types.Route exposing (Route)
 import UI.Icons
@@ -145,12 +145,13 @@ viewPotentialDissertationAuthor : Config -> Document -> Html Msg
 viewPotentialDissertationAuthor config document =
     if document.metadatatypeName == "Dissertation" then
         viewAttribute
-            { name =
+            { field = "author-from-document-name"
+            , name =
                 Localization.string config { en = "Author", de = "Autor" }
             , value =
                 Just
-                    (Entities.Markup.parse
-                        (Entities.Markup.SpanClass "unparsable")
+                    (Markup.parse
+                        (Markup.SpanClass "unparsable")
                         document.name
                     )
             }
@@ -195,19 +196,56 @@ viewSearchMatching config maybeSearchMatching =
                         }
 
 
-viewAttribute : { a | name : String, value : Maybe Markup } -> Html msg
+keys :
+    { year : Regex.Regex
+    , yearmonth : Regex.Regex
+    , date : Regex.Regex
+    }
+keys =
+    let
+        regex regexString =
+            Maybe.withDefault Regex.never (Regex.fromString regexString)
+    in
+    { year = regex "year"
+    , yearmonth = regex "yearmonth"
+    , date = regex "publicationdate"
+    }
+
+
+viewAttribute : { a | name : String, value : Maybe Markup, field : String } -> Html msg
 viewAttribute attribute =
     case attribute.value of
         Just value ->
-            if Entities.Markup.isEmpty value then
+            if Markup.isEmpty value then
                 Html.text ""
 
             else
+                let
+                    isField regex =
+                        Regex.contains regex attribute.field
+
+                    fixedValue =
+                        value
+                            |> (if isField keys.yearmonth then
+                                    Markup.normalizeYearMonth
+
+                                else if isField keys.year then
+                                    Markup.normalizeYear
+
+                                else if isField keys.date then
+                                    Markup.normalizeYearMonthDay
+
+                                else
+                                    identity
+                               )
+                in
                 Html.tr
                     [ Html.Attributes.class "attribute" ]
-                    [ Html.td [] [ Html.text attribute.name ]
+                    [ Html.td
+                        [ Html.Attributes.title attribute.field ]
+                        [ Html.text attribute.name ]
                     , Html.td []
-                        (Entities.Markup.view value)
+                        (Markup.view fixedValue)
                     ]
 
         Nothing ->
