@@ -206,24 +206,33 @@ viewAttribute attribute =
 
 viewResidence : Context -> Residence -> Html msg
 viewResidence context residence =
-    Html.div
-        [ Html.Attributes.class "residence" ]
-        [ Html.div
-            [ Html.Attributes.class "title" ]
-            [ Localization.text context.config
-                { en = "Occurrences:"
-                , de = "Vorkommen:"
-                }
+    let
+        residenceLimitedToToplevelFolders : Residence
+        residenceLimitedToToplevelFolders =
+            Residence.limitToToplevelFolders context.config residence
+    in
+    if List.isEmpty residenceLimitedToToplevelFolders then
+        Html.text ""
+
+    else
+        Html.div
+            [ Html.Attributes.class "residence" ]
+            [ Html.div
+                [ Html.Attributes.class "title" ]
+                [ Localization.text context.config
+                    { en = "Occurrences:"
+                    , de = "Vorkommen:"
+                    }
+                ]
+            , Html.ul [] <|
+                List.map
+                    (\lineage ->
+                        Html.li []
+                            [ lineage
+                                |> List.Nonempty.toList
+                                |> Just
+                                |> UI.Widgets.Breadcrumbs.view context
+                            ]
+                    )
+                    residenceLimitedToToplevelFolders
             ]
-        , Html.ul [] <|
-            List.map
-                (\lineage ->
-                    Html.li []
-                        [ lineage
-                            |> List.Nonempty.toList
-                            |> Just
-                            |> UI.Widgets.Breadcrumbs.view context
-                        ]
-                )
-                (Residence.limitToToplevelFolders context.config residence)
-        ]
