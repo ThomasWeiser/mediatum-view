@@ -261,11 +261,6 @@ a.document:hover {
   display: flex;
   align-items: center;
 }
-.document .header .header-left, .document .header .header-right {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .document .header-left {
   flex: 0 1 auto;
   color: var(--color-primary);
@@ -274,6 +269,9 @@ a.document:hover {
   margin-left: 1em;
   flex: 1 1 15%;
   height: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   text-align: right;
   font-size: 80%;
   color: var(--color-text-light);
