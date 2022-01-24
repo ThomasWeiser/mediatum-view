@@ -34,6 +34,7 @@ import Types exposing (DocumentIdFromSearch)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
 import Types.Localization as Localization
+import Types.Navigation as Navigation
 import Types.Route exposing (Route)
 import UI.Icons
 import UI.Widgets.Breadcrumbs
@@ -107,7 +108,19 @@ view context model =
 viewDocument : Context -> Model -> Document -> Residence -> Html Msg
 viewDocument context model document residence =
     Html.div []
-        [ Html.div
+        [ Html.div [ Html.Attributes.class "permalink" ]
+            [ Html.a
+                [ Navigation.alterRouteHref
+                    context
+                    (Navigation.ShowDocumentPermalink document.id)
+                ]
+                [ Localization.text context.config
+                    { en = "Permanent link"
+                    , de = "Dauerhafter Link"
+                    }
+                ]
+            ]
+        , Html.div
             [ Html.Attributes.class "thumbnail" ]
             [ Html.img
                 [ Html.Attributes.src

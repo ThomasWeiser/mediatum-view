@@ -3,7 +3,7 @@ module Types.Route exposing
     , RoutePath(..)
     , RouteParameters
     , initHome
-    , initDocumentInFolder
+    , initDocumentInFolder, initDocumentWithoutFolder
     , sanitize
     )
 
@@ -16,7 +16,7 @@ Parsing URLs and stringifying routes are defined in [`Types.Route.Url`](Types-Ro
 @docs RouteParameters
 
 @docs initHome
-@docs initDocumentInFolder
+@docs initDocumentInFolder, initDocumentWithoutFolder
 
 @docs sanitize
 
@@ -68,6 +68,15 @@ initHome config =
 initDocumentInFolder : Config -> FolderId -> DocumentId -> Route
 initDocumentInFolder config folderId documentId =
     { path = TwoIds (Types.Id.asNodeId folderId) (Types.Id.asNodeId documentId)
+    , parameters = emptyParameters config
+    }
+
+
+{-| A route to a document without a folder, without any further parameters.
+-}
+initDocumentWithoutFolder : Config -> DocumentId -> Route
+initDocumentWithoutFolder config documentId =
+    { path = OneId (Types.Id.asNodeId documentId)
     , parameters = emptyParameters config
     }
 
