@@ -303,6 +303,9 @@ viewAttribute attribute =
                                 && not (isField keys.congressOrJournal)
                           )
                         ]
+                    , -- For developing and debugging purposes:
+                      -- Attach the field name as a data attribute to the DOM node
+                      Html.Attributes.attribute "data-mediatum-field" attribute.field
                     ]
                     (let
                         markup =

@@ -242,7 +242,10 @@ viewAttribute attribute =
                 Html.tr
                     [ Html.Attributes.class "attribute" ]
                     [ Html.td
-                        [ Html.Attributes.title attribute.field ]
+                        [ -- For developing and debugging purposes:
+                          -- Attach the field name as a data attribute to the DOM node
+                          Html.Attributes.attribute "data-mediatum-field" attribute.field
+                        ]
                         [ Html.text attribute.name ]
                     , Html.td []
                         (Markup.view fixedValue)
