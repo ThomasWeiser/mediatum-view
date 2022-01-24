@@ -208,7 +208,7 @@ keys =
     in
     { year = regex "year"
     , yearmonth = regex "yearmonth"
-    , date = regex "publicationdate"
+    , date = regex "date"
     }
 
 
