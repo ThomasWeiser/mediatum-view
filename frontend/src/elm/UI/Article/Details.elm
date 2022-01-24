@@ -200,6 +200,7 @@ keys :
     { year : Regex.Regex
     , yearmonth : Regex.Regex
     , date : Regex.Regex
+    , wwwAddress : Regex.Regex
     }
 keys =
     let
@@ -209,6 +210,7 @@ keys =
     { year = regex "year"
     , yearmonth = regex "yearmonth"
     , date = regex "date"
+    , wwwAddress = regex "www-address"
     }
 
 
@@ -234,6 +236,9 @@ viewAttribute attribute =
 
                                 else if isField keys.date then
                                     Markup.normalizeYearMonthDay
+
+                                else if isField keys.wwwAddress then
+                                    Markup.renderWwwAddress
 
                                 else
                                     identity

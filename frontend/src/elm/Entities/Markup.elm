@@ -4,10 +4,11 @@ module Entities.Markup exposing
     , parse
     , empty, plainText
     , normalizeYear, normalizeYearMonth, normalizeYearMonthDay
+    , fixSpacesAfterSeparators
+    , renderWwwAddress
     , isEmpty
     , trim, view
     , toHtmlString
-    , fixSpacesAfterSeparators
     )
 
 {-|
@@ -17,7 +18,8 @@ module Entities.Markup exposing
 @docs parse
 @docs empty, plainText
 @docs normalizeYear, normalizeYearMonth, normalizeYearMonthDay
-@docs fixSpaceInSemicolonSeparatedList
+@docs fixSpacesAfterSeparators
+@docs renderWwwAddress
 @docs isEmpty
 @docs trim, view
 @docs toHtmlString
@@ -251,6 +253,48 @@ regexSemicolonFollowedBy : Regex.Regex
 regexSemicolonFollowedBy =
     -- If the package elm/regex could handle the Unicode flag, we could use ";\\p{Alpha}"
     "(;|,)([a-zA-ZöäüÖÄÜß])"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
+
+
+renderWwwAddress : Markup -> Markup
+renderWwwAddress (Markup topNodes) =
+    topNodes
+        |> Debug.log "renderWwwAddress"
+        |> List.map
+            (\node ->
+                case node of
+                    Html.Parser.Text text ->
+                        case Regex.find regexWwwAddress text |> Debug.log "find" of
+                            [ match ] ->
+                                case match.submatches of
+                                    [ Just url, Just linktext ] ->
+                                        Html.Parser.Element
+                                            "a"
+                                            [ ( "href", url ) ]
+                                            [ Html.Parser.Text linktext ]
+
+                                    (Just url) :: _ ->
+                                        Html.Parser.Element
+                                            "a"
+                                            [ ( "href", url ) ]
+                                            [ Html.Parser.Text url ]
+
+                                    _ ->
+                                        Html.Parser.Text text
+
+                            _ ->
+                                Html.Parser.Text text
+
+                    _ ->
+                        node
+            )
+        |> Markup
+
+
+regexWwwAddress : Regex.Regex
+regexWwwAddress =
+    "^\\s*(https?://[^; ]+)(?:;\\s*(.*))?$"
         |> Regex.fromString
         |> Maybe.withDefault Regex.never
 
