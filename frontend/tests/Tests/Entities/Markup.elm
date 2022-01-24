@@ -177,18 +177,134 @@ all =
                 normalizeYear
                     >> plainText
                     >> Expect.equal "2020"
-            , testText "<span>2020</span>-00-00T00:00:00" <|
+            , testText "2020-00-00T00:00:00Z" <|
                 normalizeYear
                     >> plainText
                     >> Expect.equal "2020"
-            , testText "<span>2020-00-00</span>T00:00:00" <|
+            , testText "2020-00-00" <|
                 normalizeYear
                     >> plainText
                     >> Expect.equal "2020"
-            , testText "2020-00-<span>00</span>T00:00:00" <|
+            , testText "2020-11-22T11:22:33" <|
                 normalizeYear
                     >> plainText
                     >> Expect.equal "2020"
+            , testText "2020-00-00, 2021-00-00" <|
+                normalizeYear
+                    >> plainText
+                    >> Expect.equal "2020, 2021"
+            , testText "abc<span>2020-00-00T00:00:00</span>def" <|
+                normalizeYear
+                    >> toHtmlString
+                    >> Expect.equal "abc<span>2020</span>def"
+            , testText "2020-00-00T00:00:00missing word boundary" <|
+                normalizeYear
+                    >> plainText
+                    >> Expect.equal "2020-00-00T00:00:00missing word boundary"
+            , testText "2020-00-00missing word boundary" <|
+                normalizeYear
+                    >> plainText
+                    >> Expect.equal "2020-00-00missing word boundary"
+            , testText "missing word boundary2020-00-00T00:00:00" <|
+                normalizeYear
+                    >> plainText
+                    >> Expect.equal "missing word boundary2020-00-00T00:00:00"
+            , testText "missing word boundary2020-00-00" <|
+                normalizeYear
+                    >> plainText
+                    >> Expect.equal "missing word boundary2020-00-00"
+            ]
+        , describe "normalizeYearMonth"
+            [ testText "" <|
+                normalizeYearMonth
+                    >> plainText
+                    >> Expect.equal ""
+            , testText "2020-11-00T00:00:00" <|
+                normalizeYearMonth
+                    >> plainText
+                    >> Expect.equal "2020-11"
+            , testText "2020-11-00T00:00:00Z" <|
+                normalizeYearMonth
+                    >> plainText
+                    >> Expect.equal "2020-11"
+            , testText "2020-11-00" <|
+                normalizeYearMonth
+                    >> plainText
+                    >> Expect.equal "2020-11"
+            , testText "2020-11-22T11:22:33" <|
+                normalizeYearMonth
+                    >> plainText
+                    >> Expect.equal "2020-11"
+            , testText "2020-11-00, 2021-12-00" <|
+                normalizeYearMonth
+                    >> plainText
+                    >> Expect.equal "2020-11, 2021-12"
+            , testText "abc<span>2020-11-00T00:00:00</span>def" <|
+                normalizeYearMonth
+                    >> toHtmlString
+                    >> Expect.equal "abc<span>2020-11</span>def"
+            , testText "2020-11-00T00:00:00missing word boundary" <|
+                normalizeYearMonth
+                    >> plainText
+                    >> Expect.equal "2020-11-00T00:00:00missing word boundary"
+            , testText "2020-11-00missing word boundary" <|
+                normalizeYearMonth
+                    >> plainText
+                    >> Expect.equal "2020-11-00missing word boundary"
+            , testText "missing word boundary2020-11-00T00:00:00" <|
+                normalizeYearMonth
+                    >> plainText
+                    >> Expect.equal "missing word boundary2020-11-00T00:00:00"
+            , testText "missing word boundary2020-11-00" <|
+                normalizeYearMonth
+                    >> plainText
+                    >> Expect.equal "missing word boundary2020-11-00"
+            ]
+        , describe "normalizeYearMonthDay"
+            [ testText "" <|
+                normalizeYearMonthDay
+                    >> plainText
+                    >> Expect.equal ""
+            , testText "2020-11-22T00:00:00" <|
+                normalizeYearMonthDay
+                    >> plainText
+                    >> Expect.equal "2020-11-22"
+            , testText "2020-11-22T00:00:00Z" <|
+                normalizeYearMonthDay
+                    >> plainText
+                    >> Expect.equal "2020-11-22"
+            , testText "2020-11-22" <|
+                normalizeYearMonthDay
+                    >> plainText
+                    >> Expect.equal "2020-11-22"
+            , testText "2020-11-22T11:22:33" <|
+                normalizeYearMonthDay
+                    >> plainText
+                    >> Expect.equal "2020-11-22"
+            , testText "2020-11-22, 2021-12-24" <|
+                normalizeYearMonthDay
+                    >> plainText
+                    >> Expect.equal "2020-11-22, 2021-12-24"
+            , testText "abc<span>2020-11-22T00:00:00</span>def" <|
+                normalizeYearMonthDay
+                    >> toHtmlString
+                    >> Expect.equal "abc<span>2020-11-22</span>def"
+            , testText "2020-11-22T00:00:00missing word boundary" <|
+                normalizeYearMonthDay
+                    >> plainText
+                    >> Expect.equal "2020-11-22T00:00:00missing word boundary"
+            , testText "2020-11-22missing word boundary" <|
+                normalizeYearMonthDay
+                    >> plainText
+                    >> Expect.equal "2020-11-22missing word boundary"
+            , testText "missing word boundary2020-11-22T00:00:00" <|
+                normalizeYearMonthDay
+                    >> plainText
+                    >> Expect.equal "missing word boundary2020-11-22T00:00:00"
+            , testText "missing word boundary2020-11-22" <|
+                normalizeYearMonthDay
+                    >> plainText
+                    >> Expect.equal "missing word boundary2020-11-22"
             ]
         ]
 

@@ -3,11 +3,11 @@ module Entities.Markup exposing
     , FlagUnparsable(..)
     , parse
     , empty, plainText
-    , normalizeYear, normalizeYearMonth
+    , normalizeYear, normalizeYearMonth, normalizeYearMonthDay
     , isEmpty
     , trim, view
     , toHtmlString
-    , fixSpacesAfterSeparators, normalizeYearMonthDay
+    , fixSpacesAfterSeparators
     )
 
 {-|
@@ -16,7 +16,7 @@ module Entities.Markup exposing
 @docs FlagUnparsable
 @docs parse
 @docs empty, plainText
-@docs normalizeYear, normalizeYearMonth
+@docs normalizeYear, normalizeYearMonth, normalizeYearMonthDay
 @docs fixSpaceInSemicolonSeparatedList
 @docs isEmpty
 @docs trim, view
@@ -117,46 +117,101 @@ plainText (Markup topNodes) =
     plainTextFromNodes topNodes
 
 
-{-| Years are sometime formatted as "2020-00-00T00:00:00".
-For a nicer display we take just the first segment and only the first 4 characters of it.
+mapTextNodes : (String -> String) -> Markup -> Markup
+mapTextNodes mapping (Markup topNodes) =
+    let
+        mapNodes nodes =
+            List.map
+                (\node ->
+                    case node of
+                        Html.Parser.Text text ->
+                            Html.Parser.Text (mapping text)
 
-    normalizeYear (parse "<span>2020</span>-00-00T00:00:00")
-        == parse "2020"
+                        Html.Parser.Element name attributes children ->
+                            Html.Parser.Element name attributes (mapNodes children)
 
-Note: Currently we don't preserve the markup structure. This should get implemented someday!
+                        Html.Parser.Comment _ ->
+                            node
+                )
+                nodes
+    in
+    Markup (mapNodes topNodes)
+
+
+{-| Years are sometime formatted as "2020-00-00T00:00:00". We change that to "2020".
+
+    normalizeYear (parse "<span>2020-00-00T00:00:00</span>")
+        == parse "<span>2020</span>"
 
 -}
 normalizeYear : Markup -> Markup
-normalizeYear markup =
-    Markup
-        [ Html.Parser.Text
-            (plainText markup |> String.left 4)
-        ]
+normalizeYear =
+    mapTextNodes
+        (regexReplaceWithSingleSubmatch regexYear)
+
+
+regexYear : Regex.Regex
+regexYear =
+    "\\b(\\d\\d\\d\\d)-\\d\\d-\\d\\d(?:T\\d\\d:\\d\\d:\\d\\dZ?)?\\b"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
 
 
 {-| Attribute "yearmonth" are mostly formatted as "2020-03-00T00:00:00".
-For a nicer display we take just the first segment and only the first 7 characters of it.
 
-    normalizeYear (parse "<span>2020</span>-03-00T00:00:00")
-        == parse "2020-03"
+We just take the year and the month: "2020-03"
 
-Note: Currently we don't preserve the markup structure. This should get implemented someday!
+    normalizeYear (parse "<span>2020-03-00T00:00:00</span>")
+        == parse "<span>2020-03</span>"
 
 -}
 normalizeYearMonth : Markup -> Markup
-normalizeYearMonth markup =
-    Markup
-        [ Html.Parser.Text
-            (plainText markup |> String.left 7)
-        ]
+normalizeYearMonth =
+    mapTextNodes
+        (regexReplaceWithSingleSubmatch regexYearMonth)
 
 
+regexYearMonth : Regex.Regex
+regexYearMonth =
+    "\\b(\\d\\d\\d\\d-\\d\\d)-\\d\\d(?:T\\d\\d:\\d\\d:\\d\\dZ?)?\\b"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
+
+
+{-| Attributes containing dates are mostly formatted as "2020-03-30T00:00:00".
+
+We just take the date part: "2020-03-30"
+For a nicer display we take just the first segment and only the first 7 characters of it.
+
+    normalizeYear (parse "<span>2020-03-30T00:00:00</span>")
+        == parse "<span>2020-03-30</span>"
+
+-}
 normalizeYearMonthDay : Markup -> Markup
-normalizeYearMonthDay markup =
-    Markup
-        [ Html.Parser.Text
-            (plainText markup |> String.left 10)
-        ]
+normalizeYearMonthDay =
+    mapTextNodes
+        (regexReplaceWithSingleSubmatch regexYearMonthDay)
+
+
+regexYearMonthDay : Regex.Regex
+regexYearMonthDay =
+    "\\b(\\d\\d\\d\\d-\\d\\d-\\d\\d)(?:T\\d\\d:\\d\\d:\\d\\dZ?)?\\b"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
+
+
+regexReplaceWithSingleSubmatch : Regex.Regex -> String -> String
+regexReplaceWithSingleSubmatch regexWithSingleCapturingGroup =
+    Regex.replace regexWithSingleCapturingGroup
+        (\match ->
+            case match.submatches of
+                [ Just submatch ] ->
+                    submatch
+
+                _ ->
+                    -- case should never happen
+                    match.match
+        )
 
 
 {-| Lists of author names are mostly separated by commas or semicolons without subsequent spaces.
