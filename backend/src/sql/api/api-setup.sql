@@ -38,6 +38,7 @@ create type api.setup_config as
     , static_fts_aspects api.fts_aspect_config[]
     , static_facet_aspects api.facet_aspect_config[]
     , masks_by_purpose api.masks_purpose_config[]
+    , front_page api.translations
     );
 
 create or replace function api.setup
@@ -65,7 +66,7 @@ create or replace function api.setup_config
     select
         (select (toplevel_folder_ids)
             from config.application
-            where name = 'hsb'
+            where name = setup.application
         ) as toplevel_folders,
     	10 as default_limit,
     	1000 as max_limit,
@@ -91,5 +92,10 @@ create or replace function api.setup_config
                 (mask_names->>'en', mask_names->>'de')::api.translations
             )::api.masks_purpose_config
             from config.masks_by_purpose
-        )) as static_facet_aspects
+        )) as static_facet_aspects,
+        (select (
+            (select html from config.frontpage where application = setup.application and language = 'en'),
+            (select html from config.frontpage where application = setup.application and language = 'de')
+         )::api.translations) as front_page
+
 $$ language sql stable;

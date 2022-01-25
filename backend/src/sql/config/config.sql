@@ -18,6 +18,7 @@ delete from config.masks_by_purpose;
 delete from config.aspect_facet;
 delete from config.aspect_fts;
 delete from config.aspect_def;
+delete from config.frontpage;
 
 insert into config.masks_by_purpose
     (purpose, mask_names)
@@ -62,4 +63,14 @@ values
     ('person', '{"en": "Person", "de": "Person"}'::jsonb),
     ('keywords', '{"en": "Keywords", "de": "Stichworte"}'::jsonb),
     ('year', '{"en": "Year", "de": "Jahr"}'::jsonb)
+;
+
+\set hsb_frontpage_en_html `cat src/content/hsb-frontpage-en.html`
+\set hsb_frontpage_de_html `cat src/content/hsb-frontpage-de.html`
+
+insert into config.frontpage
+    (application, language, html)
+values
+    ('hsb', 'en', :'hsb_frontpage_en_html'),
+    ('hsb', 'de', :'hsb_frontpage_de_html')
 ;

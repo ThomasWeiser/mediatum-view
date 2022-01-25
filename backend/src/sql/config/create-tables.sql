@@ -29,3 +29,10 @@ create table if not exists config.masks_by_purpose (
     mask_names jsonb not null
 );
 
+create table if not exists config.frontpage (
+    application text,
+    language text,
+    html text not null,
+    primary key (application, language)
+);
+

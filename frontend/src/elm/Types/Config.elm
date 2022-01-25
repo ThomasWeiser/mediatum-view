@@ -24,7 +24,7 @@ import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
 import Types.Config.MasksConfig as MasksConfig exposing (MasksConfig)
 import Types.Id exposing (FolderId)
-import Types.Localization as Localization exposing (Language)
+import Types.Localization as Localization exposing (Language, Translations)
 import Types.Selection as Selection
 import Types.ServerSetup exposing (ServerSetup)
 
@@ -44,6 +44,7 @@ type alias Config =
     , facetAspects : List FacetAspectConfig
     , masks : MasksConfig
     , iteratorShowsListing : Bool
+    , frontPage : Maybe Translations
     }
 
 
@@ -63,6 +64,7 @@ init =
     , facetAspects = []
     , masks = MasksConfig.init
     , iteratorShowsListing = False
+    , frontPage = Nothing
     }
 
 
@@ -115,6 +117,7 @@ updateFromServerSetup serverSetup config =
 
                 Just masksPurposeServerConfig ->
                     MasksConfig.updateFromServer masksPurposeServerConfig config.masks
+        , frontPage = serverSetup.config.frontPage
     }
 
 
