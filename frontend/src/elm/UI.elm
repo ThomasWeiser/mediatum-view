@@ -343,16 +343,17 @@ view context model =
             -- TODO: Fix the links. We currently cannot show ids like "604993_12"
             [ Html.span
                 [ Html.Attributes.class "footer-right" ]
-                [ item "/604993_12" "Nutzungsrechte" "Nutzungsrechte"
-                , item "/604993_9" "Privacy" "Datenschutz"
-                , item "/604993_13" "Impressum" "Impressum"
+                [ item "https://mediatum.ub.tum.de/?item=604993_13.html" "Impressum" "Impressum"
+                , item "https://mediatum.ub.tum.de/?item=604993_18.html" "Barrierefreiheit" "Barrierefreiheit"
+                , item "https://mediatum.ub.tum.de/?item=604993_9.html" "Privacy" "Datenschutz"
+                , item "https://mediatum.ub.tum.de/?item=604993_12.html" "Nutzungsrechte" "Nutzungsrechte"
                 ]
             , Html.span
                 [ Html.Attributes.class "footer-left" ]
                 [ item "mailto:mediatum@ub.tum.de" "mediatum@ub.tum.de" "mediatum@ub.tum.de"
-                , item "/604993_15" "Contact" "Kontakt"
-                , item "/604993_17" "About mediaTUM" "Über mediaTUM"
-                , item "/604993_14" "Help" "Hilfe"
+                , item "https://mediatum.ub.tum.de/?item=604993_15.html" "Contact" "Kontakt"
+                , item "https://mediatum.ub.tum.de/?item=604993_17.html" "About mediaTUM" "Über mediaTUM"
+                , item "https://mediatum.ub.tum.de/?item=604993_14.html" "Help" "Hilfe"
                 ]
             ]
         ]
