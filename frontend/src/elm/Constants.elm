@@ -2,6 +2,7 @@ module Constants exposing
     ( apiUrl, graphqlOperationNamePrefix
     , incrementLimitOnLoadMore
     , maxAttributeLengthInListingView
+    , contentServerUrls
     )
 
 {-| Configurable values
@@ -9,8 +10,11 @@ module Constants exposing
 @docs apiUrl, graphqlOperationNamePrefix
 @docs incrementLimitOnLoadMore
 @docs maxAttributeLengthInListingView
+@docs contentServerUrls
 
 -}
+
+import Types.Id as Id
 
 
 {-| Endpoint for backend's GraphQL service.
@@ -50,3 +54,22 @@ incrementLimitOnLoadMore limit =
 maxAttributeLengthInListingView : Int
 maxAttributeLengthInListingView =
     200
+
+
+{-| Content like document files and thumbnails are provided by a separate server.
+
+This value is a record of URL building functions to this server.
+
+-}
+contentServerUrls :
+    { thumbnail : Id.DocumentId -> String
+    , presentation : Id.DocumentId -> String
+    }
+contentServerUrls =
+    let
+        appendId base id =
+            base ++ Id.toString id
+    in
+    { thumbnail = "https://mediatum.ub.tum.de/thumbs/" |> appendId
+    , presentation = "https://mediatum.ub.tum.de/thumb2/" |> appendId
+    }

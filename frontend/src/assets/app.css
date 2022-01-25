@@ -261,11 +261,6 @@ a.document:hover {
   display: flex;
   align-items: center;
 }
-.document .header .header-left, .document .header .header-right {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .document .header-left {
   flex: 0 1 auto;
   color: var(--color-primary);
@@ -274,9 +269,31 @@ a.document:hover {
   margin-left: 1em;
   flex: 1 1 15%;
   height: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   text-align: right;
   font-size: 80%;
   color: var(--color-text-light);
+}
+.listing .document {
+  display: flex;
+}
+.listing .document .thumbnail {
+  flex: 0 1 auto;
+  margin-right: 1em;
+  min-width: 3em;
+  max-width: 30%;
+}
+.listing .document .thumbnail img {
+  width: 100%;
+  height: auto;
+  max-width: 128px;
+  max-height: 128px;
+}
+.listing .document .description {
+  flex: 1 1 0;
+  width: 15em;
 }
 .listing .attributes {
   margin-left: 2em;

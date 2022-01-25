@@ -656,6 +656,8 @@ decoderAttributeList =
                             (Entities.Markup.parse
                                 (Entities.Markup.SpanClass "unparsable")
                             )
+                        |> Json.Decode.map
+                            Entities.Markup.fixSpacesAfterSeparators
                         |> Json.Decode.maybe
                     )
                 )

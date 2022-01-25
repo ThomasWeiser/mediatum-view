@@ -29,13 +29,12 @@ import Entities.PageSequence as PageSequence exposing (PageSequence)
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Maybe.Extra
 import Regex
 import RemoteData
 import Types.ApiData exposing (ApiData)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
-import Types.Id exposing (DocumentId)
+import Types.Id as Id exposing (DocumentId)
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Route exposing (Route)
@@ -181,24 +180,34 @@ viewDocument context number document =
             context
             (Navigation.ShowDocument context.selection.scope document.id)
         ]
-        [ Html.div [ Html.Attributes.class "header" ]
-            [ Html.div [ Html.Attributes.class "header-left" ]
-                [ Html.span [ Html.Attributes.class "result-number" ]
-                    [ Html.text <| String.fromInt number ++ ". " ]
-                , Html.span [ Html.Attributes.class "metadatatype" ]
-                    [ Html.text document.metadatatypeName ]
+        [ Html.div
+            [ Html.Attributes.class "thumbnail" ]
+            [ Html.img
+                [ Html.Attributes.src
+                    (Constants.contentServerUrls.thumbnail document.id)
                 ]
-            , Html.div [ Html.Attributes.class "header-right" ]
-                [ viewSearchMatching context.config document.searchMatching ]
+                []
             ]
-        , Html.div
-            [ Html.Attributes.class "attributes"
-            , Html.Events.onClick (SelectDocument document.id)
+        , Html.div [ Html.Attributes.class "description" ]
+            [ Html.div [ Html.Attributes.class "header" ]
+                [ Html.div [ Html.Attributes.class "header-left" ]
+                    [ Html.span [ Html.Attributes.class "result-number" ]
+                        [ Html.text <| String.fromInt number ++ ". " ]
+                    , Html.span [ Html.Attributes.class "metadatatype" ]
+                        [ Html.text document.metadatatypeName ]
+                    ]
+                , Html.div [ Html.Attributes.class "header-right" ]
+                    [ viewSearchMatching context.config document.searchMatching ]
+                ]
+            , Html.div
+                [ Html.Attributes.class "attributes"
+                , Html.Events.onClick (SelectDocument document.id)
+                ]
+                (List.map
+                    viewAttribute
+                    document.attributes
+                )
             ]
-            (List.map
-                viewAttribute
-                document.attributes
-            )
         ]
 
 
@@ -294,6 +303,9 @@ viewAttribute attribute =
                                 && not (isField keys.congressOrJournal)
                           )
                         ]
+                    , -- For developing and debugging purposes:
+                      -- Attach the field name as a data attribute to the DOM node
+                      Html.Attributes.attribute "data-mediatum-field" attribute.field
                     ]
                     (let
                         markup =
