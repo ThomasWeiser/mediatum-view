@@ -30,7 +30,9 @@ create table if not exists config.masks_by_purpose (
 );
 
 create table if not exists config.frontpage (
-    language text primary key,
-    html text not null
+    application text,
+    language text,
+    html text not null,
+    primary key (application, language)
 );
 

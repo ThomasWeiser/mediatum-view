@@ -69,8 +69,8 @@ values
 \set hsb_frontpage_de_html `cat src/content/hsb-frontpage-de.html`
 
 insert into config.frontpage
-    (language, html)
+    (application, language, html)
 values
-    ('en', :'hsb_frontpage_en_html'),
-    ('de', :'hsb_frontpage_de_html')
+    ('hsb', 'en', :'hsb_frontpage_en_html'),
+    ('hsb', 'de', :'hsb_frontpage_de_html')
 ;
