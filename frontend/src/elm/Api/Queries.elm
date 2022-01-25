@@ -126,6 +126,10 @@ serverSetup =
                                 Api.Fragments.masksPurposeConfig
                                 |> Api.Fragments.nonNullElementsOfMaybeListOrFail
                             )
+                        |> SelectionSet.with
+                            (Mediatum.Object.SetupConfig.frontPage
+                                Api.Fragments.translation
+                            )
                     )
                     |> SelectionSet.nonNullOrFail
                 )

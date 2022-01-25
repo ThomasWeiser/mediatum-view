@@ -14,6 +14,7 @@ import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
 import Types.Config.MasksConfig exposing (MasksPurposeServerConfig)
 import Types.Id exposing (FolderId)
+import Types.Localization exposing (Translations)
 import Types.Selection as Selection
 
 
@@ -33,4 +34,5 @@ type alias ServerConfig =
     , staticFtsAspects : Maybe (List FtsAspectConfig)
     , staticFacetAspects : Maybe (List FacetAspectConfig)
     , masksByPurpose : Maybe (List MasksPurposeServerConfig)
+    , frontPage : Maybe Translations
     }

@@ -38,6 +38,7 @@ create type api.setup_config as
     , static_fts_aspects api.fts_aspect_config[]
     , static_facet_aspects api.facet_aspect_config[]
     , masks_by_purpose api.masks_purpose_config[]
+    , front_page api.translations
     );
 
 create or replace function api.setup
@@ -91,5 +92,10 @@ create or replace function api.setup_config
                 (mask_names->>'en', mask_names->>'de')::api.translations
             )::api.masks_purpose_config
             from config.masks_by_purpose
-        )) as static_facet_aspects
+        )) as static_facet_aspects,
+        (select (
+            (select html from config.frontpage where language = 'en'),
+            (select html from config.frontpage where language = 'de')
+         )::api.translations) as front_page
+
 $$ language sql stable;
