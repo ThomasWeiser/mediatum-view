@@ -33,6 +33,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Maybe.Extra
 import RemoteData
+import Types.AdjustmentToSetup as AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.ApiData exposing (ApiData)
 import Types.Config as Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
@@ -48,6 +49,7 @@ import UI.Article.Generic
 import UI.Article.Iterator
 import UI.Article.Listing
 import UI.Widgets.Breadcrumbs
+import UI.Widgets.ThumbnailSwitch
 import Utils
 
 
@@ -64,6 +66,7 @@ type alias Context =
 type Return
     = NoReturn
     | Navigate Navigation
+    | AdjustSetup AdjustmentToSetup
 
 
 {-| -}
@@ -82,7 +85,8 @@ type Content
 
 {-| -}
 type Msg
-    = GenericMsg UI.Article.Generic.Msg
+    = ReturnAdjustmentToSetup AdjustmentToSetup
+    | GenericMsg UI.Article.Generic.Msg
     | CollectionMsg UI.Article.Collection.Msg
     | ListingMsg UI.Article.Listing.Msg
     | DetailsMsg UI.Article.Details.Msg
@@ -231,6 +235,12 @@ folderCountsForQuery context =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case ( msg, model.content, context.presentation ) of
+        ( ReturnAdjustmentToSetup adjustment, _, _ ) ->
+            ( model
+            , Cmd.none
+            , AdjustSetup adjustment
+            )
+
         ( GenericMsg subMsg, GenericModel subModel, _ ) ->
             let
                 ( subModel1, subCmd ) =
@@ -332,7 +342,8 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.article
         [ Html.Attributes.class "article" ]
-        [ viewBreadcrumbs
+        [ viewThumbnailsSwitch context model
+        , viewBreadcrumbs
             context
             (Presentation.getFolderId context.cache context.presentation)
         , viewContent context model
@@ -347,6 +358,48 @@ viewBreadcrumbs context maybeFolderId =
                 >> RemoteData.toMaybe
             )
         |> UI.Widgets.Breadcrumbs.view context
+
+
+viewThumbnailsSwitch : Context -> Model -> Html Msg
+viewThumbnailsSwitch context model =
+    let
+        showSwitch =
+            case ( model.content, context.presentation ) of
+                ( GenericModel _, _ ) ->
+                    False
+
+                ( CollectionModel _, _ ) ->
+                    False
+
+                ( ListingModel _, ListingPresentation selection limit ) ->
+                    UI.Article.Listing.hasAtLeastOneDocument
+                        { config = context.config
+                        , cache = context.cache
+                        , route = context.route
+                        , selection = selection
+                        , limit = limit
+                        }
+
+                ( DetailsModel _, _ ) ->
+                    True
+
+                ( IteratorModel _, IteratorPresentation selection limit documentIdFromSearch ) ->
+                    True
+
+                _ ->
+                    -- Model doesn't match query-context; should never happen.
+                    False
+    in
+    if showSwitch then
+        Html.span [ Html.Attributes.class "thumbnail-switch" ]
+            [ UI.Widgets.ThumbnailSwitch.view
+                context.config
+                context.config.hideThumbnails
+                (ReturnAdjustmentToSetup << AdjustmentToSetup.HideThumbnails)
+            ]
+
+    else
+        Html.text ""
 
 
 viewContent : Context -> Model -> Html Msg

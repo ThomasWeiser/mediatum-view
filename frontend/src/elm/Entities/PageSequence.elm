@@ -1,5 +1,6 @@
 module Entities.PageSequence exposing
     ( PageSequence, init
+    , hasAtLeastOneDocument
     , PresentationSegments, presentationSegmentsAll, presentationSegmentsLimited
     , canLoadMore, remoteDataIsSuccess, extent
     , firstDocument, findAdjacentDocuments, findIndex
@@ -15,6 +16,8 @@ The segmentation of the listing into pages reflects the history of requests to p
 
 @docs PageSequence, init
 
+@docs hasAtLeastOneDocument
+
 @docs PresentationSegments, presentationSegmentsAll, presentationSegmentsLimited
 
 @docs canLoadMore, remoteDataIsSuccess, extent
@@ -26,6 +29,7 @@ The segmentation of the listing into pages reflects the history of requests to p
 -}
 
 import Array exposing (Array)
+import Array.Extra
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import List.Extra
 import Maybe.Extra
@@ -58,6 +62,22 @@ type alias PresentationSegments =
 init : PageSequence
 init =
     PageSequence Array.empty False
+
+
+{-| Used to hide controls that don't make sense without documents
+-}
+hasAtLeastOneDocument : PageSequence -> Bool
+hasAtLeastOneDocument (PageSequence array complete) =
+    Array.Extra.any
+        (\( _, apiDataDocumentsPage ) ->
+            case apiDataDocumentsPage of
+                Success documentsPage ->
+                    not (List.isEmpty documentsPage.content)
+
+                _ ->
+                    False
+        )
+        array
 
 
 {-| Construct a subsequence that comprises the given window of the listing.

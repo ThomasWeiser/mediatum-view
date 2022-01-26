@@ -2,7 +2,7 @@ module Types.Config exposing
     ( Config
     , init
     , updateFromServerSetup
-    , adjustUILanguage, adjustIteratorShowsListing
+    , adjustUILanguage, adjustHideThumbnails
     , getMaskName
     )
 
@@ -13,7 +13,7 @@ Most values are defined in the server and fetched dynamically.
 @docs Config
 @docs init
 @docs updateFromServerSetup
-@docs adjustUILanguage, adjustIteratorShowsListing
+@docs adjustUILanguage, adjustHideThumbnails
 @docs getMaskName
 
 -}
@@ -43,7 +43,7 @@ type alias Config =
     , ftsAspects : List FtsAspectConfig
     , facetAspects : List FacetAspectConfig
     , masks : MasksConfig
-    , iteratorShowsListing : Bool
+    , hideThumbnails : Bool
     , frontPage : Maybe Translations
     }
 
@@ -63,7 +63,7 @@ init =
     , ftsAspects = []
     , facetAspects = []
     , masks = MasksConfig.init
-    , iteratorShowsListing = False
+    , hideThumbnails = True
     , frontPage = Nothing
     }
 
@@ -82,12 +82,12 @@ adjustUILanguage navigatorLanguage userSelectedUILanguage config =
     }
 
 
-{-| Set the `uiLanguage` from given `navigatorLanguage` and `userSelectedUILanguage`
+{-| Set the globally configured option to hide thumbnails in listing and details views
 -}
-adjustIteratorShowsListing : Bool -> Config -> Config
-adjustIteratorShowsListing newState config =
+adjustHideThumbnails : Bool -> Config -> Config
+adjustHideThumbnails newState config =
     { config
-        | iteratorShowsListing = newState
+        | hideThumbnails = newState
     }
 
 

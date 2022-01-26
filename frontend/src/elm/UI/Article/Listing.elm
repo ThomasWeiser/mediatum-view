@@ -5,6 +5,7 @@ module UI.Article.Listing exposing
     , Msg
     , initialModel
     , update
+    , hasAtLeastOneDocument
     , view
     )
 
@@ -16,6 +17,7 @@ module UI.Article.Listing exposing
 @docs Msg
 @docs initialModel
 @docs update
+@docs hasAtLeastOneDocument
 @docs view
 
 -}
@@ -95,6 +97,20 @@ update context msg model =
             , Navigate
                 (Navigation.ShowDocument context.selection.scope documentId)
             )
+
+
+{-| -}
+hasAtLeastOneDocument : Context -> Bool
+hasAtLeastOneDocument context =
+    let
+        pageSequence =
+            Cache.getDocumentsPages
+                context.cache
+                ( Config.getMaskName MasksConfig.MaskForListing context.config
+                , context.selection
+                )
+    in
+    PageSequence.hasAtLeastOneDocument pageSequence
 
 
 {-| -}
@@ -180,14 +196,18 @@ viewDocument context number document =
             context
             (Navigation.ShowDocument context.selection.scope document.id)
         ]
-        [ Html.div
-            [ Html.Attributes.class "thumbnail" ]
-            [ Html.img
-                [ Html.Attributes.src
-                    (Constants.contentServerUrls.thumbnail document.id)
+        [ if context.config.hideThumbnails then
+            Html.text ""
+
+          else
+            Html.div
+                [ Html.Attributes.class "thumbnail" ]
+                [ Html.img
+                    [ Html.Attributes.src
+                        (Constants.contentServerUrls.thumbnail document.id)
+                    ]
+                    []
                 ]
-                []
-            ]
         , Html.div [ Html.Attributes.class "description" ]
             [ Html.div [ Html.Attributes.class "header" ]
                 [ Html.div [ Html.Attributes.class "header-left" ]

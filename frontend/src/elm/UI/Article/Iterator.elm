@@ -138,36 +138,14 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.div []
         [ viewHeader context model
-        , Html.div
-            [ Html.Attributes.style "display" "flex" ]
-            [ if context.config.iteratorShowsListing then
-                Html.div
-                    [ Html.Attributes.style "flex" "1" ]
-                    [ Listing.view
-                        { config = context.config
-                        , cache = context.cache
-                        , route = context.route
-                        , selection = context.selection
-                        , limit = context.limit
-                        }
-                        model.listing
-                        |> Html.map ListingMsg
-                    ]
-
-              else
-                Html.text ""
-            , Html.div
-                [ Html.Attributes.style "flex" "1" ]
-                [ Details.view
-                    { config = context.config
-                    , cache = context.cache
-                    , route = context.route
-                    , documentIdFromSearch = context.documentIdFromSearch
-                    }
-                    model.details
-                    |> Html.map DetailsMsg
-                ]
-            ]
+        , Details.view
+            { config = context.config
+            , cache = context.cache
+            , route = context.route
+            , documentIdFromSearch = context.documentIdFromSearch
+            }
+            model.details
+            |> Html.map DetailsMsg
         ]
 
 

@@ -120,14 +120,18 @@ viewDocument context model document residence =
                     }
                 ]
             ]
-        , Html.div
-            [ Html.Attributes.class "thumbnail" ]
-            [ Html.img
-                [ Html.Attributes.src
-                    (Constants.contentServerUrls.presentation document.id)
+        , if context.config.hideThumbnails then
+            Html.text ""
+
+          else
+            Html.div
+                [ Html.Attributes.class "thumbnail" ]
+                [ Html.img
+                    [ Html.Attributes.src
+                        (Constants.contentServerUrls.presentation document.id)
+                    ]
+                    []
                 ]
-                []
-            ]
         , Html.div [ Html.Attributes.class "header" ]
             [ Html.div [ Html.Attributes.class "metadatatype" ]
                 [ Html.text document.metadatatypeName ]

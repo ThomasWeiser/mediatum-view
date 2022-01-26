@@ -182,9 +182,9 @@ adjust adjustment model =
                 (Localization.languageToLanguageTag userSelectedUILanguage)
             )
 
-        AdjustmentToSetup.IteratorShowsListing state ->
+        AdjustmentToSetup.HideThumbnails state ->
             ( { model
-                | config = model.config |> Config.adjustIteratorShowsListing state
+                | config = model.config |> Config.adjustHideThumbnails state
               }
             , Cmd.none
             )
