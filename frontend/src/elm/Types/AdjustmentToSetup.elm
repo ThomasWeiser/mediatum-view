@@ -14,3 +14,4 @@ like switching the UI language.
 -}
 type AdjustmentToSetup
     = UserSelectedUILanguage Language
+    | HideThumbnails Bool

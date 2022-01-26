@@ -2,7 +2,7 @@ module Types.Config exposing
     ( Config
     , init
     , updateFromServerSetup
-    , adjustUILanguage
+    , adjustUILanguage, adjustHideThumbnails
     , getMaskName
     )
 
@@ -13,7 +13,7 @@ Most values are defined in the server and fetched dynamically.
 @docs Config
 @docs init
 @docs updateFromServerSetup
-@docs adjustUILanguage
+@docs adjustUILanguage, adjustHideThumbnails
 @docs getMaskName
 
 -}
@@ -43,6 +43,7 @@ type alias Config =
     , ftsAspects : List FtsAspectConfig
     , facetAspects : List FacetAspectConfig
     , masks : MasksConfig
+    , hideThumbnails : Bool
     , frontPage : Maybe Translations
     }
 
@@ -62,6 +63,7 @@ init =
     , ftsAspects = []
     , facetAspects = []
     , masks = MasksConfig.init
+    , hideThumbnails = True
     , frontPage = Nothing
     }
 
@@ -77,6 +79,15 @@ adjustUILanguage navigatorLanguage userSelectedUILanguage config =
             ]
                 |> Maybe.Extra.orList
                 |> Maybe.withDefault Localization.LangEn
+    }
+
+
+{-| Set the globally configured option to hide thumbnails in listing and details views
+-}
+adjustHideThumbnails : Bool -> Config -> Config
+adjustHideThumbnails newState config =
+    { config
+        | hideThumbnails = newState
     }
 
 

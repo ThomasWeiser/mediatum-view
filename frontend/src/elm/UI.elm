@@ -229,6 +229,9 @@ update context msg model =
 
                 UI.Article.Navigate navigation ->
                     Navigate navigation
+
+                UI.Article.AdjustSetup adjustment ->
+                    AdjustSetup adjustment
             )
 
 

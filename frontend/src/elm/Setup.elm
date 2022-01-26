@@ -182,6 +182,13 @@ adjust adjustment model =
                 (Localization.languageToLanguageTag userSelectedUILanguage)
             )
 
+        AdjustmentToSetup.HideThumbnails state ->
+            ( { model
+                | config = model.config |> Config.adjustHideThumbnails state
+              }
+            , Cmd.none
+            )
+
 
 {-| Gather the needs from the App and signal them to the cache.
 -}
