@@ -373,25 +373,29 @@ viewFtsFilter config aspect searchText =
 
 viewFtsAspectButtons : Config -> List ( Aspect, String ) -> Html Msg
 viewFtsAspectButtons config ftsFilterLines =
-    Html.div [] <|
-        List.filterMap
-            (\{ aspect, label } ->
-                if Utils.List.findByMapping Tuple.first aspect ftsFilterLines == Nothing then
-                    Just <|
-                        Html.span
-                            [ Html.Attributes.class "" ]
-                            [ Html.button
-                                [ Html.Attributes.type_ "button"
-                                , Html.Attributes.class "add-filter-button"
+    Html.div []
+        [ Localization.text config
+            { en = "Search for: "
+            , de = "Suchen nach: "
+            }
+        , Html.span
+            [ Html.Attributes.class "fts-aspect-buttons" ]
+            (List.filterMap
+                (\{ aspect, label } ->
+                    if Utils.List.findByMapping Tuple.first aspect ftsFilterLines == Nothing then
+                        Just <|
+                            Html.span
+                                [ Html.Attributes.class "text-button"
                                 , Html.Events.onClick <| AddFtsFilter aspect
                                 ]
                                 [ Localization.text config label ]
-                            ]
 
-                else
-                    Nothing
+                    else
+                        Nothing
+                )
+                config.ftsAspects
             )
-            config.ftsAspects
+        ]
 
 
 viewFacetFilters : Context -> Html Msg

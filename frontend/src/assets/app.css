@@ -209,6 +209,9 @@ input.hide-clear[type=search]::-ms-reveal {
 .filters-bar {
   margin: 1rem 0;
 }
+.filters-bar .fts-aspect-buttons .text-button{
+  margin: 0 0.25rem;
+}
 .filter-form {
   display: inline-block;
 }
