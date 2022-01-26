@@ -245,8 +245,7 @@ view context model =
                     [ Html.Attributes.class "tum-links" ]
                     [ Html.div
                         [ Html.Attributes.style "float" "right" ]
-                        [ viewListingCheckbox context
-                        , UI.Widgets.LanguageSelect.view
+                        [ UI.Widgets.LanguageSelect.view
                             context.config.uiLanguage
                             (\language ->
                                 ReturnAdjustmentToSetup (AdjustmentToSetup.UserSelectedUILanguage language)
@@ -356,24 +355,4 @@ view context model =
                 , item "https://mediatum.ub.tum.de/?item=604993_14.html" "Help" "Hilfe"
                 ]
             ]
-        ]
-
-
-viewListingCheckbox : Context -> Html Msg
-viewListingCheckbox context =
-    Html.label
-        [ Html.Attributes.class "test-checkbox" ]
-        [ Html.input
-            [ Html.Attributes.type_ "checkbox"
-            , Html.Attributes.checked context.config.iteratorShowsListing
-            , Html.Events.onClick
-                (ReturnAdjustmentToSetup
-                    (AdjustmentToSetup.IteratorShowsListing (not context.config.iteratorShowsListing))
-                )
-            ]
-            []
-        , Localization.text context.config
-            { en = " Test: Iterator shows result list"
-            , de = " Test: Iterator zeigt Ergebnisliste"
-            }
         ]
