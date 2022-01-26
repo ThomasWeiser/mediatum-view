@@ -63,7 +63,7 @@ init =
     , ftsAspects = []
     , facetAspects = []
     , masks = MasksConfig.init
-    , hideThumbnails = True
+    , hideThumbnails = False
     , frontPage = Nothing
     }
 
