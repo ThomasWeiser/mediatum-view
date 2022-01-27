@@ -333,8 +333,8 @@ getSearchFieldPlaceholder context =
 viewFtsFilters : Config -> Model -> Html Msg
 viewFtsFilters config model =
     Html.div [ Html.Attributes.class "filters-bar" ]
-        [ viewExistingFtsFilters config model.ftsFilterLines
-        , viewFtsAspectButtons config model.ftsFilterLines
+        [ viewFtsAspectButtons config model.ftsFilterLines
+        , viewExistingFtsFilters config model.ftsFilterLines
         ]
 
 
