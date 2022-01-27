@@ -20,6 +20,7 @@ module UI.Controls exposing
 
 -}
 
+import Browser.Dom
 import Cache exposing (Cache)
 import Html exposing (Html)
 import Html.Attributes
@@ -28,6 +29,7 @@ import List.Extra
 import Maybe.Extra
 import RemoteData
 import String.Format
+import Task
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
@@ -69,9 +71,11 @@ type alias Model =
 
 {-| -}
 type Msg
-    = SetGlobalFtsText String
+    = NoOp
+    | SetGlobalFtsText String
     | ClearGlobalFtsText
     | AddFtsFilter Aspect
+    | SelectFtsFilter Aspect
     | SetFtsFilterText Aspect String
     | RemoveFtsFilter Aspect
     | RemoveFacetFilter Aspect
@@ -115,6 +119,12 @@ updateFromRoute route model =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
+        NoOp ->
+            ( model
+            , Cmd.none
+            , NoReturn
+            )
+
         SetGlobalFtsText globalFtsText ->
             ( { model | globalFtsText = globalFtsText }
             , Cmd.none
@@ -138,7 +148,15 @@ update context msg model =
                         |> Utils.List.setOnMapping Tuple.first
                             ( aspect, "" )
               }
-            , Cmd.none
+            , Browser.Dom.focus (idOfAspectSearchField aspect)
+                |> Task.attempt (always NoOp)
+            , NoReturn
+            )
+
+        SelectFtsFilter aspect ->
+            ( model
+            , Browser.Dom.focus (idOfAspectSearchField aspect)
+                |> Task.attempt (always NoOp)
             , NoReturn
             )
 
@@ -345,7 +363,8 @@ viewFtsFilter config aspect searchText =
         , Html.span
             [ Html.Attributes.class "input-group" ]
             [ Html.input
-                [ Html.Attributes.class "search-input"
+                [ Html.Attributes.id (idOfAspectSearchField aspect)
+                , Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
                 , Html.Attributes.placeholder
                     (Localization.string config
@@ -371,6 +390,11 @@ viewFtsFilter config aspect searchText =
         ]
 
 
+idOfAspectSearchField : Aspect -> String
+idOfAspectSearchField aspect =
+    "search-input-aspect-" ++ Aspect.toString aspect
+
+
 viewFtsAspectButtons : Config -> List ( Aspect, String ) -> Html Msg
 viewFtsAspectButtons config ftsFilterLines =
     Html.div []
@@ -380,18 +404,27 @@ viewFtsAspectButtons config ftsFilterLines =
             }
         , Html.span
             [ Html.Attributes.class "fts-aspect-buttons" ]
-            (List.filterMap
+            (List.map
                 (\{ aspect, label } ->
-                    if Utils.List.findByMapping Tuple.first aspect ftsFilterLines == Nothing then
-                        Just <|
-                            Html.span
-                                [ Html.Attributes.class "text-button"
-                                , Html.Events.onClick <| AddFtsFilter aspect
-                                ]
-                                [ Localization.text config label ]
+                    let
+                        ftsFilterLineIsAlreadyOpen =
+                            Utils.List.findByMapping Tuple.first aspect ftsFilterLines /= Nothing
+                    in
+                    Html.span
+                        [ Html.Attributes.class "text-button"
+                        , Html.Attributes.classList
+                            [ ( "text-button-negligible"
+                              , ftsFilterLineIsAlreadyOpen
+                              )
+                            ]
+                        , Html.Events.onClick <|
+                            if ftsFilterLineIsAlreadyOpen then
+                                SelectFtsFilter aspect
 
-                    else
-                        Nothing
+                            else
+                                AddFtsFilter aspect
+                        ]
+                        [ Localization.text config label ]
                 )
                 config.ftsAspects
             )

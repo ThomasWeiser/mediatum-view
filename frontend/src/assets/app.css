@@ -77,6 +77,9 @@ a, .text-button {
   color: var(--color-primary-lighter);
   text-decoration: none;
 }
+.text-button.text-button-negligible {
+  color: var(--color-text-light);
+}
 a:hover, .text-button:hover {
   text-decoration: underline;
 }
@@ -163,9 +166,14 @@ article {
 }
 .search-bar .search-input {
   flex: 1;
-  font-size: 105%;
+  font-size: 100%;
   border: none;
 }
+/* When the :has() "parent-selector" is getting implemented by the browsers we can use something like this:
+.search-input:has(input:focus) {
+  border-color: var(--color-primary-lighter);
+}
+*/
 .search-bar .clear-input {
   background: none;
   border: none;
