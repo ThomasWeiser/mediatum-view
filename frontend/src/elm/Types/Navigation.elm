@@ -29,7 +29,7 @@ import Types.Selection exposing (FtsFilters, GlobalFts, Sorting)
 type Navigation
     = ListOfNavigations (List Navigation)
     | ShowDocument FolderId DocumentId
-    | ShowDocumentPermalink DocumentId
+    | ShowDocumentWithoutContext DocumentId
     | ShowListingWithoutDocument
     | ShowListingWithFolder FolderId
     | ShowListingWithSearchAndFtsFilter GlobalFts FtsFilters Sorting
@@ -84,7 +84,7 @@ alterRoute config cache navigation route =
                         (documentId |> Id.asNodeId)
             }
 
-        ShowDocumentPermalink documentId ->
+        ShowDocumentWithoutContext documentId ->
             Route.initDocumentWithoutFolder config documentId
 
         ShowListingWithoutDocument ->

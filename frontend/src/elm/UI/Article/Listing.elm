@@ -204,7 +204,7 @@ viewDocument context number document =
                 [ Html.Attributes.class "thumbnail" ]
                 [ Html.img
                     [ Html.Attributes.src
-                        (Constants.contentServerUrls.thumbnail document.id)
+                        (Constants.externalServerUrls.thumbnail document.id)
                     ]
                     []
                 ]

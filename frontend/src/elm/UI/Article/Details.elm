@@ -110,13 +110,17 @@ viewDocument context model document residence =
     Html.div []
         [ Html.div [ Html.Attributes.class "permalink" ]
             [ Html.a
-                [ Navigation.alterRouteHref
-                    context
-                    (Navigation.ShowDocumentPermalink document.id)
+                [ Html.Attributes.href
+                    (Constants.externalServerUrls.documentPermanent document.id)
+                , Html.Attributes.title <|
+                    Localization.string context.config
+                        { en = "Persistent link to the document in mediaTUM"
+                        , de = "Dauerhafter Verweis auf das Dokument in mediaTUM"
+                        }
                 ]
                 [ Localization.text context.config
-                    { en = "Permanent link"
-                    , de = "Dauerhafter Link"
+                    { en = "Show this document in mediaTUM"
+                    , de = "Zeige dieses Dokument in mediaTUM"
                     }
                 ]
             ]
@@ -128,7 +132,7 @@ viewDocument context model document residence =
                 [ Html.Attributes.class "thumbnail" ]
                 [ Html.img
                     [ Html.Attributes.src
-                        (Constants.contentServerUrls.presentation document.id)
+                        (Constants.externalServerUrls.presentation document.id)
                     ]
                     []
                 ]
