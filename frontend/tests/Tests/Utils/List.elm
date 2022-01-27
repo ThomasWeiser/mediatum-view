@@ -287,6 +287,32 @@ suite =
                 (Fuzz.list Fuzz.int)
                 (Utils.List.lexicalOrdering compare)
             ]
+        , let
+            f isLast x =
+                if isLast then
+                    x * 4
+
+                else
+                    x * 2
+          in
+          describe "mapAndMarkLast"
+            [ test "on empty list" <|
+                \() ->
+                    Utils.List.mapAndMarkLast f []
+                        |> Expect.equal []
+            , test "one element" <|
+                \() ->
+                    Utils.List.mapAndMarkLast f [ 10 ]
+                        |> Expect.equal [ 40 ]
+            , test "two elements" <|
+                \() ->
+                    Utils.List.mapAndMarkLast f [ 10, 11 ]
+                        |> Expect.equal [ 20, 44 ]
+            , test "four elements" <|
+                \() ->
+                    Utils.List.mapAndMarkLast f [ 10, 11, 12, 13 ]
+                        |> Expect.equal [ 20, 22, 24, 52 ]
+            ]
         ]
 
 
