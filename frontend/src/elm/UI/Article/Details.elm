@@ -112,10 +112,15 @@ viewDocument context model document residence =
             [ Html.a
                 [ Html.Attributes.href
                     (Constants.externalServerUrls.documentPermanent document.id)
+                , Html.Attributes.title <|
+                    Localization.string context.config
+                        { en = "Persistent link to the document in mediaTUM"
+                        , de = "Dauerhafter Verweis auf das Dokument in mediaTUM"
+                        }
                 ]
                 [ Localization.text context.config
-                    { en = "Permanent link"
-                    , de = "Dauerhafter Link"
+                    { en = "Show this document in mediaTUM"
+                    , de = "Zeige dieses Dokument in mediaTUM"
                     }
                 ]
             ]
