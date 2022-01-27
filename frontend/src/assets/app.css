@@ -148,6 +148,10 @@ article {
   padding: 0.5em;
 }
 
+.stick-on-wrapping {
+  display: inline-block;
+}
+
 .search-bar {
   display: flex;
   align-items: center;

@@ -434,10 +434,13 @@ viewFtsAspectButtons config ftsFilterLines =
 viewFacetFilters : Context -> Html Msg
 viewFacetFilters context =
     let
-        listOfHtml =
+        listOfFacetFilters =
             context.route.parameters.facetFilters
                 |> FilterList.toList
-                |> List.map (viewFacetFilter context.config)
+
+        listOfHtml =
+            listOfFacetFilters
+                |> Utils.List.mapAndMarkLast (viewFacetFilter context.config)
     in
     if List.isEmpty listOfHtml then
         Html.text ""
@@ -452,15 +455,15 @@ viewFacetFilters context =
                     }
                 ]
                 :: (listOfHtml
-                        |> List.intersperse (Html.text ", ")
+                        |> List.intersperse (Html.text " ")
                    )
             )
 
 
-viewFacetFilter : Config -> Selection.FacetFilter -> Html Msg
-viewFacetFilter config ( aspect, value ) =
+viewFacetFilter : Config -> Bool -> Selection.FacetFilter -> Html Msg
+viewFacetFilter config isLastElement ( aspect, value ) =
     Html.span
-        [ Html.Attributes.class "fixed-facet-filter"
+        [ Html.Attributes.class "fixed-facet-filter stick-on-wrapping"
         ]
         [ Html.span
             [ Html.Attributes.class "aspect-name" ]
@@ -468,15 +471,23 @@ viewFacetFilter config ( aspect, value ) =
                 (FacetAspect.getLabelOrAspectName config aspect config.facetAspects)
             , Html.text ": "
             ]
-        , Html.text value
+        , Html.span
+            [ Html.Attributes.class "aspect-value" ]
+            [ Html.text value ]
         , Html.text " "
         , Html.span
             [ Html.Attributes.class "text-button"
             , Html.Events.onClick (RemoveFacetFilter aspect)
             ]
             [ Localization.text config
-                { en = " (remove)"
-                , de = " (<< alle)"
+                { en = "(remove)"
+                , de = "(<< alle)"
                 }
             ]
+        , Html.text <|
+            if isLastElement then
+                ""
+
+            else
+                ", "
         ]
