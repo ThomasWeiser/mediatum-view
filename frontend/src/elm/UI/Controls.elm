@@ -433,36 +433,50 @@ viewFtsAspectButtons config ftsFilterLines =
 
 viewFacetFilters : Context -> Html Msg
 viewFacetFilters context =
-    Html.div [ Html.Attributes.class "filters-bar" ]
-        (context.route.parameters.facetFilters
-            |> FilterList.toList
-            |> List.map (viewFacetFilter context.config)
-        )
+    let
+        listOfHtml =
+            context.route.parameters.facetFilters
+                |> FilterList.toList
+                |> List.map (viewFacetFilter context.config)
+    in
+    if List.isEmpty listOfHtml then
+        Html.text ""
+
+    else
+        Html.div
+            [ Html.Attributes.class "filters-bar" ]
+            (Html.span []
+                [ Localization.text context.config
+                    { en = "Selected properties: "
+                    , de = "Ausgewählte Eigenschaften: "
+                    }
+                ]
+                :: (listOfHtml
+                        |> List.intersperse (Html.text ", ")
+                   )
+            )
 
 
 viewFacetFilter : Config -> Selection.FacetFilter -> Html Msg
 viewFacetFilter config ( aspect, value ) =
-    Html.div
-        [ Html.Attributes.class "search-bar"
+    Html.span
+        [ Html.Attributes.class "fixed-facet-filter"
         ]
-        [ Html.label
-            [ Html.Attributes.class "search-label" ]
+        [ Html.span
+            [ Html.Attributes.class "aspect-name" ]
             [ Html.text
                 (FacetAspect.getLabelOrAspectName config aspect config.facetAspects)
+            , Html.text ": "
             ]
+        , Html.text value
+        , Html.text " "
         , Html.span
-            [ Html.Attributes.class "input-group" ]
-            [ Html.div
-                [ Html.Attributes.class "search-input"
-                ]
-                [ Html.text value ]
-            , Html.button
-                [ Html.Attributes.type_ "button"
-
-                -- , Html.Attributes.disabled beingEdited
-                , Html.Events.onClick (RemoveFacetFilter aspect)
-                , Html.Attributes.class "filter-button"
-                ]
-                [ UI.Icons.clear ]
+            [ Html.Attributes.class "text-button"
+            , Html.Events.onClick (RemoveFacetFilter aspect)
+            ]
+            [ Localization.text config
+                { en = " (remove)"
+                , de = " (<< alle)"
+                }
             ]
         ]

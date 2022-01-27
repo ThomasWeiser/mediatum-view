@@ -178,6 +178,9 @@ article {
   background: none;
   border: none;
 }
+.fixed-facet-filter .aspect-name {
+  font-weight: bold;
+}
 .submit-buttons {
   text-align: right;
 }
