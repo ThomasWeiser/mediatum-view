@@ -450,8 +450,8 @@ viewFacetFilters context =
             [ Html.Attributes.class "filters-bar" ]
             (Html.span []
                 [ Localization.text context.config
-                    { en = "Selected properties: "
-                    , de = "Ausgewählte Eigenschaften: "
+                    { en = "Selection: "
+                    , de = "Auswahl: "
                     }
                 ]
                 :: (listOfHtml
@@ -469,7 +469,7 @@ viewFacetFilter config isLastElement ( aspect, value ) =
             [ Html.Attributes.class "aspect-name" ]
             [ Html.text
                 (FacetAspect.getLabelOrAspectName config aspect config.facetAspects)
-            , Html.text ": "
+            , Html.text " "
             ]
         , Html.span
             [ Html.Attributes.class "aspect-value" ]
