@@ -2,7 +2,7 @@ module Constants exposing
     ( apiUrl, graphqlOperationNamePrefix
     , incrementLimitOnLoadMore
     , maxAttributeLengthInListingView
-    , contentServerUrls
+    , externalServerUrls
     )
 
 {-| Configurable values
@@ -61,15 +61,17 @@ maxAttributeLengthInListingView =
 This value is a record of URL building functions to this server.
 
 -}
-contentServerUrls :
+externalServerUrls :
     { thumbnail : Id.DocumentId -> String
     , presentation : Id.DocumentId -> String
+    , item : String -> String
     }
-contentServerUrls =
+externalServerUrls =
     let
         appendId base id =
             base ++ Id.toString id
     in
     { thumbnail = "https://mediatum.ub.tum.de/thumbs/" |> appendId
     , presentation = "https://mediatum.ub.tum.de/thumb2/" |> appendId
+    , item = \itemSpec -> "https://mediatum.ub.tum.de/?item=" ++ itemSpec ++ ".html"
     }

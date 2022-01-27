@@ -128,7 +128,7 @@ viewDocument context model document residence =
                 [ Html.Attributes.class "thumbnail" ]
                 [ Html.img
                     [ Html.Attributes.src
-                        (Constants.contentServerUrls.presentation document.id)
+                        (Constants.externalServerUrls.presentation document.id)
                     ]
                     []
                 ]
