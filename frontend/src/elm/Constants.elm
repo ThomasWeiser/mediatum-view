@@ -65,6 +65,7 @@ externalServerUrls :
     { thumbnail : Id.DocumentId -> String
     , presentation : Id.DocumentId -> String
     , item : String -> String
+    , documentPermanent : Id.DocumentId -> String
     }
 externalServerUrls =
     let
@@ -74,4 +75,5 @@ externalServerUrls =
     { thumbnail = "https://mediatum.ub.tum.de/thumbs/" |> appendId
     , presentation = "https://mediatum.ub.tum.de/thumb2/" |> appendId
     , item = \itemSpec -> "https://mediatum.ub.tum.de/?item=" ++ itemSpec ++ ".html"
+    , documentPermanent = "https://mediatum.ub.tum.de/" |> appendId
     }

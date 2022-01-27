@@ -110,9 +110,8 @@ viewDocument context model document residence =
     Html.div []
         [ Html.div [ Html.Attributes.class "permalink" ]
             [ Html.a
-                [ Navigation.alterRouteHref
-                    context
-                    (Navigation.ShowDocumentPermalink document.id)
+                [ Html.Attributes.href
+                    (Constants.externalServerUrls.documentPermanent document.id)
                 ]
                 [ Localization.text context.config
                     { en = "Permanent link"
