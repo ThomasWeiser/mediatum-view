@@ -403,6 +403,7 @@ ul.folder-list ul.folder-list {
 }
 .folder-head .folder-name {
   padding-left: 0.6em;
+  text-align: left;
 }
 .folder-head:hover .folder-name {
   text-decoration: underline;
