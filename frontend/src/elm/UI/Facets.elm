@@ -1,4 +1,4 @@
-module UI.Facets exposing
+port module UI.Facets exposing
     ( Context
     , Return(..)
     , Model
@@ -25,8 +25,10 @@ import Cache.Derive
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Process
 import RemoteData
 import Sort.Dict
+import Task
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect exposing (FacetAspectConfig)
@@ -68,6 +70,7 @@ type Msg
     | SelectFacetUnfilter Aspect
     | ShowFacetCollapsed Aspect Bool
     | ShowFacetLongList Aspect Bool
+    | FocusOnFacet Aspect
 
 
 {-| -}
@@ -112,6 +115,12 @@ update context msg model =
             , NoReturn
             )
 
+        FocusOnFacet aspect ->
+            ( model
+            , scrollElementIntoView (idOfFacetBox aspect)
+            , NoReturn
+            )
+
 
 {-| -}
 focusOnFacet : Context -> Aspect -> Model -> ( Model, Cmd Msg )
@@ -123,8 +132,13 @@ focusOnFacet context aspect model =
     ( { model
         | showCollapsed = Sort.Dict.insert aspect False model.showCollapsed
       }
-    , Cmd.none
+    , -- Wait for the changed DOM (i.e. not collapsed) to be drawn
+      Process.sleep 50
+        |> Task.perform (always (FocusOnFacet aspect))
     )
+
+
+port scrollElementIntoView : String -> Cmd msg
 
 
 {-| -}
@@ -159,7 +173,9 @@ viewFacet context model selection facetAspectConfig =
                 |> Maybe.withDefault False
     in
     Html.nav
-        [ Html.Attributes.class "facet-box" ]
+        [ Html.Attributes.id (idOfFacetBox facetAspectConfig.aspect)
+        , Html.Attributes.class "facet-box"
+        ]
         [ Html.div
             [ Html.Attributes.class "facet-head facet-clickable"
             , Html.Events.onClick (ShowFacetCollapsed facetAspectConfig.aspect (not showCollapsed))
@@ -216,6 +232,11 @@ viewFacet context model selection facetAspectConfig =
                                     )
                 )
         ]
+
+
+idOfFacetBox : Aspect -> String
+idOfFacetBox aspect =
+    "facet-box-aspect-" ++ Aspect.toString aspect
 
 
 viewFacetSelection : Config -> Aspect -> String -> Maybe Int -> List (Html Msg)
