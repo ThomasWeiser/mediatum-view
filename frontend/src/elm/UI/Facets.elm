@@ -32,7 +32,7 @@ import Task
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect exposing (FacetAspectConfig)
-import Types.FacetValue exposing (FacetValues)
+import Types.FacetValue as FacetValue exposing (FacetValues)
 import Types.FilterList as FilterList
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
@@ -292,12 +292,7 @@ viewFacetSelection config aspect selectedValue maybeCount =
             ]
             [ Html.span
                 [ Html.Attributes.class "facet-value-text" ]
-                [ if String.isEmpty selectedValue then
-                    viewNotSpecified config
-
-                  else
-                    Html.text selectedValue
-                ]
+                [ FacetValue.valueTextWithSubstitution config selectedValue ]
             , case maybeCount of
                 Just count ->
                     Html.span
@@ -338,12 +333,7 @@ viewFacetValues config model aspect facetValues =
                             ]
                             [ Html.span
                                 [ Html.Attributes.class "facet-value-text" ]
-                                [ if String.isEmpty value then
-                                    viewNotSpecified config
-
-                                  else
-                                    Html.text value
-                                ]
+                                [ FacetValue.valueTextWithSubstitution config value ]
                             , Html.span
                                 [ Html.Attributes.class "facet-value-count" ]
                                 [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
@@ -380,13 +370,3 @@ viewFacetValues config model aspect facetValues =
                 ]
             ]
     ]
-
-
-viewNotSpecified : Config -> Html msg
-viewNotSpecified config =
-    Html.i []
-        [ Localization.text config
-            { en = "[not specified]"
-            , de = "[nicht angegeben]"
-            }
-        ]

@@ -34,6 +34,7 @@ import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Config.FtsAspectConfig as FtsAspect
+import Types.FacetValue as FacetValue exposing (FacetValues)
 import Types.FilterList as FilterList
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
@@ -532,7 +533,7 @@ viewFacetFilter config isLastElement ( aspect, value ) =
             ]
         , Html.span
             [ Html.Attributes.class "aspect-value" ]
-            [ Html.text value ]
+            [ FacetValue.valueTextWithSubstitution config value ]
         , Html.text " "
         , Html.button
             [ Html.Attributes.type_ "button"
