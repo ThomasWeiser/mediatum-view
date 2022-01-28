@@ -452,8 +452,8 @@ viewFacetFilters context =
             [ Html.Attributes.class "filters-bar" ]
             (Html.span []
                 [ Localization.text context.config
-                    { en = "Selection: "
-                    , de = "Auswahl: "
+                    { en = "Selected: "
+                    , de = "Ausgewählt: "
                     }
                 ]
                 :: listOfHtml
@@ -480,8 +480,8 @@ viewFacetFilter config isLastElement ( aspect, value ) =
             , Html.Events.onClick (RemoveFacetFilter aspect)
             ]
             [ Localization.text config
-                { en = "(remove)"
-                , de = "(<< alle)"
+                { en = "(unselect)"
+                , de = "(abwählen)"
                 }
             ]
         , if isLastElement then
