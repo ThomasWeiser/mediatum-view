@@ -150,10 +150,6 @@ update context msg model =
 {-| -}
 focusOnFacet : Context -> Aspect -> Model -> ( Model, Cmd Msg )
 focusOnFacet context aspect model =
-    let
-        _ =
-            Debug.log "focusOnFacet" aspect
-    in
     ( { model
         | showCollapsed = Sort.Dict.insert aspect False model.showCollapsed
       }
