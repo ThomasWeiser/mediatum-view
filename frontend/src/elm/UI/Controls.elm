@@ -37,7 +37,7 @@ import Types.Config.FtsAspectConfig as FtsAspect
 import Types.FilterList as FilterList
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
-import Types.Presentation exposing (Presentation(..))
+import Types.Presentation as Presentation exposing (Presentation(..))
 import Types.RearrangeableEditList exposing (RearrangeableEditList, rearrange)
 import Types.Route exposing (Route)
 import Types.SearchTerm as SearchTerm
@@ -78,6 +78,7 @@ type Msg
     | SelectFtsFilter Aspect
     | SetFtsFilterText Aspect String
     | RemoveFtsFilter Aspect
+    | SelectFacetFilter Aspect
     | RemoveFacetFilter Aspect
     | SetSorting Sorting
     | Submit
@@ -184,6 +185,13 @@ update context msg model =
             ( model1
             , Cmd.none
             , navigate model1
+            )
+
+        SelectFacetFilter aspect ->
+            ( model
+            , Cmd.none
+            , NoReturn
+              -- TODO
             )
 
         RemoveFacetFilter aspect ->
@@ -306,7 +314,7 @@ viewSearchButtons config model =
 
 getSearchFieldPlaceholder : Context -> String
 getSearchFieldPlaceholder context =
-    Types.Presentation.getFolderId context.cache context.presentation
+    Presentation.getFolderId context.cache context.presentation
         |> Maybe.Extra.orElse
             (context.config.toplevelFolderIds |> List.head)
         |> Maybe.andThen
@@ -404,29 +412,29 @@ viewFtsAspectButtons config ftsFilterLines =
             }
         , Html.span
             [ Html.Attributes.class "fts-aspect-buttons" ]
-            (List.map
-                (\{ aspect, label } ->
-                    let
-                        ftsFilterLineIsAlreadyOpen =
-                            Utils.List.findByMapping Tuple.first aspect ftsFilterLines /= Nothing
-                    in
-                    Html.span
-                        [ Html.Attributes.class "text-button"
-                        , Html.Attributes.classList
-                            [ ( "text-button-negligible"
-                              , ftsFilterLineIsAlreadyOpen
-                              )
-                            ]
-                        , Html.Events.onClick <|
-                            if ftsFilterLineIsAlreadyOpen then
-                                SelectFtsFilter aspect
+            (config.ftsAspects
+                |> List.map
+                    (\{ aspect, label } ->
+                        let
+                            ftsFilterLineIsAlreadyOpen =
+                                Utils.List.findByMapping Tuple.first aspect ftsFilterLines /= Nothing
+                        in
+                        Html.span
+                            [ Html.Attributes.class "text-button"
+                            , Html.Attributes.classList
+                                [ ( "text-button-negligible"
+                                  , ftsFilterLineIsAlreadyOpen
+                                  )
+                                ]
+                            , Html.Events.onClick <|
+                                if ftsFilterLineIsAlreadyOpen then
+                                    SelectFtsFilter aspect
 
-                            else
-                                AddFtsFilter aspect
-                        ]
-                        [ Localization.text config label ]
-                )
-                config.ftsAspects
+                                else
+                                    AddFtsFilter aspect
+                            ]
+                            [ Localization.text config label ]
+                    )
                 |> List.intersperse
                     (Html.span [ Html.Attributes.class "separator" ] [ Html.text " · " ])
             )
@@ -435,11 +443,58 @@ viewFtsAspectButtons config ftsFilterLines =
 
 viewFacetFilters : Context -> Html Msg
 viewFacetFilters context =
-    let
-        listOfFacetFilters =
-            context.route.parameters.facetFilters
-                |> FilterList.toList
+    case Presentation.getSelection context.presentation of
+        Nothing ->
+            Html.text ""
 
+        Just selection ->
+            let
+                listOfFacetFilters =
+                    selection.facetFilters |> FilterList.toList
+            in
+            Html.div [ Html.Attributes.class "filters-bar" ]
+                [ viewFacetFilterButtons context listOfFacetFilters
+                , viewSelectedFacetFilters context listOfFacetFilters
+                ]
+
+
+viewFacetFilterButtons : Context -> List Selection.FacetFilter -> Html Msg
+viewFacetFilterButtons context listOfFacetFilters =
+    Html.div []
+        [ Localization.text context.config
+            { en = "Select: "
+            , de = "Auswählen: "
+            }
+        , Html.span
+            [ Html.Attributes.class "facet-aspect-buttons" ]
+            (context.config.facetAspects
+                |> List.map
+                    (\{ aspect, label } ->
+                        let
+                            facetFilterIsAlreadyActive =
+                                Utils.List.findByMapping Tuple.first aspect listOfFacetFilters /= Nothing
+                        in
+                        Html.span
+                            [ Html.Attributes.class "text-button"
+                            , Html.Attributes.classList
+                                [ ( "text-button-negligible"
+                                  , facetFilterIsAlreadyActive
+                                  )
+                                ]
+                            , Html.Events.onClick <|
+                                SelectFacetFilter aspect
+                            ]
+                            [ Localization.text context.config label ]
+                    )
+                |> List.intersperse
+                    (Html.span [ Html.Attributes.class "separator" ] [ Html.text " · " ])
+            )
+        ]
+
+
+viewSelectedFacetFilters : Context -> List Selection.FacetFilter -> Html Msg
+viewSelectedFacetFilters context listOfFacetFilters =
+    let
         listOfHtml =
             listOfFacetFilters
                 |> Utils.List.mapAndMarkLast (viewFacetFilter context.config)
@@ -448,8 +503,7 @@ viewFacetFilters context =
         Html.text ""
 
     else
-        Html.div
-            [ Html.Attributes.class "filters-bar" ]
+        Html.div []
             (Html.span []
                 [ Localization.text context.config
                     { en = "Selected: "

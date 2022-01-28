@@ -1,6 +1,6 @@
 module Types.Presentation exposing
     ( Presentation(..)
-    , getFolderId
+    , getFolderId, getSelection
     , fromRoute
     )
 
@@ -24,7 +24,7 @@ for the given route under the current knowledge about the relevant node types.
 Each variant of the type corresponds to a sub-component of [`UI.Article`](UI-Article).
 
 @docs Presentation
-@docs getFolderId
+@docs getFolderId, getSelection
 @docs fromRoute
 
 -}
@@ -70,6 +70,26 @@ getFolderId cache presentation =
 
         IteratorPresentation selection limit documentIdFromSearch ->
             Just selection.scope
+
+
+{-| -}
+getSelection : Presentation -> Maybe Selection
+getSelection presentation =
+    case presentation of
+        GenericPresentation _ ->
+            Nothing
+
+        DocumentPresentation _ _ ->
+            Nothing
+
+        CollectionPresentation _ ->
+            Nothing
+
+        ListingPresentation selection _ ->
+            Just selection
+
+        IteratorPresentation selection _ _ ->
+            Just selection
 
 
 {-| -}
