@@ -34,7 +34,7 @@ import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Config.FtsAspectConfig as FtsAspect
-import Types.FacetValue as FacetValue exposing (FacetValues)
+import Types.FacetValue as FacetValue
 import Types.FilterList as FilterList
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)

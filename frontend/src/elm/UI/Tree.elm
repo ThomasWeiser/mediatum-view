@@ -27,7 +27,7 @@ module UI.Tree exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
-import Entities.Folder as Folder exposing (Folder)
+import Entities.Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes

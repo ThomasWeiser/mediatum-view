@@ -14,10 +14,9 @@ import Cache exposing (Cache)
 import Constants
 import Html exposing (Html)
 import Html.Attributes
-import Html.Events
 import Types.AdjustmentToSetup as AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.Config exposing (Config)
-import Types.Localization as Localization exposing (Language)
+import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation exposing (Presentation(..))

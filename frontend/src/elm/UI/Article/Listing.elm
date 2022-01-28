@@ -36,7 +36,7 @@ import RemoteData
 import Types.ApiData exposing (ApiData)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
-import Types.Id as Id exposing (DocumentId)
+import Types.Id exposing (DocumentId)
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Route exposing (Route)

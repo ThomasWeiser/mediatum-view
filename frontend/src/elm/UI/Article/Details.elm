@@ -34,7 +34,6 @@ import Types exposing (DocumentIdFromSearch)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
 import Types.Localization as Localization
-import Types.Navigation as Navigation
 import Types.Route exposing (Route)
 import UI.Icons
 import UI.Widgets.Breadcrumbs
