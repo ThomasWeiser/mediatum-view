@@ -32,6 +32,7 @@
 
     --color-text: var(--color-nightrider);
     --color-text-light: var(--color-grey);
+    --color-text-lighter: var(--color-suvagrey);
     --color-primary: var(--color-lochmara);
     --color-primary-lighter: var(--color-royalblue);
     --color-spot-1: var(--color-citrus);
@@ -186,6 +187,9 @@ article {
 .fixed-facet-filter .aspect-name {
   font-weight: bold;
 }
+.fixed-facet-filter .separator {
+  margin: 0 0.4em;
+}
 .submit-buttons {
   text-align: right;
 }
@@ -225,8 +229,11 @@ input.hide-clear[type=search]::-ms-reveal {
 .filters-bar {
   margin: 1rem 0;
 }
-.filters-bar .fts-aspect-buttons .text-button{
-  margin: 0 0.25rem;
+.filters-bar .fts-aspect-buttons .text-button {
+  margin: 0 0.10rem;
+}
+.filters-bar .fts-aspect-buttons .separator {
+  color: var(--color-text-light);
 }
 .filter-form {
   display: inline-block;

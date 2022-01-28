@@ -427,6 +427,8 @@ viewFtsAspectButtons config ftsFilterLines =
                         [ Localization.text config label ]
                 )
                 config.ftsAspects
+                |> List.intersperse
+                    (Html.span [ Html.Attributes.class "separator" ] [ Html.text " · " ])
             )
         ]
 
@@ -454,9 +456,7 @@ viewFacetFilters context =
                     , de = "Auswahl: "
                     }
                 ]
-                :: (listOfHtml
-                        |> List.intersperse (Html.text " ")
-                   )
+                :: listOfHtml
             )
 
 
@@ -484,10 +484,9 @@ viewFacetFilter config isLastElement ( aspect, value ) =
                 , de = "(<< alle)"
                 }
             ]
-        , Html.text <|
-            if isLastElement then
-                ""
+        , if isLastElement then
+            Html.text ""
 
-            else
-                ", "
+          else
+            Html.span [ Html.Attributes.class "separator" ] [ Html.text "·" ]
         ]
