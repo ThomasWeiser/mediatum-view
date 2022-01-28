@@ -244,6 +244,9 @@ button.text-button {
 .filters-bar .fts-aspect-buttons .separator {
   color: var(--color-text-light);
 }
+.filters-bar.facet-controls {
+  min-height: 5.7ex;
+}
 .filter-form {
   display: inline-block;
 }

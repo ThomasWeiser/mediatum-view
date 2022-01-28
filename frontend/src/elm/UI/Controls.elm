@@ -457,7 +457,7 @@ viewFacetFilters context =
                 listOfFacetFilters =
                     selection.facetFilters |> FilterList.toList
             in
-            Html.div [ Html.Attributes.class "filters-bar" ]
+            Html.div [ Html.Attributes.class "filters-bar facet-controls" ]
                 [ viewFacetFilterButtons context listOfFacetFilters
                 , viewSelectedFacetFilters context listOfFacetFilters
                 ]
