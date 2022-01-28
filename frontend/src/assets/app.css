@@ -190,8 +190,19 @@ article {
 .fixed-facet-filter .separator {
   margin: 0 0.4em;
 }
-.submit-buttons {
-  text-align: right;
+.bottom-controls {
+  min-height: 36px;
+  position: relative;
+}
+.bottom-controls .sidebar-switch {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+.bottom-controls .submit-buttons {
+  position: absolute;
+  bottom: 0;
+  right: 0;
 }
 /*
 .input-group > * {
@@ -236,7 +247,7 @@ button.text-button {
 }
 
 .filters-bar {
-  margin: 1rem 0;
+  margin: 0.7rem 0;
 }
 .filters-bar .fts-aspect-buttons button.text-button {
   margin: 0 0.10rem;
@@ -422,6 +433,9 @@ ul.folder-list ul.folder-list {
   margin-left: 1em;
   font-size: 80%;
   color: var(--color-text-light);
+}
+.sidebar-switch {
+  font-size: 80%;
 }
 .spinner {
   width: 3em;

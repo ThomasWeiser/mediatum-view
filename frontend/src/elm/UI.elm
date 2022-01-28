@@ -210,6 +210,9 @@ update context msg model =
                         UI.Controls.NoReturn ->
                             ( model1, cmd1, NoReturn )
 
+                        UI.Controls.AdjustSetup adjustment ->
+                            ( model1, cmd1, AdjustSetup adjustment )
+
                         UI.Controls.FocusOnFacet aspect ->
                             let
                                 ( facetModel, facetCmd ) =
@@ -333,29 +336,33 @@ view context model =
                 |> Html.map ControlsMsg
             ]
         , Html.main_ []
-            [ Html.aside []
-                [ Html.map TreeMsg <|
-                    UI.Tree.view
-                        { config = context.config
-                        , cache = context.cache
-                        , presentation = context.presentation
-                        }
-                        model.tree
-                        (UI.Article.folderCountsForQuery
+            [ if context.config.hideSidebar then
+                Html.text ""
+
+              else
+                Html.aside []
+                    [ Html.map TreeMsg <|
+                        UI.Tree.view
                             { config = context.config
                             , cache = context.cache
-                            , route = context.route
                             , presentation = context.presentation
                             }
-                        )
-                , Html.map FacetsMsg <|
-                    UI.Facets.view
-                        { config = context.config
-                        , cache = context.cache
-                        , presentation = context.presentation
-                        }
-                        model.facets
-                ]
+                            model.tree
+                            (UI.Article.folderCountsForQuery
+                                { config = context.config
+                                , cache = context.cache
+                                , route = context.route
+                                , presentation = context.presentation
+                                }
+                            )
+                    , Html.map FacetsMsg <|
+                        UI.Facets.view
+                            { config = context.config
+                            , cache = context.cache
+                            , presentation = context.presentation
+                            }
+                            model.facets
+                    ]
             , Html.map ArticleMsg <|
                 UI.Article.view
                     { config = context.config

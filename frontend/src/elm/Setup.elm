@@ -189,6 +189,13 @@ adjust adjustment model =
             , Cmd.none
             )
 
+        AdjustmentToSetup.HideSidebar state ->
+            ( { model
+                | config = model.config |> Config.adjustHideSidebar state
+              }
+            , Cmd.none
+            )
+
 
 {-| Gather the needs from the App and signal them to the cache.
 -}

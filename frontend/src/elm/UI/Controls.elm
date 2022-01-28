@@ -30,6 +30,7 @@ import Maybe.Extra
 import RemoteData
 import String.Format
 import Task
+import Types.AdjustmentToSetup as AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
@@ -59,6 +60,7 @@ type alias Context =
 {-| -}
 type Return
     = NoReturn
+    | AdjustSetup AdjustmentToSetup
     | FocusOnFacet Aspect
     | Navigate Navigation
 
@@ -74,6 +76,7 @@ type alias Model =
 {-| -}
 type Msg
     = NoOp
+    | ReturnAdjustmentToSetup AdjustmentToSetup
     | SetGlobalFtsText String
     | ClearGlobalFtsText
     | AddFtsFilter Aspect
@@ -126,6 +129,12 @@ update context msg model =
             ( model
             , Cmd.none
             , NoReturn
+            )
+
+        ReturnAdjustmentToSetup adjustment ->
+            ( model
+            , Cmd.none
+            , AdjustSetup adjustment
             )
 
         SetGlobalFtsText globalFtsText ->
@@ -241,7 +250,7 @@ view context model =
             [ viewSearch context model
             , viewFtsFilters context.config model
             , viewFacetFilters context
-            , viewSearchButtons context.config model
+            , viewBottomControls context.config model
             ]
         ]
 
@@ -273,6 +282,39 @@ viewSearch context model =
                 , Html.Events.onClick ClearGlobalFtsText
                 ]
                 [ UI.Icons.clear ]
+            ]
+        ]
+
+
+viewBottomControls : Config -> Model -> Html Msg
+viewBottomControls config model =
+    Html.div
+        [ Html.Attributes.class "bottom-controls" ]
+        [ viewSearchButtons config model
+        , viewSidebarButton config model
+        ]
+
+
+viewSidebarButton : Config -> Model -> Html Msg
+viewSidebarButton config model =
+    Html.div
+        [ Html.Attributes.class "sidebar-switch" ]
+        [ Html.button
+            [ Html.Attributes.type_ "button"
+            , Html.Attributes.class "text-button"
+            , Html.Events.onClick <|
+                ReturnAdjustmentToSetup (AdjustmentToSetup.HideSidebar (not config.hideSidebar))
+            ]
+            [ Localization.text config <|
+                if config.hideSidebar then
+                    { en = "Show Sidebar"
+                    , de = "Seitenleiste einblenden"
+                    }
+
+                else
+                    { en = "Hide Sidebar"
+                    , de = "Seitenleiste ausblenden"
+                    }
             ]
         ]
 
