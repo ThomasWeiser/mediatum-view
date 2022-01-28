@@ -61,6 +61,7 @@ type Return
 type alias Model =
     { showLongList : Sort.Dict.Dict Aspect Bool
     , showCollapsed : Sort.Dict.Dict Aspect Bool
+    , highlightBox : Maybe Aspect
     }
 
 
@@ -78,45 +79,69 @@ initialModel : Model
 initialModel =
     { showLongList = Sort.Dict.empty (Utils.sorter Aspect.ordering)
     , showCollapsed = Sort.Dict.empty (Utils.sorter Aspect.ordering)
+    , highlightBox = Nothing
     }
 
 
 {-| -}
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
+    let
+        handleHighlight aspect =
+            { model
+                | highlightBox =
+                    model.highlightBox
+                        |> Maybe.andThen
+                            (\highlightedAspect ->
+                                if highlightedAspect == aspect then
+                                    Just aspect
+
+                                else
+                                    Nothing
+                            )
+            }
+    in
     case msg of
         SelectFacetValue aspect value ->
-            ( model
+            ( handleHighlight aspect
             , Cmd.none
             , Navigate
                 (Navigation.ShowListingWithAddedFacetFilter aspect value)
             )
 
         SelectFacetUnfilter aspect ->
-            ( model
+            ( handleHighlight aspect
             , Cmd.none
             , Navigate
                 (Navigation.ShowListingWithRemovedFacetFilter aspect)
             )
 
         ShowFacetCollapsed aspect state ->
-            ( { model
-                | showCollapsed = Sort.Dict.insert aspect state model.showCollapsed
+            let
+                model1 =
+                    handleHighlight aspect
+            in
+            ( { model1
+                | showCollapsed = Sort.Dict.insert aspect state model1.showCollapsed
               }
             , Cmd.none
             , NoReturn
             )
 
         ShowFacetLongList aspect state ->
-            ( { model
-                | showLongList = Sort.Dict.insert aspect state model.showLongList
+            let
+                model1 =
+                    handleHighlight aspect
+            in
+            ( { model1
+                | showLongList = Sort.Dict.insert aspect state model1.showLongList
               }
             , Cmd.none
             , NoReturn
             )
 
         FocusOnFacet aspect ->
-            ( model
+            ( { model | highlightBox = Just aspect }
             , scrollElementIntoView (idOfFacetBox aspect)
             , NoReturn
             )
@@ -175,6 +200,11 @@ viewFacet context model selection facetAspectConfig =
     Html.nav
         [ Html.Attributes.id (idOfFacetBox facetAspectConfig.aspect)
         , Html.Attributes.class "facet-box"
+        , Html.Attributes.classList
+            [ ( "highlight"
+              , model.highlightBox == Just facetAspectConfig.aspect
+              )
+            ]
         ]
         [ Html.button
             [ Html.Attributes.type_ "button"
