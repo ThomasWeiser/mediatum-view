@@ -4,7 +4,7 @@ module UI.Facets exposing
     , Model
     , Msg
     , initialModel
-    , update
+    , update, focusOnFacet
     , view
     )
 
@@ -15,7 +15,7 @@ module UI.Facets exposing
 @docs Model
 @docs Msg
 @docs initialModel
-@docs update
+@docs update, focusOnFacet
 @docs view
 
 -}
@@ -111,6 +111,20 @@ update context msg model =
             , Cmd.none
             , NoReturn
             )
+
+
+{-| -}
+focusOnFacet : Context -> Aspect -> Model -> ( Model, Cmd Msg )
+focusOnFacet context aspect model =
+    let
+        _ =
+            Debug.log "focusOnFacet" aspect
+    in
+    ( { model
+        | showCollapsed = Sort.Dict.insert aspect False model.showCollapsed
+      }
+    , Cmd.none
+    )
 
 
 {-| -}

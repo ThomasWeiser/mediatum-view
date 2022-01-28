@@ -179,11 +179,11 @@ update context msg model =
               }
             , Cmd.map FacetsMsg subCmd
             , case subReturn of
+                UI.Facets.NoReturn ->
+                    NoReturn
+
                 UI.Facets.Navigate navigation ->
                     Navigate navigation
-
-                _ ->
-                    NoReturn
             )
 
         ControlsMsg subMsg ->
@@ -197,17 +197,47 @@ update context msg model =
                         }
                         subMsg
                         model.controls
-            in
-            ( { model
-                | controls = subModel
-              }
-            , Cmd.map ControlsMsg subCmd
-            , case subReturn of
-                UI.Controls.Navigate navigation ->
-                    Navigate navigation
 
-                _ ->
-                    NoReturn
+                model1 =
+                    { model
+                        | controls = subModel
+                    }
+
+                cmd1 =
+                    Cmd.map ControlsMsg subCmd
+
+                ( model2, cmd2, return ) =
+                    case subReturn of
+                        UI.Controls.NoReturn ->
+                            ( model1, cmd1, NoReturn )
+
+                        UI.Controls.FocusOnFacet aspect ->
+                            let
+                                ( facetModel, facetCmd ) =
+                                    UI.Facets.focusOnFacet
+                                        { config = context.config
+                                        , cache = context.cache
+                                        , presentation = context.presentation
+                                        }
+                                        aspect
+                                        model.facets
+                            in
+                            ( { model1
+                                | facets = facetModel
+                              }
+                            , Cmd.batch
+                                [ cmd1
+                                , Cmd.map FacetsMsg facetCmd
+                                ]
+                            , NoReturn
+                            )
+
+                        UI.Controls.Navigate navigation ->
+                            ( model1, cmd1, Navigate navigation )
+            in
+            ( model2
+            , cmd2
+            , return
             )
 
         ArticleMsg subMsg ->

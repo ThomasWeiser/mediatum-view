@@ -58,6 +58,7 @@ type alias Context =
 {-| -}
 type Return
     = NoReturn
+    | FocusOnFacet Aspect
     | Navigate Navigation
 
 
@@ -190,8 +191,7 @@ update context msg model =
         SelectFacetFilter aspect ->
             ( model
             , Cmd.none
-            , NoReturn
-              -- TODO
+            , FocusOnFacet aspect
             )
 
         RemoveFacetFilter aspect ->
