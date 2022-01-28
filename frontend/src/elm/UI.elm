@@ -336,33 +336,30 @@ view context model =
                 |> Html.map ControlsMsg
             ]
         , Html.main_ []
-            [ if context.config.hideSidebar then
-                Html.text ""
-
-              else
-                Html.aside []
-                    [ Html.map TreeMsg <|
-                        UI.Tree.view
+            [ Html.aside
+                [ Html.Attributes.classList [ ( "hidden", context.config.hideSidebar ) ] ]
+                [ Html.map TreeMsg <|
+                    UI.Tree.view
+                        { config = context.config
+                        , cache = context.cache
+                        , presentation = context.presentation
+                        }
+                        model.tree
+                        (UI.Article.folderCountsForQuery
                             { config = context.config
                             , cache = context.cache
+                            , route = context.route
                             , presentation = context.presentation
                             }
-                            model.tree
-                            (UI.Article.folderCountsForQuery
-                                { config = context.config
-                                , cache = context.cache
-                                , route = context.route
-                                , presentation = context.presentation
-                                }
-                            )
-                    , Html.map FacetsMsg <|
-                        UI.Facets.view
-                            { config = context.config
-                            , cache = context.cache
-                            , presentation = context.presentation
-                            }
-                            model.facets
-                    ]
+                        )
+                , Html.map FacetsMsg <|
+                    UI.Facets.view
+                        { config = context.config
+                        , cache = context.cache
+                        , presentation = context.presentation
+                        }
+                        model.facets
+                ]
             , Html.map ArticleMsg <|
                 UI.Article.view
                     { config = context.config

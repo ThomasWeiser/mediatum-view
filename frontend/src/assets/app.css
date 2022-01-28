@@ -135,9 +135,13 @@ main {
   min-height: 0;
 }
 aside {
-  flex: 4;
+  flex: 4 1 0%;
+  transition: flex-grow 0.2s;
   overflow: auto;
   /* border-right: 1px solid grey; */
+}
+aside.hidden {
+  flex-grow: 0;
 }
 aside nav {
   background-color: var(--color-nav-background);
