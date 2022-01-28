@@ -176,8 +176,9 @@ viewFacet context model selection facetAspectConfig =
         [ Html.Attributes.id (idOfFacetBox facetAspectConfig.aspect)
         , Html.Attributes.class "facet-box"
         ]
-        [ Html.div
-            [ Html.Attributes.class "facet-head facet-clickable"
+        [ Html.button
+            [ Html.Attributes.type_ "button"
+            , Html.Attributes.class "text-button facet-head facet-clickable"
             , Html.Events.onClick (ShowFacetCollapsed facetAspectConfig.aspect (not showCollapsed))
             , Html.Attributes.classList
                 [ ( "expanded", not showCollapsed ) ]
@@ -301,17 +302,22 @@ viewFacetValues config model aspect facetValues =
                         [ Html.Attributes.class "facet-line facet-clickable"
                         , Html.Events.onClick (SelectFacetValue aspect value)
                         ]
-                        [ Html.span
-                            [ Html.Attributes.class "facet-value-text" ]
-                            [ if String.isEmpty value then
-                                viewNotSpecified config
-
-                              else
-                                Html.text value
+                        [ Html.button
+                            [ Html.Attributes.type_ "button"
+                            , Html.Attributes.class "text-button"
                             ]
-                        , Html.span
-                            [ Html.Attributes.class "facet-value-count" ]
-                            [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
+                            [ Html.span
+                                [ Html.Attributes.class "facet-value-text" ]
+                                [ if String.isEmpty value then
+                                    viewNotSpecified config
+
+                                  else
+                                    Html.text value
+                                ]
+                            , Html.span
+                                [ Html.Attributes.class "facet-value-count" ]
+                                [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
+                            ]
                         ]
             )
             facetValues
@@ -323,19 +329,24 @@ viewFacetValues config model aspect facetValues =
             [ Html.Attributes.class "facet-line facet-clickable facet-special-action"
             , Html.Events.onClick (ShowFacetLongList aspect showShortList)
             ]
-            [ Html.span
-                [ Html.Attributes.class "facet-value-text" ]
-                [ if showShortList then
-                    Localization.text config
-                        { en = ">> More"
-                        , de = ">> mehr"
-                        }
+            [ Html.button
+                [ Html.Attributes.type_ "button"
+                , Html.Attributes.class "text-button"
+                ]
+                [ Html.span
+                    [ Html.Attributes.class "facet-value-text" ]
+                    [ if showShortList then
+                        Localization.text config
+                            { en = ">> More"
+                            , de = ">> mehr"
+                            }
 
-                  else
-                    Localization.text config
-                        { en = "<< Less"
-                        , de = "<< weniger"
-                        }
+                      else
+                        Localization.text config
+                            { en = "<< Less"
+                            , de = "<< weniger"
+                            }
+                    ]
                 ]
             ]
     ]

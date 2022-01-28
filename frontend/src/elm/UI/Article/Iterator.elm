@@ -244,11 +244,13 @@ viewNavigationButtons context linkage =
             Html.button
                 (if List.isEmpty listOfNavigations then
                     [ Html.Attributes.type_ "button"
+                    , Html.Attributes.class "visual-button"
                     , Html.Attributes.disabled True
                     ]
 
                  else
                     [ Html.Attributes.type_ "button"
+                    , Html.Attributes.class "visual-button"
                     , Html.Events.onClick (ReturnNavigation (Navigation.ListOfNavigations listOfNavigations))
                     ]
                 )

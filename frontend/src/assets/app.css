@@ -74,14 +74,14 @@ body, input {
   color: var(--color-primary);
 }
 
-a, .text-button {
+a, button.text-button {
   color: var(--color-primary-lighter);
   text-decoration: none;
 }
-.text-button.text-button-negligible {
+button.text-button.text-button-negligible {
   color: var(--color-text-light);
 }
-a:hover, .text-button:hover {
+a:hover, button.text-button:hover {
   text-decoration: underline;
 }
 
@@ -225,11 +225,20 @@ input.hide-clear[type=search]::-ms-reveal {
   width: 0;
   height: 0; 
 }
+button {
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+}
+button.text-button {
+  font-size: unset;
+  background-color: unset;
+  border: 0;
+  padding: 0;
+}
 
 .filters-bar {
   margin: 1rem 0;
 }
-.filters-bar .fts-aspect-buttons .text-button {
+.filters-bar .fts-aspect-buttons button.text-button {
   margin: 0 0.10rem;
 }
 .filters-bar .fts-aspect-buttons .separator {
@@ -245,10 +254,10 @@ input.hide-clear[type=search]::-ms-reveal {
 button:not(:disabled):not(.disabled) {
   cursor: pointer; 
 }
-button:disabled, button.disabled {
+button.visual-button:disabled, button.visual-button.disabled {
   opacity: .65;
 }
-button, select {
+button.visual-button, select {
   user-select: none;
   border: 1px solid;
   padding: .375rem .75rem;
@@ -260,12 +269,13 @@ button, select {
   background-color: var(--color-button-background);
   border-color: var(--color-input-border);
 }
-button.selected {
+button.visual-button.selected {
   border: 2px solid var(--color-input-border-selected)
 }
 button.filter-button {
   padding: 0.25rem .75rem;
 }
+
 
 .document {
   display: block;
@@ -351,6 +361,12 @@ a.document:hover {
 }
 ul.folder-list ul.folder-list {
     margin-left: 1.4em;
+}
+.folder-list button.text-button {
+  color: unset;
+  font-size: unset;
+  line-height: inherit;
+  width: 100%;
 }
 .details .header {
   margin: 3ex 0;
@@ -450,6 +466,10 @@ ul.folder-list ul.folder-list {
 .facet-head {
   display: flex;
 }
+.facet-head.text-button {
+  color: unset;
+  display: flex;
+}
 .facet-name {
   padding-left: 0.6em;
   font-weight: bold;
@@ -462,8 +482,12 @@ ul.folder-list ul.folder-list {
   padding: 0;
   list-style: none;
 }
-.facet-line {
+.facet-line button.text-button {
+  color: unset;
+  font-size: unset;
   display: flex;
+  line-height: inherit;
+  width: 100%;
 }
 .facet-clickable:hover .facet-value-text, .facet-clickable:hover .facet-name {
   text-decoration: underline;

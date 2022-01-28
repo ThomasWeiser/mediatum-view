@@ -215,8 +215,11 @@ viewFolderTree context model isToplevel maybeFolderCounts id =
                     isSelectedFolder =
                         presentationFolderId == Just id
                 in
-                [ Html.div
-                    [ Html.Events.onClick (Select id) ]
+                [ Html.button
+                    [ Html.Attributes.type_ "button"
+                    , Html.Attributes.class "text-button"
+                    , Html.Events.onClick (Select id)
+                    ]
                     [ viewFolderLine
                         folder
                         isToplevel

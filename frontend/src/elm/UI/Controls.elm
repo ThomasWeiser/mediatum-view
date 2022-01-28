@@ -267,7 +267,7 @@ viewSearch context model =
                 []
             , Html.button
                 [ Html.Attributes.type_ "button"
-                , Html.Attributes.class "clear-input"
+                , Html.Attributes.class "visual-button clear-input"
                 , Html.Attributes.disabled (model.globalFtsText == "")
                 , Html.Events.onClick ClearGlobalFtsText
                 ]
@@ -281,6 +281,7 @@ viewSearchButtons config model =
     Html.div [ Html.Attributes.class "submit-buttons" ]
         [ Html.button
             [ Html.Attributes.type_ "submit"
+            , Html.Attributes.class "visual-button"
             , Html.Attributes.classList
                 [ ( "selected"
                   , model.sorting == ByRank
@@ -296,6 +297,7 @@ viewSearchButtons config model =
             ]
         , Html.button
             [ Html.Attributes.type_ "submit"
+            , Html.Attributes.class "visual-button"
             , Html.Attributes.classList
                 [ ( "selected"
                   , model.sorting == ByDate
@@ -388,6 +390,7 @@ viewFtsFilter config aspect searchText =
                 []
             , Html.button
                 [ Html.Attributes.type_ "button"
+                , Html.Attributes.class "visual-button"
 
                 -- , Html.Attributes.disabled beingEdited
                 , Html.Events.onClick (RemoveFtsFilter aspect)
@@ -419,8 +422,9 @@ viewFtsAspectButtons config ftsFilterLines =
                             ftsFilterLineIsAlreadyOpen =
                                 Utils.List.findByMapping Tuple.first aspect ftsFilterLines /= Nothing
                         in
-                        Html.span
-                            [ Html.Attributes.class "text-button"
+                        Html.button
+                            [ Html.Attributes.type_ "button"
+                            , Html.Attributes.class "text-button"
                             , Html.Attributes.classList
                                 [ ( "text-button-negligible"
                                   , ftsFilterLineIsAlreadyOpen
@@ -474,8 +478,9 @@ viewFacetFilterButtons context listOfFacetFilters =
                             facetFilterIsAlreadyActive =
                                 Utils.List.findByMapping Tuple.first aspect listOfFacetFilters /= Nothing
                         in
-                        Html.span
-                            [ Html.Attributes.class "text-button"
+                        Html.button
+                            [ Html.Attributes.type_ "button"
+                            , Html.Attributes.class "text-button"
                             , Html.Attributes.classList
                                 [ ( "text-button-negligible"
                                   , facetFilterIsAlreadyActive
@@ -529,8 +534,9 @@ viewFacetFilter config isLastElement ( aspect, value ) =
             [ Html.Attributes.class "aspect-value" ]
             [ Html.text value ]
         , Html.text " "
-        , Html.span
-            [ Html.Attributes.class "text-button"
+        , Html.button
+            [ Html.Attributes.type_ "button"
+            , Html.Attributes.class "text-button"
             , Html.Events.onClick (RemoveFacetFilter aspect)
             ]
             [ Localization.text config

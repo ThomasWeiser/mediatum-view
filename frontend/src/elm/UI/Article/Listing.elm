@@ -370,6 +370,7 @@ viewFooter context pageSequence =
         viewButton label msg enabled =
             Html.button
                 [ Html.Attributes.type_ "button"
+                , Html.Attributes.class "visual-button"
                 , Html.Attributes.disabled (not enabled)
                 , Html.Events.onClick msg
                 ]

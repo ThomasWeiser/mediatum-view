@@ -16,8 +16,9 @@ import Types.Localization as Localization
 {-| -}
 view : Config -> Bool -> (Bool -> msg) -> Html msg
 view config state msgFromState =
-    Html.span
-        [ Html.Events.onClick (msgFromState (not state))
+    Html.button
+        [ Html.Attributes.type_ "button"
+        , Html.Events.onClick (msgFromState (not state))
         , Html.Attributes.class "text-button"
         ]
         [ Localization.text config <|
