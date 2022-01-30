@@ -260,12 +260,11 @@ regexSemicolonFollowedBy =
 renderWwwAddress : Markup -> Markup
 renderWwwAddress (Markup topNodes) =
     topNodes
-        |> Debug.log "renderWwwAddress"
         |> List.map
             (\node ->
                 case node of
                     Html.Parser.Text text ->
-                        case Regex.find regexWwwAddress text |> Debug.log "find" of
+                        case Regex.find regexWwwAddress text of
                             [ match ] ->
                                 case match.submatches of
                                     [ Just url, Just linktext ] ->

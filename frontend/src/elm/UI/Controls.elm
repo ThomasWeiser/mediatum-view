@@ -20,6 +20,7 @@ module UI.Controls exposing
 
 -}
 
+import Browser.Dom
 import Cache exposing (Cache)
 import Html exposing (Html)
 import Html.Attributes
@@ -28,14 +29,17 @@ import List.Extra
 import Maybe.Extra
 import RemoteData
 import String.Format
+import Task
+import Types.AdjustmentToSetup as AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect
 import Types.Config.FtsAspectConfig as FtsAspect
+import Types.FacetValue as FacetValue
 import Types.FilterList as FilterList
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
-import Types.Presentation exposing (Presentation(..))
+import Types.Presentation as Presentation exposing (Presentation(..))
 import Types.RearrangeableEditList exposing (RearrangeableEditList, rearrange)
 import Types.Route exposing (Route)
 import Types.SearchTerm as SearchTerm
@@ -56,6 +60,8 @@ type alias Context =
 {-| -}
 type Return
     = NoReturn
+    | AdjustSetup AdjustmentToSetup
+    | FocusOnFacet Aspect
     | Navigate Navigation
 
 
@@ -69,11 +75,15 @@ type alias Model =
 
 {-| -}
 type Msg
-    = SetGlobalFtsText String
+    = NoOp
+    | ReturnAdjustmentToSetup AdjustmentToSetup
+    | SetGlobalFtsText String
     | ClearGlobalFtsText
     | AddFtsFilter Aspect
+    | SelectFtsFilter Aspect
     | SetFtsFilterText Aspect String
     | RemoveFtsFilter Aspect
+    | SelectFacetFilter Aspect
     | RemoveFacetFilter Aspect
     | SetSorting Sorting
     | Submit
@@ -115,6 +125,18 @@ updateFromRoute route model =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
+        NoOp ->
+            ( model
+            , Cmd.none
+            , NoReturn
+            )
+
+        ReturnAdjustmentToSetup adjustment ->
+            ( model
+            , Cmd.none
+            , AdjustSetup adjustment
+            )
+
         SetGlobalFtsText globalFtsText ->
             ( { model | globalFtsText = globalFtsText }
             , Cmd.none
@@ -138,7 +160,15 @@ update context msg model =
                         |> Utils.List.setOnMapping Tuple.first
                             ( aspect, "" )
               }
-            , Cmd.none
+            , Browser.Dom.focus (idOfAspectSearchField aspect)
+                |> Task.attempt (always NoOp)
+            , NoReturn
+            )
+
+        SelectFtsFilter aspect ->
+            ( model
+            , Browser.Dom.focus (idOfAspectSearchField aspect)
+                |> Task.attempt (always NoOp)
             , NoReturn
             )
 
@@ -166,6 +196,12 @@ update context msg model =
             ( model1
             , Cmd.none
             , navigate model1
+            )
+
+        SelectFacetFilter aspect ->
+            ( model
+            , Cmd.none
+            , FocusOnFacet aspect
             )
 
         RemoveFacetFilter aspect ->
@@ -214,7 +250,7 @@ view context model =
             [ viewSearch context model
             , viewFtsFilters context.config model
             , viewFacetFilters context
-            , viewSearchButtons context.config model
+            , viewBottomControls context.config model
             ]
         ]
 
@@ -241,11 +277,44 @@ viewSearch context model =
                 []
             , Html.button
                 [ Html.Attributes.type_ "button"
-                , Html.Attributes.class "clear-input"
+                , Html.Attributes.class "visual-button clear-input"
                 , Html.Attributes.disabled (model.globalFtsText == "")
                 , Html.Events.onClick ClearGlobalFtsText
                 ]
                 [ UI.Icons.clear ]
+            ]
+        ]
+
+
+viewBottomControls : Config -> Model -> Html Msg
+viewBottomControls config model =
+    Html.div
+        [ Html.Attributes.class "bottom-controls" ]
+        [ viewSearchButtons config model
+        , viewSidebarButton config model
+        ]
+
+
+viewSidebarButton : Config -> Model -> Html Msg
+viewSidebarButton config model =
+    Html.div
+        [ Html.Attributes.class "sidebar-switch" ]
+        [ Html.button
+            [ Html.Attributes.type_ "button"
+            , Html.Attributes.class "text-button"
+            , Html.Events.onClick <|
+                ReturnAdjustmentToSetup (AdjustmentToSetup.HideSidebar (not config.hideSidebar))
+            ]
+            [ Localization.text config <|
+                if config.hideSidebar then
+                    { en = "Show Sidebar"
+                    , de = "Seitenleiste einblenden"
+                    }
+
+                else
+                    { en = "Hide Sidebar"
+                    , de = "Seitenleiste ausblenden"
+                    }
             ]
         ]
 
@@ -255,6 +324,7 @@ viewSearchButtons config model =
     Html.div [ Html.Attributes.class "submit-buttons" ]
         [ Html.button
             [ Html.Attributes.type_ "submit"
+            , Html.Attributes.class "visual-button"
             , Html.Attributes.classList
                 [ ( "selected"
                   , model.sorting == ByRank
@@ -270,6 +340,7 @@ viewSearchButtons config model =
             ]
         , Html.button
             [ Html.Attributes.type_ "submit"
+            , Html.Attributes.class "visual-button"
             , Html.Attributes.classList
                 [ ( "selected"
                   , model.sorting == ByDate
@@ -288,7 +359,7 @@ viewSearchButtons config model =
 
 getSearchFieldPlaceholder : Context -> String
 getSearchFieldPlaceholder context =
-    Types.Presentation.getFolderId context.cache context.presentation
+    Presentation.getFolderId context.cache context.presentation
         |> Maybe.Extra.orElse
             (context.config.toplevelFolderIds |> List.head)
         |> Maybe.andThen
@@ -315,8 +386,8 @@ getSearchFieldPlaceholder context =
 viewFtsFilters : Config -> Model -> Html Msg
 viewFtsFilters config model =
     Html.div [ Html.Attributes.class "filters-bar" ]
-        [ viewExistingFtsFilters config model.ftsFilterLines
-        , viewFtsAspectButtons config model.ftsFilterLines
+        [ viewFtsAspectButtons config model.ftsFilterLines
+        , viewExistingFtsFilters config model.ftsFilterLines
         ]
 
 
@@ -345,7 +416,8 @@ viewFtsFilter config aspect searchText =
         , Html.span
             [ Html.Attributes.class "input-group" ]
             [ Html.input
-                [ Html.Attributes.class "search-input"
+                [ Html.Attributes.id (idOfAspectSearchField aspect)
+                , Html.Attributes.class "search-input"
                 , Html.Attributes.type_ "search"
                 , Html.Attributes.placeholder
                     (Localization.string config
@@ -361,6 +433,7 @@ viewFtsFilter config aspect searchText =
                 []
             , Html.button
                 [ Html.Attributes.type_ "button"
+                , Html.Attributes.class "visual-button"
 
                 -- , Html.Attributes.disabled beingEdited
                 , Html.Events.onClick (RemoveFtsFilter aspect)
@@ -371,61 +444,152 @@ viewFtsFilter config aspect searchText =
         ]
 
 
+idOfAspectSearchField : Aspect -> String
+idOfAspectSearchField aspect =
+    "search-input-aspect-" ++ Aspect.toString aspect
+
+
 viewFtsAspectButtons : Config -> List ( Aspect, String ) -> Html Msg
 viewFtsAspectButtons config ftsFilterLines =
-    Html.div [] <|
-        List.filterMap
-            (\{ aspect, label } ->
-                if Utils.List.findByMapping Tuple.first aspect ftsFilterLines == Nothing then
-                    Just <|
-                        Html.span
-                            [ Html.Attributes.class "" ]
-                            [ Html.button
-                                [ Html.Attributes.type_ "button"
-                                , Html.Attributes.class "add-filter-button"
-                                , Html.Events.onClick <| AddFtsFilter aspect
+    Html.div []
+        [ Localization.text config
+            { en = "Search for: "
+            , de = "Suchen nach: "
+            }
+        , Html.span
+            [ Html.Attributes.class "fts-aspect-buttons" ]
+            (config.ftsAspects
+                |> List.map
+                    (\{ aspect, label } ->
+                        let
+                            ftsFilterLineIsAlreadyOpen =
+                                Utils.List.findByMapping Tuple.first aspect ftsFilterLines /= Nothing
+                        in
+                        Html.button
+                            [ Html.Attributes.type_ "button"
+                            , Html.Attributes.class "text-button"
+                            , Html.Attributes.classList
+                                [ ( "text-button-negligible"
+                                  , ftsFilterLineIsAlreadyOpen
+                                  )
                                 ]
-                                [ Localization.text config label ]
-                            ]
+                            , Html.Events.onClick <|
+                                if ftsFilterLineIsAlreadyOpen then
+                                    SelectFtsFilter aspect
 
-                else
-                    Nothing
+                                else
+                                    AddFtsFilter aspect
+                            ]
+                            [ Localization.text config label ]
+                    )
+                |> List.intersperse
+                    (Html.span [ Html.Attributes.class "separator" ] [ Html.text " · " ])
             )
-            config.ftsAspects
+        ]
 
 
 viewFacetFilters : Context -> Html Msg
 viewFacetFilters context =
-    Html.div [ Html.Attributes.class "filters-bar" ]
-        (context.route.parameters.facetFilters
-            |> FilterList.toList
-            |> List.map (viewFacetFilter context.config)
-        )
+    case Presentation.getSelection context.presentation of
+        Nothing ->
+            Html.text ""
+
+        Just selection ->
+            let
+                listOfFacetFilters =
+                    selection.facetFilters |> FilterList.toList
+            in
+            Html.div [ Html.Attributes.class "filters-bar facet-controls" ]
+                [ viewFacetFilterButtons context listOfFacetFilters
+                , viewSelectedFacetFilters context listOfFacetFilters
+                ]
 
 
-viewFacetFilter : Config -> Selection.FacetFilter -> Html Msg
-viewFacetFilter config ( aspect, value ) =
-    Html.div
-        [ Html.Attributes.class "search-bar"
+viewFacetFilterButtons : Context -> List Selection.FacetFilter -> Html Msg
+viewFacetFilterButtons context listOfFacetFilters =
+    Html.div []
+        [ Localization.text context.config
+            { en = "Select: "
+            , de = "Auswählen: "
+            }
+        , Html.span
+            [ Html.Attributes.class "facet-aspect-buttons" ]
+            (context.config.facetAspects
+                |> List.map
+                    (\{ aspect, label } ->
+                        let
+                            facetFilterIsAlreadyActive =
+                                Utils.List.findByMapping Tuple.first aspect listOfFacetFilters /= Nothing
+                        in
+                        Html.button
+                            [ Html.Attributes.type_ "button"
+                            , Html.Attributes.class "text-button"
+                            , Html.Attributes.classList
+                                [ ( "text-button-negligible"
+                                  , facetFilterIsAlreadyActive
+                                  )
+                                ]
+                            , Html.Events.onClick <|
+                                SelectFacetFilter aspect
+                            ]
+                            [ Localization.text context.config label ]
+                    )
+                |> List.intersperse
+                    (Html.span [ Html.Attributes.class "separator" ] [ Html.text " · " ])
+            )
         ]
-        [ Html.label
-            [ Html.Attributes.class "search-label" ]
+
+
+viewSelectedFacetFilters : Context -> List Selection.FacetFilter -> Html Msg
+viewSelectedFacetFilters context listOfFacetFilters =
+    let
+        listOfHtml =
+            listOfFacetFilters
+                |> Utils.List.mapAndMarkLast (viewFacetFilter context.config)
+    in
+    if List.isEmpty listOfHtml then
+        Html.text ""
+
+    else
+        Html.div []
+            (Html.span []
+                [ Localization.text context.config
+                    { en = "Selected: "
+                    , de = "Ausgewählt: "
+                    }
+                ]
+                :: listOfHtml
+            )
+
+
+viewFacetFilter : Config -> Bool -> Selection.FacetFilter -> Html Msg
+viewFacetFilter config isLastElement ( aspect, value ) =
+    Html.span
+        [ Html.Attributes.class "fixed-facet-filter stick-on-wrapping"
+        ]
+        [ Html.span
+            [ Html.Attributes.class "aspect-name" ]
             [ Html.text
                 (FacetAspect.getLabelOrAspectName config aspect config.facetAspects)
+            , Html.text " "
             ]
         , Html.span
-            [ Html.Attributes.class "input-group" ]
-            [ Html.div
-                [ Html.Attributes.class "search-input"
-                ]
-                [ Html.text value ]
-            , Html.button
-                [ Html.Attributes.type_ "button"
-
-                -- , Html.Attributes.disabled beingEdited
-                , Html.Events.onClick (RemoveFacetFilter aspect)
-                , Html.Attributes.class "filter-button"
-                ]
-                [ UI.Icons.clear ]
+            [ Html.Attributes.class "aspect-value" ]
+            [ FacetValue.valueTextWithSubstitution config value ]
+        , Html.text " "
+        , Html.button
+            [ Html.Attributes.type_ "button"
+            , Html.Attributes.class "text-button"
+            , Html.Events.onClick (RemoveFacetFilter aspect)
             ]
+            [ Localization.text config
+                { en = "(unselect)"
+                , de = "(abwählen)"
+                }
+            ]
+        , if isLastElement then
+            Html.text ""
+
+          else
+            Html.span [ Html.Attributes.class "separator" ] [ Html.text "·" ]
         ]

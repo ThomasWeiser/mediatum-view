@@ -32,6 +32,7 @@
 
     --color-text: var(--color-nightrider);
     --color-text-light: var(--color-grey);
+    --color-text-lighter: var(--color-suvagrey);
     --color-primary: var(--color-lochmara);
     --color-primary-lighter: var(--color-royalblue);
     --color-spot-1: var(--color-citrus);
@@ -73,11 +74,14 @@ body, input {
   color: var(--color-primary);
 }
 
-a, .text-button {
+a, button.text-button {
   color: var(--color-primary-lighter);
   text-decoration: none;
 }
-a:hover, .text-button:hover {
+button.text-button.text-button-negligible {
+  color: var(--color-text-light);
+}
+a:hover, button.text-button:hover {
   text-decoration: underline;
 }
 
@@ -131,9 +135,13 @@ main {
   min-height: 0;
 }
 aside {
-  flex: 4;
+  flex: 4 1 0%;
+  transition: flex-grow 0.2s;
   overflow: auto;
   /* border-right: 1px solid grey; */
+}
+aside.hidden {
+  flex-grow: 0;
 }
 aside nav {
   background-color: var(--color-nav-background);
@@ -145,9 +153,14 @@ article {
   padding: 0.5em;
 }
 
+.stick-on-wrapping {
+  display: inline-block;
+}
+
 .search-bar {
   display: flex;
   align-items: center;
+  margin-top: 10px;
   margin-bottom: 10px;
 }
 .search-bar  .search-label {
@@ -163,15 +176,37 @@ article {
 }
 .search-bar .search-input {
   flex: 1;
-  font-size: 105%;
+  font-size: 100%;
   border: none;
 }
+/* When the :has() "parent-selector" is getting implemented by the browsers we can use something like this:
+.search-input:has(input:focus) {
+  border-color: var(--color-primary-lighter);
+}
+*/
 .search-bar .clear-input {
   background: none;
   border: none;
 }
-.submit-buttons {
-  text-align: right;
+.fixed-facet-filter .aspect-name {
+  font-weight: bold;
+}
+.fixed-facet-filter .separator {
+  margin: 0 0.4em;
+}
+.bottom-controls {
+  min-height: 36px;
+  position: relative;
+}
+.bottom-controls .sidebar-switch {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+.bottom-controls .submit-buttons {
+  position: absolute;
+  bottom: 0;
+  right: 0;
 }
 /*
 .input-group > * {
@@ -205,9 +240,27 @@ input.hide-clear[type=search]::-ms-reveal {
   width: 0;
   height: 0; 
 }
+button {
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+}
+button.text-button {
+  font-size: unset;
+  background-color: unset;
+  border: 0;
+  padding: 0;
+}
 
 .filters-bar {
-  margin: 1rem 0;
+  margin: 0.7rem 0;
+}
+.filters-bar .fts-aspect-buttons button.text-button {
+  margin: 0 0.10rem;
+}
+.filters-bar .fts-aspect-buttons .separator {
+  color: var(--color-text-light);
+}
+.filters-bar.facet-controls {
+  min-height: 5.7ex;
 }
 .filter-form {
   display: inline-block;
@@ -219,10 +272,10 @@ input.hide-clear[type=search]::-ms-reveal {
 button:not(:disabled):not(.disabled) {
   cursor: pointer; 
 }
-button:disabled, button.disabled {
+button.visual-button:disabled, button.visual-button.disabled {
   opacity: .65;
 }
-button, select {
+button.visual-button, select {
   user-select: none;
   border: 1px solid;
   padding: .375rem .75rem;
@@ -234,12 +287,13 @@ button, select {
   background-color: var(--color-button-background);
   border-color: var(--color-input-border);
 }
-button.selected {
+button.visual-button.selected {
   border: 2px solid var(--color-input-border-selected)
 }
 button.filter-button {
   padding: 0.25rem .75rem;
 }
+
 
 .document {
   display: block;
@@ -326,6 +380,12 @@ a.document:hover {
 ul.folder-list ul.folder-list {
     margin-left: 1.4em;
 }
+.folder-list button.text-button {
+  color: unset;
+  font-size: unset;
+  line-height: inherit;
+  width: 100%;
+}
 .details .header {
   margin: 3ex 0;
 }
@@ -343,6 +403,7 @@ ul.folder-list ul.folder-list {
 }
 .folder-head .folder-name {
   padding-left: 0.6em;
+  text-align: left;
 }
 .folder-head:hover .folder-name {
   text-decoration: underline;
@@ -377,6 +438,9 @@ ul.folder-list ul.folder-list {
   margin-left: 1em;
   font-size: 80%;
   color: var(--color-text-light);
+}
+.sidebar-switch {
+  font-size: 80%;
 }
 .spinner {
   width: 3em;
@@ -421,7 +485,18 @@ ul.folder-list ul.folder-list {
 .facet-box {
   margin-top: 1ex;
 }
+.facet-box {
+  border: 2px solid var(--color-nav-background);
+  transition: border-color 2s cubic-bezier(0, 1.59, 0.76, 1.1);
+}
+.facet-box.highlight {
+  border: 2px solid var(--color-primary);
+}
 .facet-head {
+  display: flex;
+}
+.facet-head.text-button {
+  color: unset;
   display: flex;
 }
 .facet-name {
@@ -436,8 +511,12 @@ ul.folder-list ul.folder-list {
   padding: 0;
   list-style: none;
 }
-.facet-line {
+.facet-line button.text-button {
+  color: unset;
+  font-size: unset;
   display: flex;
+  line-height: inherit;
+  width: 100%;
 }
 .facet-clickable:hover .facet-value-text, .facet-clickable:hover .facet-name {
   text-decoration: underline;

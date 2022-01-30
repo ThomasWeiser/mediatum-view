@@ -1,10 +1,10 @@
-module UI.Facets exposing
+port module UI.Facets exposing
     ( Context
     , Return(..)
     , Model
     , Msg
     , initialModel
-    , update
+    , update, focusOnFacet
     , view
     )
 
@@ -15,7 +15,7 @@ module UI.Facets exposing
 @docs Model
 @docs Msg
 @docs initialModel
-@docs update
+@docs update, focusOnFacet
 @docs view
 
 -}
@@ -25,12 +25,14 @@ import Cache.Derive
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Process
 import RemoteData
 import Sort.Dict
+import Task
 import Types.Aspect as Aspect exposing (Aspect)
 import Types.Config exposing (Config)
 import Types.Config.FacetAspectConfig as FacetAspect exposing (FacetAspectConfig)
-import Types.FacetValue exposing (FacetValues)
+import Types.FacetValue as FacetValue exposing (FacetValues)
 import Types.FilterList as FilterList
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
@@ -59,6 +61,7 @@ type Return
 type alias Model =
     { showLongList : Sort.Dict.Dict Aspect Bool
     , showCollapsed : Sort.Dict.Dict Aspect Bool
+    , highlightBox : Maybe Aspect
     }
 
 
@@ -68,6 +71,7 @@ type Msg
     | SelectFacetUnfilter Aspect
     | ShowFacetCollapsed Aspect Bool
     | ShowFacetLongList Aspect Bool
+    | FocusOnFacet Aspect
 
 
 {-| -}
@@ -75,42 +79,87 @@ initialModel : Model
 initialModel =
     { showLongList = Sort.Dict.empty (Utils.sorter Aspect.ordering)
     , showCollapsed = Sort.Dict.empty (Utils.sorter Aspect.ordering)
+    , highlightBox = Nothing
     }
 
 
 {-| -}
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
+    let
+        handleHighlight aspect =
+            { model
+                | highlightBox =
+                    model.highlightBox
+                        |> Maybe.andThen
+                            (\highlightedAspect ->
+                                if highlightedAspect == aspect then
+                                    Just aspect
+
+                                else
+                                    Nothing
+                            )
+            }
+    in
     case msg of
         SelectFacetValue aspect value ->
-            ( model
+            ( handleHighlight aspect
             , Cmd.none
             , Navigate
                 (Navigation.ShowListingWithAddedFacetFilter aspect value)
             )
 
         SelectFacetUnfilter aspect ->
-            ( model
+            ( handleHighlight aspect
             , Cmd.none
             , Navigate
                 (Navigation.ShowListingWithRemovedFacetFilter aspect)
             )
 
         ShowFacetCollapsed aspect state ->
-            ( { model
-                | showCollapsed = Sort.Dict.insert aspect state model.showCollapsed
+            let
+                model1 =
+                    handleHighlight aspect
+            in
+            ( { model1
+                | showCollapsed = Sort.Dict.insert aspect state model1.showCollapsed
               }
             , Cmd.none
             , NoReturn
             )
 
         ShowFacetLongList aspect state ->
-            ( { model
-                | showLongList = Sort.Dict.insert aspect state model.showLongList
+            let
+                model1 =
+                    handleHighlight aspect
+            in
+            ( { model1
+                | showLongList = Sort.Dict.insert aspect state model1.showLongList
               }
             , Cmd.none
             , NoReturn
             )
+
+        FocusOnFacet aspect ->
+            ( { model | highlightBox = Just aspect }
+            , scrollElementIntoView (idOfFacetBox aspect)
+            , NoReturn
+            )
+
+
+{-| -}
+focusOnFacet : Context -> Aspect -> Model -> ( Model, Cmd Msg )
+focusOnFacet context aspect model =
+    ( { model
+        | showCollapsed = Sort.Dict.insert aspect False model.showCollapsed
+      }
+    , -- Wait for the changed DOM (i.e. not collapsed) to be drawn
+      Process.sleep 50
+        |> Task.perform (always (FocusOnFacet aspect))
+    )
+
+
+port scrollElementIntoView : String -> Cmd msg
 
 
 {-| -}
@@ -145,9 +194,17 @@ viewFacet context model selection facetAspectConfig =
                 |> Maybe.withDefault False
     in
     Html.nav
-        [ Html.Attributes.class "facet-box" ]
-        [ Html.div
-            [ Html.Attributes.class "facet-head facet-clickable"
+        [ Html.Attributes.id (idOfFacetBox facetAspectConfig.aspect)
+        , Html.Attributes.class "facet-box"
+        , Html.Attributes.classList
+            [ ( "highlight"
+              , model.highlightBox == Just facetAspectConfig.aspect
+              )
+            ]
+        ]
+        [ Html.button
+            [ Html.Attributes.type_ "button"
+            , Html.Attributes.class "text-button facet-head facet-clickable"
             , Html.Events.onClick (ShowFacetCollapsed facetAspectConfig.aspect (not showCollapsed))
             , Html.Attributes.classList
                 [ ( "expanded", not showCollapsed ) ]
@@ -204,6 +261,11 @@ viewFacet context model selection facetAspectConfig =
         ]
 
 
+idOfFacetBox : Aspect -> String
+idOfFacetBox aspect =
+    "facet-box-aspect-" ++ Aspect.toString aspect
+
+
 viewFacetSelection : Config -> Aspect -> String -> Maybe Int -> List (Html Msg)
 viewFacetSelection config aspect selectedValue maybeCount =
     [ Html.div
@@ -226,12 +288,7 @@ viewFacetSelection config aspect selectedValue maybeCount =
             ]
             [ Html.span
                 [ Html.Attributes.class "facet-value-text" ]
-                [ if String.isEmpty selectedValue then
-                    viewNotSpecified config
-
-                  else
-                    Html.text selectedValue
-                ]
+                [ FacetValue.valueTextWithSubstitution config selectedValue ]
             , case maybeCount of
                 Just count ->
                     Html.span
@@ -266,17 +323,17 @@ viewFacetValues config model aspect facetValues =
                         [ Html.Attributes.class "facet-line facet-clickable"
                         , Html.Events.onClick (SelectFacetValue aspect value)
                         ]
-                        [ Html.span
-                            [ Html.Attributes.class "facet-value-text" ]
-                            [ if String.isEmpty value then
-                                viewNotSpecified config
-
-                              else
-                                Html.text value
+                        [ Html.button
+                            [ Html.Attributes.type_ "button"
+                            , Html.Attributes.class "text-button"
                             ]
-                        , Html.span
-                            [ Html.Attributes.class "facet-value-count" ]
-                            [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
+                            [ Html.span
+                                [ Html.Attributes.class "facet-value-text" ]
+                                [ FacetValue.valueTextWithSubstitution config value ]
+                            , Html.span
+                                [ Html.Attributes.class "facet-value-count" ]
+                                [ Html.text <| "(" ++ String.fromInt count ++ ")" ]
+                            ]
                         ]
             )
             facetValues
@@ -288,29 +345,24 @@ viewFacetValues config model aspect facetValues =
             [ Html.Attributes.class "facet-line facet-clickable facet-special-action"
             , Html.Events.onClick (ShowFacetLongList aspect showShortList)
             ]
-            [ Html.span
-                [ Html.Attributes.class "facet-value-text" ]
-                [ if showShortList then
-                    Localization.text config
-                        { en = ">> More"
-                        , de = ">> mehr"
-                        }
+            [ Html.button
+                [ Html.Attributes.type_ "button"
+                , Html.Attributes.class "text-button"
+                ]
+                [ Html.span
+                    [ Html.Attributes.class "facet-value-text" ]
+                    [ if showShortList then
+                        Localization.text config
+                            { en = ">> More"
+                            , de = ">> mehr"
+                            }
 
-                  else
-                    Localization.text config
-                        { en = "<< Less"
-                        , de = "<< weniger"
-                        }
+                      else
+                        Localization.text config
+                            { en = "<< Less"
+                            , de = "<< weniger"
+                            }
+                    ]
                 ]
             ]
     ]
-
-
-viewNotSpecified : Config -> Html msg
-viewNotSpecified config =
-    Html.i []
-        [ Localization.text config
-            { en = "[not specified]"
-            , de = "[nicht angegeben]"
-            }
-        ]

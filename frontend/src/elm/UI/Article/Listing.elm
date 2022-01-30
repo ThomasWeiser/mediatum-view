@@ -36,7 +36,7 @@ import RemoteData
 import Types.ApiData exposing (ApiData)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
-import Types.Id as Id exposing (DocumentId)
+import Types.Id exposing (DocumentId)
 import Types.Localization as Localization
 import Types.Navigation as Navigation exposing (Navigation)
 import Types.Route exposing (Route)
@@ -370,6 +370,7 @@ viewFooter context pageSequence =
         viewButton label msg enabled =
             Html.button
                 [ Html.Attributes.type_ "button"
+                , Html.Attributes.class "visual-button"
                 , Html.Attributes.disabled (not enabled)
                 , Html.Events.onClick msg
                 ]

@@ -1,18 +1,24 @@
 module Types.FacetValue exposing
     ( FacetValue, FacetValues, FacetsValues
     , facetsValuesFromDict
+    , valueTextWithSubstitution
     )
 
 {-|
 
 @docs FacetValue, FacetValues, FacetsValues
 @docs facetsValuesFromDict
+@docs valueTextWithSubstitution
 
 -}
 
 import Dict exposing (Dict)
+import Html exposing (Html)
 import Sort.Dict
+import String.Extra
 import Types.Aspect as Aspect exposing (Aspect)
+import Types.Config exposing (Config)
+import Types.Localization as Localization
 import Utils
 
 
@@ -46,3 +52,17 @@ facetsValuesFromDict dict =
         |> Dict.toList
         |> List.map (Tuple.mapFirst Aspect.fromString)
         |> Sort.Dict.fromList (Utils.sorter Aspect.ordering)
+
+
+valueTextWithSubstitution : Config -> String -> Html msg
+valueTextWithSubstitution config string =
+    if String.Extra.isBlank string then
+        Html.i []
+            [ Localization.text config
+                { en = "[not specified]"
+                , de = "[nicht angegeben]"
+                }
+            ]
+
+    else
+        Html.text string

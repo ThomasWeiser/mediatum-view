@@ -5,6 +5,7 @@ module Utils.List exposing
     , findByMapping, filterByMapping, filterByNotMapping, replaceOnMapping, setOnMapping, updateOnMapping
     , mapWhile, mapEllipsis
     , lexicalOrdering
+    , mapAndMarkLast
     )
 
 {-|
@@ -15,6 +16,7 @@ module Utils.List exposing
 @docs findByMapping, filterByMapping, filterByNotMapping, replaceOnMapping, setOnMapping, updateOnMapping
 @docs mapWhile, mapEllipsis
 @docs lexicalOrdering
+@docs mapAndMarkLast
 
 -}
 
@@ -276,3 +278,14 @@ lexicalOrdering compareElements listL listR =
 
                 EQ ->
                     lexicalOrdering compareElements tailL tailR
+
+
+mapAndMarkLast : (Bool -> a -> b) -> List a -> List b
+mapAndMarkLast f xs =
+    List.foldr
+        (\x ( mark, acc ) ->
+            ( False, f mark x :: acc )
+        )
+        ( True, [] )
+        xs
+        |> Tuple.second

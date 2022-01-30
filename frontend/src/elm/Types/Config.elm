@@ -2,7 +2,7 @@ module Types.Config exposing
     ( Config
     , init
     , updateFromServerSetup
-    , adjustUILanguage, adjustHideThumbnails
+    , adjustUILanguage, adjustHideThumbnails, adjustHideSidebar
     , getMaskName
     )
 
@@ -13,7 +13,7 @@ Most values are defined in the server and fetched dynamically.
 @docs Config
 @docs init
 @docs updateFromServerSetup
-@docs adjustUILanguage, adjustHideThumbnails
+@docs adjustUILanguage, adjustHideThumbnails, adjustHideSidebar
 @docs getMaskName
 
 -}
@@ -44,6 +44,7 @@ type alias Config =
     , facetAspects : List FacetAspectConfig
     , masks : MasksConfig
     , hideThumbnails : Bool
+    , hideSidebar : Bool
     , frontPage : Maybe Translations
     }
 
@@ -64,6 +65,7 @@ init =
     , facetAspects = []
     , masks = MasksConfig.init
     , hideThumbnails = False
+    , hideSidebar = False
     , frontPage = Nothing
     }
 
@@ -88,6 +90,15 @@ adjustHideThumbnails : Bool -> Config -> Config
 adjustHideThumbnails newState config =
     { config
         | hideThumbnails = newState
+    }
+
+
+{-| Set the globally configured option to hide the sidebar
+-}
+adjustHideSidebar : Bool -> Config -> Config
+adjustHideSidebar newState config =
+    { config
+        | hideSidebar = newState
     }
 
 

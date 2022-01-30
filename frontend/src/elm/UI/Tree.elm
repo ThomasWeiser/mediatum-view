@@ -27,7 +27,7 @@ module UI.Tree exposing
 
 import Cache exposing (Cache)
 import Cache.Derive
-import Entities.Folder as Folder exposing (Folder)
+import Entities.Folder exposing (Folder)
 import Entities.FolderCounts exposing (FolderCounts)
 import Html exposing (Html)
 import Html.Attributes
@@ -215,8 +215,11 @@ viewFolderTree context model isToplevel maybeFolderCounts id =
                     isSelectedFolder =
                         presentationFolderId == Just id
                 in
-                [ Html.div
-                    [ Html.Events.onClick (Select id) ]
+                [ Html.button
+                    [ Html.Attributes.type_ "button"
+                    , Html.Attributes.class "text-button"
+                    , Html.Events.onClick (Select id)
+                    ]
                     [ viewFolderLine
                         folder
                         isToplevel
