@@ -1,6 +1,7 @@
 module Entities.Document exposing
     ( Document, Attribute, SearchMatching
     , init, attributeValue
+    , File, Files
     )
 
 {-| The metadata of a document and its attributes.
@@ -29,6 +30,7 @@ type alias Document =
     , metadatatypeName : String
     , attributes : List Attribute
     , searchMatching : Maybe SearchMatching
+    , files : Maybe Files
     }
 
 
@@ -55,6 +57,20 @@ type alias SearchMatching =
     }
 
 
+{-| A list of associated files
+-}
+type alias Files =
+    List File
+
+
+{-| Specification of an associated file
+-}
+type alias File =
+    { filetype : String
+    , mimetype : String
+    }
+
+
 {-| -}
 init :
     DocumentId
@@ -62,13 +78,15 @@ init :
     -> String
     -> List Attribute
     -> Maybe SearchMatching
+    -> Maybe Files
     -> Document
-init id metadatatypeName name attributes searchMatching =
+init id metadatatypeName name attributes searchMatching files =
     { id = id
     , name = name
     , metadatatypeName = metadatatypeName
     , attributes = attributes
     , searchMatching = searchMatching
+    , files = files
     }
 
 

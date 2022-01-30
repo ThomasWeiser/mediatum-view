@@ -35,7 +35,7 @@ module Api.Fragments exposing
 
 -}
 
-import Entities.Document as Document exposing (Document)
+import Entities.Document as Document exposing (Document, File, Files)
 import Entities.DocumentResults exposing (DocumentResult, DocumentsPage)
 import Entities.Folder as Folder exposing (Folder, LineageFolders)
 import Entities.FolderCounts as FolderCounts exposing (FolderCounts)
@@ -55,6 +55,7 @@ import Mediatum.Object.DocumentResultPage
 import Mediatum.Object.FacetAspectConfig
 import Mediatum.Object.FacetValue
 import Mediatum.Object.FacetValuesConnection
+import Mediatum.Object.File
 import Mediatum.Object.Folder
 import Mediatum.Object.FolderCount
 import Mediatum.Object.FolderCountsConnection
@@ -504,7 +505,7 @@ documentResult maskName maybeSearchTerm =
             )
         |> SelectionSet.with
             (Mediatum.Object.DocumentResult.document
-                (documentByMask maskName maybeSearchTerm)
+                (documentByMask maskName maybeSearchTerm False)
                 |> SelectionSet.nonNullOrFail
             )
 
@@ -526,8 +527,8 @@ _GraphQL notation:_
     }
 
 -}
-documentByMask : String -> Maybe SearchTerm -> SelectionSet Document Mediatum.Object.Document
-documentByMask maskName maybeSearchTerm =
+documentByMask : String -> Maybe SearchTerm -> Bool -> SelectionSet Document Mediatum.Object.Document
+documentByMask maskName maybeSearchTerm withFiles =
     SelectionSet.succeed Document.init
         |> SelectionSet.with
             (Mediatum.Object.Document.id
@@ -584,6 +585,16 @@ documentByMask maskName maybeSearchTerm =
                 Nothing ->
                     SelectionSet.hardcoded Nothing
            )
+        |> (if withFiles then
+                SelectionSet.with
+                    (Mediatum.Object.Document.files
+                        documentFile
+                        |> nonNullElementsOfMaybeListOrFail
+                    )
+
+            else
+                SelectionSet.hardcoded Nothing
+           )
 
 
 {-| Selection set on a Document to get the residence of the document,
@@ -604,6 +615,20 @@ documentResidence =
         folderLineageIds
         |> SelectionSet.nonNullOrFail
         |> SelectionSet.nonNullElementsOrFail
+
+
+{-| -}
+documentFile : SelectionSet File Mediatum.Object.File
+documentFile =
+    SelectionSet.succeed File
+        |> SelectionSet.with
+            (Mediatum.Object.File.filetype
+                |> SelectionSet.nonNullOrFail
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.File.mimetype
+                |> SelectionSet.nonNullOrFail
+            )
 
 
 {-| Similar to Graphql.SelectionSet.nonNullElementsOrFail, but the list is and remains wrapped in a Maybe.

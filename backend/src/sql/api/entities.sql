@@ -186,6 +186,18 @@ create or replace view entity.document as
       and aux.is_public_today (node.id);
 
 
+create or replace view entity.file as
+    select
+        document.id as document_id,
+        file.id,
+        file.filetype,
+        file.mimetype
+    from entity.document, mediatum.node_to_file, mediatum.file
+    where document.id = node_to_file.nid
+      and node_to_file.file_id = file.id
+      and aux.data_is_public_today (document.id);
+
+
 -- View on node for getting documents, where we don't need to check `not nodetype.is_container`
 create or replace view entity.node as
     select
