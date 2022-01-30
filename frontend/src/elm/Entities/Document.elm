@@ -1,16 +1,18 @@
 module Entities.Document exposing
-    ( Document, Attribute, SearchMatching
-    , init, attributeValue
-    , File, Files
+    ( Document, Attribute, SearchMatching, Files, File
+    , init
+    , attributeValue, hasPresentation
     )
 
 {-| The metadata of a document and its attributes.
 
-@docs Document, Attribute, SearchMatching
-@docs init, attributeValue
+@docs Document, Attribute, SearchMatching, Files, File
+@docs init
+@docs attributeValue, hasPresentation
 
 -}
 
+import Constants
 import Entities.Markup exposing (Markup)
 import List.Extra
 import Types.Id exposing (DocumentId)
@@ -98,3 +100,17 @@ attributeValue key document =
         (\attribute -> attribute.field == key)
         document.attributes
         |> Maybe.map (.value >> Maybe.withDefault Entities.Markup.empty)
+
+
+hasPresentation : Document -> Bool
+hasPresentation document =
+    case document.files of
+        Nothing ->
+            False
+
+        Just files ->
+            List.any
+                (\file ->
+                    file.filetype == Constants.filetypes.presentation
+                )
+                files

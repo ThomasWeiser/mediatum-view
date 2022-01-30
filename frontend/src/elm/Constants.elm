@@ -3,6 +3,7 @@ module Constants exposing
     , incrementLimitOnLoadMore
     , maxAttributeLengthInListingView
     , externalServerUrls
+    , filetypes
     )
 
 {-| Configurable values
@@ -10,7 +11,8 @@ module Constants exposing
 @docs apiUrl, graphqlOperationNamePrefix
 @docs incrementLimitOnLoadMore
 @docs maxAttributeLengthInListingView
-@docs contentServerUrls
+@docs externalServerUrls
+@docs filetypes
 
 -}
 
@@ -76,4 +78,14 @@ externalServerUrls =
     , presentation = "https://mediatum.ub.tum.de/thumb2/" |> appendId
     , item = \itemSpec -> "https://mediatum.ub.tum.de/?item=" ++ itemSpec ++ ".html"
     , documentPermanent = "https://mediatum.ub.tum.de/" |> appendId
+    }
+
+
+{-| Identifier used for certain relevant filetypes associated with documents
+-}
+filetypes :
+    { presentation : String
+    }
+filetypes =
+    { presentation = "presentation"
     }

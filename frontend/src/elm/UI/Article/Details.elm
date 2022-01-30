@@ -123,7 +123,7 @@ viewDocument context model document residence =
                     }
                 ]
             ]
-        , if context.config.hideThumbnails then
+        , if context.config.hideThumbnails || not (Document.hasPresentation document) then
             Html.text ""
 
           else
