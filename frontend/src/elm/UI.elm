@@ -252,7 +252,7 @@ update context msg model =
                                 [ cmd1
                                 , Cmd.map FacetsMsg facetCmd
                                 ]
-                            , NoReturn
+                            , AdjustSetup (AdjustmentToSetup.HideSidebar False)
                             )
 
                         UI.Controls.Navigate navigation ->
