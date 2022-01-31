@@ -68,6 +68,8 @@ externalServerUrls :
     , presentation : Id.DocumentId -> String
     , item : String -> String
     , documentPermanent : Id.DocumentId -> String
+    , bibtex : Id.DocumentId -> String
+    , bibtexLogo : String
     , showDocumentPdf : Id.DocumentId -> String
     , downloadDocumentPdf : Id.DocumentId -> String
     , urn : String -> String
@@ -82,6 +84,8 @@ externalServerUrls =
     , presentation = "https://mediatum.ub.tum.de/thumb2/" |> appendId
     , item = \itemSpec -> "https://mediatum.ub.tum.de/?item=" ++ itemSpec ++ ".html"
     , documentPermanent = "https://mediatum.ub.tum.de/" |> appendId
+    , bibtex = \id -> "https://mediatum.ub.tum.de/export/" ++ Id.toString id ++ "/bibtex"
+    , bibtexLogo = "https://mediatum.ub.tum.de/img/bibtex.gif"
     , showDocumentPdf =
         \id ->
             "https://mediatum.ub.tum.de/doc/" ++ Id.toString id ++ "/" ++ Id.toString id ++ ".pdf"

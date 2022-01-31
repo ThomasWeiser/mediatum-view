@@ -400,6 +400,13 @@ ul.folder-list ul.folder-list {
 {
   color: var(--color-primary);
 }
+.details .bibtex {
+  margin: 1ex 0;
+}
+.details .bibtex img {
+  vertical-align: middle;
+  margin-right: 0.4em;
+}
 
 .folder-head {
   display: flex;

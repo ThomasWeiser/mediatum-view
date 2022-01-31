@@ -175,6 +175,7 @@ viewDocument context model document residence =
                         document.attributes
                 )
             ]
+        , viewBibtex context.config document
         , viewSearchMatching context.config document.searchMatching
         , viewResidence context residence
         ]
@@ -206,6 +207,29 @@ viewPotentialDissertationAuthor config document =
 
     else
         Html.text ""
+
+
+viewBibtex : Config -> Document -> Html msg
+viewBibtex config document =
+    Html.div
+        [ Html.Attributes.class "bibtex" ]
+        [ Html.a
+            [ Html.Attributes.href (Constants.externalServerUrls.bibtex document.id)
+            , Html.Attributes.target "_blank"
+            , Localization.title config
+                { en = "Open BibTeX information in new window"
+                , de = "BibTeX Informationen in neuem Fenster öffnen"
+                }
+            ]
+            [ Html.img [ Html.Attributes.src Constants.externalServerUrls.bibtexLogo ] []
+            , Html.text "BibTex"
+            ]
+        ]
+
+
+
+-- <a href="/export/1591291/bibtex" target="bibtexdocument" title="BibTeX Informationen in neuem Fenster öffnen">
+-- <img src="/img/bibtex.gif">&nbsp;BibTeX</a>
 
 
 viewSearchMatching : Config -> Maybe Document.SearchMatching -> Html msg
