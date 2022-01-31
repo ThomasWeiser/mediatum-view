@@ -21,6 +21,7 @@ import Html
 import Json.Decode
 import Setup
 import Types.Config as Config
+import Types.Localization as Localization
 import Types.Route as Route
 import Types.Route.Url
 import Url exposing (Url)
@@ -141,7 +142,11 @@ update msg model =
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "mediaTUM View"
+    { title =
+        Localization.string model.setup.config
+            { en = "TUM University Bibliography"
+            , de = "TUM Hochschulbibliographie"
+            }
     , body =
         [ Setup.view model.setup
             |> Html.map SetupMsg
