@@ -5,7 +5,7 @@ module Entities.Markup exposing
     , empty, plainText
     , normalizeYear, normalizeYearMonth, normalizeYearMonthDay
     , fixSpacesAfterSeparators
-    , renderWwwAddress
+    , renderWwwAddress, renderUrn
     , isEmpty
     , trim, view
     , toHtmlString
@@ -19,13 +19,14 @@ module Entities.Markup exposing
 @docs empty, plainText
 @docs normalizeYear, normalizeYearMonth, normalizeYearMonthDay
 @docs fixSpacesAfterSeparators
-@docs renderWwwAddress
+@docs renderWwwAddress, renderUrn
 @docs isEmpty
 @docs trim, view
 @docs toHtmlString
 
 -}
 
+import Constants
 import Html exposing (Html)
 import Html.Parser exposing (Node)
 import Html.Parser.Util
@@ -294,6 +295,45 @@ renderWwwAddress (Markup topNodes) =
 regexWwwAddress : Regex.Regex
 regexWwwAddress =
     "^\\s*(https?://[^; ]+)(?:;\\s*(.*))?$"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
+
+
+renderUrn : Markup -> Markup
+renderUrn (Markup topNodes) =
+    topNodes
+        |> List.map
+            (\node ->
+                case node |> Debug.log "renderUrn" of
+                    Html.Parser.Text text ->
+                        case Regex.find regexUrn text of
+                            [ match ] ->
+                                case match.submatches of
+                                    [ Just urn ] ->
+                                        Html.Parser.Element
+                                            "a"
+                                            [ ( "href"
+                                              , Constants.externalServerUrls.urn urn
+                                              )
+                                            , ( "target", "_blank" )
+                                            ]
+                                            [ Html.Parser.Text urn ]
+
+                                    _ ->
+                                        Html.Parser.Text text
+
+                            _ ->
+                                Html.Parser.Text text
+
+                    _ ->
+                        node
+            )
+        |> Markup
+
+
+regexUrn : Regex.Regex
+regexUrn =
+    "^\\s*(urn:.*)$"
         |> Regex.fromString
         |> Maybe.withDefault Regex.never
 

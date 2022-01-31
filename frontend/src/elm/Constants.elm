@@ -70,6 +70,7 @@ externalServerUrls :
     , documentPermanent : Id.DocumentId -> String
     , showDocumentPdf : Id.DocumentId -> String
     , downloadDocumentPdf : Id.DocumentId -> String
+    , urn : String -> String
     }
 externalServerUrls =
     let
@@ -86,6 +87,7 @@ externalServerUrls =
     , downloadDocumentPdf =
         \id ->
             "https://mediatum.ub.tum.de/download/" ++ Id.toString id ++ "/" ++ Id.toString id ++ ".pdf"
+    , urn = \urnSpec -> "http://nbn-resolving.de/urn/resolver.pl?" ++ urnSpec
     }
 
 
