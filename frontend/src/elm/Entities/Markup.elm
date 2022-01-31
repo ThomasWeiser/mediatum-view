@@ -5,7 +5,7 @@ module Entities.Markup exposing
     , empty, plainText
     , normalizeYear, normalizeYearMonth, normalizeYearMonthDay
     , fixSpacesAfterSeparators
-    , renderWwwAddress, renderUrn
+    , renderWwwAddress, renderUrn, renderDoi
     , isEmpty
     , trim, view
     , toHtmlString
@@ -19,7 +19,7 @@ module Entities.Markup exposing
 @docs empty, plainText
 @docs normalizeYear, normalizeYearMonth, normalizeYearMonthDay
 @docs fixSpacesAfterSeparators
-@docs renderWwwAddress, renderUrn
+@docs renderWwwAddress, renderUrn, renderDoi
 @docs isEmpty
 @docs trim, view
 @docs toHtmlString
@@ -304,7 +304,7 @@ renderUrn (Markup topNodes) =
     topNodes
         |> List.map
             (\node ->
-                case node |> Debug.log "renderUrn" of
+                case node of
                     Html.Parser.Text text ->
                         case Regex.find regexUrn text of
                             [ match ] ->
@@ -334,6 +334,45 @@ renderUrn (Markup topNodes) =
 regexUrn : Regex.Regex
 regexUrn =
     "^\\s*(urn:.*)$"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
+
+
+renderDoi : Markup -> Markup
+renderDoi (Markup topNodes) =
+    topNodes
+        |> List.map
+            (\node ->
+                case node |> Debug.log "renderDoi" of
+                    Html.Parser.Text text ->
+                        case Regex.find regexDoi text of
+                            [ match ] ->
+                                case match.submatches of
+                                    [ Just doi ] ->
+                                        Html.Parser.Element
+                                            "a"
+                                            [ ( "href"
+                                              , Constants.externalServerUrls.doi doi
+                                              )
+                                            , ( "target", "_blank" )
+                                            ]
+                                            [ Html.Parser.Text doi ]
+
+                                    _ ->
+                                        Html.Parser.Text text
+
+                            _ ->
+                                Html.Parser.Text text
+
+                    _ ->
+                        node
+            )
+        |> Markup
+
+
+regexDoi : Regex.Regex
+regexDoi =
+    "^\\s*(?:doi:)?(.*)$"
         |> Regex.fromString
         |> Maybe.withDefault Regex.never
 

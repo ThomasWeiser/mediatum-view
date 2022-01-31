@@ -250,6 +250,7 @@ keys :
     , date : Regex.Regex
     , wwwAddress : Regex.Regex
     , urn : Regex.Regex
+    , doi : Regex.Regex
     }
 keys =
     let
@@ -261,6 +262,7 @@ keys =
     , date = regex "date"
     , wwwAddress = regex "www-address"
     , urn = regex "^urn$"
+    , doi = regex "^doi$"
     }
 
 
@@ -292,6 +294,9 @@ viewAttribute attribute =
 
                                 else if isField keys.urn then
                                     Markup.renderUrn
+
+                                else if isField keys.doi then
+                                    Markup.renderDoi
 
                                 else
                                     identity
