@@ -301,6 +301,16 @@ create or replace function aux.is_public_today (nodeId int4)
 $$ language sql stable;
 
 
+create or replace function aux.data_is_public_today (nodeId int4)
+    returns boolean as $$
+    select mediatum.has_data_access_to_node (nodeId,
+            _group_ids => '{2}', -- Group ID 2 is 'Gast' here. May need a more generic lookup.
+            ipaddr => inet '0.0.0.0',
+            _date => date 'today'
+        )
+$$ language sql stable;
+
+
 create or replace function aux.nodetype_is_container (nodetype1 varchar)
     returns boolean as $$
     select exists

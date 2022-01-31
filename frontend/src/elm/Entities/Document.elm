@@ -1,15 +1,18 @@
 module Entities.Document exposing
-    ( Document, Attribute, SearchMatching
-    , init, attributeValue
+    ( Document, Attribute, SearchMatching, Files, File
+    , init
+    , attributeValue, hasPresentation, hasDocumentPdf
     )
 
 {-| The metadata of a document and its attributes.
 
-@docs Document, Attribute, SearchMatching
-@docs init, attributeValue
+@docs Document, Attribute, SearchMatching, Files, File
+@docs init
+@docs attributeValue, hasPresentation, hasDocumentPdf
 
 -}
 
+import Constants
 import Entities.Markup exposing (Markup)
 import List.Extra
 import Types.Id exposing (DocumentId)
@@ -29,6 +32,7 @@ type alias Document =
     , metadatatypeName : String
     , attributes : List Attribute
     , searchMatching : Maybe SearchMatching
+    , files : Maybe Files
     }
 
 
@@ -55,6 +59,20 @@ type alias SearchMatching =
     }
 
 
+{-| A list of associated files
+-}
+type alias Files =
+    List File
+
+
+{-| Specification of an associated file
+-}
+type alias File =
+    { filetype : String
+    , mimetype : String
+    }
+
+
 {-| -}
 init :
     DocumentId
@@ -62,13 +80,15 @@ init :
     -> String
     -> List Attribute
     -> Maybe SearchMatching
+    -> Maybe Files
     -> Document
-init id metadatatypeName name attributes searchMatching =
+init id metadatatypeName name attributes searchMatching files =
     { id = id
     , name = name
     , metadatatypeName = metadatatypeName
     , attributes = attributes
     , searchMatching = searchMatching
+    , files = files
     }
 
 
@@ -80,3 +100,32 @@ attributeValue key document =
         (\attribute -> attribute.field == key)
         document.attributes
         |> Maybe.map (.value >> Maybe.withDefault Entities.Markup.empty)
+
+
+hasPresentation : Document -> Bool
+hasPresentation document =
+    case document.files of
+        Nothing ->
+            False
+
+        Just files ->
+            List.any
+                (\file ->
+                    file.filetype == Constants.filetypes.presentation
+                )
+                files
+
+
+hasDocumentPdf : Document -> Bool
+hasDocumentPdf document =
+    case document.files of
+        Nothing ->
+            False
+
+        Just files ->
+            List.any
+                (\file ->
+                    (file.filetype == Constants.filetypes.document)
+                        && (file.mimetype == "application/pdf")
+                )
+                files

@@ -231,7 +231,7 @@ genericNode maskName nodeId =
                 (Mediatum.Object.GenericNode.asDocument
                     (SelectionSet.succeed Tuple.pair
                         |> SelectionSet.with
-                            (Api.Fragments.documentByMask maskName Nothing)
+                            (Api.Fragments.documentByMask maskName Nothing True)
                         |> SelectionSet.with
                             Api.Fragments.documentResidence
                     )
@@ -473,7 +473,7 @@ documentDetails maskName documentIdFromSearch withResidence =
         { id = Id.toInt documentIdFromSearch.id }
         (SelectionSet.succeed Tuple.pair
             |> SelectionSet.with
-                (Api.Fragments.documentByMask maskName documentIdFromSearch.search)
+                (Api.Fragments.documentByMask maskName documentIdFromSearch.search True)
             |> (if withResidence then
                     SelectionSet.with
                         (Api.Fragments.documentResidence

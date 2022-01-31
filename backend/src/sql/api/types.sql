@@ -283,6 +283,19 @@ comment on column api.document_from_search.tsquery is
     '@omit';
 
 
+create type api.file as
+    ( filetype text
+    , mimetype text
+    );
+
+comment on type api.file is
+    'Data about a file associated with a document';
+comment on column api.file.filetype is
+    'Common filetype are "document", "thumb", "presentation"';
+comment on column api.file.mimetype is
+    'The mimetype of the file';
+
+
 create type api.fts_sorting as enum
     ( 'by_rank'
     , 'by_date'

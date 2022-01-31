@@ -255,3 +255,18 @@ $$ language sql strict stable parallel safe;
 comment on function api.document_values_by_mask (document api.document, mask_name text, highlight_search_term text) is
     'Gets the meta field values of this document as a JSON value, selected by a named mask. '
     'Optionally mark the occurences of a search term given as highlightSearchTerm.';
+
+
+create or replace function api.document_files
+    ( document api.document
+    )
+    returns api.file[] as $$
+    select array(
+        select row(file.filetype, file.mimetype)::api.file
+        from entity.file
+        where document.id = file.document_id
+    )
+$$ language sql stable;
+
+comment on function api.document_files (document api.document) is
+    'Gets the list of files (if permitted) associated with the document.';
