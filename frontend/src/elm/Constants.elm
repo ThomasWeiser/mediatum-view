@@ -70,6 +70,7 @@ externalServerUrls :
     , documentPermanent : Id.DocumentId -> String
     , bibtex : Id.DocumentId -> String
     , bibtexLogo : String
+    , licenseLogo : String -> String
     , showDocumentPdf : Id.DocumentId -> String
     , downloadDocumentPdf : Id.DocumentId -> String
     , urn : String -> String
@@ -86,6 +87,7 @@ externalServerUrls =
     , documentPermanent = "https://mediatum.ub.tum.de/" |> appendId
     , bibtex = \id -> "https://mediatum.ub.tum.de/export/" ++ Id.toString id ++ "/bibtex"
     , bibtexLogo = "https://mediatum.ub.tum.de/img/bibtex.gif"
+    , licenseLogo = \abbreviation -> "https://mediatum.ub.tum.de/img/" ++ abbreviation ++ ".png"
     , showDocumentPdf =
         \id ->
             "https://mediatum.ub.tum.de/doc/" ++ Id.toString id ++ "/" ++ Id.toString id ++ ".pdf"

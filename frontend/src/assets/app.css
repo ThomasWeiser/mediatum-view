@@ -407,6 +407,9 @@ ul.folder-list ul.folder-list {
   vertical-align: middle;
   margin-right: 0.4em;
 }
+.details .license img {
+  height: 2.3ex;
+}
 
 .folder-head {
   display: flex;

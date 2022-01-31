@@ -246,6 +246,7 @@ keys :
     , wwwAddress : Regex.Regex
     , urn : Regex.Regex
     , doi : Regex.Regex
+    , license : Regex.Regex
     }
 keys =
     let
@@ -258,6 +259,7 @@ keys =
     , wwwAddress = regex "www-address"
     , urn = regex "^urn$"
     , doi = regex "^doi$"
+    , license = regex "^license$"
     }
 
 
@@ -292,6 +294,9 @@ viewAttribute attribute =
 
                                 else if isField keys.doi then
                                     Markup.renderDoi
+
+                                else if isField keys.license then
+                                    Markup.renderLicense
 
                                 else
                                     identity

@@ -5,7 +5,7 @@ module Entities.Markup exposing
     , empty, plainText
     , normalizeYear, normalizeYearMonth, normalizeYearMonthDay
     , fixSpacesAfterSeparators
-    , renderWwwAddress, renderUrn, renderDoi
+    , renderWwwAddress, renderUrn, renderDoi, renderLicense
     , isEmpty
     , trim, view
     , toHtmlString
@@ -19,7 +19,7 @@ module Entities.Markup exposing
 @docs empty, plainText
 @docs normalizeYear, normalizeYearMonth, normalizeYearMonthDay
 @docs fixSpacesAfterSeparators
-@docs renderWwwAddress, renderUrn, renderDoi
+@docs renderWwwAddress, renderUrn, renderDoi, renderLicense
 @docs isEmpty
 @docs trim, view
 @docs toHtmlString
@@ -271,13 +271,17 @@ renderWwwAddress (Markup topNodes) =
                                     [ Just url, Just linktext ] ->
                                         Html.Parser.Element
                                             "a"
-                                            [ ( "href", url ) ]
+                                            [ ( "href", url )
+                                            , ( "target", "_blank" )
+                                            ]
                                             [ Html.Parser.Text linktext ]
 
                                     (Just url) :: _ ->
                                         Html.Parser.Element
                                             "a"
-                                            [ ( "href", url ) ]
+                                            [ ( "href", url )
+                                            , ( "target", "_blank" )
+                                            ]
                                             [ Html.Parser.Text url ]
 
                                     _ ->
@@ -343,7 +347,7 @@ renderDoi (Markup topNodes) =
     topNodes
         |> List.map
             (\node ->
-                case node |> Debug.log "renderDoi" of
+                case node of
                     Html.Parser.Text text ->
                         case Regex.find regexDoi text of
                             [ match ] ->
@@ -373,6 +377,48 @@ renderDoi (Markup topNodes) =
 regexDoi : Regex.Regex
 regexDoi =
     "^\\s*(?:doi:)?(.*)$"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
+
+
+renderLicense : Markup -> Markup
+renderLicense (Markup topNodes) =
+    topNodes
+        |> List.map
+            (\node ->
+                case node of
+                    Html.Parser.Text text ->
+                        case Regex.find regexLicense text of
+                            [ match ] ->
+                                case match.submatches of
+                                    [ Just abbreviation, Just url ] ->
+                                        Html.Parser.Element
+                                            "a"
+                                            [ ( "href", url )
+                                            , ( "target", "_blank" )
+                                            , ( "class", "license" )
+                                            ]
+                                            [ Html.Parser.Element
+                                                "img"
+                                                [ ( "src", Constants.externalServerUrls.licenseLogo abbreviation ) ]
+                                                []
+                                            ]
+
+                                    _ ->
+                                        Html.Parser.Text text
+
+                            _ ->
+                                Html.Parser.Text text
+
+                    _ ->
+                        node
+            )
+        |> Markup
+
+
+regexLicense : Regex.Regex
+regexLicense =
+    "^\\s*([a-zA-Z0-9_-]+),\\s*(https?://\\S+)$"
         |> Regex.fromString
         |> Maybe.withDefault Regex.never
 
