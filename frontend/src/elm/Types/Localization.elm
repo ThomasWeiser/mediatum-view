@@ -2,7 +2,7 @@ module Types.Localization exposing
     ( Language(..)
     , languageFromLanguageTag, languageToLanguageTag
     , Translations
-    , text, string
+    , string, text, title
     )
 
 {-| Types used for localization of the app.
@@ -12,11 +12,12 @@ Currently we offer English and German as UI languages.
 @docs Language
 @docs languageFromLanguageTag, languageToLanguageTag
 @docs Translations
-@docs text, string
+@docs string, text, title
 
 -}
 
-import Html exposing (Html)
+import Html exposing (Attribute, Html)
+import Html.Attributes
 
 
 {-| A text with translations into the supported languages
@@ -52,6 +53,12 @@ string config translations =
 text : Config c -> Translations -> Html msg
 text config translations =
     Html.text (string config translations)
+
+
+{-| -}
+title : Config c -> Translations -> Attribute msg
+title config translations =
+    Html.Attributes.title (string config translations)
 
 
 {-| -}

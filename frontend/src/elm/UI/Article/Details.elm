@@ -111,11 +111,10 @@ viewDocument context model document residence =
             [ Html.a
                 [ Html.Attributes.href
                     (Constants.externalServerUrls.documentPermanent document.id)
-                , Html.Attributes.title <|
-                    Localization.string context.config
-                        { en = "Persistent link to the document in mediaTUM"
-                        , de = "Dauerhafter Verweis auf das Dokument in mediaTUM"
-                        }
+                , Localization.title context.config
+                    { en = "Persistent link to the document in mediaTUM"
+                    , de = "Dauerhafter Verweis auf das Dokument in mediaTUM"
+                    }
                 ]
                 [ Localization.text context.config
                     { en = "Show this document in mediaTUM"
@@ -134,11 +133,10 @@ viewDocument context model document residence =
                         Html.a
                             [ Html.Attributes.href (Constants.externalServerUrls.showDocumentPdf document.id)
                             , Html.Attributes.target "_blank"
-                            , Html.Attributes.title <|
-                                Localization.string context.config
-                                    { en = "Open fulltext in new window"
-                                    , de = "Volltext in neuem Fenster öffnen"
-                                    }
+                            , Localization.title context.config
+                                { en = "Open fulltext in new window"
+                                , de = "Volltext in neuem Fenster öffnen"
+                                }
                             ]
                             [ html ]
 

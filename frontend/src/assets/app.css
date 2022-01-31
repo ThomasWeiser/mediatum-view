@@ -191,6 +191,13 @@ article {
 .fixed-facet-filter .aspect-name {
   font-weight: bold;
 }
+.fixed-facet-filter .visual-button {
+  padding: 0rem 0.35rem;
+  line-height: 100%;
+}
+.fixed-facet-filter .visual-button svg {
+  height: 1.2ex;
+}
 .fixed-facet-filter .separator {
   margin: 0 0.4em;
 }

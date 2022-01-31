@@ -45,6 +45,7 @@ import Types.Route exposing (Route)
 import Types.SearchTerm as SearchTerm
 import Types.Selection as Selection exposing (Sorting(..))
 import UI.Icons
+import Utils
 import Utils.List
 
 
@@ -434,8 +435,6 @@ viewFtsFilter config aspect searchText =
             , Html.button
                 [ Html.Attributes.type_ "button"
                 , Html.Attributes.class "visual-button"
-
-                -- , Html.Attributes.disabled beingEdited
                 , Html.Events.onClick (RemoveFtsFilter aspect)
                 , Html.Attributes.class "filter-button"
                 ]
@@ -509,8 +508,8 @@ viewFacetFilterButtons : Context -> List Selection.FacetFilter -> Html Msg
 viewFacetFilterButtons context listOfFacetFilters =
     Html.div []
         [ Localization.text context.config
-            { en = "Select: "
-            , de = "Auswählen: "
+            { en = "Filter by: "
+            , de = "Filtern nach: "
             }
         , Html.span
             [ Html.Attributes.class "facet-aspect-buttons" ]
@@ -546,16 +545,19 @@ viewSelectedFacetFilters context listOfFacetFilters =
         listOfHtml =
             listOfFacetFilters
                 |> Utils.List.mapAndMarkLast (viewFacetFilter context.config)
+
+        numberOfFilters =
+            List.length listOfFacetFilters
     in
-    if List.isEmpty listOfHtml then
+    if numberOfFilters == 0 then
         Html.text ""
 
     else
         Html.div []
             (Html.span []
                 [ Localization.text context.config
-                    { en = "Selected: "
-                    , de = "Ausgewählt: "
+                    { en = (numberOfFilters > 1) |> Utils.ifElse "Active filters: " "Active filter: "
+                    , de = "Aktive Filter: "
                     }
                 ]
                 :: listOfHtml
@@ -579,14 +581,15 @@ viewFacetFilter config isLastElement ( aspect, value ) =
         , Html.text " "
         , Html.button
             [ Html.Attributes.type_ "button"
-            , Html.Attributes.class "text-button"
-            , Html.Events.onClick (RemoveFacetFilter aspect)
-            ]
-            [ Localization.text config
-                { en = "(unselect)"
-                , de = "(abwählen)"
+            , Html.Attributes.class "visual-button"
+            , Localization.title config
+                { en = "(remove filter)"
+                , de = "(Filter entfernen)"
                 }
+            , Html.Events.onClick (RemoveFacetFilter aspect)
+            , Html.Attributes.class "filter-button"
             ]
+            [ UI.Icons.clear ]
         , if isLastElement then
             Html.text ""
 
