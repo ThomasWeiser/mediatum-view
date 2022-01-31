@@ -22,7 +22,7 @@ module UI.Article.Details exposing
 
 import Cache exposing (Cache)
 import Constants
-import Entities.Document as Document exposing (Document)
+import Entities.Document as Document exposing (Attribute, Document)
 import Entities.Markup as Markup exposing (Markup)
 import Entities.Residence as Residence exposing (Residence)
 import Html exposing (Html)
@@ -169,44 +169,15 @@ viewDocument context model document residence =
             ]
         , Html.table []
             [ Html.tbody []
-                (viewPotentialDissertationAuthor context.config document
-                    :: List.map
-                        viewAttribute
-                        document.attributes
+                (List.map
+                    viewAttribute
+                    document.attributes
                 )
             ]
         , viewBibtex context.config document
         , viewSearchMatching context.config document.searchMatching
         , viewResidence context residence
         ]
-
-
-{-| Work around a peculiarity of the current TUM database, regarding documents with schema `diss`.
-
-When queried by mask `nodebig` or `nodebig_en`, there is no maskitem which contains the author's name.
-But for most documents with schema `diss` the author's name is given by the document's name,
-which is a separate column in table `mediatum.node`.
-
-So, in these cases we add a synthetical attribute to display the author's name.
-
--}
-viewPotentialDissertationAuthor : Config -> Document -> Html Msg
-viewPotentialDissertationAuthor config document =
-    if document.metadatatypeName == "Dissertation" then
-        viewAttribute
-            { field = "author-from-document-name"
-            , name =
-                Localization.string config { en = "Author", de = "Autor" }
-            , value =
-                Just
-                    (Markup.parse
-                        (Markup.SpanClass "unparsable")
-                        document.name
-                    )
-            }
-
-    else
-        Html.text ""
 
 
 viewBibtex : Config -> Document -> Html msg
@@ -290,7 +261,7 @@ keys =
     }
 
 
-viewAttribute : { a | name : String, value : Maybe Markup, field : String } -> Html msg
+viewAttribute : Attribute -> Html msg
 viewAttribute attribute =
     case attribute.value of
         Just value ->
