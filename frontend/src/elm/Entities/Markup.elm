@@ -5,7 +5,7 @@ module Entities.Markup exposing
     , empty, plainText
     , normalizeYear, normalizeYearMonth, normalizeYearMonthDay
     , fixSpacesAfterSeparators
-    , renderWwwAddress
+    , renderWwwAddress, renderUrn, renderDoi, renderLicense
     , isEmpty
     , trim, view
     , toHtmlString
@@ -19,13 +19,14 @@ module Entities.Markup exposing
 @docs empty, plainText
 @docs normalizeYear, normalizeYearMonth, normalizeYearMonthDay
 @docs fixSpacesAfterSeparators
-@docs renderWwwAddress
+@docs renderWwwAddress, renderUrn, renderDoi, renderLicense
 @docs isEmpty
 @docs trim, view
 @docs toHtmlString
 
 -}
 
+import Constants
 import Html exposing (Html)
 import Html.Parser exposing (Node)
 import Html.Parser.Util
@@ -270,13 +271,17 @@ renderWwwAddress (Markup topNodes) =
                                     [ Just url, Just linktext ] ->
                                         Html.Parser.Element
                                             "a"
-                                            [ ( "href", url ) ]
+                                            [ ( "href", url )
+                                            , ( "target", "_blank" )
+                                            ]
                                             [ Html.Parser.Text linktext ]
 
                                     (Just url) :: _ ->
                                         Html.Parser.Element
                                             "a"
-                                            [ ( "href", url ) ]
+                                            [ ( "href", url )
+                                            , ( "target", "_blank" )
+                                            ]
                                             [ Html.Parser.Text url ]
 
                                     _ ->
@@ -294,6 +299,126 @@ renderWwwAddress (Markup topNodes) =
 regexWwwAddress : Regex.Regex
 regexWwwAddress =
     "^\\s*(https?://[^; ]+)(?:;\\s*(.*))?$"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
+
+
+renderUrn : Markup -> Markup
+renderUrn (Markup topNodes) =
+    topNodes
+        |> List.map
+            (\node ->
+                case node of
+                    Html.Parser.Text text ->
+                        case Regex.find regexUrn text of
+                            [ match ] ->
+                                case match.submatches of
+                                    [ Just urn ] ->
+                                        Html.Parser.Element
+                                            "a"
+                                            [ ( "href"
+                                              , Constants.externalServerUrls.urn urn
+                                              )
+                                            , ( "target", "_blank" )
+                                            ]
+                                            [ Html.Parser.Text urn ]
+
+                                    _ ->
+                                        Html.Parser.Text text
+
+                            _ ->
+                                Html.Parser.Text text
+
+                    _ ->
+                        node
+            )
+        |> Markup
+
+
+regexUrn : Regex.Regex
+regexUrn =
+    "^\\s*(urn:.*)$"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
+
+
+renderDoi : Markup -> Markup
+renderDoi (Markup topNodes) =
+    topNodes
+        |> List.map
+            (\node ->
+                case node of
+                    Html.Parser.Text text ->
+                        case Regex.find regexDoi text of
+                            [ match ] ->
+                                case match.submatches of
+                                    [ Just doi ] ->
+                                        Html.Parser.Element
+                                            "a"
+                                            [ ( "href"
+                                              , Constants.externalServerUrls.doi doi
+                                              )
+                                            , ( "target", "_blank" )
+                                            ]
+                                            [ Html.Parser.Text doi ]
+
+                                    _ ->
+                                        Html.Parser.Text text
+
+                            _ ->
+                                Html.Parser.Text text
+
+                    _ ->
+                        node
+            )
+        |> Markup
+
+
+regexDoi : Regex.Regex
+regexDoi =
+    "^\\s*(?:doi:)?(.*)$"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
+
+
+renderLicense : Markup -> Markup
+renderLicense (Markup topNodes) =
+    topNodes
+        |> List.map
+            (\node ->
+                case node of
+                    Html.Parser.Text text ->
+                        case Regex.find regexLicense text of
+                            [ match ] ->
+                                case match.submatches of
+                                    [ Just abbreviation, Just url ] ->
+                                        Html.Parser.Element
+                                            "a"
+                                            [ ( "href", url )
+                                            , ( "target", "_blank" )
+                                            , ( "class", "license" )
+                                            ]
+                                            [ Html.Parser.Element
+                                                "img"
+                                                [ ( "src", Constants.externalServerUrls.licenseLogo abbreviation ) ]
+                                                []
+                                            ]
+
+                                    _ ->
+                                        Html.Parser.Text text
+
+                            _ ->
+                                Html.Parser.Text text
+
+                    _ ->
+                        node
+            )
+        |> Markup
+
+
+regexLicense : Regex.Regex
+regexLicense =
+    "^\\s*([a-zA-Z0-9_-]+),\\s*(https?://\\S+)$"
         |> Regex.fromString
         |> Maybe.withDefault Regex.never
 

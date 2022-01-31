@@ -24,7 +24,7 @@ insert into config.masks_by_purpose
     (purpose, mask_names)
 values
     ('listing', '{"en": "nodesmall_en", "de": "nodesmall"}'::jsonb),
-    ('details', '{"en": "nodebig_en", "de": "nodebig"}'::jsonb)
+    ('details', '{"en": "node-hsb_en", "de": "node-hsb"}'::jsonb)
 ;
 
 insert into config.aspect_def

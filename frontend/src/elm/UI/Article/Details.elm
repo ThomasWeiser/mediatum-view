@@ -22,7 +22,7 @@ module UI.Article.Details exposing
 
 import Cache exposing (Cache)
 import Constants
-import Entities.Document as Document exposing (Document)
+import Entities.Document as Document exposing (Attribute, Document)
 import Entities.Markup as Markup exposing (Markup)
 import Entities.Residence as Residence exposing (Residence)
 import Html exposing (Html)
@@ -169,43 +169,38 @@ viewDocument context model document residence =
             ]
         , Html.table []
             [ Html.tbody []
-                (viewPotentialDissertationAuthor context.config document
-                    :: List.map
-                        viewAttribute
-                        document.attributes
+                (List.map
+                    viewAttribute
+                    document.attributes
                 )
             ]
+        , viewBibtex context.config document
         , viewSearchMatching context.config document.searchMatching
         , viewResidence context residence
         ]
 
 
-{-| Work around a peculiarity of the current TUM database, regarding documents with schema `diss`.
+viewBibtex : Config -> Document -> Html msg
+viewBibtex config document =
+    Html.div
+        [ Html.Attributes.class "bibtex" ]
+        [ Html.a
+            [ Html.Attributes.href (Constants.externalServerUrls.bibtex document.id)
+            , Html.Attributes.target "_blank"
+            , Localization.title config
+                { en = "Open BibTeX information in new window"
+                , de = "BibTeX Informationen in neuem Fenster öffnen"
+                }
+            ]
+            [ Html.img [ Html.Attributes.src Constants.externalServerUrls.bibtexLogo ] []
+            , Html.text "BibTex"
+            ]
+        ]
 
-When queried by mask `nodebig` or `nodebig_en`, there is no maskitem which contains the author's name.
-But for most documents with schema `diss` the author's name is given by the document's name,
-which is a separate column in table `mediatum.node`.
 
-So, in these cases we add a synthetical attribute to display the author's name.
 
--}
-viewPotentialDissertationAuthor : Config -> Document -> Html Msg
-viewPotentialDissertationAuthor config document =
-    if document.metadatatypeName == "Dissertation" then
-        viewAttribute
-            { field = "author-from-document-name"
-            , name =
-                Localization.string config { en = "Author", de = "Autor" }
-            , value =
-                Just
-                    (Markup.parse
-                        (Markup.SpanClass "unparsable")
-                        document.name
-                    )
-            }
-
-    else
-        Html.text ""
+-- <a href="/export/1591291/bibtex" target="bibtexdocument" title="BibTeX Informationen in neuem Fenster öffnen">
+-- <img src="/img/bibtex.gif">&nbsp;BibTeX</a>
 
 
 viewSearchMatching : Config -> Maybe Document.SearchMatching -> Html msg
@@ -249,6 +244,9 @@ keys :
     , yearmonth : Regex.Regex
     , date : Regex.Regex
     , wwwAddress : Regex.Regex
+    , urn : Regex.Regex
+    , doi : Regex.Regex
+    , license : Regex.Regex
     }
 keys =
     let
@@ -259,10 +257,13 @@ keys =
     , yearmonth = regex "yearmonth"
     , date = regex "date"
     , wwwAddress = regex "www-address"
+    , urn = regex "^urn$"
+    , doi = regex "^doi$"
+    , license = regex "^license$"
     }
 
 
-viewAttribute : { a | name : String, value : Maybe Markup, field : String } -> Html msg
+viewAttribute : Attribute -> Html msg
 viewAttribute attribute =
     case attribute.value of
         Just value ->
@@ -287,6 +288,15 @@ viewAttribute attribute =
 
                                 else if isField keys.wwwAddress then
                                     Markup.renderWwwAddress
+
+                                else if isField keys.urn then
+                                    Markup.renderUrn
+
+                                else if isField keys.doi then
+                                    Markup.renderDoi
+
+                                else if isField keys.license then
+                                    Markup.renderLicense
 
                                 else
                                     identity

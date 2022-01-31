@@ -68,8 +68,13 @@ externalServerUrls :
     , presentation : Id.DocumentId -> String
     , item : String -> String
     , documentPermanent : Id.DocumentId -> String
+    , bibtex : Id.DocumentId -> String
+    , bibtexLogo : String
+    , licenseLogo : String -> String
     , showDocumentPdf : Id.DocumentId -> String
     , downloadDocumentPdf : Id.DocumentId -> String
+    , urn : String -> String
+    , doi : String -> String
     }
 externalServerUrls =
     let
@@ -80,12 +85,17 @@ externalServerUrls =
     , presentation = "https://mediatum.ub.tum.de/thumb2/" |> appendId
     , item = \itemSpec -> "https://mediatum.ub.tum.de/?item=" ++ itemSpec ++ ".html"
     , documentPermanent = "https://mediatum.ub.tum.de/" |> appendId
+    , bibtex = \id -> "https://mediatum.ub.tum.de/export/" ++ Id.toString id ++ "/bibtex"
+    , bibtexLogo = "https://mediatum.ub.tum.de/img/bibtex.gif"
+    , licenseLogo = \abbreviation -> "https://mediatum.ub.tum.de/img/" ++ abbreviation ++ ".png"
     , showDocumentPdf =
         \id ->
             "https://mediatum.ub.tum.de/doc/" ++ Id.toString id ++ "/" ++ Id.toString id ++ ".pdf"
     , downloadDocumentPdf =
         \id ->
             "https://mediatum.ub.tum.de/download/" ++ Id.toString id ++ "/" ++ Id.toString id ++ ".pdf"
+    , urn = \urnSpec -> "https://nbn-resolving.de/urn/resolver.pl?" ++ urnSpec
+    , doi = \doiSpec -> "https://doi.org/" ++ doiSpec
     }
 
 
