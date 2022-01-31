@@ -129,12 +129,42 @@ viewDocument context model document residence =
           else
             Html.div
                 [ Html.Attributes.class "thumbnail" ]
-                [ Html.img
-                    [ Html.Attributes.src
-                        (Constants.externalServerUrls.presentation document.id)
-                    ]
-                    []
+                [ (if Document.hasDocumentPdf document then
+                    \html ->
+                        Html.a
+                            [ Html.Attributes.href (Constants.externalServerUrls.showDocumentPdf document.id)
+                            , Html.Attributes.target "_blank"
+                            , Html.Attributes.title <|
+                                Localization.string context.config
+                                    { en = "Open fulltext in new window"
+                                    , de = "Volltext in neuem Fenster öffnen"
+                                    }
+                            ]
+                            [ html ]
+
+                   else
+                    identity
+                  )
+                    (Html.img
+                        [ Html.Attributes.src
+                            (Constants.externalServerUrls.presentation document.id)
+                        ]
+                        []
+                    )
                 ]
+        , if Document.hasDocumentPdf document then
+            Html.div [ Html.Attributes.class "download-link" ]
+                [ Html.a
+                    [ Html.Attributes.href (Constants.externalServerUrls.downloadDocumentPdf document.id) ]
+                    [ Localization.text context.config
+                        { en = "Download PDF"
+                        , de = "PDF herunterladen"
+                        }
+                    ]
+                ]
+
+          else
+            Html.text ""
         , Html.div [ Html.Attributes.class "header" ]
             [ Html.div [ Html.Attributes.class "metadatatype" ]
                 [ Html.text document.metadatatypeName ]

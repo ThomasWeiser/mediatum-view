@@ -68,6 +68,8 @@ externalServerUrls :
     , presentation : Id.DocumentId -> String
     , item : String -> String
     , documentPermanent : Id.DocumentId -> String
+    , showDocumentPdf : Id.DocumentId -> String
+    , downloadDocumentPdf : Id.DocumentId -> String
     }
 externalServerUrls =
     let
@@ -78,6 +80,12 @@ externalServerUrls =
     , presentation = "https://mediatum.ub.tum.de/thumb2/" |> appendId
     , item = \itemSpec -> "https://mediatum.ub.tum.de/?item=" ++ itemSpec ++ ".html"
     , documentPermanent = "https://mediatum.ub.tum.de/" |> appendId
+    , showDocumentPdf =
+        \id ->
+            "https://mediatum.ub.tum.de/doc/" ++ Id.toString id ++ "/" ++ Id.toString id ++ ".pdf"
+    , downloadDocumentPdf =
+        \id ->
+            "https://mediatum.ub.tum.de/download/" ++ Id.toString id ++ "/" ++ Id.toString id ++ ".pdf"
     }
 
 
@@ -85,7 +93,9 @@ externalServerUrls =
 -}
 filetypes :
     { presentation : String
+    , document : String
     }
 filetypes =
     { presentation = "presentation"
+    , document = "document"
     }

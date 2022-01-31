@@ -1,14 +1,14 @@
 module Entities.Document exposing
     ( Document, Attribute, SearchMatching, Files, File
     , init
-    , attributeValue, hasPresentation
+    , attributeValue, hasPresentation, hasDocumentPdf
     )
 
 {-| The metadata of a document and its attributes.
 
 @docs Document, Attribute, SearchMatching, Files, File
 @docs init
-@docs attributeValue, hasPresentation
+@docs attributeValue, hasPresentation, hasDocumentPdf
 
 -}
 
@@ -112,5 +112,20 @@ hasPresentation document =
             List.any
                 (\file ->
                     file.filetype == Constants.filetypes.presentation
+                )
+                files
+
+
+hasDocumentPdf : Document -> Bool
+hasDocumentPdf document =
+    case document.files of
+        Nothing ->
+            False
+
+        Just files ->
+            List.any
+                (\file ->
+                    (file.filetype == Constants.filetypes.document)
+                        && (file.mimetype == "application/pdf")
                 )
                 files
