@@ -25,7 +25,7 @@ create table if not exists config.aspect_facet (
 );
 
 create table if not exists config.masks_by_purpose (
-    purpose text not null,
+    purpose text primary key not null,
     mask_names jsonb not null
 );
 
