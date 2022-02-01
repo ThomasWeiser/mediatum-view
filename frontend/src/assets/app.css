@@ -102,6 +102,9 @@ header .language-select {
   font-size: initial;
   font-weight: initial;
 }
+header .language-select .text-button {
+  color: unset;
+}
 header .language-select .selected {
   font-weight: bold;
 }
