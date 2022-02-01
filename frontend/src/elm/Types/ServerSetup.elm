@@ -34,5 +34,5 @@ type alias ServerConfig =
     , staticFtsAspects : Maybe (List FtsAspectConfig)
     , staticFacetAspects : Maybe (List FacetAspectConfig)
     , masksByPurpose : Maybe (List MasksPurposeServerConfig)
-    , frontPage : Maybe Translations
+    , collectionPages : List ( FolderId, Translations )
     }

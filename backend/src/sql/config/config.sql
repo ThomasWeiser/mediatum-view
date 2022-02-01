@@ -18,7 +18,7 @@ delete from config.masks_by_purpose;
 delete from config.aspect_facet;
 delete from config.aspect_fts;
 delete from config.aspect_def;
-delete from config.frontpage;
+delete from config.collection_page;
 
 insert into config.masks_by_purpose
     (purpose, mask_names)
@@ -68,9 +68,9 @@ values
 \set hsb_frontpage_en_html `cat src/content/hsb-frontpage-en.html`
 \set hsb_frontpage_de_html `cat src/content/hsb-frontpage-de.html`
 
-insert into config.frontpage
-    (application, language, html)
+insert into config.collection_page
+    (application, folder_id, language, html)
 values
-    ('hsb', 'en', :'hsb_frontpage_en_html'),
-    ('hsb', 'de', :'hsb_frontpage_de_html')
+    ('hsb', 1433087, 'en', :'hsb_frontpage_en_html'),
+    ('hsb', 1433087, 'de', :'hsb_frontpage_de_html')
 ;

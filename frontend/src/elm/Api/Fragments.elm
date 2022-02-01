@@ -1,5 +1,5 @@
 module Api.Fragments exposing
-    ( translation, ftsAspectConfig, facetAspectConfig, masksPurposeConfig
+    ( translation, ftsAspectConfig, facetAspectConfig, masksPurposeConfig, collectionPage
     , folder, folderAndSubfolders, folderLineageFolders
     , folderAndSubfolderCounts, folderCount, facetByAspect
     , documentsPage, documentResult, documentByMask, documentResidence
@@ -11,7 +11,7 @@ module Api.Fragments exposing
 
 # Fragments of Config
 
-@docs translation, ftsAspectConfig, facetAspectConfig, masksPurposeConfig
+@docs translation, ftsAspectConfig, facetAspectConfig, masksPurposeConfig, collectionPage
 
 
 # Fragments on Folder
@@ -47,6 +47,7 @@ import Json.Decode exposing (Decoder)
 import List.Nonempty
 import Maybe.Extra
 import Mediatum.Object
+import Mediatum.Object.CollectionPage
 import Mediatum.Object.Docset
 import Mediatum.Object.Document
 import Mediatum.Object.DocumentFromSearch
@@ -68,6 +69,7 @@ import Mediatum.Scalar
 import String.Extra
 import Types exposing (FolderDisplay(..), WindowPage)
 import Types.Aspect as Aspect exposing (Aspect)
+import Types.Config as Config
 import Types.Config.FacetAspectConfig exposing (FacetAspectConfig)
 import Types.Config.FtsAspectConfig exposing (FtsAspectConfig)
 import Types.Config.MasksConfig exposing (MasksPurposeServerConfig)
@@ -154,6 +156,22 @@ masksPurposeConfig =
             )
         |> SelectionSet.with
             (Mediatum.Object.MasksPurposeConfig.maskNames
+                translation
+                |> SelectionSet.nonNullOrFail
+            )
+
+
+collectionPage : SelectionSet Config.CollectionPage Mediatum.Object.CollectionPage
+collectionPage =
+    SelectionSet.succeed
+        Tuple.pair
+        |> SelectionSet.with
+            (Mediatum.Object.CollectionPage.folderId
+                |> SelectionSet.nonNullOrFail
+                |> SelectionSet.map Id.fromInt
+            )
+        |> SelectionSet.with
+            (Mediatum.Object.CollectionPage.content
                 translation
                 |> SelectionSet.nonNullOrFail
             )

@@ -80,7 +80,7 @@ findMap mapping list =
         .id
         2
         [ { id = 2, data = "two" }, { id = 5, data = "five" } ]
-        == { id = 2, data = "two" }
+        == Just { id = 2, data = "two" }
 
 -}
 findByMapping : (a -> b) -> b -> List a -> Maybe a
