@@ -48,7 +48,6 @@ import UI.Article.Details
 import UI.Article.Generic
 import UI.Article.Iterator
 import UI.Article.Listing
-import UI.Widgets.Breadcrumbs
 import UI.Widgets.ThumbnailSwitch
 import Utils
 
@@ -343,21 +342,8 @@ view context model =
     Html.article
         [ Html.Attributes.class "article" ]
         [ viewThumbnailsSwitch context model
-        , viewBreadcrumbs
-            context
-            (Presentation.getFolderId context.cache context.presentation)
         , viewContent context model
         ]
-
-
-viewBreadcrumbs : Context -> Maybe FolderId -> Html msg
-viewBreadcrumbs context maybeFolderId =
-    maybeFolderId
-        |> Maybe.andThen
-            (Cache.Derive.getPath context.config context.cache
-                >> RemoteData.toMaybe
-            )
-        |> UI.Widgets.Breadcrumbs.view context
 
 
 viewThumbnailsSwitch : Context -> Model -> Html Msg

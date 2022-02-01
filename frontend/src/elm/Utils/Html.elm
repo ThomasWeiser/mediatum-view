@@ -1,8 +1,10 @@
-module Utils.Html exposing
+port module Utils.Html exposing
     ( viewApiError
     , viewCacheError
     , viewError
     , displayNone
+    , scrollElementIntoView
+    , ScrollIntoViewVerticalAlignment(..)
     )
 
 {-| Display errors messages using a standardized layout.
@@ -12,6 +14,7 @@ module Utils.Html exposing
 @docs viewError
 
 @docs displayNone
+@docs ScrollIntoViewBlock, scrollElementIntoView
 
 -}
 
@@ -49,3 +52,26 @@ displayNone hide =
 
     else
         Html.Attributes.class ""
+
+
+{-| See <https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView>
+-}
+type ScrollIntoViewVerticalAlignment
+    = VerticalAlignmentNearest
+    | VerticalAlignmentStart
+
+
+scrollElementIntoView : ScrollIntoViewVerticalAlignment -> String -> Cmd msg
+scrollElementIntoView block elementId =
+    scrollIntoView
+        ( case block of
+            VerticalAlignmentNearest ->
+                "nearest"
+
+            VerticalAlignmentStart ->
+                "start"
+        , elementId
+        )
+
+
+port scrollIntoView : ( String, String ) -> Cmd msg

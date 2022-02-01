@@ -22,9 +22,11 @@ module UI.Controls exposing
 
 import Browser.Dom
 import Cache exposing (Cache)
+import Cache.Derive
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Json.Decode exposing (maybe)
 import List.Extra
 import Maybe.Extra
 import RemoteData
@@ -44,7 +46,9 @@ import Types.RearrangeableEditList exposing (RearrangeableEditList, rearrange)
 import Types.Route exposing (Route)
 import Types.SearchTerm as SearchTerm
 import Types.Selection as Selection exposing (Sorting(..))
+import Types.SidebarElement as SidebarElement exposing (SidebarElement)
 import UI.Icons
+import UI.Widgets.Breadcrumbs
 import Utils
 import Utils.List
 
@@ -62,7 +66,7 @@ type alias Context =
 type Return
     = NoReturn
     | AdjustSetup AdjustmentToSetup
-    | FocusOnFacet Aspect
+    | FocusOnSidebarElement SidebarElement
     | Navigate Navigation
 
 
@@ -84,6 +88,7 @@ type Msg
     | SelectFtsFilter Aspect
     | SetFtsFilterText Aspect String
     | RemoveFtsFilter Aspect
+    | SelectDirectoryFilter
     | SelectFacetFilter Aspect
     | RemoveFacetFilter Aspect
     | SetSorting Sorting
@@ -199,10 +204,16 @@ update context msg model =
             , navigate model1
             )
 
+        SelectDirectoryFilter ->
+            ( model
+            , Cmd.none
+            , FocusOnSidebarElement SidebarElement.Tree
+            )
+
         SelectFacetFilter aspect ->
             ( model
             , Cmd.none
-            , FocusOnFacet aspect
+            , FocusOnSidebarElement (SidebarElement.Facet aspect)
             )
 
         RemoveFacetFilter aspect ->
@@ -499,7 +510,8 @@ viewFacetFilters context =
                     selection.facetFilters |> FilterList.toList
             in
             Html.div [ Html.Attributes.class "filters-bar facet-controls" ]
-                [ viewFacetFilterButtons context listOfFacetFilters
+                [ viewBreadcrumbs context
+                , viewFacetFilterButtons context listOfFacetFilters
                 , viewSelectedFacetFilters context listOfFacetFilters
                 ]
 
@@ -533,10 +545,44 @@ viewFacetFilterButtons context listOfFacetFilters =
                             ]
                             [ Localization.text context.config label ]
                     )
+                |> (\listOfButtons ->
+                        Html.button
+                            [ Html.Attributes.type_ "button"
+                            , Html.Attributes.class "text-button"
+                            , Html.Events.onClick SelectDirectoryFilter
+                            ]
+                            [ Localization.text context.config
+                                { en = "Directory", de = "Verzeichnis" }
+                            ]
+                            :: listOfButtons
+                   )
                 |> List.intersperse
                     (Html.span [ Html.Attributes.class "separator" ] [ Html.text " · " ])
             )
         ]
+
+
+viewBreadcrumbs : Context -> Html Msg
+viewBreadcrumbs context =
+    let
+        maybeLineage =
+            Presentation.getFolderId context.cache context.presentation
+                |> Maybe.andThen
+                    (Cache.Derive.getPath context.config context.cache
+                        >> RemoteData.toMaybe
+                    )
+    in
+    if maybeLineage == Nothing then
+        Html.text ""
+
+    else
+        Html.div []
+            [ Localization.text context.config
+                { en = "Directory: "
+                , de = "Verzeichnis: "
+                }
+            , UI.Widgets.Breadcrumbs.view context maybeLineage
+            ]
 
 
 viewSelectedFacetFilters : Context -> List Selection.FacetFilter -> Html Msg

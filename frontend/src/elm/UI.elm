@@ -21,6 +21,7 @@ import Types.Navigation as Navigation exposing (Navigation)
 import Types.Needs
 import Types.Presentation exposing (Presentation(..))
 import Types.Route exposing (Route)
+import Types.SidebarElement as SidebarElement
 import UI.Article
 import UI.Controls
 import UI.Facets
@@ -213,7 +214,27 @@ update context msg model =
                         UI.Controls.AdjustSetup adjustment ->
                             ( model1, cmd1, AdjustSetup adjustment )
 
-                        UI.Controls.FocusOnFacet aspect ->
+                        UI.Controls.FocusOnSidebarElement SidebarElement.Tree ->
+                            let
+                                ( treeModel, treeCmd ) =
+                                    UI.Tree.focusOnTree
+                                        { config = context.config
+                                        , cache = context.cache
+                                        , presentation = context.presentation
+                                        }
+                                        model.tree
+                            in
+                            ( { model1
+                                | tree = treeModel
+                              }
+                            , Cmd.batch
+                                [ cmd1
+                                , Cmd.map TreeMsg treeCmd
+                                ]
+                            , AdjustSetup (AdjustmentToSetup.HideSidebar False)
+                            )
+
+                        UI.Controls.FocusOnSidebarElement (SidebarElement.Facet aspect) ->
                             let
                                 ( facetModel, facetCmd ) =
                                     UI.Facets.focusOnFacet

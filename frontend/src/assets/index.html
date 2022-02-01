@@ -17,13 +17,14 @@
       function (userSelectedUILanguageTag) {
         localStorage.setItem("selectedUILanguage", userSelectedUILanguageTag);
       });
-      app.ports.scrollElementIntoView.subscribe(
-        function (elementId) {
-          let element = document.getElementById(elementId);
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
-          }
-        });
+    app.ports.scrollIntoView.subscribe(
+      function ([block, elementId]) {
+        console.warn ("scrollIntoView %s %s", block, elementId);
+        let element = document.getElementById(elementId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: block, inline: "start" });
+        }
+      });
     window.addEventListener('storage', function (ev) {
       if (ev.key == "selectedUILanguage") {
         app.ports.jsConfigChange.send(

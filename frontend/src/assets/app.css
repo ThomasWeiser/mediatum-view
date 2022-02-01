@@ -470,6 +470,7 @@ ul.folder-list ul.folder-list {
 }
 .residence {
   margin-top: 4ex;
+  line-height: normal;
 }
 .residence .title {
   font-weight: bold;
@@ -478,11 +479,11 @@ ul.folder-list ul.folder-list {
   margin-top: 4ex;
   font-weight: bold;
 }
-.breadcrumbs {
+.details .breadcrumbs {
   font-size: 80%;
   color: var(--color-text-light);
 }
-.breadcrumbs a {
+.details .breadcrumbs a {
   color: inherit;
 }
 .article .details table {
@@ -502,12 +503,12 @@ ul.folder-list ul.folder-list {
 .facet-box {
   margin-top: 1ex;
 }
-.facet-box {
+.sidebar-box {
   border: 2px solid var(--color-nav-background);
-  transition: border-color 2s cubic-bezier(0, 1.59, 0.76, 1.1);
+  transition: border-color 1s cubic-bezier(0, 1.59, 0.76, 1.1);
 }
-.facet-box.highlight {
-  border: 2px solid var(--color-primary);
+.sidebar-box.highlight {
+  border-color: var(--color-primary);
 }
 .facet-head {
   display: flex;

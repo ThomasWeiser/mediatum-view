@@ -7,6 +7,7 @@ module UI.Tree exposing
     , needs
     , updateOnPresentationFolderId
     , update
+    , focusOnTree
     , view
     )
 
@@ -21,6 +22,7 @@ module UI.Tree exposing
 @docs needs
 @docs updateOnPresentationFolderId
 @docs update
+@docs focusOnTree
 @docs view
 
 -}
@@ -33,8 +35,10 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Maybe.Extra
+import Process
 import RemoteData
 import Sort.Dict
+import Task
 import Types exposing (FolderDisplay(..))
 import Types.ApiData exposing (ApiData)
 import Types.Config exposing (Config)
@@ -81,12 +85,14 @@ For tracking the necessary state we use these fields as the local UI state:
 type alias Model =
     { latestPresentationFolderId : Maybe FolderId
     , userCollapsedPresentationFolder : Bool
+    , highlightBox : Bool
     }
 
 
 {-| -}
 type Msg
     = Select FolderId
+    | HighlightFade
 
 
 {-| -}
@@ -94,6 +100,7 @@ initialModel : Model
 initialModel =
     { latestPresentationFolderId = Nothing
     , userCollapsedPresentationFolder = False
+    , highlightBox = False
     }
 
 
@@ -142,6 +149,27 @@ update context msg model =
                 , UserSelection id
                 )
 
+        HighlightFade ->
+            ( { model
+                | highlightBox = False
+              }
+            , NoReturn
+            )
+
+
+{-| -}
+focusOnTree : Context -> Model -> ( Model, Cmd Msg )
+focusOnTree context model =
+    ( { model
+        | highlightBox = True
+      }
+    , Cmd.batch
+        [ Utils.Html.scrollElementIntoView Utils.Html.VerticalAlignmentStart idOfNavElement
+        , Process.sleep 2000
+            |> Task.perform (always HighlightFade)
+        ]
+    )
+
 
 getPresentationFolderId : Context -> Maybe FolderId
 getPresentationFolderId context =
@@ -151,7 +179,15 @@ getPresentationFolderId context =
 {-| -}
 view : Context -> Model -> Maybe FolderCounts -> Html Msg
 view context model maybeFolderCounts =
-    Html.nav []
+    Html.nav
+        [ Html.Attributes.id idOfNavElement
+        , Html.Attributes.class "sidebar-box"
+        , Html.Attributes.classList
+            [ ( "highlight"
+              , model.highlightBox
+              )
+            ]
+        ]
         [ viewListOfFolders
             context
             model
@@ -159,6 +195,11 @@ view context model maybeFolderCounts =
             maybeFolderCounts
             (RemoteData.Success context.config.toplevelFolderIds)
         ]
+
+
+idOfNavElement : String
+idOfNavElement =
+    "tree-nav-box"
 
 
 viewListOfFolders : Context -> Model -> Bool -> Maybe FolderCounts -> ApiData (List FolderId) -> Html Msg
