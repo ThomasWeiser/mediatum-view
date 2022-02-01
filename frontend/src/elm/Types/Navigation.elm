@@ -108,7 +108,7 @@ alterRoute config cache navigation route =
         ShowListingWithSearchAndFtsFilter globalFts ftsFilters sorting ->
             { listingRoute
                 | parameters =
-                    { parametersWithDefaultLimit
+                    { parameters
                         | globalFts = globalFts
                         , sorting = sorting
                         , ftsFilters = ftsFilters
