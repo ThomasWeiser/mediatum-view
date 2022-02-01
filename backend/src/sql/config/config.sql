@@ -38,7 +38,7 @@ values
     ('author', array['author', 'author-contrib', 'author.fullname_comma'], true, false),
     ('person', array['author', 'author-contrib', 'author.fullname_comma', 'advisor', 'referee'], true, false),
     ('keywords', array['keywords', 'keywords-translated'], true, false),
-    ('description', array['description', 'description-translated'], false, false),
+    ('abstract', array['abstract', 'abstract2', 'description', 'description-translated'], false, false),
     ('year', array['year', 'year-accepted'], false, true)
 ;
 
@@ -49,7 +49,7 @@ values
     ('author', '{"en": "Author", "de": "Autor"}'::jsonb),
     ('person', '{"en": "Person", "de": "Person"}'::jsonb),
     ('keywords', '{"en": "Keywords", "de": "Stichworte"}'::jsonb),
-    ('description', '{"en": "Abstract", "de": "Kurzfassung"}'::jsonb)
+    ('abstract', '{"en": "Abstract", "de": "Kurzfassung"}'::jsonb)
 ;
 
 insert into config.aspect_facet
