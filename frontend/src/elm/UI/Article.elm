@@ -187,7 +187,7 @@ needs context =
                     case remoteMaybeIndexOfDocument of
                         RemoteData.Success (Just indexOfDocument) ->
                             if indexOfDocument == limit then
-                                Constants.incrementLimitOnLoadMore limit
+                                Constants.incrementLimitOnLoadMore context.config limit
 
                             else
                                 limit

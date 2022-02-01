@@ -262,7 +262,7 @@ viewNavigationButtons context linkage =
                         |> Maybe.Extra.unwrap []
                             (\id -> [ Navigation.ShowDocument context.selection.scope id ])
                         |> Utils.List.consIf (loadMore && linkage.canLoadMore)
-                            (Navigation.SetLimit (Constants.incrementLimitOnLoadMore context.limit))
+                            (Navigation.SetLimit (Constants.incrementLimitOnLoadMore context.config context.limit))
             in
             buttonListOfNavigations listOfNavigations
     in
