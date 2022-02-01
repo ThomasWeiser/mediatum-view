@@ -87,7 +87,7 @@ update context msg model =
             , Cmd.none
             , Navigate
                 (Navigation.SetLimit
-                    (Constants.incrementLimitOnLoadMore context.limit)
+                    (Constants.incrementLimitOnLoadMore context.config context.limit)
                 )
             )
 

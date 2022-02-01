@@ -16,6 +16,8 @@ module Constants exposing
 
 -}
 
+import Basics.Extra
+import Types.Config exposing (Config)
 import Types.Id as Id
 
 
@@ -37,19 +39,21 @@ graphqlOperationNamePrefix =
 
 
 {-| -}
-incrementLimitOnLoadMore : Int -> Int
-incrementLimitOnLoadMore limit =
-    if limit <= 10 then
+incrementLimitOnLoadMore : Config -> Int -> Int
+incrementLimitOnLoadMore config limit =
+    (if limit <= 10 then
         20
 
-    else if limit <= 30 then
+     else if limit <= 30 then
         50
 
-    else if limit <= 70 then
+     else if limit <= 70 then
         100
 
-    else
+     else
         ((limit + 149) // 100) * 100
+    )
+        |> Basics.Extra.atMost config.maxLimit
 
 
 {-| -}

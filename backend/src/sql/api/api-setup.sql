@@ -74,7 +74,7 @@ create or replace function api.setup_config
             where name = setup.application
         ) as toplevel_folders,
     	10 as default_limit,
-    	1000 as max_limit,
+    	500 as max_limit,
     	'by_rank'::api.fts_sorting as default_sorting,
         20 as number_of_facet_values,
         (select array(

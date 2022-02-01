@@ -79,7 +79,7 @@ create or replace function api.all_documents_page
                 from aux.all_documents_paginated
                     ( folder_id
                     , aux.internalize_aspect_tests (aspect_tests)
-                    , least ("limit", 200) -- For API security we restrict the maximum allowed limit
+                    , least ("limit", 500) -- For API security we restrict the maximum allowed limit
                     , "offset"
                     )
             )
