@@ -42,7 +42,7 @@ view context maybeLineage =
         separator =
             Html.text " > "
     in
-    Html.div [ Html.Attributes.class "breadcrumbs" ]
+    Html.span [ Html.Attributes.class "breadcrumbs" ]
         (maybeLineage
             |> Maybe.Extra.unwrap
                 [ ellipsis ]

@@ -7,6 +7,7 @@ module UI.Tree exposing
     , needs
     , updateOnPresentationFolderId
     , update
+    , focusOnTree
     , view
     )
 
@@ -21,6 +22,7 @@ module UI.Tree exposing
 @docs needs
 @docs updateOnPresentationFolderId
 @docs update
+@docs focusOnTree
 @docs view
 
 -}
@@ -81,6 +83,7 @@ For tracking the necessary state we use these fields as the local UI state:
 type alias Model =
     { latestPresentationFolderId : Maybe FolderId
     , userCollapsedPresentationFolder : Bool
+    , highlightBox : Bool
     }
 
 
@@ -94,6 +97,7 @@ initialModel : Model
 initialModel =
     { latestPresentationFolderId = Nothing
     , userCollapsedPresentationFolder = False
+    , highlightBox = False
     }
 
 
@@ -143,6 +147,15 @@ update context msg model =
                 )
 
 
+{-| -}
+focusOnTree : Context -> Model -> ( Model, Cmd Msg )
+focusOnTree context model =
+    -- TODO
+    ( model
+    , Utils.Html.scrollElementIntoView Utils.Html.VerticalAlignmentStart idOfNavElement
+    )
+
+
 getPresentationFolderId : Context -> Maybe FolderId
 getPresentationFolderId context =
     Presentation.getFolderId context.cache context.presentation
@@ -151,7 +164,8 @@ getPresentationFolderId context =
 {-| -}
 view : Context -> Model -> Maybe FolderCounts -> Html Msg
 view context model maybeFolderCounts =
-    Html.nav []
+    Html.nav
+        [ Html.Attributes.id idOfNavElement ]
         [ viewListOfFolders
             context
             model
@@ -159,6 +173,11 @@ view context model maybeFolderCounts =
             maybeFolderCounts
             (RemoteData.Success context.config.toplevelFolderIds)
         ]
+
+
+idOfNavElement : String
+idOfNavElement =
+    "tree-nav-box"
 
 
 viewListOfFolders : Context -> Model -> Bool -> Maybe FolderCounts -> ApiData (List FolderId) -> Html Msg

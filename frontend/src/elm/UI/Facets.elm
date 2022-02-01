@@ -1,4 +1,4 @@
-port module UI.Facets exposing
+module UI.Facets exposing
     ( Context
     , Return(..)
     , Model
@@ -142,7 +142,9 @@ update context msg model =
 
         FocusOnFacet aspect ->
             ( { model | highlightBox = Just aspect }
-            , scrollElementIntoView (idOfFacetBox aspect)
+            , Utils.Html.scrollElementIntoView
+                Utils.Html.VerticalAlignmentNearest
+                (idOfFacetBox aspect)
             , NoReturn
             )
 
@@ -157,9 +159,6 @@ focusOnFacet context aspect model =
       Process.sleep 50
         |> Task.perform (always (FocusOnFacet aspect))
     )
-
-
-port scrollElementIntoView : String -> Cmd msg
 
 
 {-| -}
