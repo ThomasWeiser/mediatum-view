@@ -503,12 +503,12 @@ ul.folder-list ul.folder-list {
 .facet-box {
   margin-top: 1ex;
 }
-.facet-box {
+.sidebar-box {
   border: 2px solid var(--color-nav-background);
-  transition: border-color 2s cubic-bezier(0, 1.59, 0.76, 1.1);
+  transition: border-color 1s cubic-bezier(0, 1.59, 0.76, 1.1);
 }
-.facet-box.highlight {
-  border: 2px solid var(--color-primary);
+.sidebar-box.highlight {
+  border-color: var(--color-primary);
 }
 .facet-head {
   display: flex;

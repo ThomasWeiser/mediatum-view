@@ -35,8 +35,10 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Maybe.Extra
+import Process
 import RemoteData
 import Sort.Dict
+import Task
 import Types exposing (FolderDisplay(..))
 import Types.ApiData exposing (ApiData)
 import Types.Config exposing (Config)
@@ -90,6 +92,7 @@ type alias Model =
 {-| -}
 type Msg
     = Select FolderId
+    | HighlightFade
 
 
 {-| -}
@@ -146,13 +149,25 @@ update context msg model =
                 , UserSelection id
                 )
 
+        HighlightFade ->
+            ( { model
+                | highlightBox = False
+              }
+            , NoReturn
+            )
+
 
 {-| -}
 focusOnTree : Context -> Model -> ( Model, Cmd Msg )
 focusOnTree context model =
-    -- TODO
-    ( model
-    , Utils.Html.scrollElementIntoView Utils.Html.VerticalAlignmentStart idOfNavElement
+    ( { model
+        | highlightBox = True
+      }
+    , Cmd.batch
+        [ Utils.Html.scrollElementIntoView Utils.Html.VerticalAlignmentStart idOfNavElement
+        , Process.sleep 2000
+            |> Task.perform (always HighlightFade)
+        ]
     )
 
 
@@ -165,7 +180,14 @@ getPresentationFolderId context =
 view : Context -> Model -> Maybe FolderCounts -> Html Msg
 view context model maybeFolderCounts =
     Html.nav
-        [ Html.Attributes.id idOfNavElement ]
+        [ Html.Attributes.id idOfNavElement
+        , Html.Attributes.class "sidebar-box"
+        , Html.Attributes.classList
+            [ ( "highlight"
+              , model.highlightBox
+              )
+            ]
+        ]
         [ viewListOfFolders
             context
             model

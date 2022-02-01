@@ -25,6 +25,7 @@ import Cache.Derive
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import List.Extra
 import Process
 import RemoteData
 import Sort.Dict
@@ -61,7 +62,7 @@ type Return
 type alias Model =
     { showLongList : Sort.Dict.Dict Aspect Bool
     , showCollapsed : Sort.Dict.Dict Aspect Bool
-    , highlightBox : Maybe Aspect
+    , highlightBoxes : List Aspect
     }
 
 
@@ -72,6 +73,7 @@ type Msg
     | ShowFacetCollapsed Aspect Bool
     | ShowFacetLongList Aspect Bool
     | FocusOnFacet Aspect
+    | HighlightFade Aspect
 
 
 {-| -}
@@ -79,72 +81,63 @@ initialModel : Model
 initialModel =
     { showLongList = Sort.Dict.empty (Utils.sorter Aspect.ordering)
     , showCollapsed = Sort.Dict.empty (Utils.sorter Aspect.ordering)
-    , highlightBox = Nothing
+    , highlightBoxes = []
     }
 
 
 {-| -}
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
-    let
-        handleHighlight aspect =
-            { model
-                | highlightBox =
-                    model.highlightBox
-                        |> Maybe.andThen
-                            (\highlightedAspect ->
-                                if highlightedAspect == aspect then
-                                    Just aspect
-
-                                else
-                                    Nothing
-                            )
-            }
-    in
     case msg of
         SelectFacetValue aspect value ->
-            ( handleHighlight aspect
+            ( model
             , Cmd.none
             , Navigate
                 (Navigation.ShowListingWithAddedFacetFilter aspect value)
             )
 
         SelectFacetUnfilter aspect ->
-            ( handleHighlight aspect
+            ( model
             , Cmd.none
             , Navigate
                 (Navigation.ShowListingWithRemovedFacetFilter aspect)
             )
 
         ShowFacetCollapsed aspect state ->
-            let
-                model1 =
-                    handleHighlight aspect
-            in
-            ( { model1
-                | showCollapsed = Sort.Dict.insert aspect state model1.showCollapsed
+            ( { model
+                | showCollapsed = Sort.Dict.insert aspect state model.showCollapsed
               }
             , Cmd.none
             , NoReturn
             )
 
         ShowFacetLongList aspect state ->
-            let
-                model1 =
-                    handleHighlight aspect
-            in
-            ( { model1
-                | showLongList = Sort.Dict.insert aspect state model1.showLongList
+            ( { model
+                | showLongList = Sort.Dict.insert aspect state model.showLongList
               }
             , Cmd.none
             , NoReturn
             )
 
         FocusOnFacet aspect ->
-            ( { model | highlightBox = Just aspect }
-            , Utils.Html.scrollElementIntoView
-                Utils.Html.VerticalAlignmentNearest
-                (idOfFacetBox aspect)
+            ( { model
+                | highlightBoxes = aspect :: model.highlightBoxes
+              }
+            , Cmd.batch
+                [ Utils.Html.scrollElementIntoView
+                    Utils.Html.VerticalAlignmentNearest
+                    (idOfFacetBox aspect)
+                , Process.sleep 2000
+                    |> Task.perform (always (HighlightFade aspect))
+                ]
+            , NoReturn
+            )
+
+        HighlightFade aspect ->
+            ( { model
+                | highlightBoxes = List.Extra.remove aspect model.highlightBoxes
+              }
+            , Cmd.none
             , NoReturn
             )
 
@@ -194,10 +187,10 @@ viewFacet context model selection facetAspectConfig =
     in
     Html.nav
         [ Html.Attributes.id (idOfFacetBox facetAspectConfig.aspect)
-        , Html.Attributes.class "facet-box"
+        , Html.Attributes.class "facet-box sidebar-box"
         , Html.Attributes.classList
             [ ( "highlight"
-              , model.highlightBox == Just facetAspectConfig.aspect
+              , List.member facetAspectConfig.aspect model.highlightBoxes
               )
             ]
         ]
