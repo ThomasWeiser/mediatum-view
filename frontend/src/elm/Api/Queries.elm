@@ -127,8 +127,10 @@ serverSetup =
                                 |> Api.Fragments.nonNullElementsOfMaybeListOrFail
                             )
                         |> SelectionSet.with
-                            (Mediatum.Object.SetupConfig.frontPage
-                                Api.Fragments.translation
+                            (Mediatum.Object.SetupConfig.collectionPages
+                                Api.Fragments.collectionPage
+                                |> SelectionSet.nonNullOrFail
+                                |> SelectionSet.nonNullElementsOrFail
                             )
                     )
                     |> SelectionSet.nonNullOrFail

@@ -1,20 +1,20 @@
 module Types.Config exposing
-    ( Config
+    ( Config, CollectionPage
     , init
     , updateFromServerSetup
     , adjustUILanguage, adjustHideThumbnails, adjustHideSidebar
-    , getMaskName
+    , getMaskName, getCollectionPage
     )
 
 {-| Configuration values used throughout the app.
 
 Most values are defined in the server and fetched dynamically.
 
-@docs Config
+@docs Config, CollectionPage
 @docs init
 @docs updateFromServerSetup
 @docs adjustUILanguage, adjustHideThumbnails, adjustHideSidebar
-@docs getMaskName
+@docs getMaskName, getCollectionPage
 
 -}
 
@@ -27,6 +27,7 @@ import Types.Id exposing (FolderId)
 import Types.Localization as Localization exposing (Language, Translations)
 import Types.Selection as Selection
 import Types.ServerSetup exposing (ServerSetup)
+import Utils.List
 
 
 {-| Configuration values that are made available to most modules via their Context type
@@ -45,8 +46,12 @@ type alias Config =
     , masks : MasksConfig
     , hideThumbnails : Bool
     , hideSidebar : Bool
-    , frontPage : Maybe Translations
+    , collectionPages : List CollectionPage
     }
+
+
+type alias CollectionPage =
+    ( FolderId, Translations )
 
 
 {-| Initialize with standard values.
@@ -66,7 +71,7 @@ init =
     , masks = MasksConfig.init
     , hideThumbnails = False
     , hideSidebar = False
-    , frontPage = Nothing
+    , collectionPages = []
     }
 
 
@@ -128,7 +133,7 @@ updateFromServerSetup serverSetup config =
 
                 Just masksPurposeServerConfig ->
                     MasksConfig.updateFromServer masksPurposeServerConfig config.masks
-        , frontPage = serverSetup.config.frontPage
+        , collectionPages = serverSetup.config.collectionPages
     }
 
 
@@ -138,3 +143,10 @@ getMaskName : MasksConfig.MaskPurpose -> Config -> String
 getMaskName purpose config =
     MasksConfig.forPurpose purpose config.masks
         |> Localization.string config
+
+
+getCollectionPage : FolderId -> Config -> Maybe Translations
+getCollectionPage folderId config =
+    config.collectionPages
+        |> Utils.List.findByMapping Tuple.first folderId
+        |> Maybe.map Tuple.second

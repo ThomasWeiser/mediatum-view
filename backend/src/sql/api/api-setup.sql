@@ -29,6 +29,11 @@ create type api.masks_purpose_config as
     , mask_names api.translations
     );
 
+create type api.collection_page as
+    ( folder_id int4
+    , content api.translations
+    );
+
 create type api.setup_config as
     ( toplevel_folders int4[]
     , default_limit integer
@@ -38,7 +43,7 @@ create type api.setup_config as
     , static_fts_aspects api.fts_aspect_config[]
     , static_facet_aspects api.facet_aspect_config[]
     , masks_by_purpose api.masks_purpose_config[]
-    , front_page api.translations
+    , collection_pages api.collection_page[]
     );
 
 create or replace function api.setup
@@ -93,9 +98,16 @@ create or replace function api.setup_config
             )::api.masks_purpose_config
             from config.masks_by_purpose
         )) as static_facet_aspects,
-        (select (
-            (select html from config.frontpage where application = setup.application and language = 'en'),
-            (select html from config.frontpage where application = setup.application and language = 'de')
-         )::api.translations) as front_page
+        (select array( 
+            select ( folder_id
+                   , ( min(html) filter (where language = 'en')
+                     , min(html) filter (where language = 'de')
+                     )::api.translations
+                   )::api.collection_page
+            from config.collection_page
+            where application = 'hsb'
+            group by folder_id
+        )) as collection_pages
+    ;
 
 $$ language sql stable;

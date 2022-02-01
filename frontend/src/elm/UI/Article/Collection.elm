@@ -24,7 +24,7 @@ import Html exposing (Html)
 import Html.Parser
 import Html.Parser.Util
 import RemoteData
-import Types.Config exposing (Config)
+import Types.Config as Config exposing (Config)
 import Types.Id exposing (FolderId)
 import Types.Localization as Localization
 import UI.Icons
@@ -63,30 +63,26 @@ update msg model =
 
 view : Context -> Model -> Html Msg
 view context model =
-    if List.member context.folderId context.config.toplevelFolderIds then
-        case context.config.frontPage of
-            Nothing ->
-                viewWithCollectionName context model
+    case Config.getCollectionPage context.folderId context.config of
+        Nothing ->
+            viewWithCollectionName context model
 
-            Just frontPage ->
-                frontPage
-                    |> Localization.string context.config
-                    |> Html.Parser.run
-                    |> Result.map
-                        Html.Parser.Util.toVirtualDom
-                    |> Result.withDefault
-                        [ viewWithCollectionName context model
-                        , Html.div []
-                            [ Localization.text context.config
-                                { en = "Cannot display front page since its content is not valid HTML."
-                                , de = "Startseite kann nicht angezeigt werden, da ihr Inhalt kein gültiges HTML ist."
-                                }
-                            ]
+        Just page ->
+            page
+                |> Localization.string context.config
+                |> Html.Parser.run
+                |> Result.map
+                    Html.Parser.Util.toVirtualDom
+                |> Result.withDefault
+                    [ viewWithCollectionName context model
+                    , Html.div []
+                        [ Localization.text context.config
+                            { en = "Cannot display front page since its content is not valid HTML."
+                            , de = "Startseite kann nicht angezeigt werden, da ihr Inhalt kein gültiges HTML ist."
+                            }
                         ]
-                    |> Html.div []
-
-    else
-        viewWithCollectionName context model
+                    ]
+                |> Html.div []
 
 
 viewWithCollectionName : Context -> Model -> Html Msg
