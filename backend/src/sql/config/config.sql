@@ -67,10 +67,14 @@ values
 
 \set hsb_frontpage_en_html `cat src/content/hsb-frontpage-en.html`
 \set hsb_frontpage_de_html `cat src/content/hsb-frontpage-de.html`
+\set hsb_yearbook_en_html `cat src/content/hsb-yearbook-en.html`
+\set hsb_yearbook_de_html `cat src/content/hsb-yearbook-de.html`
 
 insert into config.collection_page
     (application, folder_id, language, html)
 values
     ('hsb', 1433087, 'en', :'hsb_frontpage_en_html'),
-    ('hsb', 1433087, 'de', :'hsb_frontpage_de_html')
+    ('hsb', 1433087, 'de', :'hsb_frontpage_de_html'),
+    ('hsb', 1192000, 'en', :'hsb_yearbook_en_html'),
+    ('hsb', 1192000, 'de', :'hsb_yearbook_de_html')
 ;
