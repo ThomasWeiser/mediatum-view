@@ -305,6 +305,9 @@ update context msg model =
             , case subReturn of
                 UI.Article.Details.NoReturn ->
                     NoReturn
+
+                UI.Article.Details.AdjustSetup adjustment ->
+                    AdjustSetup adjustment
             )
 
         ( IteratorMsg subMsg, IteratorModel subModel, IteratorPresentation selection limit documentIdFromSearch ) ->

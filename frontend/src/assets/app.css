@@ -193,9 +193,15 @@ article {
 }
 article.listing .thumbnail-switch {
   position: sticky;
-  text-align: right;
   top: 0;
+  text-align: right;
   margin-bottom: -2ex;
+}
+article.details .thumbnail-switch {
+  float: right;
+}
+.iterator-view article.details .thumbnail-switch {
+  display: none;
 }
 
 .stick-on-wrapping {

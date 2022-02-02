@@ -31,12 +31,14 @@ import List.Nonempty
 import Regex
 import RemoteData
 import Types exposing (DocumentIdFromSearch)
+import Types.AdjustmentToSetup as AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
 import Types.Localization as Localization
 import Types.Route exposing (Route)
 import UI.Icons
 import UI.Widgets.Breadcrumbs
+import UI.Widgets.ThumbnailSwitch
 import Utils.Html
 import Utils.List
 
@@ -53,6 +55,7 @@ type alias Context =
 {-| -}
 type Return
     = NoReturn
+    | AdjustSetup AdjustmentToSetup
 
 
 {-| -}
@@ -61,8 +64,8 @@ type alias Model =
 
 
 {-| -}
-type alias Msg =
-    Never
+type Msg
+    = ReturnAdjustmentToSetup AdjustmentToSetup
 
 
 {-| -}
@@ -74,14 +77,26 @@ initialModel =
 {-| -}
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
-    ( model, Cmd.none, NoReturn )
+    case msg of
+        ReturnAdjustmentToSetup adjustmentToSetup ->
+            ( model
+            , Cmd.none
+            , AdjustSetup adjustmentToSetup
+            )
 
 
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
     Html.article [ Html.Attributes.class "details" ]
-        [ case
+        [ Html.div
+            [ Html.Attributes.class "thumbnail-switch" ]
+            [ UI.Widgets.ThumbnailSwitch.view
+                context.config
+                context.config.hideThumbnails
+                (ReturnAdjustmentToSetup << AdjustmentToSetup.HideThumbnails)
+            ]
+        , case
             RemoteData.map2 Tuple.pair
                 (Cache.get context.cache.documents
                     ( Config.getMaskName MasksConfig.MaskForDetails context.config
