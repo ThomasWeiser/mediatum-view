@@ -38,6 +38,7 @@ import Types.Route exposing (Route)
 import UI.Icons
 import UI.Widgets.Breadcrumbs
 import Utils.Html
+import Utils.List
 
 
 {-| -}
@@ -107,22 +108,7 @@ view context model =
 viewDocument : Context -> Model -> Document -> Residence -> Html Msg
 viewDocument context model document residence =
     Html.div []
-        [ Html.div [ Html.Attributes.class "permalink" ]
-            [ Html.a
-                [ Html.Attributes.href
-                    (Constants.externalServerUrls.documentPermanent document.id)
-                , Localization.title context.config
-                    { en = "Persistent link to the document in mediaTUM"
-                    , de = "Dauerhafter Verweis auf das Dokument in mediaTUM"
-                    }
-                ]
-                [ Localization.text context.config
-                    { en = "Show this document in mediaTUM"
-                    , de = "Zeige dieses Dokument in mediaTUM"
-                    }
-                ]
-            ]
-        , if context.config.hideThumbnails || not (Document.hasPresentation document) then
+        [ if context.config.hideThumbnails || not (Document.hasPresentation document) then
             Html.text ""
 
           else
@@ -150,8 +136,9 @@ viewDocument context model document residence =
                         []
                     )
                 ]
-        , if Document.hasDocumentPdf document then
-            Html.div [ Html.Attributes.class "download-link" ]
+        , Html.div []
+            (Utils.List.appendIf
+                (Document.hasDocumentPdf document)
                 [ Html.a
                     [ Html.Attributes.href (Constants.externalServerUrls.downloadDocumentPdf document.id) ]
                     [ Localization.text context.config
@@ -159,10 +146,23 @@ viewDocument context model document residence =
                         , de = "PDF herunterladen"
                         }
                     ]
+                , Html.span [ Html.Attributes.class "separator" ] [ Html.text " · " ]
                 ]
-
-          else
-            Html.text ""
+                [ Html.a
+                    [ Html.Attributes.href
+                        (Constants.externalServerUrls.documentPermanent document.id)
+                    , Localization.title context.config
+                        { en = "Persistent link to the document in mediaTUM"
+                        , de = "Dauerhafter Verweis auf das Dokument in mediaTUM"
+                        }
+                    ]
+                    [ Localization.text context.config
+                        { en = "Show this document in mediaTUM"
+                        , de = "Zeige dieses Dokument in mediaTUM"
+                        }
+                    ]
+                ]
+            )
         , Html.div [ Html.Attributes.class "header" ]
             [ Html.div [ Html.Attributes.class "metadatatype" ]
                 [ Html.text document.metadatatypeName ]
