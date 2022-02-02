@@ -293,6 +293,10 @@ button.visual-button.selected {
   border: 2px solid var(--color-input-border-selected)
 }
 
+.iterator-buttons .button-back-to-list {
+  margin-right: 1em;
+}
+
 
 .document {
   display: block;

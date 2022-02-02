@@ -269,27 +269,39 @@ viewNavigationButtons context linkage =
             in
             buttonListOfNavigations attributes listOfNavigations
     in
-    Html.div [] <|
-        buttonNavigationInResults
+    Html.div
+        [ Html.Attributes.class "iterator-buttons" ]
+    <|
+        buttonListOfNavigations
             [ Localization.title context.config
-                { en = "First Result"
-                , de = "erstes Resultat der Liste"
+                { en = "Back to Results"
+                , de = "zurück zur Liste"
                 }
+            , Html.Attributes.class "button-back-to-list"
             ]
-            linkage.firstId
-            False
-            [ UI.Icons.icons.first ]
+            [ Navigation.ShowListingWithoutDocument ]
+            [ UI.Icons.icons.list ]
+            :: buttonNavigationInResults
+                [ Localization.title context.config
+                    { en = "First Result"
+                    , de = "erstes Resultat der Liste"
+                    }
+                , Html.Attributes.class "button-first-result"
+                ]
+                linkage.firstId
+                False
+                [ UI.Icons.icons.first ]
             :: (case linkage.currentNumber of
                     Nothing ->
                         [ buttonNavigationInResults
-                            [ Localization.title context.config
+                            [ Html.Attributes.class "button-load-more-results" ]
+                            Nothing
+                            True
+                            [ Localization.text context.config
                                 { en = "Load More Results"
                                 , de = "weitere Ergebnisse laden"
                                 }
                             ]
-                            Nothing
-                            True
-                            [ UI.Icons.icons.reload ]
                         ]
 
                     Just currentNumber ->
@@ -298,30 +310,23 @@ viewNavigationButtons context linkage =
                                 { en = "Previous Result"
                                 , de = "vorheriges Resultat"
                                 }
+                            , Html.Attributes.class "button-previous-result"
                             ]
                             linkage.prevId
                             (currentNumber - 1 > context.limit)
-                            [ UI.Icons.icons.prev ]
+                            [ UI.Icons.icons.previous ]
                         , buttonNavigationInResults
                             [ Localization.title context.config
                                 { en = "Next Result"
                                 , de = "nächstes Resultat"
                                 }
+                            , Html.Attributes.class "button-next-result"
                             ]
                             linkage.nextId
                             (currentNumber >= context.limit)
                             [ UI.Icons.icons.next ]
                         ]
                )
-            ++ [ buttonListOfNavigations
-                    [ Localization.title context.config
-                        { en = "Back to Results"
-                        , de = "zurück zur Liste"
-                        }
-                    ]
-                    [ Navigation.ShowListingWithoutDocument ]
-                    [ UI.Icons.icons.list ]
-               ]
 
 
 getLinkage : Context -> Linkage
