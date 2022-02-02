@@ -411,8 +411,14 @@ viewFooter context pageSequence =
             , Html.Attributes.class "no-more-results"
             ]
             [ Html.hr [] []
-            , Localization.text context.config
-                { en = "No More Results"
-                , de = "keine weiteren Ergebnisse"
-                }
+            , Localization.text context.config <|
+                if PageSequence.hasAtLeastOneDocument pageSequence then
+                    { en = "No More Results"
+                    , de = "keine weiteren Ergebnisse"
+                    }
+
+                else
+                    { en = "No Results"
+                    , de = "keine Ergebnisse"
+                    }
             ]
