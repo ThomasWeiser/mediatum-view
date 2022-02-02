@@ -118,6 +118,9 @@ update context msg model =
 
                 Listing.Navigate navigation ->
                     Navigate navigation
+
+                Listing.AdjustSetup adjustment ->
+                    AdjustSetup adjustment
             )
 
         DetailsMsg subMsg ->

@@ -283,6 +283,9 @@ update context msg model =
 
                         UI.Article.Listing.Navigate navigation ->
                             Navigate navigation
+
+                        UI.Article.Listing.AdjustSetup adjustment ->
+                            AdjustSetup adjustment
                     )
 
         ( DetailsMsg subMsg, DetailsModel subModel, DocumentPresentation maybeFolderId documentIdFromSearch ) ->

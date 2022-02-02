@@ -33,6 +33,7 @@ import Html.Attributes
 import Html.Events
 import Regex
 import RemoteData
+import Types.AdjustmentToSetup as AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.ApiData exposing (ApiData)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
@@ -42,6 +43,7 @@ import Types.Navigation as Navigation exposing (Navigation)
 import Types.Route exposing (Route)
 import Types.Selection exposing (Selection)
 import UI.Icons
+import UI.Widgets.ThumbnailSwitch
 import Utils.Html
 
 
@@ -59,6 +61,7 @@ type alias Context =
 type Return
     = NoReturn
     | Navigate Navigation
+    | AdjustSetup AdjustmentToSetup
 
 
 {-| -}
@@ -68,7 +71,8 @@ type alias Model =
 
 {-| -}
 type Msg
-    = SelectDocument DocumentId
+    = ReturnAdjustmentToSetup AdjustmentToSetup
+    | SelectDocument DocumentId
     | LoadMore
 
 
@@ -82,6 +86,12 @@ initialModel =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
+        ReturnAdjustmentToSetup adjustment ->
+            ( model
+            , Cmd.none
+            , AdjustSetup adjustment
+            )
+
         LoadMore ->
             ( model
             , Cmd.none
@@ -124,8 +134,16 @@ view context model =
                 , context.selection
                 )
     in
-    Html.article [] <|
-        [ viewPageSequence context pageSequence
+    Html.article
+        [ Html.Attributes.class "listing" ]
+        [ Html.div
+            [ Html.Attributes.class "thumbnail-switch" ]
+            [ UI.Widgets.ThumbnailSwitch.view
+                context.config
+                context.config.hideThumbnails
+                (ReturnAdjustmentToSetup << AdjustmentToSetup.HideThumbnails)
+            ]
+        , viewPageSequence context pageSequence
         , viewFooter context pageSequence
         ]
 

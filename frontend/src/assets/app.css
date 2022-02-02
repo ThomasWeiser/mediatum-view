@@ -189,6 +189,13 @@ article {
   height: 100%;
   overflow: auto;
   padding: 0.5em;
+  position: relative;
+}
+article.listing .thumbnail-switch {
+  position: sticky;
+  text-align: right;
+  top: 0;
+  margin-bottom: -2ex;
 }
 
 .stick-on-wrapping {
