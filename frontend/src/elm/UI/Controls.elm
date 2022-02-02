@@ -447,7 +447,6 @@ viewFtsFilter config aspect searchText =
                 [ Html.Attributes.type_ "button"
                 , Html.Attributes.class "visual-button"
                 , Html.Events.onClick (RemoveFtsFilter aspect)
-                , Html.Attributes.class "filter-button"
                 ]
                 [ UI.Icons.clear ]
             ]
@@ -633,7 +632,6 @@ viewFacetFilter config isLastElement ( aspect, value ) =
                 , de = "(Filter entfernen)"
                 }
             , Html.Events.onClick (RemoveFacetFilter aspect)
-            , Html.Attributes.class "filter-button"
             ]
             [ UI.Icons.clear ]
         , if isLastElement then

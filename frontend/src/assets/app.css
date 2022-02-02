@@ -191,12 +191,17 @@ article {
   background: none;
   border: none;
 }
+.search-bar .input-group button.visual-button {
+  padding: 0.25rem .75rem;
+}
 .fixed-facet-filter .aspect-name {
   font-weight: bold;
 }
 .fixed-facet-filter .visual-button {
-  padding: 0rem 0.35rem;
-  line-height: 100%;
+  padding: 0rem .25rem;
+  line-height: 105%;
+  border-radius: 4px;
+  margin: 0 4px;
 }
 .fixed-facet-filter .visual-button svg {
   height: 1.2ex;
@@ -218,19 +223,6 @@ article {
   bottom: 0;
   right: 0;
 }
-/*
-.input-group > * {
-  border-radius: 0;
-}
-.input-group > *:first-child {
-  border-top-left-radius: .4rem;
-  border-bottom-left-radius: .4rem;
-}
-.input-group > *:last-child {
-  border-top-right-radius: .4rem;
-  border-bottom-right-radius: .4rem;
-}
-*/
 
 /* Remove some builtin-styles for input fields in webkit, chrome, ie */
 input:focus{
@@ -290,7 +282,7 @@ button.visual-button, select {
   border: 1px solid;
   padding: .375rem .75rem;
   font-size: 1rem;
-  border-radius: .4rem;
+  border-radius: 0;
 
   color: var(--color-text);
 
@@ -299,20 +291,6 @@ button.visual-button, select {
 }
 button.visual-button.selected {
   border: 2px solid var(--color-input-border-selected)
-}
-.input-group button.visual-button {
-  border-radius: 0;
-}
-.button-group button.visual-button:not(:first-child) {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-.button-group button.visual-button:not(:last-child) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-button.filter-button {
-  padding: 0.25rem .75rem;
 }
 
 
@@ -449,13 +427,19 @@ ul.folder-list ul.folder-list {
   width: 1.5ex;
   height: 1.5ex;
   stroke: currentColor;
-  stroke-width: 3px;
+  stroke-width: 4px;
   stroke-linejoin: round;
-  fill: currentColor;
+  fill: none;
   transition: transform 0.15s
+}
+.svg-icon.icon-search {
+  stroke-width: 2px;
 }
 .directory .svg-icon {
   fill: transparent;
+}
+.collection .svg-icon {
+  fill: currentColor;
 }
 .expanded .svg-icon {
   transform: rotate(90deg);
