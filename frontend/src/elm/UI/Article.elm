@@ -328,6 +328,9 @@ update context msg model =
 
                         UI.Article.Iterator.Navigate navigation ->
                             Navigate navigation
+
+                        UI.Article.Iterator.AdjustSetup adjustmentToSetup ->
+                            AdjustSetup adjustmentToSetup
                     )
 
         _ ->
@@ -341,8 +344,9 @@ view : Context -> Model -> Html Msg
 view context model =
     Html.main_
         []
-        [ viewThumbnailsSwitch context model
-        , viewContent context model
+        [ -- TODO
+          -- viewThumbnailsSwitch context model,
+          viewContent context model
         ]
 
 
@@ -377,7 +381,7 @@ viewThumbnailsSwitch context model =
                     False
     in
     if showSwitch then
-        Html.span [ Html.Attributes.class "thumbnail-switch" ]
+        Html.div [ Html.Attributes.class "thumbnail-switch" ]
             [ UI.Widgets.ThumbnailSwitch.view
                 context.config
                 context.config.hideThumbnails

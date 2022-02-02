@@ -11,6 +11,7 @@ import Html.Attributes
 import Html.Events
 import Types.Config exposing (Config)
 import Types.Localization as Localization
+import UI.Icons
 
 
 {-| -}
@@ -19,9 +20,8 @@ view config state msgFromState =
     Html.button
         [ Html.Attributes.type_ "button"
         , Html.Events.onClick (msgFromState (not state))
-        , Html.Attributes.class "text-button"
-        ]
-        [ Localization.text config <|
+        , Html.Attributes.class "visual-button"
+        , Localization.title config <|
             if state then
                 { en = "Show Thumbnails"
                 , de = "Vorschaubilder anzeigen"
@@ -32,3 +32,4 @@ view config state msgFromState =
                 , de = "Vorschaubilder ausblenden"
                 }
         ]
+        [ UI.Icons.icons.eye (not state) ]

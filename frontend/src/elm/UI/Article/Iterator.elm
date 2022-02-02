@@ -31,6 +31,7 @@ import Maybe.Extra
 import RemoteData
 import String.Format
 import Types exposing (DocumentIdFromSearch)
+import Types.AdjustmentToSetup as AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
 import Types.Id exposing (DocumentId)
@@ -41,6 +42,7 @@ import Types.Selection exposing (Selection)
 import UI.Article.Details as Details
 import UI.Article.Listing as Listing
 import UI.Icons
+import UI.Widgets.ThumbnailSwitch
 import Utils.List
 
 
@@ -59,6 +61,7 @@ type alias Context =
 type Return
     = NoReturn
     | Navigate Navigation
+    | AdjustSetup AdjustmentToSetup
 
 
 {-| -}
@@ -70,7 +73,8 @@ type alias Model =
 
 {-| -}
 type Msg
-    = ListingMsg Listing.Msg
+    = ReturnAdjustmentToSetup AdjustmentToSetup
+    | ListingMsg Listing.Msg
     | DetailsMsg Details.Msg
     | ReturnNavigation Navigation
 
@@ -87,6 +91,12 @@ initialModel =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
+        ReturnAdjustmentToSetup adjustment ->
+            ( model
+            , Cmd.none
+            , AdjustSetup adjustment
+            )
+
         ListingMsg subMsg ->
             let
                 ( subModel, subCmd, subReturn ) =
@@ -169,9 +179,11 @@ viewHeader context model =
         linkage =
             getLinkage context
     in
-    Html.div []
-        [ viewNavigationButtons context linkage
-        , Html.text (resultNumberText context linkage)
+    Html.nav
+        [ Html.Attributes.class "iterator-header" ]
+        [ Html.div [] [ Html.text (resultNumberText context linkage) ]
+        , viewNavigationButtons context linkage
+        , viewThumbnailsSwitch context.config
         ]
 
 
@@ -328,6 +340,16 @@ viewNavigationButtons context linkage =
                             [ UI.Icons.icons.next ]
                         ]
                )
+
+
+viewThumbnailsSwitch : Config -> Html Msg
+viewThumbnailsSwitch config =
+    Html.div [ Html.Attributes.class "thumbnail-switch" ]
+        [ UI.Widgets.ThumbnailSwitch.view
+            config
+            config.hideThumbnails
+            (ReturnAdjustmentToSetup << AdjustmentToSetup.HideThumbnails)
+        ]
 
 
 getLinkage : Context -> Linkage

@@ -39,6 +39,7 @@
     --color-spot-1-lighter: var(--color-citrus-lighter);
     --color-input-border: var(--color-verylightgrey);
     --color-input-border-selected: var(--color-grey);
+    --color-ruler: var(--color-grey);
     --color-button-background: var(--color-whitesmoke-darker);
     --color-nav-background: var(--color-whitesmoke-darker);
     --color-spinner-small-base: var(--color-nightrider);
@@ -87,7 +88,7 @@ a:hover, button.text-button:hover {
 
 header {
   flex: 0;
-  border-bottom: 1px solid gray;
+  border-bottom: 1px solid var(--color-ruler);
   padding-bottom: 1ex;
 }
 header .tum-header {
@@ -161,6 +162,17 @@ main .thumbnail-switch {
 }
 main .iterator-view {
   height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+main .iterator-view .iterator-header {
+  border-bottom: 1px solid var(--color-ruler);
+  padding: 1ex 0 1ex 1ex;
+  display: flex;
+  align-items: center;
+}
+main .iterator-view .iterator-header > div {
+    flex: 1 0;
 }
 article {
   height: 100%;

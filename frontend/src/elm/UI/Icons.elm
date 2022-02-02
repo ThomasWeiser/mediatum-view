@@ -10,6 +10,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Svg exposing (Svg)
 import Svg.Attributes
+import Utils.List
 
 
 {-| -}
@@ -37,7 +38,6 @@ definitions =
             , symbolWithPath "previous" "M 23,2 9,16 23,30"
             , symbolWithPath "next" "M 9,2 23,16 9,30"
             , symbolWithPath "list" "M2,5H6M9,5H30 M2,16H6M9,16H30 M2,27H6M9,27H30"
-            , symbolWithPath "reload" "M 16,30 V 2 M 25,21 16,30 7,21"
             ]
         ]
 
@@ -51,7 +51,7 @@ icons =
     , previous = icon "previous"
     , next = icon "next"
     , list = icon "list"
-    , reload = icon "reload"
+    , eye = eye
     , spinner = spinner
     , spinnerSmall = spinnerSmall
     }
@@ -62,6 +62,37 @@ icon name =
     Svg.svg
         [ Svg.Attributes.class ("svg-icon icon-" ++ name) ]
         [ Svg.use [ Svg.Attributes.xlinkHref ("#icon-" ++ name) ] [] ]
+
+
+eye : Bool -> Html msg
+eye crossed =
+    Svg.svg
+        [ Svg.Attributes.class "svg-icon icon-eye"
+        , Svg.Attributes.viewBox "0 0 32 32"
+        , Svg.Attributes.stroke "black"
+        ]
+        (Utils.List.consIf
+            crossed
+            (Svg.path
+                [ Svg.Attributes.d "M 1,31 31,1"
+                , Svg.Attributes.style "stroke-width:3"
+                ]
+                []
+            )
+            [ Svg.path
+                [ Svg.Attributes.d "m 31,15.5 c 0,0 -4.4,8.9 -14.9,8.9 -10.4,0 -14.9,-8.9 -14.9,-8.9 0,0 4.5,-8.9 14.9,-8.9 10.4,0 14.9,8.9 14.9,8.9 z"
+                , Svg.Attributes.style "stroke-width:3"
+                ]
+                []
+            , Svg.circle
+                [ Svg.Attributes.cx "15.5"
+                , Svg.Attributes.cy "15.5"
+                , Svg.Attributes.r "6"
+                , Svg.Attributes.style "stroke-width:3"
+                ]
+                []
+            ]
+        )
 
 
 {-| -}
