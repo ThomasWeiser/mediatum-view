@@ -124,7 +124,7 @@ view context model =
                 , context.selection
                 )
     in
-    Html.div [] <|
+    Html.article [] <|
         [ viewPageSequence context pageSequence
         , viewFooter context pageSequence
         ]

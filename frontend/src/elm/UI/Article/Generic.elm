@@ -156,7 +156,7 @@ view context model =
                                 |> always
                             )
     in
-    Html.div [] <|
+    Html.article [] <|
         case remoteDataMessage of
             NotAsked ->
                 [ UI.Icons.icons.spinner ]

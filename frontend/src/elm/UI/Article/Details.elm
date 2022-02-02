@@ -80,7 +80,7 @@ update context msg model =
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
-    Html.div [ Html.Attributes.class "details" ]
+    Html.article [ Html.Attributes.class "details" ]
         [ case
             RemoteData.map2 Tuple.pair
                 (Cache.get context.cache.documents

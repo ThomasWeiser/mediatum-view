@@ -152,14 +152,20 @@ aside nav {
 }
 main {
   flex: 8;
-  overflow: auto;
-  padding: 0.5em;
 }
-main .thumbnail-switch{
+main .thumbnail-switch {
   float: right;
   margin-left: 1em;
   font-size: 80%;
   color: var(--color-text-light);
+}
+main .iterator-view {
+  height: 100%;
+}
+article {
+  height: 100%;
+  overflow: auto;
+  padding: 0.5em;
 }
 
 .stick-on-wrapping {

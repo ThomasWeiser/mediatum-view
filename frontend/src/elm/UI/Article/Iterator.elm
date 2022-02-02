@@ -137,7 +137,8 @@ update context msg model =
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
-    Html.div []
+    Html.div
+        [ Html.Attributes.class "iterator-view" ]
         [ viewHeader context model
         , Details.view
             { config = context.config
