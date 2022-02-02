@@ -181,7 +181,8 @@ viewHeader context model =
     in
     Html.nav
         [ Html.Attributes.class "iterator-header" ]
-        [ Html.div [] [ Html.text (resultNumberText context linkage) ]
+        [ Html.div [ Html.Attributes.class "result-number" ]
+            [ Html.text (resultNumberText context linkage) ]
         , viewNavigationButtons context linkage
         , viewThumbnailsSwitch context.config
         ]
