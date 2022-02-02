@@ -300,6 +300,17 @@ button.visual-button, select {
 button.visual-button.selected {
   border: 2px solid var(--color-input-border-selected)
 }
+.input-group button.visual-button {
+  border-radius: 0;
+}
+.button-group button.visual-button:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.button-group button.visual-button:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
 button.filter-button {
   padding: 0.25rem .75rem;
 }

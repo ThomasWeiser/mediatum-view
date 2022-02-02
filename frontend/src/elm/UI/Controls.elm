@@ -333,7 +333,7 @@ viewSidebarButton config model =
 
 viewSearchButtons : Config -> Model -> Html Msg
 viewSearchButtons config model =
-    Html.div [ Html.Attributes.class "submit-buttons" ]
+    Html.div [ Html.Attributes.class "submit-buttons button-group" ]
         [ Html.button
             [ Html.Attributes.type_ "submit"
             , Html.Attributes.class "visual-button"
