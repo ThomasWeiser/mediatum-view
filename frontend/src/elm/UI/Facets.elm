@@ -202,7 +202,7 @@ viewFacet context model selection facetAspectConfig =
                 [ ( "expanded", not showCollapsed ) ]
             ]
             [ Html.div []
-                [ UI.Icons.expando ]
+                [ UI.Icons.icons.expando ]
             , Html.div
                 [ Html.Attributes.class "facet-name" ]
                 [ Localization.text context.config facetAspectConfig.label ]
@@ -233,10 +233,10 @@ viewFacet context model selection facetAspectConfig =
                         of
                             RemoteData.NotAsked ->
                                 -- Should never happen
-                                [ UI.Icons.spinnerSmall ]
+                                [ UI.Icons.icons.spinnerSmall ]
 
                             RemoteData.Loading ->
-                                [ UI.Icons.spinnerSmall ]
+                                [ UI.Icons.icons.spinnerSmall ]
 
                             RemoteData.Failure error ->
                                 [ Utils.Html.viewApiError error ]

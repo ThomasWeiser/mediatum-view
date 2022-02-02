@@ -207,10 +207,10 @@ viewListOfFolders context model isToplevel maybeFolderCounts apiDataFolderIds =
     Html.ul [ Html.Attributes.class "folder-list" ] <|
         case apiDataFolderIds of
             RemoteData.NotAsked ->
-                [ Html.li [] [ UI.Icons.spinnerSmall ] ]
+                [ Html.li [] [ UI.Icons.icons.spinnerSmall ] ]
 
             RemoteData.Loading ->
-                [ Html.li [] [ UI.Icons.spinnerSmall ] ]
+                [ Html.li [] [ UI.Icons.icons.spinnerSmall ] ]
 
             RemoteData.Success folderIds ->
                 List.map
@@ -229,10 +229,10 @@ viewFolderTree context model isToplevel maybeFolderCounts id =
     Html.div [] <|
         case Cache.get context.cache.folders id of
             RemoteData.NotAsked ->
-                [ UI.Icons.spinnerSmall ]
+                [ UI.Icons.icons.spinnerSmall ]
 
             RemoteData.Loading ->
-                [ UI.Icons.spinnerSmall ]
+                [ UI.Icons.icons.spinnerSmall ]
 
             RemoteData.Success folder ->
                 let
@@ -302,10 +302,10 @@ viewFolderLine folder isToplevel maybeCount selected expanded =
         ]
         [ Html.div []
             [ if folder.hasSubfolder then
-                UI.Icons.expando
+                UI.Icons.icons.expando
 
               else
-                UI.Icons.leaf
+                UI.Icons.icons.leaf
             ]
         , Html.div
             [ Html.Attributes.class "folder-name" ]

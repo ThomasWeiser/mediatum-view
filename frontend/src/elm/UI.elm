@@ -356,7 +356,8 @@ view context model =
                 model.controls
                 |> Html.map ControlsMsg
             ]
-        , Html.main_ []
+        , Html.div
+            [ Html.Attributes.class "sidebar-and-main" ]
             [ Html.aside
                 [ Html.Attributes.classList [ ( "hidden", context.config.hideSidebar ) ] ]
                 [ Html.map TreeMsg <|

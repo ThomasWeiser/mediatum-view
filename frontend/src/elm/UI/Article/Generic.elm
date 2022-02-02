@@ -156,13 +156,13 @@ view context model =
                                 |> always
                             )
     in
-    Html.div [] <|
+    Html.article [] <|
         case remoteDataMessage of
             NotAsked ->
-                [ UI.Icons.spinner ]
+                [ UI.Icons.icons.spinner ]
 
             Loading ->
-                [ UI.Icons.spinner ]
+                [ UI.Icons.icons.spinner ]
 
             Success notification ->
                 [ Html.text notification ]

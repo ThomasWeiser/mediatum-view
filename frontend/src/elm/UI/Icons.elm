@@ -1,20 +1,8 @@
-module UI.Icons exposing
-    ( definitions
-    , expando
-    , leaf
-    , search
-    , clear
-    , spinner, spinnerSmall
-    )
+module UI.Icons exposing (definitions, icons)
 
 {-|
 
-@docs definitions
-@docs expando
-@docs leaf
-@docs search
-@docs clear
-@docs spinner, spinnerSmall
+@docs definitions, icons
 
 -}
 
@@ -22,6 +10,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Svg exposing (Svg)
 import Svg.Attributes
+import Utils.List
 
 
 {-| -}
@@ -45,39 +34,65 @@ definitions =
             , symbolWithPath "leaf" "M 6 6 h 20 v 20 h -20 z"
             , symbolWithPath "search" "M19.196 21.854c-1.687 1.202-3.751 1.909-5.98 1.909-5.697 0-10.316-4.619-10.316-10.316s4.619-10.316 10.316-10.316c5.697 0 10.316 4.619 10.316 10.316 0 2.229-0.707 4.293-1.909 5.98l6.778 6.778c0.668 0.668 0.662 1.736-0 2.399l-0.028 0.028c-0.661 0.661-1.736 0.663-2.399 0l-6.778-6.778zM13.217 21.336c4.357 0 7.889-3.532 7.889-7.889s-3.532-7.889-7.889-7.889c-4.357 0-7.889 3.532-7.889 7.889s3.532 7.889 7.889 7.889v0z"
             , symbolWithPath "clear" "M 2 2 L 30 30 M 2 30 L 30 2"
+            , symbolWithPath "first" "M 6 2 V 30 M 29,2 15,16 29,30"
+            , symbolWithPath "previous" "M 23,2 9,16 23,30"
+            , symbolWithPath "next" "M 9,2 23,16 9,30"
+            , symbolWithPath "list" "M2,5H6M9,5H30 M2,16H6M9,16H30 M2,27H6M9,27H30"
             ]
         ]
 
 
-{-| -}
-expando : Html msg
-expando =
-    icon "expando"
-
-
-{-| -}
-leaf : Html msg
-leaf =
-    icon "leaf"
-
-
-{-| -}
-search : Html msg
-search =
-    icon "search"
-
-
-{-| -}
-clear : Html msg
-clear =
-    icon "clear"
+icons =
+    { expando = icon "expando"
+    , leaf = icon "leaf"
+    , search = icon "search"
+    , clear = icon "clear"
+    , first = icon "first"
+    , previous = icon "previous"
+    , next = icon "next"
+    , list = icon "list"
+    , eye = eye
+    , spinner = spinner
+    , spinnerSmall = spinnerSmall
+    }
 
 
 icon : String -> Html msg
 icon name =
     Svg.svg
-        [ Svg.Attributes.class "svg-icon" ]
+        [ Svg.Attributes.class ("svg-icon icon-" ++ name) ]
         [ Svg.use [ Svg.Attributes.xlinkHref ("#icon-" ++ name) ] [] ]
+
+
+eye : Bool -> Html msg
+eye crossed =
+    Svg.svg
+        [ Svg.Attributes.class "svg-icon icon-eye"
+        , Svg.Attributes.viewBox "0 0 32 32"
+        , Svg.Attributes.stroke "black"
+        ]
+        (Utils.List.consIf
+            crossed
+            (Svg.path
+                [ Svg.Attributes.d "M 1,31 31,1"
+                , Svg.Attributes.style "stroke-width:3"
+                ]
+                []
+            )
+            [ Svg.path
+                [ Svg.Attributes.d "m 31,15.5 c 0,0 -4.4,8.9 -14.9,8.9 -10.4,0 -14.9,-8.9 -14.9,-8.9 0,0 4.5,-8.9 14.9,-8.9 10.4,0 14.9,8.9 14.9,8.9 z"
+                , Svg.Attributes.style "stroke-width:3"
+                ]
+                []
+            , Svg.circle
+                [ Svg.Attributes.cx "15.5"
+                , Svg.Attributes.cy "15.5"
+                , Svg.Attributes.r "6"
+                , Svg.Attributes.style "stroke-width:3"
+                ]
+                []
+            ]
+        )
 
 
 {-| -}

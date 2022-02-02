@@ -31,6 +31,7 @@ import Maybe.Extra
 import RemoteData
 import String.Format
 import Types exposing (DocumentIdFromSearch)
+import Types.AdjustmentToSetup as AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
 import Types.Id exposing (DocumentId)
@@ -40,6 +41,8 @@ import Types.Route exposing (Route)
 import Types.Selection exposing (Selection)
 import UI.Article.Details as Details
 import UI.Article.Listing as Listing
+import UI.Icons
+import UI.Widgets.ThumbnailSwitch
 import Utils.List
 
 
@@ -58,6 +61,7 @@ type alias Context =
 type Return
     = NoReturn
     | Navigate Navigation
+    | AdjustSetup AdjustmentToSetup
 
 
 {-| -}
@@ -69,7 +73,8 @@ type alias Model =
 
 {-| -}
 type Msg
-    = ListingMsg Listing.Msg
+    = ReturnAdjustmentToSetup AdjustmentToSetup
+    | ListingMsg Listing.Msg
     | DetailsMsg Details.Msg
     | ReturnNavigation Navigation
 
@@ -86,6 +91,12 @@ initialModel =
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
     case msg of
+        ReturnAdjustmentToSetup adjustment ->
+            ( model
+            , Cmd.none
+            , AdjustSetup adjustment
+            )
+
         ListingMsg subMsg ->
             let
                 ( subModel, subCmd, subReturn ) =
@@ -107,6 +118,9 @@ update context msg model =
 
                 Listing.Navigate navigation ->
                     Navigate navigation
+
+                Listing.AdjustSetup adjustment ->
+                    AdjustSetup adjustment
             )
 
         DetailsMsg subMsg ->
@@ -136,7 +150,8 @@ update context msg model =
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
-    Html.div []
+    Html.div
+        [ Html.Attributes.class "iterator-view" ]
         [ viewHeader context model
         , Details.view
             { config = context.config
@@ -167,9 +182,12 @@ viewHeader context model =
         linkage =
             getLinkage context
     in
-    Html.div []
-        [ viewNavigationButtons context linkage
-        , Html.text (resultNumberText context linkage)
+    Html.nav
+        [ Html.Attributes.class "iterator-header" ]
+        [ Html.div [ Html.Attributes.class "result-number" ]
+            [ Html.text (resultNumberText context linkage) ]
+        , viewNavigationButtons context linkage
+        , viewThumbnailsSwitch context.config
         ]
 
 
@@ -240,22 +258,24 @@ resultNumberText context linkage =
 viewNavigationButtons : Context -> Linkage -> Html Msg
 viewNavigationButtons context linkage =
     let
-        buttonListOfNavigations listOfNavigations =
+        buttonListOfNavigations attributes listOfNavigations =
             Html.button
                 (if List.isEmpty listOfNavigations then
-                    [ Html.Attributes.type_ "button"
-                    , Html.Attributes.class "visual-button"
-                    , Html.Attributes.disabled True
-                    ]
+                    attributes
+                        ++ [ Html.Attributes.type_ "button"
+                           , Html.Attributes.class "visual-button"
+                           , Html.Attributes.disabled True
+                           ]
 
                  else
-                    [ Html.Attributes.type_ "button"
-                    , Html.Attributes.class "visual-button"
-                    , Html.Events.onClick (ReturnNavigation (Navigation.ListOfNavigations listOfNavigations))
-                    ]
+                    attributes
+                        ++ [ Html.Attributes.type_ "button"
+                           , Html.Attributes.class "visual-button"
+                           , Html.Events.onClick (ReturnNavigation (Navigation.ListOfNavigations listOfNavigations))
+                           ]
                 )
 
-        buttonNavigationInResults maybeDocumentId loadMore =
+        buttonNavigationInResults attributes maybeDocumentId loadMore =
             let
                 listOfNavigations =
                     maybeDocumentId
@@ -264,20 +284,34 @@ viewNavigationButtons context linkage =
                         |> Utils.List.consIf (loadMore && linkage.canLoadMore)
                             (Navigation.SetLimit (Constants.incrementLimitOnLoadMore context.config context.limit))
             in
-            buttonListOfNavigations listOfNavigations
+            buttonListOfNavigations attributes listOfNavigations
     in
-    Html.div [] <|
-        buttonNavigationInResults
-            linkage.firstId
-            False
-            [ Localization.text context.config
-                { en = "First Result"
-                , de = "erstes Resultat der Liste"
+    Html.div
+        [ Html.Attributes.class "iterator-buttons" ]
+    <|
+        buttonListOfNavigations
+            [ Localization.title context.config
+                { en = "Back to Results"
+                , de = "zurück zur Liste"
                 }
+            , Html.Attributes.class "button-back-to-list"
             ]
+            [ Navigation.ShowListingWithoutDocument ]
+            [ UI.Icons.icons.list ]
+            :: buttonNavigationInResults
+                [ Localization.title context.config
+                    { en = "First Result"
+                    , de = "erstes Resultat der Liste"
+                    }
+                , Html.Attributes.class "button-first-result"
+                ]
+                linkage.firstId
+                False
+                [ UI.Icons.icons.first ]
             :: (case linkage.currentNumber of
                     Nothing ->
                         [ buttonNavigationInResults
+                            [ Html.Attributes.class "button-load-more-results" ]
                             Nothing
                             True
                             [ Localization.text context.config
@@ -289,31 +323,37 @@ viewNavigationButtons context linkage =
 
                     Just currentNumber ->
                         [ buttonNavigationInResults
-                            linkage.prevId
-                            (currentNumber - 1 > context.limit)
-                            [ Localization.text context.config
+                            [ Localization.title context.config
                                 { en = "Previous Result"
                                 , de = "vorheriges Resultat"
                                 }
+                            , Html.Attributes.class "button-previous-result"
                             ]
+                            linkage.prevId
+                            (currentNumber - 1 > context.limit)
+                            [ UI.Icons.icons.previous ]
                         , buttonNavigationInResults
-                            linkage.nextId
-                            (currentNumber >= context.limit)
-                            [ Localization.text context.config
+                            [ Localization.title context.config
                                 { en = "Next Result"
                                 , de = "nächstes Resultat"
                                 }
+                            , Html.Attributes.class "button-next-result"
                             ]
+                            linkage.nextId
+                            (currentNumber >= context.limit)
+                            [ UI.Icons.icons.next ]
                         ]
                )
-            ++ [ buttonListOfNavigations
-                    [ Navigation.ShowListingWithoutDocument ]
-                    [ Localization.text context.config
-                        { en = "Back to Results"
-                        , de = "zurück zur Liste"
-                        }
-                    ]
-               ]
+
+
+viewThumbnailsSwitch : Config -> Html Msg
+viewThumbnailsSwitch config =
+    Html.div [ Html.Attributes.class "thumbnail-switch" ]
+        [ UI.Widgets.ThumbnailSwitch.view
+            config
+            config.hideThumbnails
+            (ReturnAdjustmentToSetup << AdjustmentToSetup.HideThumbnails)
+        ]
 
 
 getLinkage : Context -> Linkage

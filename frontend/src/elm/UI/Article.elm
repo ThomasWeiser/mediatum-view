@@ -283,6 +283,9 @@ update context msg model =
 
                         UI.Article.Listing.Navigate navigation ->
                             Navigate navigation
+
+                        UI.Article.Listing.AdjustSetup adjustment ->
+                            AdjustSetup adjustment
                     )
 
         ( DetailsMsg subMsg, DetailsModel subModel, DocumentPresentation maybeFolderId documentIdFromSearch ) ->
@@ -302,6 +305,9 @@ update context msg model =
             , case subReturn of
                 UI.Article.Details.NoReturn ->
                     NoReturn
+
+                UI.Article.Details.AdjustSetup adjustment ->
+                    AdjustSetup adjustment
             )
 
         ( IteratorMsg subMsg, IteratorModel subModel, IteratorPresentation selection limit documentIdFromSearch ) ->
@@ -328,6 +334,9 @@ update context msg model =
 
                         UI.Article.Iterator.Navigate navigation ->
                             Navigate navigation
+
+                        UI.Article.Iterator.AdjustSetup adjustmentToSetup ->
+                            AdjustSetup adjustmentToSetup
                     )
 
         _ ->
@@ -339,10 +348,11 @@ update context msg model =
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
-    Html.article
-        [ Html.Attributes.class "article" ]
-        [ viewThumbnailsSwitch context model
-        , viewContent context model
+    Html.main_
+        []
+        [ -- TODO
+          -- viewThumbnailsSwitch context model,
+          viewContent context model
         ]
 
 
@@ -377,7 +387,7 @@ viewThumbnailsSwitch context model =
                     False
     in
     if showSwitch then
-        Html.span [ Html.Attributes.class "thumbnail-switch" ]
+        Html.div [ Html.Attributes.class "thumbnail-switch" ]
             [ UI.Widgets.ThumbnailSwitch.view
                 context.config
                 context.config.hideThumbnails

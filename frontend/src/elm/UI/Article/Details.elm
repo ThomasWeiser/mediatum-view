@@ -31,13 +31,16 @@ import List.Nonempty
 import Regex
 import RemoteData
 import Types exposing (DocumentIdFromSearch)
+import Types.AdjustmentToSetup as AdjustmentToSetup exposing (AdjustmentToSetup)
 import Types.Config as Config exposing (Config)
 import Types.Config.MasksConfig as MasksConfig
 import Types.Localization as Localization
 import Types.Route exposing (Route)
 import UI.Icons
 import UI.Widgets.Breadcrumbs
+import UI.Widgets.ThumbnailSwitch
 import Utils.Html
+import Utils.List
 
 
 {-| -}
@@ -52,6 +55,7 @@ type alias Context =
 {-| -}
 type Return
     = NoReturn
+    | AdjustSetup AdjustmentToSetup
 
 
 {-| -}
@@ -60,8 +64,8 @@ type alias Model =
 
 
 {-| -}
-type alias Msg =
-    Never
+type Msg
+    = ReturnAdjustmentToSetup AdjustmentToSetup
 
 
 {-| -}
@@ -73,13 +77,18 @@ initialModel =
 {-| -}
 update : Context -> Msg -> Model -> ( Model, Cmd Msg, Return )
 update context msg model =
-    ( model, Cmd.none, NoReturn )
+    case msg of
+        ReturnAdjustmentToSetup adjustmentToSetup ->
+            ( model
+            , Cmd.none
+            , AdjustSetup adjustmentToSetup
+            )
 
 
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
-    Html.div [ Html.Attributes.class "details" ]
+    Html.article [ Html.Attributes.class "details" ]
         [ case
             RemoteData.map2 Tuple.pair
                 (Cache.get context.cache.documents
@@ -91,10 +100,10 @@ view context model =
           of
             RemoteData.NotAsked ->
                 -- Should never happen
-                UI.Icons.spinner
+                UI.Icons.icons.spinner
 
             RemoteData.Loading ->
-                UI.Icons.spinner
+                UI.Icons.icons.spinner
 
             RemoteData.Failure error ->
                 Utils.Html.viewApiError error
@@ -106,23 +115,26 @@ view context model =
 
 viewDocument : Context -> Model -> Document -> Residence -> Html Msg
 viewDocument context model document residence =
+    let
+        hasNoThumbnail =
+            context.config.hideThumbnails || not (Document.hasPresentation document)
+    in
     Html.div []
-        [ Html.div [ Html.Attributes.class "permalink" ]
-            [ Html.a
-                [ Html.Attributes.href
-                    (Constants.externalServerUrls.documentPermanent document.id)
-                , Localization.title context.config
-                    { en = "Persistent link to the document in mediaTUM"
-                    , de = "Dauerhafter Verweis auf das Dokument in mediaTUM"
-                    }
-                ]
-                [ Localization.text context.config
-                    { en = "Show this document in mediaTUM"
-                    , de = "Zeige dieses Dokument in mediaTUM"
-                    }
-                ]
+        [ Html.div
+            [ Html.Attributes.class "thumbnail-switch"
+            , Html.Attributes.classList [ ( "button-negligible", hasNoThumbnail ) ]
             ]
-        , if context.config.hideThumbnails || not (Document.hasPresentation document) then
+            [ UI.Widgets.ThumbnailSwitch.view
+                context.config
+                context.config.hideThumbnails
+                (ReturnAdjustmentToSetup << AdjustmentToSetup.HideThumbnails)
+            ]
+        , Html.div
+            [ Html.Attributes.class "header" ]
+            [ Html.div [ Html.Attributes.class "metadatatype" ]
+                [ Html.text document.metadatatypeName ]
+            ]
+        , if hasNoThumbnail then
             Html.text ""
 
           else
@@ -150,8 +162,10 @@ viewDocument context model document residence =
                         []
                     )
                 ]
-        , if Document.hasDocumentPdf document then
-            Html.div [ Html.Attributes.class "download-link" ]
+        , Html.div
+            [ Html.Attributes.class "external-links" ]
+            (Utils.List.appendIf
+                (Document.hasDocumentPdf document)
                 [ Html.a
                     [ Html.Attributes.href (Constants.externalServerUrls.downloadDocumentPdf document.id) ]
                     [ Localization.text context.config
@@ -159,14 +173,23 @@ viewDocument context model document residence =
                         , de = "PDF herunterladen"
                         }
                     ]
+                , Html.span [ Html.Attributes.class "separator" ] [ Html.text " · " ]
                 ]
-
-          else
-            Html.text ""
-        , Html.div [ Html.Attributes.class "header" ]
-            [ Html.div [ Html.Attributes.class "metadatatype" ]
-                [ Html.text document.metadatatypeName ]
-            ]
+                [ Html.a
+                    [ Html.Attributes.href
+                        (Constants.externalServerUrls.documentPermanent document.id)
+                    , Localization.title context.config
+                        { en = "Persistent link to the document in mediaTUM"
+                        , de = "Dauerhafter Verweis auf das Dokument in mediaTUM"
+                        }
+                    ]
+                    [ Localization.text context.config
+                        { en = "Show this document in mediaTUM"
+                        , de = "Zeige dieses Dokument in mediaTUM"
+                        }
+                    ]
+                ]
+            )
         , Html.table []
             [ Html.tbody []
                 (List.map

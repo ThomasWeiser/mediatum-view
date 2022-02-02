@@ -39,6 +39,7 @@
     --color-spot-1-lighter: var(--color-citrus-lighter);
     --color-input-border: var(--color-verylightgrey);
     --color-input-border-selected: var(--color-grey);
+    --color-ruler: var(--color-grey);
     --color-button-background: var(--color-whitesmoke-darker);
     --color-nav-background: var(--color-whitesmoke-darker);
     --color-spinner-small-base: var(--color-nightrider);
@@ -78,7 +79,7 @@ a, button.text-button {
   color: var(--color-primary-lighter);
   text-decoration: none;
 }
-button.text-button.text-button-negligible {
+button.button-negligible, .button-negligible  button.visual-button {
   color: var(--color-text-light);
 }
 a:hover, button.text-button:hover {
@@ -87,7 +88,7 @@ a:hover, button.text-button:hover {
 
 header {
   flex: 0;
-  border-bottom: 1px solid gray;
+  border-bottom: 1px solid var(--color-ruler);
   padding-bottom: 1ex;
 }
 header .tum-header {
@@ -101,6 +102,9 @@ header .language-select {
   margin-right: 20px;
   font-size: initial;
   font-weight: initial;
+}
+header .language-select .text-button {
+  color: unset;
 }
 header .language-select .selected {
   font-weight: bold;
@@ -129,7 +133,7 @@ footer .footer-right > * {
   margin-left: 1em;
 }
 
-main {
+.sidebar-and-main {
   flex: 1;
   display: flex;
   min-height: 0;
@@ -147,10 +151,57 @@ aside nav {
   background-color: var(--color-nav-background);
   padding: 0.6em;
 }
-article {
+main {
   flex: 8;
+}
+/*
+main .thumbnail-switch {
+  float: right;
+  margin-left: 1em;
+  font-size: 80%;
+  color: var(--color-text-light);
+}
+*/
+main .iterator-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+main .iterator-view .iterator-header {
+  border-bottom: 1px solid var(--color-ruler);
+  padding: 1ex 0 1ex 1ex;
+  display: flex;
+  align-items: center;
+}
+main .iterator-view .iterator-header > .result-number {
+  flex: 2 1 0;
+  min-width: 10em;
+}
+main .iterator-view .iterator-header > .iterator-buttons {
+  flex: 1 0 content;
+  text-align: center;
+}
+main .iterator-view .iterator-header > .thumbnail-switch {
+  flex: 2 1 content;
+  text-align: right;
+}
+article {
+  height: 100%;
   overflow: auto;
   padding: 0.5em;
+  position: relative;
+}
+article.listing .thumbnail-switch {
+  position: sticky;
+  top: 0;
+  text-align: right;
+  margin-bottom: -2.7ex;
+}
+article.details .thumbnail-switch {
+  float: right;
+}
+.iterator-view article.details .thumbnail-switch {
+  display: none;
 }
 
 .stick-on-wrapping {
@@ -188,18 +239,23 @@ article {
   background: none;
   border: none;
 }
+.search-bar .input-group button.visual-button {
+  padding: 0.25rem .75rem;
+}
 .fixed-facet-filter .aspect-name {
   font-weight: bold;
 }
 .fixed-facet-filter .visual-button {
-  padding: 0rem 0.35rem;
-  line-height: 100%;
+  padding: 0rem .25rem;
+  line-height: 105%;
+  border-radius: 4px;
+  margin: 0 4px;
 }
 .fixed-facet-filter .visual-button svg {
   height: 1.2ex;
 }
 .fixed-facet-filter .separator {
-  margin: 0 0.4em;
+  margin: 0 0.45em 0 0.3em;
 }
 .bottom-controls {
   min-height: 36px;
@@ -215,19 +271,10 @@ article {
   bottom: 0;
   right: 0;
 }
-/*
-.input-group > * {
-  border-radius: 0;
+
+.separator {
+  margin: 0 0.3em;
 }
-.input-group > *:first-child {
-  border-top-left-radius: .4rem;
-  border-bottom-left-radius: .4rem;
-}
-.input-group > *:last-child {
-  border-top-right-radius: .4rem;
-  border-bottom-right-radius: .4rem;
-}
-*/
 
 /* Remove some builtin-styles for input fields in webkit, chrome, ie */
 input:focus{
@@ -287,7 +334,7 @@ button.visual-button, select {
   border: 1px solid;
   padding: .375rem .75rem;
   font-size: 1rem;
-  border-radius: .4rem;
+  border-radius: 0;
 
   color: var(--color-text);
 
@@ -297,8 +344,9 @@ button.visual-button, select {
 button.visual-button.selected {
   border: 2px solid var(--color-input-border-selected)
 }
-button.filter-button {
-  padding: 0.25rem .75rem;
+
+.iterator-buttons .button-back-to-list {
+  margin-right: 1em;
 }
 
 
@@ -394,11 +442,13 @@ ul.folder-list ul.folder-list {
   width: 100%;
 }
 .details .header {
-  margin: 3ex 0;
+  margin: 1ex 0 2ex 0;
 }
-.details .header .metadatatype
-{
+.details .header .metadatatype {
   color: var(--color-primary);
+}
+.details .external-links {
+  margin: 1.5ex 0 2.5ex 0;
 }
 .details .bibtex {
   margin: 1ex 0;
@@ -435,27 +485,24 @@ ul.folder-list ul.folder-list {
   width: 1.5ex;
   height: 1.5ex;
   stroke: currentColor;
-  stroke-width: 3px;
+  stroke-width: 4px;
   stroke-linejoin: round;
-  fill: currentColor;
+  fill: none;
   transition: transform 0.15s
+}
+.svg-icon.icon-search {
+  stroke-width: 2px;
 }
 .directory .svg-icon {
   fill: transparent;
+}
+.collection .svg-icon {
+  fill: currentColor;
 }
 .expanded .svg-icon {
   transform: rotate(90deg);
 }
 
-.article {
-  position: relative;
-}
-.article .thumbnail-switch{
-  float: right;
-  margin-left: 1em;
-  font-size: 80%;
-  color: var(--color-text-light);
-}
 .sidebar-switch {
   font-size: 80%;
 }
@@ -486,17 +533,17 @@ ul.folder-list ul.folder-list {
 .details .breadcrumbs a {
   color: inherit;
 }
-.article .details table {
+main .details table {
   border-collapse: collapse;
 }
-.article .details table td {
+main .details table td {
   vertical-align: top;
   padding: 0.2em 0;
 }
-.article .details table td:first-of-type {
+main .details table td:first-of-type {
   font-weight: bold;
 }
-.article .details table td + td {
+main .details table td + td {
   padding-left: 0.4em;
 }
 
