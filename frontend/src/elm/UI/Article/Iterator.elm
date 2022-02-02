@@ -40,6 +40,7 @@ import Types.Route exposing (Route)
 import Types.Selection exposing (Selection)
 import UI.Article.Details as Details
 import UI.Article.Listing as Listing
+import UI.Icons
 import Utils.List
 
 
@@ -240,22 +241,24 @@ resultNumberText context linkage =
 viewNavigationButtons : Context -> Linkage -> Html Msg
 viewNavigationButtons context linkage =
     let
-        buttonListOfNavigations listOfNavigations =
+        buttonListOfNavigations attributes listOfNavigations =
             Html.button
                 (if List.isEmpty listOfNavigations then
-                    [ Html.Attributes.type_ "button"
-                    , Html.Attributes.class "visual-button"
-                    , Html.Attributes.disabled True
-                    ]
+                    attributes
+                        ++ [ Html.Attributes.type_ "button"
+                           , Html.Attributes.class "visual-button"
+                           , Html.Attributes.disabled True
+                           ]
 
                  else
-                    [ Html.Attributes.type_ "button"
-                    , Html.Attributes.class "visual-button"
-                    , Html.Events.onClick (ReturnNavigation (Navigation.ListOfNavigations listOfNavigations))
-                    ]
+                    attributes
+                        ++ [ Html.Attributes.type_ "button"
+                           , Html.Attributes.class "visual-button"
+                           , Html.Events.onClick (ReturnNavigation (Navigation.ListOfNavigations listOfNavigations))
+                           ]
                 )
 
-        buttonNavigationInResults maybeDocumentId loadMore =
+        buttonNavigationInResults attributes maybeDocumentId loadMore =
             let
                 listOfNavigations =
                     maybeDocumentId
@@ -264,55 +267,60 @@ viewNavigationButtons context linkage =
                         |> Utils.List.consIf (loadMore && linkage.canLoadMore)
                             (Navigation.SetLimit (Constants.incrementLimitOnLoadMore context.config context.limit))
             in
-            buttonListOfNavigations listOfNavigations
+            buttonListOfNavigations attributes listOfNavigations
     in
     Html.div [] <|
         buttonNavigationInResults
-            linkage.firstId
-            False
-            [ Localization.text context.config
+            [ Localization.title context.config
                 { en = "First Result"
                 , de = "erstes Resultat der Liste"
                 }
             ]
+            linkage.firstId
+            False
+            [ UI.Icons.icons.first ]
             :: (case linkage.currentNumber of
                     Nothing ->
                         [ buttonNavigationInResults
-                            Nothing
-                            True
-                            [ Localization.text context.config
+                            [ Localization.title context.config
                                 { en = "Load More Results"
                                 , de = "weitere Ergebnisse laden"
                                 }
                             ]
+                            Nothing
+                            True
+                            [ UI.Icons.icons.reload ]
                         ]
 
                     Just currentNumber ->
                         [ buttonNavigationInResults
-                            linkage.prevId
-                            (currentNumber - 1 > context.limit)
-                            [ Localization.text context.config
+                            [ Localization.title context.config
                                 { en = "Previous Result"
                                 , de = "vorheriges Resultat"
                                 }
                             ]
+                            linkage.prevId
+                            (currentNumber - 1 > context.limit)
+                            [ UI.Icons.icons.prev ]
                         , buttonNavigationInResults
-                            linkage.nextId
-                            (currentNumber >= context.limit)
-                            [ Localization.text context.config
+                            [ Localization.title context.config
                                 { en = "Next Result"
                                 , de = "nächstes Resultat"
                                 }
                             ]
+                            linkage.nextId
+                            (currentNumber >= context.limit)
+                            [ UI.Icons.icons.next ]
                         ]
                )
             ++ [ buttonListOfNavigations
-                    [ Navigation.ShowListingWithoutDocument ]
-                    [ Localization.text context.config
+                    [ Localization.title context.config
                         { en = "Back to Results"
                         , de = "zurück zur Liste"
                         }
                     ]
+                    [ Navigation.ShowListingWithoutDocument ]
+                    [ UI.Icons.icons.list ]
                ]
 
 

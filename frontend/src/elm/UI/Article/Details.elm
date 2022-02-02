@@ -91,10 +91,10 @@ view context model =
           of
             RemoteData.NotAsked ->
                 -- Should never happen
-                UI.Icons.spinner
+                UI.Icons.icons.spinner
 
             RemoteData.Loading ->
-                UI.Icons.spinner
+                UI.Icons.icons.spinner
 
             RemoteData.Failure error ->
                 Utils.Html.viewApiError error

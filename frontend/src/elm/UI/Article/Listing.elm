@@ -165,7 +165,7 @@ viewSpinner : Html msg
 viewSpinner =
     Html.div
         [ Html.Attributes.class "text-align-center" ]
-        [ UI.Icons.spinner ]
+        [ UI.Icons.icons.spinner ]
 
 
 viewDocumentsPage : Context -> List DocumentResult -> Html Msg
