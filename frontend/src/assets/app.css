@@ -195,7 +195,7 @@ article.listing .thumbnail-switch {
   position: sticky;
   top: 0;
   text-align: right;
-  margin-bottom: -2ex;
+  margin-bottom: -2.7ex;
 }
 article.details .thumbnail-switch {
   float: right;
