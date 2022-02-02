@@ -132,7 +132,7 @@ footer .footer-right > * {
   margin-left: 1em;
 }
 
-main {
+.sidebar-and-main {
   flex: 1;
   display: flex;
   min-height: 0;
@@ -150,10 +150,16 @@ aside nav {
   background-color: var(--color-nav-background);
   padding: 0.6em;
 }
-article {
+main {
   flex: 8;
   overflow: auto;
   padding: 0.5em;
+}
+main .thumbnail-switch{
+  float: right;
+  margin-left: 1em;
+  font-size: 80%;
+  color: var(--color-text-light);
 }
 
 .stick-on-wrapping {
@@ -453,15 +459,6 @@ ul.folder-list ul.folder-list {
   transform: rotate(90deg);
 }
 
-.article {
-  position: relative;
-}
-.article .thumbnail-switch{
-  float: right;
-  margin-left: 1em;
-  font-size: 80%;
-  color: var(--color-text-light);
-}
 .sidebar-switch {
   font-size: 80%;
 }
@@ -492,17 +489,17 @@ ul.folder-list ul.folder-list {
 .details .breadcrumbs a {
   color: inherit;
 }
-.article .details table {
+main .details table {
   border-collapse: collapse;
 }
-.article .details table td {
+main .details table td {
   vertical-align: top;
   padding: 0.2em 0;
 }
-.article .details table td:first-of-type {
+main .details table td:first-of-type {
   font-weight: bold;
 }
-.article .details table td + td {
+main .details table td + td {
   padding-left: 0.4em;
 }
 

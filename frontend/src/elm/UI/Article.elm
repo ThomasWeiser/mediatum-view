@@ -339,7 +339,7 @@ update context msg model =
 {-| -}
 view : Context -> Model -> Html Msg
 view context model =
-    Html.article
+    Html.main_
         [ Html.Attributes.class "article" ]
         [ viewThumbnailsSwitch context model
         , viewContent context model
