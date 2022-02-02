@@ -442,11 +442,13 @@ ul.folder-list ul.folder-list {
   width: 100%;
 }
 .details .header {
-  margin: 3ex 0;
+  margin: 1ex 0 2ex 0;
 }
-.details .header .metadatatype
-{
+.details .header .metadatatype {
   color: var(--color-primary);
+}
+.details .external-links {
+  margin: 1.5ex 0 2.5ex 0;
 }
 .details .bibtex {
   margin: 1ex 0;

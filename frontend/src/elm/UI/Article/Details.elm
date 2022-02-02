@@ -123,7 +123,12 @@ view context model =
 viewDocument : Context -> Model -> Document -> Residence -> Html Msg
 viewDocument context model document residence =
     Html.div []
-        [ if context.config.hideThumbnails || not (Document.hasPresentation document) then
+        [ Html.div
+            [ Html.Attributes.class "header" ]
+            [ Html.div [ Html.Attributes.class "metadatatype" ]
+                [ Html.text document.metadatatypeName ]
+            ]
+        , if context.config.hideThumbnails || not (Document.hasPresentation document) then
             Html.text ""
 
           else
@@ -151,7 +156,8 @@ viewDocument context model document residence =
                         []
                     )
                 ]
-        , Html.div []
+        , Html.div
+            [ Html.Attributes.class "external-links" ]
             (Utils.List.appendIf
                 (Document.hasDocumentPdf document)
                 [ Html.a
@@ -178,10 +184,6 @@ viewDocument context model document residence =
                     ]
                 ]
             )
-        , Html.div [ Html.Attributes.class "header" ]
-            [ Html.div [ Html.Attributes.class "metadatatype" ]
-                [ Html.text document.metadatatypeName ]
-            ]
         , Html.table []
             [ Html.tbody []
                 (List.map
