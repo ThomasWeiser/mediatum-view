@@ -174,8 +174,8 @@ main .iterator-view .iterator-header {
   align-items: center;
 }
 main .iterator-view .iterator-header > .result-number {
-  flex: 1 1 content;
-  min-width: 11em;
+  flex: 2 1 0;
+  min-width: 10em;
 }
 main .iterator-view .iterator-header > .iterator-buttons {
   flex: 1 0 content;
