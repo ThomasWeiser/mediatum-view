@@ -79,7 +79,7 @@ a, button.text-button {
   color: var(--color-primary-lighter);
   text-decoration: none;
 }
-button.text-button.text-button-negligible {
+button.button-negligible, .button-negligible  button.visual-button {
   color: var(--color-text-light);
 }
 a:hover, button.text-button:hover {

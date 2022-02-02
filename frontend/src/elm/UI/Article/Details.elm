@@ -89,14 +89,7 @@ update context msg model =
 view : Context -> Model -> Html Msg
 view context model =
     Html.article [ Html.Attributes.class "details" ]
-        [ Html.div
-            [ Html.Attributes.class "thumbnail-switch" ]
-            [ UI.Widgets.ThumbnailSwitch.view
-                context.config
-                context.config.hideThumbnails
-                (ReturnAdjustmentToSetup << AdjustmentToSetup.HideThumbnails)
-            ]
-        , case
+        [ case
             RemoteData.map2 Tuple.pair
                 (Cache.get context.cache.documents
                     ( Config.getMaskName MasksConfig.MaskForDetails context.config
@@ -122,13 +115,26 @@ view context model =
 
 viewDocument : Context -> Model -> Document -> Residence -> Html Msg
 viewDocument context model document residence =
+    let
+        hasNoThumbnail =
+            context.config.hideThumbnails || not (Document.hasPresentation document)
+    in
     Html.div []
         [ Html.div
+            [ Html.Attributes.class "thumbnail-switch"
+            , Html.Attributes.classList [ ( "button-negligible", hasNoThumbnail ) ]
+            ]
+            [ UI.Widgets.ThumbnailSwitch.view
+                context.config
+                context.config.hideThumbnails
+                (ReturnAdjustmentToSetup << AdjustmentToSetup.HideThumbnails)
+            ]
+        , Html.div
             [ Html.Attributes.class "header" ]
             [ Html.div [ Html.Attributes.class "metadatatype" ]
                 [ Html.text document.metadatatypeName ]
             ]
-        , if context.config.hideThumbnails || not (Document.hasPresentation document) then
+        , if hasNoThumbnail then
             Html.text ""
 
           else

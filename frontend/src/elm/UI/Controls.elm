@@ -478,7 +478,7 @@ viewFtsAspectButtons config ftsFilterLines =
                             [ Html.Attributes.type_ "button"
                             , Html.Attributes.class "text-button"
                             , Html.Attributes.classList
-                                [ ( "text-button-negligible"
+                                [ ( "button-negligible"
                                   , ftsFilterLineIsAlreadyOpen
                                   )
                                 ]
@@ -535,7 +535,7 @@ viewFacetFilterButtons context listOfFacetFilters =
                             [ Html.Attributes.type_ "button"
                             , Html.Attributes.class "text-button"
                             , Html.Attributes.classList
-                                [ ( "text-button-negligible"
+                                [ ( "button-negligible"
                                   , facetFilterIsAlreadyActive
                                   )
                                 ]
